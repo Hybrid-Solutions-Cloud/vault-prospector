@@ -120,7 +120,7 @@ public sealed partial class MainViewModel(
     private Task RevealAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
-        using var value = await secretAccessService.RetrieveAsync(SelectedResult.Id, true, cancellationToken);
+        using var value = await secretAccessService.RetrieveAsync(SelectedResult.Id, cancellationToken);
         SecretPreview = value.Reveal();
         _ = HideSecretLaterAsync(value.Mask());
         StatusText = "Secret revealed for 10 seconds after Windows Hello verification.";
@@ -130,7 +130,7 @@ public sealed partial class MainViewModel(
     private Task CopyAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
-        using var value = await secretAccessService.RetrieveAsync(SelectedResult.Id, true, cancellationToken);
+        using var value = await secretAccessService.RetrieveAsync(SelectedResult.Id, cancellationToken);
         await secretAccessService.CopyAsync(value, TimeSpan.FromSeconds(Math.Clamp(ClipboardClearSeconds, 5, 300)), CurrentPolicy(), cancellationToken);
         StatusText = $"Copied. Clipboard clears after {Math.Clamp(ClipboardClearSeconds, 5, 300)} seconds if unchanged.";
     });

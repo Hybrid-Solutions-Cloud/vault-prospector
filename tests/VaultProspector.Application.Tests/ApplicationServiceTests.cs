@@ -29,7 +29,7 @@ public sealed class ApplicationServiceTests
         var provider = new FakeProvider();
         var service = new SecretAccessService(provider, repository, new FakeValueStore(), new FakeClipboard(), new AlwaysVerify(), new FixedClock());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.RetrieveAsync(item.Id, true, TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.RetrieveAsync(item.Id, TestContext.Current.CancellationToken));
         Assert.Equal(0, provider.RetrieveCalls);
     }
 
@@ -40,7 +40,30 @@ public sealed class ApplicationServiceTests
         var item = Item(VaultObjectType.Secret);
         var repository = new FakeRepository(identity) { Resolved = (item, Vault(), identity) };
         var service = new SecretAccessService(new FakeProvider(), repository, new FakeValueStore(), new FakeClipboard(), new NeverVerify(), new FixedClock());
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.RetrieveAsync(item.Id, true, TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.RetrieveAsync(item.Id, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task DisabledOfflinePolicyRejectsBeforeVerificationOrAzureRetrieval()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity) { Resolved = (item, Vault(), identity) };
+        var provider = new FakeProvider();
+        var verification = new CountingVerify();
+        var store = new FakeValueStore();
+        var service = new SecretAccessService(provider, repository, store, new FakeClipboard(), verification, new FixedClock());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.RetrieveAndCacheAsync(
+            item.Id,
+            null,
+            TimeSpan.FromHours(1),
+            CachePolicy.SecureDefault,
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, verification.Calls);
+        Assert.Equal(0, provider.RetrieveCalls);
+        Assert.Equal(0, store.StoreCalls);
     }
 
     [Fact]
