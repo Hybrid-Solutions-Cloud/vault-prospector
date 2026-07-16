@@ -40,7 +40,7 @@ The full local Release gate passed on 2026-07-16: locked restore, structured dir
 
 The Release executable launched on Windows and rendered the first-identity guide, recommended product registration, custom-registration option, friendly label, and Microsoft sign-in action. UI Automation exposed the onboarding text and meaningful names for the custom client-ID control and sign-in button. Toggling custom mode exposed its requirements and client-ID field.
 
-The initial window took longer than the ten-second automation polling window to become targetable, and automated Tab-focus observations did not conclusively include every visible field. This is partial smoke evidence only; startup performance and the complete keyboard/screen-reader path remain open under P-14 and P-15.
+The initial window took longer than the ten-second automation polling window to become targetable. A second keyboard-only run confirmed that Tab reaches the custom-registration checkbox, Space exposes the custom client-ID field, and the next Tab focuses that named field. This is still partial smoke evidence: startup performance, complete task navigation, and real screen-reader behavior remain open under P-14 and P-15.
 
 ## Evidence still required
 
