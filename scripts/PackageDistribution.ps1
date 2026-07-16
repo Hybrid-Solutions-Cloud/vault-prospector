@@ -47,6 +47,25 @@ function Get-MsiProperty {
     return $record.StringData(1).Trim()
 }
 
+function Write-WinGetManifestContent {
+    param(
+        [Parameter(Mandatory)] [string] $Path,
+        [Parameter(Mandatory)] [string] $Value
+    )
+
+    # winget-pkgs rejects mixed line endings. Here-strings inherit the script file's
+    # newline style, while Set-Content otherwise appends the platform newline, so
+    # normalize the complete payload and write exactly one trailing CRLF.
+    $normalized = ($Value -replace "`r`n", "`n" -replace "`r", "`n").TrimEnd("`n")
+    $normalized = ($normalized -replace "`n", "`r`n") + "`r`n"
+    Set-Content -LiteralPath $Path -Value $normalized -Encoding utf8NoBOM -NoNewline
+
+    $written = [System.IO.File]::ReadAllText($Path)
+    if ($written -match '(?<!\r)\n' -or $written -match '\r(?!\n)') {
+        throw "WinGet manifest '$Path' contains mixed or non-CRLF line endings."
+    }
+}
+
 if (-not (Test-Path -LiteralPath $installerPath)) {
     throw "Installer was not found at '$installerPath'. Run PackageInstaller.ps1 first."
 }
@@ -126,9 +145,9 @@ ManifestType: defaultLocale
 ManifestVersion: 1.10.0
 "@
 
-Set-Content -LiteralPath (Join-Path $wingetRoot 'HybridSolutionsCloud.VaultProspector.yaml') -Value $versionManifest -Encoding utf8NoBOM
-Set-Content -LiteralPath (Join-Path $wingetRoot 'HybridSolutionsCloud.VaultProspector.installer.yaml') -Value $installerManifest -Encoding utf8NoBOM
-Set-Content -LiteralPath (Join-Path $wingetRoot 'HybridSolutionsCloud.VaultProspector.locale.en-US.yaml') -Value $localeManifest -Encoding utf8NoBOM
+Write-WinGetManifestContent -Path (Join-Path $wingetRoot 'HybridSolutionsCloud.VaultProspector.yaml') -Value $versionManifest
+Write-WinGetManifestContent -Path (Join-Path $wingetRoot 'HybridSolutionsCloud.VaultProspector.installer.yaml') -Value $installerManifest
+Write-WinGetManifestContent -Path (Join-Path $wingetRoot 'HybridSolutionsCloud.VaultProspector.locale.en-US.yaml') -Value $localeManifest
 
 $nuspec = @"
 <?xml version="1.0" encoding="utf-8"?>
