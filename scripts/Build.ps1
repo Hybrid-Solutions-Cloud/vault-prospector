@@ -25,6 +25,7 @@ function Invoke-DotNet {
 Push-Location $repoRoot
 try {
     Invoke-DotNet -Arguments @('restore', 'VaultProspector.sln', '--locked-mode')
+    & "$PSScriptRoot/Test-VulnerablePackages.ps1"
     Invoke-DotNet -Arguments @('format', 'VaultProspector.sln', '--verify-no-changes', '--no-restore')
     Invoke-DotNet -Arguments @('build', 'VaultProspector.sln', '--configuration', $Configuration, '--no-restore')
     if (-not $SkipTests) {
