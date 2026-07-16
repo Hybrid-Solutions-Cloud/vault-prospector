@@ -15,7 +15,9 @@ Preview Chocolatey packages require `--pre`. The portable ZIP remains available 
 
 ## Connect an identity
 
-Open **Identities**, enter a friendly label and the Microsoft Entra application client ID, then choose **Sign in interactively**. Complete the browser-based Microsoft sign-in. Repeat for employer, customer, personal, or lab identities.
+Open **Identities**, optionally enter a friendly label, keep the recommended Vault Prospector product registration, and choose **Continue to Microsoft sign-in**. Complete the browser-based Microsoft sign-in, including any MFA, passwordless, FIDO, or Conditional Access prompts required by the tenant. Repeat for employer, customer, personal, or lab identities.
+
+If the tenant blocks the product registration or requires an administrator-controlled application, enable **Use my organization's own public-client registration** and enter its Application (client) ID. See [Authentication setup](authentication.md) for consent and registration requirements. Vault Prospector never asks for an Entra password or client secret.
 
 ## Synchronize metadata
 
@@ -60,6 +62,8 @@ Cached values are encrypted separately with AES-GCM. Their key is protected for 
 - Purge offline values from **Settings**.
 - For an MSI or package-manager installation, uninstall from **Settings > Apps > Installed apps**, WinGet, or Chocolatey. For a portable ZIP, delete the extracted application folder.
 - To remove all local application state, delete `%LOCALAPPDATA%\VaultProspector` after closing the app.
+
+If startup reports that only the settings file is damaged, close the app and delete `%LOCALAPPDATA%\VaultProspector\settings.json`. This resets non-secret preferences and does not delete the encrypted metadata database, protected offline values, or app-owned token cache.
 
 For the complete inventory of locally processed data, network activity, retention, and deletion
 behavior, see [Privacy and local data handling](privacy.md).

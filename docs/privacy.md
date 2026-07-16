@@ -21,7 +21,7 @@ Vault Prospector processes the minimum data needed for the selected user workflo
 | Secret value selected for reveal or copy | Perform the explicit user action | Process memory; optionally the Windows clipboard | UI reveal is masked after ten seconds; clipboard clearing uses the configured interval if unchanged |
 | Optional offline secret value | Allow an explicit offline workflow | Separate AES-GCM envelope with authenticated descriptor metadata and a DPAPI-protected key for the current Windows user | Disabled by default; expires by policy, is invalidated after an incompatible security upgrade, or is purged by the user |
 | Allow-listed diagnostic events | Troubleshoot counts, status categories, and exception types | Local newline-delimited JSON log with identifiers pseudonymized | Until the user deletes local data; automatic log retention is not yet implemented |
-| Local settings | Remember client ID, clipboard timeout, and offline-cache preference | Local JSON settings file; it contains no client secret or secret value | Until all local data is deleted |
+| Local settings | Remember whether the product or an optional custom client ID is used, clipboard timeout, and offline-cache preference | Local JSON settings file; it contains no client secret, token, or secret value | Until the settings file or all local data is deleted |
 
 ## Network activity
 

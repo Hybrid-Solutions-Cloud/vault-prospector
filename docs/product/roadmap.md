@@ -10,7 +10,7 @@ The next work is ordered by security dependency rather than visual novelty. Secu
 
 | Horizon | Initiative | Status | Dependency or trade-off |
 | --- | --- | --- | --- |
-| Now | Security hardening and secure first-run setup | Planned | Must define local unlock, Entra authentication, isolated token storage, and fail-closed encryption before expanding access paths. |
+| Now | Security hardening and secure first-run setup | In progress | Product-registration onboarding and actionable safe errors are implemented; runtime usability, Windows Hello recovery, tenant-policy, and independent security evidence remain. |
 | Now | Desktop UI and password-manager interface research | Planned | Research and prototype before committing to navigation or interaction changes. |
 | Next | Taskbar background operation and metadata synchronization | Planned | Requires a locked background state, explicit close behavior, and Conditional Access-safe token handling. |
 | Next | Identity-source expansion and read-only/write-mode policy | Planned | Human and workload identities need distinct setup, authorization, and audit boundaries. Write operations remain gated behind security review. |

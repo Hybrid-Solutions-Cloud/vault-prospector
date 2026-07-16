@@ -4,12 +4,18 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+### Added
+
+- Provide a default multi-tenant Vault Prospector public-client registration, a guided first-identity experience, and an advanced organization-controlled registration option.
+- Show redacted, actionable recovery guidance for authentication, authorization, Windows verification, protected-data integrity, policy, and damaged-settings failures.
+
 ### Security
 
 - Authenticate offline-cache expiration, source fingerprint, vault, workspace, and descriptor metadata with AES-GCM associated data.
 - Invalidate legacy preview cache envelopes whose descriptor metadata was not authenticated; users must explicitly cache those values again.
 - Require application-boundary Windows Hello verification for live retrieval, copy, offline caching, and cached retrieval.
 - Validate Entra application client IDs before constructing app-specific MSAL cache paths.
+- Request Azure Key Vault delegated consent during interactive sign-in while continuing to acquire separate Resource Manager and Key Vault audience tokens.
 
 ## [0.1.0-preview.2] - 2026-07-16
 

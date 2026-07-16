@@ -12,6 +12,7 @@ public static class AzureAuthenticationScopes
     public const string ArmDelegated = "https://management.azure.com/user_impersonation";
     public const string KeyVaultDelegated = "https://vault.azure.net/user_impersonation";
     public static IReadOnlyList<string> InteractiveSignIn { get; } = Array.AsReadOnly([ArmDelegated]);
+    public static IReadOnlyList<string> AdditionalConsent { get; } = Array.AsReadOnly([KeyVaultDelegated]);
 }
 
 public sealed class MsalIdentityProvider(string cacheDirectory) : IIdentityProvider
@@ -22,6 +23,7 @@ public sealed class MsalIdentityProvider(string cacheDirectory) : IIdentityProvi
     {
         var application = await GetApplicationAsync(clientId);
         var result = await application.AcquireTokenInteractive(AzureAuthenticationScopes.InteractiveSignIn)
+            .WithExtraScopesToConsent(AzureAuthenticationScopes.AdditionalConsent)
             .WithPrompt(Prompt.SelectAccount)
             .ExecuteAsync(cancellationToken);
         var accountId = result.Account.HomeAccountId.Identifier;

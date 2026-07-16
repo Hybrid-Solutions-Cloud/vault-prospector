@@ -6,7 +6,7 @@
         Width="1180" Height="760" MinWidth="900" MinHeight="620"
         Icon="/Assets/vault-prospector.ico"
         Title="Vault Prospector">
-  <Grid RowDefinitions="Auto,*,Auto" Background="{DynamicResource ApplicationPageBackgroundThemeBrush}">
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource ApplicationPageBackgroundThemeBrush}">
     <Border Grid.Row="0" Background="#073B34" Padding="22,14">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel>
@@ -19,7 +19,18 @@
       </Grid>
     </Border>
 
-    <TabControl Grid.Row="1" Margin="18">
+    <Border Grid.Row="1" IsVisible="{Binding HasActionableError}" Background="#3F1616" BorderBrush="#DC6B6B" BorderThickness="1" CornerRadius="6" Margin="18,12,18,0" Padding="14" AutomationProperties.LiveSetting="Assertive">
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+        <TextBlock Text="!" FontSize="22" FontWeight="Bold" Foreground="#FCA5A5" />
+        <StackPanel Grid.Column="1" Spacing="4">
+          <TextBlock Text="{Binding ErrorTitle}" FontSize="16" FontWeight="SemiBold" Foreground="White" />
+          <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="White" />
+          <TextBlock Text="{Binding RecoveryText}" TextWrapping="Wrap" Foreground="#FECACA" FontWeight="SemiBold" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <TabControl Grid.Row="2" Margin="18">
       <TabItem Header="Search">
         <Grid RowDefinitions="Auto,*,Auto" Margin="4,14,4,4">
           <Border Classes="card">
@@ -120,14 +131,28 @@
           </Border>
           <Border Grid.Column="1" Classes="card">
             <StackPanel Spacing="10">
+              <Border IsVisible="{Binding IsFirstRun}" Background="#123F36" BorderBrush="#2D8A76" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,6">
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Welcome — connect your first identity" FontSize="17" FontWeight="SemiBold" />
+                  <TextBlock Text="1. Keep the recommended product registration unless your organization requires its own." TextWrapping="Wrap" />
+                  <TextBlock Text="2. Add an optional label so the account is easy to recognize." TextWrapping="Wrap" />
+                  <TextBlock Text="3. Continue to Microsoft sign-in and complete any MFA or Conditional Access prompts." TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
               <TextBlock Text="Connect Microsoft Entra identity" FontSize="20" FontWeight="SemiBold" />
               <TextBlock Text="Vault Prospector uses interactive browser sign-in. It never asks for or stores your password." TextWrapping="Wrap" />
+              <TextBlock Text="Sign-in registration" FontWeight="SemiBold" />
+              <TextBlock Text="Recommended — Vault Prospector product registration (no client secret)" TextWrapping="Wrap" />
+              <CheckBox Content="Use my organization's own public-client registration" IsChecked="{Binding UseCustomClientId}" />
+              <StackPanel IsVisible="{Binding UseCustomClientId}" Spacing="5">
+                <TextBlock Text="Custom Application (client) ID" />
+                <TextBox Text="{Binding ClientId}" PlaceholderText="00000000-0000-0000-0000-000000000000" AutomationProperties.Name="Custom Microsoft Entra application client ID" />
+                <TextBlock Text="The custom registration must allow multi-tenant public-client flows, http://localhost, Azure Resource Manager, and Azure Key Vault delegated access." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
+              </StackPanel>
               <TextBlock Text="Friendly label" />
               <TextBox Text="{Binding IdentityLabel}" PlaceholderText="Customer, employer, lab…" />
-              <TextBlock Text="Public-client application ID" />
-              <TextBox Text="{Binding ClientId}" PlaceholderText="Microsoft Entra application (client) ID" />
-              <TextBlock Text="Configure the app registration for public-client flows and the default local redirect URI. No client secret is used." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
-              <Button Classes="primary" Content="Sign in interactively" Command="{Binding AddIdentityCommand}" HorizontalAlignment="Left" />
+              <TextBlock Text="Microsoft Entra controls the sign-in, consent, MFA, and Conditional Access experience. Vault Prospector receives no password." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
+              <Button Classes="primary" Content="Continue to Microsoft sign-in" Command="{Binding AddIdentityCommand}" HorizontalAlignment="Left" />
             </StackPanel>
           </Border>
         </Grid>
@@ -180,7 +205,7 @@
       </TabItem>
     </TabControl>
 
-    <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="18,10">
+    <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="18,10">
       <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" /><ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" /></Grid>
     </Border>
   </Grid>

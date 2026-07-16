@@ -11,6 +11,7 @@ public sealed class AuthenticationConfigurationTests
     {
         Assert.Equal([AzureAuthenticationScopes.ArmDelegated], AzureAuthenticationScopes.InteractiveSignIn);
         Assert.DoesNotContain(AzureAuthenticationScopes.KeyVaultDelegated, AzureAuthenticationScopes.InteractiveSignIn);
+        Assert.Equal([AzureAuthenticationScopes.KeyVaultDelegated], AzureAuthenticationScopes.AdditionalConsent);
     }
 
     [Fact]

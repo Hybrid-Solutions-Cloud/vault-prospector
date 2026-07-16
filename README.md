@@ -27,12 +27,12 @@ Vault Prospector does not create Azure role assignments, rotate secrets, export 
 2. Verify the checksum and Sigstore bundle by following [the release verification guide](docs/release.md).
 3. Run the MSI. It installs Vault Prospector for the computer and adds a Start menu shortcut.
 4. Open **Vault Prospector** from Start.
-5. On the **Identities** tab, enter the client ID from your Microsoft Entra public-client app registration and select **Sign in interactively**.
+5. On the **Identities** tab, keep the recommended Vault Prospector registration and select **Continue to Microsoft sign-in**. Use a custom public-client registration only when your organization requires one.
 6. Select the connected identity and choose **Sync selected**.
 
 The portable `win-x64` ZIP remains available for users who cannot run an installer. WinGet and Chocolatey commands will be enabled after their community repositories approve the package; see [Windows package distribution](docs/package-distribution.md).
 
-The required app registration takes about five minutes; see [Authentication setup](docs/authentication.md).
+Tenant consent and optional custom-registration requirements are explained in [Authentication setup](docs/authentication.md).
 
 ### Build from source
 

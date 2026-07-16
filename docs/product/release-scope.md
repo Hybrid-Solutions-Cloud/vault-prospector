@@ -21,7 +21,7 @@ Version `0.1.0-preview.2` is the installable Windows desktop evaluation release.
 - Workspace assignment currently supports identities and vaults; direct tenant/subscription assignment and per-workspace policy editing remain backlog items.
 - Encrypted schema migration is covered from the internal version 1 shape to version 2. Migration from a previously published build cannot be exercised because this is the first public release.
 - The SQLCipher native bundle currently reports a NuGet deprecation/legacy-package advisory without a published replacement; the release gate separately confirms that no known vulnerable packages are present.
-- Azure end-to-end behavior depends on the evaluator's tenant, app registration, Conditional Access policy, and RBAC/data-plane permissions. Automated tests use provider contracts and do not contain a live tenant credential.
+- Azure end-to-end behavior depends on the evaluator's tenant consent policy, Conditional Access policy, and RBAC/data-plane permissions. The default product registration is currently not publisher-verified, so some tenants require administrator approval; an organization-controlled public-client registration remains available. Automated tests use provider contracts and do not contain a live tenant credential.
 - Individual binaries are not Authenticode-signed. Release archives have checksums, keyless Sigstore bundles, and SBOMs. GitHub-native artifact attestations are unavailable for this private repository under the organization's current plan; the workflow enables them automatically if the repository becomes public.
 - iPhone/iOS and Android/Google Play applications are coming soon as listed in the [roadmap](roadmap.md) and [backlog](backlog.md); they are not part of this Windows release.
 

@@ -26,6 +26,8 @@ public sealed partial class MainViewModel(
     public string VersionLabel { get; } = $"Vault Prospector {GetVersion()}";
 
     [ObservableProperty] private string _clientId = string.Empty;
+    [ObservableProperty] private bool _useCustomClientId;
+    [ObservableProperty] private bool _isFirstRun;
     [ObservableProperty] private string _identityLabel = string.Empty;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _tenantFilter = string.Empty;
@@ -49,6 +51,10 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private bool _offlineCacheEnabled;
     [ObservableProperty] private int _maximumCacheHours = 8;
     [ObservableProperty] private int _clipboardClearSeconds = 30;
+    [ObservableProperty] private bool _hasActionableError;
+    [ObservableProperty] private string _errorTitle = string.Empty;
+    [ObservableProperty] private string _errorMessage = string.Empty;
+    [ObservableProperty] private string _recoveryText = string.Empty;
 
     [RelayCommand]
     public async Task InitializeAsync()
@@ -56,7 +62,8 @@ public sealed partial class MainViewModel(
         await RunAsync(async cancellationToken =>
         {
             var settings = await settingsStore.LoadAsync(cancellationToken);
-            ClientId = settings.ClientId;
+            UseCustomClientId = settings.UseCustomClientId;
+            ClientId = settings.UseCustomClientId ? settings.ClientId : string.Empty;
             OfflineCacheEnabled = settings.OfflineCacheEnabled;
             MaximumCacheHours = settings.MaximumCacheHours;
             ClipboardClearSeconds = settings.ClipboardClearSeconds;
@@ -71,8 +78,11 @@ public sealed partial class MainViewModel(
     [RelayCommand]
     private Task AddIdentityAsync() => RunAsync(async cancellationToken =>
     {
+        var clientId = EffectiveClientId();
+        if (!Guid.TryParse(clientId, out var parsedClientId))
+            throw new ArgumentException("A valid Microsoft Entra public-client application ID is required.", nameof(ClientId));
         await SaveSettingsCoreAsync(cancellationToken);
-        var identity = await identityService.AddAsync(ClientId, IdentityLabel, cancellationToken);
+        var identity = await identityService.AddAsync(parsedClientId.ToString("D"), IdentityLabel, cancellationToken);
         await ReloadIdentitiesAsync(cancellationToken);
         SelectedIdentity = Identities.First(x => x.Id == identity.Id);
         IdentityLabel = string.Empty;
@@ -256,6 +266,7 @@ public sealed partial class MainViewModel(
         Identities.Clear();
         foreach (var identity in await repository.GetIdentitiesAsync(cancellationToken)) Identities.Add(identity);
         SelectedIdentity ??= Identities.FirstOrDefault();
+        IsFirstRun = Identities.Count == 0;
     }
 
     private async Task ReloadWorkspacesAsync(CancellationToken cancellationToken)
@@ -267,8 +278,10 @@ public sealed partial class MainViewModel(
 
     private async Task SaveSettingsCoreAsync(CancellationToken cancellationToken)
     {
-        await settingsStore.SaveAsync(new AppSettings(ClientId.Trim(), Math.Clamp(ClipboardClearSeconds, 5, 300), OfflineCacheEnabled, Math.Clamp(MaximumCacheHours, 1, 168)), cancellationToken);
+        await settingsStore.SaveAsync(new AppSettings(EffectiveClientId(), Math.Clamp(ClipboardClearSeconds, 5, 300), OfflineCacheEnabled, Math.Clamp(MaximumCacheHours, 1, 168), UseCustomClientId), cancellationToken);
     }
+
+    private string EffectiveClientId() => UseCustomClientId ? ClientId.Trim() : ProductIdentity.DefaultClientId;
 
     private CachePolicy CurrentPolicy() => new(OfflineCacheEnabled, TimeSpan.FromHours(Math.Clamp(MaximumCacheHours, 1, 168)), true, true);
 
@@ -289,26 +302,32 @@ public sealed partial class MainViewModel(
     private async Task RunAsync(Func<CancellationToken, Task> action)
     {
         if (IsBusy) return;
+        ClearActionableError();
         IsBusy = true;
         using var operation = new CancellationTokenSource();
         _activeOperation = operation;
         try { await action(operation.Token); }
         catch (OperationCanceledException) { StatusText = "Operation cancelled."; SecretPreview = "Secret hidden."; }
-        catch (Exception ex) { StatusText = SafeMessage(ex); SecretPreview = "Secret hidden."; }
+        catch (Exception ex)
+        {
+            var error = UserFacingErrorMapper.From(ex);
+            ErrorTitle = error.Title;
+            ErrorMessage = error.Message;
+            RecoveryText = error.Recovery;
+            HasActionableError = true;
+            StatusText = error.Title;
+            SecretPreview = "Secret hidden.";
+        }
         finally { _activeOperation = null; IsBusy = false; }
     }
 
-    private static string SafeMessage(Exception ex) => ex switch
+    private void ClearActionableError()
     {
-        UnauthorizedAccessException => "Local verification was not completed.",
-        Microsoft.Identity.Client.MsalUiRequiredException => "Microsoft Entra requires interactive sign-in.",
-        Azure.RequestFailedException request => $"Azure request failed with status {request.Status} ({request.ErrorCode ?? "unknown"}).",
-        ArgumentException => "Review the required settings and try again.",
-        KeyNotFoundException => "The selected item or an unexpired offline copy is unavailable.",
-        PlatformNotSupportedException => "This security operation is unavailable on the current platform.",
-        InvalidOperationException => "The requested operation is not available for the selected item or current policy.",
-        _ => "Operation failed. No sensitive error details were displayed.",
-    };
+        HasActionableError = false;
+        ErrorTitle = string.Empty;
+        ErrorMessage = string.Empty;
+        RecoveryText = string.Empty;
+    }
 }
 
 public sealed class SearchResultRow(SearchResult result)

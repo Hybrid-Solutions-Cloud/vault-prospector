@@ -167,6 +167,8 @@ Acceptance criteria:
 - An organization's external identity provider is supported through its Microsoft Entra federation; direct support for another provider requires a separate connector and threat model.
 - Setup fails closed if protected key storage or mandatory metadata encryption is unavailable.
 
+Implementation status (2026-07-16): product-registration sign-in, custom-registration fallback, first-identity guidance, extra Key Vault consent, legacy client-ID settings migration, and redacted recovery messages are implemented and unit tested. Runtime keyboard/screen-reader usability, tenant consent/MFA/Conditional Access scenarios, Windows Hello recovery, and fail-closed platform-protection testing remain release gates.
+
 ### Story: Mandatory local encryption verification
 
 As a security reviewer, I need proof that local metadata and every retained secret value are encrypted at rest so that no setup path can silently create plaintext storage.
