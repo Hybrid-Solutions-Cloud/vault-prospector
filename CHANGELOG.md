@@ -1,0 +1,18 @@
+# Changelog
+
+All notable changes to Vault Prospector are documented here. The project follows semantic versioning for published artifacts.
+
+## [0.1.0-preview.1] - 2026-07-16
+
+### Added
+
+- Avalonia Windows desktop application with a Vault Prospector product identity.
+- Multi-account Microsoft Entra interactive authentication through MSAL.
+- Azure subscription and Key Vault discovery with version-aware secret, key, and certificate metadata indexing.
+- SQLCipher-encrypted metadata storage, deterministic offline search, filters, favorites, recent access, and workspaces.
+- Explicit Windows Hello-gated secret reveal/copy with timed clipboard clearing.
+- Opt-in AES-GCM offline values protected by DPAPI, expiration, source-fingerprint invalidation, and multi-scope purge.
+- Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
+- Deferred Apple/iOS and Google/Android delivery plan.
+
+[0.1.0-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases/tag/v0.1.0-preview.1

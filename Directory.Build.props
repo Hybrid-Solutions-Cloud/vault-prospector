@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(CI)' == 'true'">true</RestoreLockedMode>
+    <NuGetLockFilePath Condition="'$(VaultProspectorPackaging)' == 'true'">$(MSBuildProjectDirectory)/obj/packages.publish.lock.json</NuGetLockFilePath>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Authors>Hybrid Solutions Cloud</Authors>
+    <Product>Vault Prospector</Product>
+    <RepositoryUrl>https://github.com/Hybrid-Solutions-Cloud/vault-prospector</RepositoryUrl>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,187 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VaultProspector.App.ViewModels"
+        x:Class="VaultProspector.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Width="1180" Height="760" MinWidth="900" MinHeight="620"
+        Icon="/Assets/vault-prospector.ico"
+        Title="Vault Prospector">
+  <Grid RowDefinitions="Auto,*,Auto" Background="{DynamicResource ApplicationPageBackgroundThemeBrush}">
+    <Border Grid.Row="0" Background="#073B34" Padding="22,14">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock Text="VAULT PROSPECTOR" Foreground="#A7F3D0" FontSize="12" FontWeight="Bold" LetterSpacing="2" />
+          <TextBlock Text="Find the right secret. Keep the boundaries clear." Foreground="White" FontSize="20" FontWeight="SemiBold" />
+        </StackPanel>
+        <Border Grid.Column="1" Background="#14584E" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
+          <TextBlock Text="LOCAL-FIRST · AZURE KEY VAULT" Foreground="#D1FAE5" FontSize="11" />
+        </Border>
+      </Grid>
+    </Border>
+
+    <TabControl Grid.Row="1" Margin="18">
+      <TabItem Header="Search">
+        <Grid RowDefinitions="Auto,*,Auto" Margin="4,14,4,4">
+          <Border Classes="card">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,150,Auto" ColumnSpacing="10">
+                <TextBox PlaceholderText="Search names, tags, and metadata" Text="{Binding SearchText}" KeyUp="SearchBox_OnKeyUp" AutomationProperties.Name="Search vault metadata" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding ObjectTypes}" SelectedItem="{Binding SelectedObjectType}" AutomationProperties.Name="Object type filter" />
+                <Button Grid.Column="2" Classes="primary" Content="Search" Command="{Binding SearchCommand}" />
+              </Grid>
+              <WrapPanel Orientation="Horizontal">
+                <CheckBox Content="Favorites" IsChecked="{Binding FavoritesOnly}" Margin="0,0,14,6" />
+                <CheckBox Content="Stale" IsChecked="{Binding StaleOnly}" Margin="0,0,14,6" />
+                <CheckBox Content="Enabled" IsChecked="{Binding EnabledOnly}" Margin="0,0,14,6" />
+                <CheckBox Content="Expired" IsChecked="{Binding ExpiredOnly}" Margin="0,0,14,6" />
+                <CheckBox Content="Selected identity" IsChecked="{Binding FilterSelectedIdentity}" Margin="0,0,14,6" />
+                <CheckBox Content="Selected workspace" IsChecked="{Binding FilterSelectedWorkspace}" Margin="0,0,14,6" />
+                <CheckBox Content="Recent first" IsChecked="{Binding RecentlyAccessedFirst}" Margin="0,0,14,6" />
+              </WrapPanel>
+              <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                <TextBox PlaceholderText="Tenant ID contains…" Text="{Binding TenantFilter}" AutomationProperties.Name="Tenant filter" />
+                <TextBox Grid.Column="1" PlaceholderText="Subscription ID contains…" Text="{Binding SubscriptionFilter}" AutomationProperties.Name="Subscription filter" />
+                <TextBox Grid.Column="2" PlaceholderText="Vault name contains…" Text="{Binding VaultFilter}" AutomationProperties.Name="Vault name filter" />
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Grid Grid.Row="1" ColumnDefinitions="2*,1*" Margin="0,14,0,14" ColumnSpacing="14">
+            <Border Classes="card">
+              <Grid RowDefinitions="Auto,*">
+                <Grid ColumnDefinitions="36,2*,120,160,120" Margin="8,0,8,8">
+                  <TextBlock Text="" /><TextBlock Grid.Column="1" Text="NAME" FontWeight="Bold" FontSize="11" />
+                  <TextBlock Grid.Column="2" Text="TYPE" FontWeight="Bold" FontSize="11" />
+                  <TextBlock Grid.Column="3" Text="VAULT" FontWeight="Bold" FontSize="11" />
+                  <TextBlock Grid.Column="4" Text="STATE" FontWeight="Bold" FontSize="11" />
+                </Grid>
+                <ListBox Grid.Row="1" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedResult}" AutomationProperties.Name="Vault search results">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SearchResultRow">
+                      <Grid ColumnDefinitions="36,2*,120,160,120" Margin="6,8">
+                        <TextBlock Text="{Binding FavoriteMarker}" Foreground="#E3A008" />
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="2" Text="{Binding Type}" />
+                        <TextBlock Grid.Column="3" Text="{Binding Vault}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="4" Text="{Binding State}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </Grid>
+            </Border>
+            <Border Grid.Column="1" Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Selected object" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding SelectedResult.Name, FallbackValue=Nothing selected}" FontSize="16" />
+                <TextBlock Text="{Binding SelectedResult.Vault}" Opacity="0.75" />
+                <TextBlock Text="{Binding SelectedResult.Identity}" Opacity="0.75" />
+                <TextBlock Text="{Binding SelectedResult.Tenant}" Opacity="0.75" TextWrapping="Wrap" />
+                <Border Background="#101D2B23" CornerRadius="6" Padding="12" Margin="0,8">
+                  <TextBlock Text="{Binding SecretPreview}" FontFamily="Consolas" TextWrapping="Wrap" AutomationProperties.Name="Masked secret value" />
+                </Border>
+                <WrapPanel Orientation="Horizontal">
+                  <Button Content="Reveal" Command="{Binding RevealCommand}" Margin="0,0,8,8" />
+                  <Button Content="Copy securely" Command="{Binding CopyCommand}" Margin="0,0,8,8" />
+                  <Button Content="Favorite" Command="{Binding ToggleFavoriteCommand}" Margin="0,0,8,8" />
+                  <Button Content="Cache offline" Command="{Binding CacheSelectedCommand}" Margin="0,0,8,8" IsEnabled="{Binding OfflineCacheEnabled}" />
+                  <Button Content="Open offline" Command="{Binding OpenOfflineCommand}" Margin="0,0,8,8" />
+                  <Button Content="Purge offline copy" Command="{Binding PurgeSelectedCachedValueCommand}" Margin="0,0,8,8" />
+                </WrapPanel>
+                <TextBlock Text="Values are retrieved only after explicit action and Windows Hello verification." FontSize="11" Opacity="0.7" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+          </Grid>
+          <TextBlock Grid.Row="2" Text="{Binding Results.Count, StringFormat={}{0} indexed objects}" Opacity="0.7" />
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="Identities">
+        <Grid ColumnDefinitions="1*,1*" Margin="4,14" ColumnSpacing="14">
+          <Border Classes="card">
+            <StackPanel Spacing="10">
+              <TextBlock Text="Connected identities" FontSize="20" FontWeight="SemiBold" />
+              <TextBlock Text="Each identity keeps an explicit tenant and vault access path." TextWrapping="Wrap" Opacity="0.75" />
+              <ListBox ItemsSource="{Binding Identities}" SelectedItem="{Binding SelectedIdentity}" MinHeight="300">
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <StackPanel Margin="6">
+                      <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding UsernameHint}" Opacity="0.7" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <WrapPanel>
+                <Button Classes="primary" Content="Sync selected" Command="{Binding SynchronizeCommand}" Margin="0,0,8,8" />
+                <Button Content="Cancel" Command="{Binding CancelOperationCommand}" IsEnabled="{Binding IsBusy}" Margin="0,0,8,8" />
+                <Button Content="Remove identity" Command="{Binding RemoveIdentityCommand}" Margin="0,0,8,8" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="1" Classes="card">
+            <StackPanel Spacing="10">
+              <TextBlock Text="Connect Microsoft Entra identity" FontSize="20" FontWeight="SemiBold" />
+              <TextBlock Text="Vault Prospector uses interactive browser sign-in. It never asks for or stores your password." TextWrapping="Wrap" />
+              <TextBlock Text="Friendly label" />
+              <TextBox Text="{Binding IdentityLabel}" PlaceholderText="Customer, employer, lab…" />
+              <TextBlock Text="Public-client application ID" />
+              <TextBox Text="{Binding ClientId}" PlaceholderText="Microsoft Entra application (client) ID" />
+              <TextBlock Text="Configure the app registration for public-client flows and the default local redirect URI. No client secret is used." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
+              <Button Classes="primary" Content="Sign in interactively" Command="{Binding AddIdentityCommand}" HorizontalAlignment="Left" />
+            </StackPanel>
+          </Border>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="Workspaces">
+        <Grid ColumnDefinitions="1*,1*" Margin="4,14" ColumnSpacing="14">
+          <Border Classes="card">
+            <StackPanel Spacing="10"><TextBlock Text="Workspaces" FontSize="20" FontWeight="SemiBold" />
+              <ListBox ItemsSource="{Binding Workspaces}" SelectedItem="{Binding SelectedWorkspace}" MinHeight="300"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Margin="6" /></DataTemplate></ListBox.ItemTemplate></ListBox>
+              <WrapPanel>
+                <Button Content="Add selected vault" Command="{Binding AddSelectedVaultToWorkspaceCommand}" Margin="0,0,8,8" />
+                <Button Content="Add selected identity" Command="{Binding AddSelectedIdentityToWorkspaceCommand}" Margin="0,0,8,8" />
+                <Button Content="Delete workspace" Command="{Binding RemoveWorkspaceCommand}" Margin="0,0,8,8" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="1" Classes="card">
+            <StackPanel Spacing="10"><TextBlock Text="Create workspace" FontSize="20" FontWeight="SemiBold" />
+              <TextBlock Text="Group identities, tenants, subscriptions, and vaults without duplicating indexed data." TextWrapping="Wrap" />
+              <TextBox Text="{Binding WorkspaceName}" PlaceholderText="Workspace name" />
+              <Button Classes="primary" Content="Create" Command="{Binding CreateWorkspaceCommand}" HorizontalAlignment="Left" />
+            </StackPanel>
+          </Border>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="Settings">
+        <ScrollViewer Margin="4,14"><Border Classes="card" MaxWidth="700" HorizontalAlignment="Left">
+          <StackPanel Spacing="12">
+            <TextBlock Text="Security settings" FontSize="22" FontWeight="SemiBold" />
+            <CheckBox Content="Enable encrypted offline value cache" IsChecked="{Binding OfflineCacheEnabled}" />
+            <TextBlock Text="Offline values are disabled by default, encrypted separately, and require Windows Hello." TextWrapping="Wrap" Opacity="0.75" />
+            <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" />
+            <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" />
+            <WrapPanel><Button Classes="primary" Content="Save settings" Command="{Binding SaveSettingsCommand}" Margin="0,0,8,8" /><Button Content="Purge selected vault" Command="{Binding PurgeSelectedVaultCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge selected workspace" Command="{Binding PurgeSelectedWorkspaceCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge all offline values" Command="{Binding PurgeAllCachedValuesCommand}" Margin="0,0,8,8" /></WrapPanel>
+            <TextBlock Text="Telemetry is disabled. Logs contain no tokens, values, usernames, vault names, or object names." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
+          </StackPanel>
+        </Border></ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="About">
+        <Border Classes="card" Margin="4,14" MaxWidth="700" HorizontalAlignment="Left" VerticalAlignment="Top">
+          <StackPanel Spacing="10"><TextBlock Text="{Binding VersionLabel}" FontSize="24" FontWeight="SemiBold" />
+            <TextBlock Text="A local-first Azure Key Vault discovery, search, and secure retrieval desktop application." TextWrapping="Wrap" />
+            <TextBlock Text="This preview never creates role assignments, rotates secrets, or silently caches values. Azure remains the source of truth." TextWrapping="Wrap" />
+            <TextBlock Text="Mobile apps are intentionally deferred and tracked on the roadmap." TextWrapping="Wrap" Opacity="0.75" />
+          </StackPanel>
+        </Border>
+      </TabItem>
+    </TabControl>
+
+    <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="18,10">
+      <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" /><ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" /></Grid>
+    </Border>
+  </Grid>
+</Window>

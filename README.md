@@ -1,122 +1,82 @@
 # Vault Prospector
 
-Vault Prospector is a local-first, cross-platform application for securely discovering, indexing, searching, and optionally caching secrets, keys, and certificates from Azure Key Vault across multiple Microsoft Entra tenants, subscriptions, identities, and client environments.
+Vault Prospector is a local-first Windows desktop application for discovering and searching Azure Key Vault metadata across multiple Microsoft Entra identities, tenants, and subscriptions. Secret values are retrieved only after an explicit action and Windows Hello verification.
 
-The product is intended to replace repetitive Azure portal navigation and ad hoc Azure CLI commands with a fast, searchable, offline-capable desktop and mobile experience.
+> **Release status:** `0.1.0` preview. Use non-production environments while evaluating the application and report security issues privately as described in [SECURITY.md](SECURITY.md).
 
-> **Project status:** Architecture and research phase. No production release is available yet.
+## What works
 
-## Core vision
+- Interactive Microsoft Entra sign-in with MFA and Conditional Access support.
+- Multiple connected identities with isolated token-cache entries.
+- Subscription and Azure Key Vault discovery.
+- Secret, key, and certificate metadata indexing without retrieving values.
+- SQLCipher-encrypted local metadata storage and offline search.
+- Deterministic search by name and tags, with workspace, identity, tenant, subscription, vault, type, enabled, expiration, favorite, staleness, and recent-access controls.
+- Explicit secret retrieval, masked display, Windows Hello verification, and timed clipboard clearing.
+- Optional AES-GCM encrypted offline values, disabled by default and protected with Windows DPAPI.
+- Version-aware indexing, workspaces, favorites, access recency, cancelable synchronization, partial-sync diagnostics, and per-vault error isolation.
+- Redacted local diagnostics with no tokens, secret values, usernames, vault names, or object names.
 
-Vault Prospector will provide:
+Vault Prospector does not create Azure role assignments, rotate secrets, export keys or certificate private keys, share secrets, or send telemetry.
 
-- One secure application experience for Windows, macOS, and iOS.
-- Multiple connected Azure identities.
-- Discovery across multiple Microsoft Entra tenants and Azure subscriptions.
-- Fast local search across Key Vault names, object names, tags, versions, expiration dates, and source context.
-- A local encrypted metadata index.
-- Optional, explicitly enabled offline caching of selected secret values.
-- OS-backed application unlock using Windows Hello, Apple Keychain, Secure Enclave, or equivalent platform capabilities.
-- Clear identity, tenant, subscription, vault, and workspace boundaries.
-- Secure clipboard behavior and automatic clipboard clearing.
-- Extensible support for additional secret providers in the future.
+## Quick start
 
-## Guiding principles
+### Install a release
 
-1. **Secure by default** — secret values are never cached unless the user explicitly enables caching.
-2. **Local first** — the app does not require a hosted backend for its primary workflow.
-3. **Least privilege** — Azure access is limited to permissions already granted to each connected identity.
-4. **Identity clarity** — every result clearly identifies the account, tenant, subscription, vault, and version from which it came.
-5. **Offline with intent** — metadata search is available offline; secret-value access offline is opt-in and policy controlled.
-6. **Cloud optional** — synchronization services may be added later, but are not required for the initial product.
-7. **Provider extensibility** — Azure Key Vault is the first provider, not a permanent architectural limitation.
+1. Download the Windows `win-x64` ZIP and its `.sha256` file from [GitHub Releases](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases).
+2. Verify the checksum and Sigstore bundle by following [the release verification guide](docs/release.md).
+3. Extract the ZIP to a user-writable folder.
+4. Run `VaultProspector.App.exe`.
+5. On the **Identities** tab, enter the client ID from your Microsoft Entra public-client app registration and select **Sign in interactively**.
+6. Select the connected identity and choose **Sync selected**.
 
-## Proposed technology direction
+The required app registration takes about five minutes; see [Authentication setup](docs/authentication.md).
 
-The initial recommendation is:
+### Build from source
 
-- .NET 9
-- Avalonia UI
-- C#
-- MVVM
-- Microsoft Authentication Library
-- Azure SDK for .NET
-- SQLite with an encrypted storage strategy
-- Platform-specific secure key storage
-- Clean Architecture-inspired project boundaries
+Prerequisites:
 
-These decisions remain subject to validation through the research spikes in `docs/spikes`.
+- PowerShell 7+
+- .NET SDK 9.0.315 or a compatible 9.0 patch selected by `global.json`
+- Windows for Windows Hello integration and the final release package
 
-## Repository structure
-
-```text
-vault-prospector/
-├── README.md
-├── CONTRIBUTING.md
-├── SECURITY.md
-├── LICENSE
-├── docs/
-│   ├── architecture/
-│   ├── adr/
-│   ├── product/
-│   ├── security/
-│   └── spikes/
-└── src/
-    └── README.md
+```powershell
+pwsh ./scripts/Build.ps1
+pwsh ./scripts/Package.ps1 -Version 0.1.0
 ```
 
-## Initial milestones
+HCS Tier 1 WSL is supported for restore, formatting, build, and non-Windows tests. The protected desktop release is built on a Windows runner so the Windows Hello projection is included.
 
-### Milestone 0 — Foundation
+## Security defaults
 
-- Confirm architecture and technology decisions.
-- Complete authentication, storage, enumeration, and platform feasibility spikes.
-- Establish the threat model and security requirements.
-- Scaffold the solution and CI pipeline.
+- Azure remains the source of truth.
+- Metadata sync never requests secret values.
+- The metadata database is encrypted; the app refuses to create a plaintext fallback.
+- Offline values are stored separately and remain disabled until explicitly enabled.
+- Windows Hello is required for reveal, copy, and offline caching.
+- Clipboard content is cleared only if it still matches the value copied by Vault Prospector.
+- Telemetry is disabled.
 
-### Milestone 1 — Connected metadata search
-
-- Sign in with Microsoft Entra ID.
-- Add and manage multiple Azure identities.
-- Discover accessible tenants, subscriptions, and Key Vaults.
-- Index vault metadata and object metadata.
-- Search by name, tag, tenant, subscription, workspace, type, and expiration status.
-
-### Milestone 2 — Secure value retrieval
-
-- Retrieve secret values on demand.
-- Implement secure clipboard workflows.
-- Record local, privacy-preserving access history.
-- Add favorites and recently used items.
-
-### Milestone 3 — Offline value cache
-
-- Allow users to opt selected values into encrypted offline storage.
-- Require local biometric or device credential unlock.
-- Support configurable expiration and automatic removal.
-- Make offline status and staleness visible.
-
-### Milestone 4 — Mobile and ecosystem integration
-
-- Deliver iOS workflows.
-- Research Password AutoFill and credential-provider integration.
-- Add Windows integration where platform APIs permit it.
-- Add extension points for future providers.
+No local application can protect a deliberately revealed value from malware already running as the same user or from a local administrator. Review the [threat model](docs/security/threat-model.md) before approving production use.
 
 ## Documentation
 
-- [Project charter](docs/product/project-charter.md)
+- [User guide](docs/user-guide.md)
+- [Authentication setup](docs/authentication.md)
+- [Architecture](docs/architecture/architecture-overview.md)
+- [Security requirements](docs/security/security-requirements.md)
+- [Threat model](docs/security/threat-model.md)
+- [Release and artifact verification](docs/release.md)
 - [Product requirements](docs/product/product-requirements.md)
+- [Preview release scope](docs/product/release-scope.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Backlog](docs/product/backlog.md)
-- [Architecture overview](docs/architecture/architecture-overview.md)
-- [Domain model](docs/architecture/domain-model.md)
-- [Threat model](docs/security/threat-model.md)
-- [Security requirements](docs/security/security-requirements.md)
-- [Architecture decision records](docs/adr/README.md)
-- [Research spikes](docs/spikes/README.md)
-- [Glossary](docs/glossary.md)
+- [Contributing](CONTRIBUTING.md)
 
-## Important security warning
+## Mobile status
 
-Vault Prospector will handle highly sensitive information. Until a release has completed security review, external penetration testing, and a formal release process, it must not be treated as an approved enterprise secret-management product.
+Apple macOS/iOS and Google Android/Play applications are intentionally not part of this release. Their platform security, background execution, app-store distribution, and credential-provider work remain explicit deferred items in the roadmap and backlog.
+
+## License
+
+Vault Prospector is available under the [MIT License](LICENSE).

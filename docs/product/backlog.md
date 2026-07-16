@@ -38,6 +38,10 @@ As a consultant, I need more than one Azure identity so that I can search employ
 
 As a user, I need clear interaction-required states so that I understand when a sync cannot proceed without signing in again.
 
+### Story: Disable and reenable an identity (post-preview)
+
+As a user, I need to suspend an identity without deleting its offline metadata and explicitly reauthenticate it when policy requires interaction.
+
 ## Epic 3 — Azure discovery
 
 ### Story: Discover subscriptions
@@ -52,6 +56,10 @@ As a user, I need the app to find Key Vault resources across selected subscripti
 
 As a user, I need to know which connected identity can access a vault so that the app uses the correct authentication context.
 
+### Story: Configure discovery inclusion (post-preview)
+
+As a user, I need to include or exclude subscriptions and vaults before subsequent synchronization so that the local index follows an explicit scope policy.
+
 ## Epic 4 — Index and search
 
 ### Story: Index secret metadata
@@ -65,6 +73,10 @@ As a user, I need instant name search across all selected vaults.
 ### Story: Filter search
 
 As a user, I need filters for workspace, tenant, subscription, vault, identity, type, expiry, and staleness.
+
+### Story: Reconcile removed provider objects (post-preview)
+
+As a user, I need incremental synchronization to tombstone objects that Azure no longer returns without erasing unrelated history.
 
 ## Epic 5 — Secure retrieval
 
@@ -107,3 +119,35 @@ As an administrator, I need policy to disable offline value caching.
 ### Story: Dependency scanning
 
 As a maintainer, I need automated dependency and secret scanning in CI.
+
+### Story: Schema upgrade validation (post-preview)
+
+As a maintainer, I need forward-only encrypted database migrations tested against every previously published schema before an upgrade release.
+
+### Story: Authenticode signing (post-preview)
+
+As a Windows user, I need individual executable and library signatures from the approved code-signing identity in addition to archive checksums, Sigstore, SBOM, and provenance.
+
+### Story: Complete workspace resource assignment (post-preview)
+
+As a user, I need direct tenant and subscription assignment plus editable workspace-specific cache policy. The preview supports identity and vault assignment.
+
+## Epic 8 — Apple and Google mobile delivery (deferred)
+
+These stories remain out of scope for the Windows desktop preview.
+
+### Story: Apple platform security validation
+
+As a security reviewer, I need macOS and iOS Keychain, Secure Enclave, LocalAuthentication, background-state, and screenshot protections validated before an Apple build is distributed.
+
+### Story: iOS application and App Store release
+
+As an iOS user, I need a mobile-safe search and retrieval experience that passes a separate threat model, entitlement review, privacy declaration, signing, TestFlight validation, and App Store review.
+
+### Story: Android application and Google Play release
+
+As an Android user, I need a mobile-safe experience using Android Keystore and BiometricPrompt that passes a separate threat model, data-safety declaration, target-SDK review, signing, closed testing, and Google Play review.
+
+### Story: Mobile autofill feasibility
+
+As a product owner, I need Apple Password AutoFill and Android Autofill framework capabilities validated without claiming that arbitrary Azure secrets can be exposed through unsupported credential-provider APIs.

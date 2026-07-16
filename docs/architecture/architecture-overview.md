@@ -2,7 +2,7 @@
 
 ## Architectural style
 
-Vault Prospector is planned as a local-first, modular application with explicit boundaries between:
+Vault Prospector is a local-first, modular application with explicit boundaries between:
 
 - User interface.
 - Application orchestration.
@@ -13,7 +13,7 @@ Vault Prospector is planned as a local-first, modular application with explicit 
 - Platform security capabilities.
 - Optional plugins.
 
-The initial implementation will use a Clean Architecture-inspired dependency direction. This does not require every enterprise pattern; the goal is to protect the domain and prevent UI, Azure SDK, database, or operating-system concerns from becoming inseparable.
+The implementation uses a Clean Architecture-inspired dependency direction. This does not require every enterprise pattern; the goal is to protect the domain and prevent UI, Azure SDK, database, or operating-system concerns from becoming inseparable. The [preview scope](../product/release-scope.md) distinguishes delivered behavior from target architecture that remains on the backlog.
 
 ## Major components
 
@@ -27,7 +27,7 @@ Responsibilities:
 - Sync status.
 - Settings.
 - Local unlock requests.
-- Accessible desktop and mobile interaction.
+- Accessible desktop interaction.
 
 ### Application layer
 
@@ -118,7 +118,7 @@ Dynamic third-party plugins may be postponed until a safe trust and signing mode
 3. The Azure provider discovers selected subscriptions and vaults.
 4. The provider enumerates object metadata without requesting values.
 5. Records are normalized into domain index models.
-6. The index transaction applies additions, updates, tombstones, and checkpoints.
+6. The preview index transaction applies additions and updates. Tombstone reconciliation and durable checkpoints remain post-preview backlog work.
 7. Search becomes immediately available against the local index.
 8. Sync errors are retained as non-sensitive diagnostics.
 

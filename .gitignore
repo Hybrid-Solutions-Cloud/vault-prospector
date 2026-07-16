@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+TestResults/
+artifacts/
+.vs/
+.vscode/
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
+*.vpcache
+*.log
+*.pfx
+*.snk

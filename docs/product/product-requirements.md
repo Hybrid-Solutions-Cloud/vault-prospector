@@ -1,5 +1,7 @@
 # Product Requirements
 
+These requirements describe the product direction. The implemented and deferred boundaries for the first public evaluation build are recorded in the [version 0.1 preview scope](release-scope.md); unmet requirements remain backlog items rather than implied release claims.
+
 ## Personas
 
 ### Multi-tenant cloud architect
