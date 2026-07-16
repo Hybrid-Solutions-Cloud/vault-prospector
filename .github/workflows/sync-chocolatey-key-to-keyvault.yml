@@ -28,10 +28,12 @@ jobs:
 
           $expires = [DateTimeOffset]::UtcNow.AddDays(180)
           $body = @{
-            value = $env:CHOCOLATEY_API_KEY
-            attributes = @{
-              enabled = $true
-              exp = $expires.ToUnixTimeSeconds()
+            properties = @{
+              value = $env:CHOCOLATEY_API_KEY
+              attributes = @{
+                enabled = $true
+                exp = $expires.ToUnixTimeSeconds()
+              }
             }
             tags = @{
               owner = 'kris@hybridsolutions.cloud'
@@ -43,7 +45,7 @@ jobs:
           } | ConvertTo-Json -Depth 4 -Compress
 
           $headers = @{ Authorization = "Bearer $env:HCS_AZURE_ACCESS_TOKEN" }
-          $uri = 'https://kv-hcs-vault-01.vault.azure.net/secrets/hcs-vault-prospector-chocolatey-publisher-api-key?api-version=7.4'
+          $uri = 'https://management.azure.com/subscriptions/be069ae1-fc96-4a07-9f8e-5994d83a137d/resourceGroups/rg-hcs-kv-mgmt-eus-01/providers/Microsoft.KeyVault/vaults/kv-hcs-vault-01/secrets/hcs-vault-prospector-chocolatey-publisher-api-key?api-version=2023-07-01'
           $result = Invoke-RestMethod -Method Put -Uri $uri -Headers $headers -ContentType 'application/json' -Body $body
 
           if ($result.id -notmatch '/secrets/hcs-vault-prospector-chocolatey-publisher-api-key/') {
