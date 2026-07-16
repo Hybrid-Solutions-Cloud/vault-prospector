@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Nodes;
 using Microsoft.Data.Sqlite;
 using VaultProspector.Application;
 using VaultProspector.Domain;
@@ -54,7 +55,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         var fileBytes = await File.ReadAllBytesAsync(Path.Combine(_directory, "values", $"{itemId:D}.vpcache"), TestContext.Current.CancellationToken);
         Assert.DoesNotContain("not-in-plaintext", Encoding.UTF8.GetString(fileBytes), StringComparison.Ordinal);
-        Assert.Contains("\"KeyVersion\":1", Encoding.UTF8.GetString(fileBytes), StringComparison.Ordinal);
+        Assert.Contains("\"KeyVersion\":2", Encoding.UTF8.GetString(fileBytes), StringComparison.Ordinal);
         using var restored = await store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken);
         Assert.Equal("not-in-plaintext", restored?.Reveal());
 
@@ -126,6 +127,42 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         Assert.Null(await store.RetrieveAsync(itemId, _clock.UtcNow, "new-fingerprint", TestContext.Current.CancellationToken));
         Assert.False(File.Exists(Path.Combine(_directory, "fingerprint-values", $"{itemId:D}.vpcache")));
+    }
+
+    [Fact]
+    public async Task ModifiedFingerprintCannotMakeProtectedValueAppearCurrent()
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "tampered-fingerprint-values");
+        var path = Path.Combine(valueDirectory, $"{itemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var value = new SensitiveValue("rotated-value");
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, value, "old-fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+
+        var envelope = JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!.AsObject();
+        envelope["Descriptor"]!["SourceMetadataFingerprint"] = "new-fingerprint";
+        await File.WriteAllTextAsync(path, envelope.ToJsonString(), TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<AuthenticationTagMismatchException>(() =>
+            store.RetrieveAsync(itemId, _clock.UtcNow, "new-fingerprint", TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task LegacyUnauthenticatedDescriptorIsInvalidated()
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "legacy-values");
+        var path = Path.Combine(valueDirectory, $"{itemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var value = new SensitiveValue("legacy-value");
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, value, "fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+
+        var envelope = JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!.AsObject();
+        envelope["KeyVersion"] = 1;
+        await File.WriteAllTextAsync(path, envelope.ToJsonString(), TestContext.Current.CancellationToken);
+
+        Assert.Null(await store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken));
+        Assert.False(File.Exists(path));
     }
 
     [Fact]

@@ -52,7 +52,7 @@ Offline values are disabled by default. To evaluate the feature:
 4. Complete Windows Hello verification.
 5. Choose **Open offline** to reopen an unexpired copy without contacting Azure. Windows Hello is required again.
 
-Cached values are encrypted separately with AES-GCM. Their key is protected for the current Windows user with DPAPI. A metadata fingerprint invalidates the copy after the source version changes. Purge the selected item from Search, or purge the selected vault, selected workspace, or entire cache from Settings.
+Cached values are encrypted separately with AES-GCM. Their key is protected for the current Windows user with DPAPI. Expiration, source fingerprint, and scope metadata are authenticated with the value, and a metadata fingerprint invalidates the copy after the source version changes. Security upgrades may invalidate an older Preview cache format; cache the value again explicitly if an unexpired copy is no longer available after upgrading. Purge the selected item from Search, or purge the selected vault, selected workspace, or entire cache from Settings.
 
 ## Remove local data
 

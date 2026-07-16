@@ -2,6 +2,15 @@
 
 All notable changes to Vault Prospector are documented here. The project follows semantic versioning for published artifacts.
 
+## [Unreleased]
+
+### Security
+
+- Authenticate offline-cache expiration, source fingerprint, vault, workspace, and descriptor metadata with AES-GCM associated data.
+- Invalidate legacy preview cache envelopes whose descriptor metadata was not authenticated; users must explicitly cache those values again.
+- Require application-boundary Windows Hello verification for live retrieval, copy, offline caching, and cached retrieval.
+- Validate Entra application client IDs before constructing app-specific MSAL cache paths.
+
 ## [0.1.0-preview.2] - 2026-07-16
 
 ### Added
