@@ -2,26 +2,22 @@
 
 ## Current state
 
-- Updated the legacy product name to Vault Prospector across all repository documentation.
-- Updated matching repository and .NET identifier examples to `vault-prospector` and `VaultProspector`.
-- Preserved Azure Key Vault terminology where it identifies the supported provider.
+- Branch: `agent/build-vault-prospector`
+- Target release: `v0.1.0-preview.1`
+- Vault Prospector is implemented as a Windows `win-x64` Avalonia desktop application with separated domain, application, infrastructure, platform, and Azure provider projects.
+- Authentication uses MSAL public-client flows, per-identity client IDs, Windows Hello consent, DPAPI-protected key material, SQLCipher metadata, and explicit secret retrieval.
+- The Apple and Google applications are intentionally deferred and recorded in the roadmap and backlog.
 
-## Validation
+## Validation state
 
-- Legacy-name search: passed; no references remain.
-- Relative Markdown links: passed.
-- Trailing whitespace and merge-conflict markers: passed.
-- Obvious secret-pattern scan: passed.
+- Windows locked restore, formatting, zero-warning compilation, and all 22 tests pass on .NET SDK 9.0.316.
+- HCS Tier 1 Ubuntu WSL locked restore, formatting, zero-warning cross-build, and all 22 tests pass on .NET SDK 9.0.315.
+- Windows `win-x64` self-contained packaging passes without PDBs and without modifying the canonical dependency lock files.
+- Packaged-application startup and responsive main-window verification pass on Windows.
+- Live Azure tenant authentication and data-plane access are not automated because the repository contains no tenant credential; this is an explicit preview limitation.
 
-## Publishing
+## Publishing state
 
-- Branch: `agent/update-vault-prospector-name`
-- Product-name commit: `bb6d44a` (`docs(vault-prospector): update product name`)
-- Branch pushed to `origin` with an HCS governance-minted GitHub App token.
-- Draft pull request: `https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/1`
-- HCS governance bootstrap succeeded with HCS scope.
-- Full-standard and local-path validation calls were unavailable because the MCP content files and Windows workspace path were not accessible to the service.
-
-## Next steps
-
-- Review and merge pull request 1.
+- The release branch is ready for governed publication.
+- Repository writes must use an HCS governance-minted GitHub App installation token.
+- Publish by merging a reviewed pull request into `main`, tagging the merge as `v0.1.0-preview.1`, and verifying the release workflow, assets, checksums, SBOM, Sigstore bundle, and provenance attestation.

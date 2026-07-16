@@ -1,0 +1,53 @@
+# User Guide
+
+## Connect an identity
+
+Open **Identities**, enter a friendly label and the Microsoft Entra application client ID, then choose **Sign in interactively**. Complete the browser-based Microsoft sign-in. Repeat for employer, customer, personal, or lab identities.
+
+## Synchronize metadata
+
+Select an identity and choose **Sync selected**. Vault Prospector enumerates subscriptions, discovers Azure Key Vault resources, and indexes secret, key, and certificate versions. It does not retrieve secret values during synchronization. Choose **Cancel** to stop the current run; starting sync again safely upserts the discovered metadata.
+
+One inaccessible subscription, vault, or object category does not stop unrelated work. The status bar reports successful counts and isolated error counts without exposing resource names in logs.
+
+## Search offline
+
+The **Search** tab queries the encrypted local index and works without Azure connectivity. Search by object name or tags. Filters cover object type, enabled/expired state, favorite status, staleness, tenant ID, subscription ID, and vault name. Select an identity or workspace on its tab and enable the corresponding search checkbox to scope results. Enable **Recent first** to prioritize objects opened previously. Every result shows its vault and identity context so the access path is explicit.
+
+Stale means the item has not been refreshed within the application's current staleness window. Azure remains authoritative.
+
+## Reveal or copy a secret
+
+Select a secret result, then choose:
+
+- **Reveal** to show the value for ten seconds;
+- **Copy securely** to place it on the clipboard for the configured interval.
+
+Both actions require Windows Hello. Keys and certificate private keys are never exported. Clipboard clearing cannot revoke content already captured by clipboard history, remote clipboard synchronization, or another process.
+
+## Favorites and workspaces
+
+Choose **Favorite** on a result to include it in the Favorites filter. Create workspaces to represent customers, projects, or environments without duplicating indexed data. Select a search result and a workspace, then use **Add selected vault**; or select an identity and use **Add selected identity**. A resource may belong to multiple workspaces. Enable **Selected workspace** in Search to apply that scope.
+
+## Offline values
+
+Offline values are disabled by default. To evaluate the feature:
+
+1. Open **Settings** and enable the encrypted offline cache.
+2. Set a maximum lifetime.
+3. Select a secret and choose **Cache offline**.
+4. Complete Windows Hello verification.
+5. Choose **Open offline** to reopen an unexpired copy without contacting Azure. Windows Hello is required again.
+
+Cached values are encrypted separately with AES-GCM. Their key is protected for the current Windows user with DPAPI. A metadata fingerprint invalidates the copy after the source version changes. Purge the selected item from Search, or purge the selected vault, selected workspace, or entire cache from Settings.
+
+## Remove local data
+
+- Remove an identity from **Identities** to purge its MSAL token-cache account and local access mapping.
+- Purge offline values from **Settings**.
+- Uninstall by deleting the application folder.
+- To remove all local application state, delete `%LOCALAPPDATA%\VaultProspector` after closing the app.
+
+## Backup and device migration
+
+Vault Prospector does not provide a backup/restore workflow in the preview. Metadata and offline-value keys are protected with Windows DPAPI for the current Windows user. Copying `%LOCALAPPDATA%\VaultProspector` to another device or user profile is not a supported migration and should not be treated as a recoverable backup. On a replacement device, install the app, connect identities again, and resynchronize metadata from Azure. Recreate any explicitly needed offline copies after reviewing policy; do not synchronize the protected-value directory through a consumer cloud-drive folder.

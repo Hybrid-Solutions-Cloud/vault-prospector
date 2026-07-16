@@ -1,8 +1,10 @@
 # Roadmap
 
-The roadmap is intentionally capability-based. Dates should not be assigned until the feasibility spikes and initial staffing are complete.
+The roadmap is intentionally capability-based. Phases 0–3 form the `0.1.0-preview.1` Windows evaluation release; remaining hardening and platform phases stay open until their acceptance evidence exists.
 
 ## Phase 0 — Product and security foundation
+
+Status: delivered in the 0.1 preview.
 
 - Project charter.
 - Requirements and glossary.
@@ -15,6 +17,8 @@ The roadmap is intentionally capability-based. Dates should not be assigned unti
 
 ## Phase 1 — Desktop metadata prototype
 
+Status: delivered in the 0.1 preview.
+
 - Windows desktop shell.
 - Microsoft Entra interactive sign-in.
 - One connected identity.
@@ -26,6 +30,8 @@ The roadmap is intentionally capability-based. Dates should not be assigned unti
 - No secret values stored locally.
 
 ## Phase 2 — Multi-identity and multi-tenant MVP
+
+Status: delivered in the 0.1 preview, with direct tenant/subscription workspace assignment tracked for a follow-up.
 
 - Multiple connected identities.
 - Guest and resource-tenant handling.
@@ -40,6 +46,8 @@ The roadmap is intentionally capability-based. Dates should not be assigned unti
 
 ## Phase 3 — Offline cache preview
 
+Status: delivered for evaluation in the 0.1 preview; independent security review and broader attack testing remain ongoing release-hardening work.
+
 - Explicit per-item offline caching.
 - Platform-backed local unlock.
 - Cache lifetime policy.
@@ -48,15 +56,21 @@ The roadmap is intentionally capability-based. Dates should not be assigned unti
 - Security review and attack testing.
 - No cloud synchronization.
 
-## Phase 4 — macOS and iOS
+## Phase 4 — Apple and Google mobile applications (deferred)
+
+This phase is intentionally deferred. No Apple App Store or Google Play release is included in the Windows desktop preview.
 
 - macOS validation.
 - iOS application shell.
+- Android application shell.
 - Mobile-safe search and retrieval.
-- Platform keychain integration.
+- Apple Keychain, Secure Enclave, and Android Keystore integration.
 - Background refresh feasibility.
-- Password AutoFill feasibility.
+- Apple Password AutoFill and Android Autofill framework feasibility.
 - Mobile offline cache policy.
+- Apple App Store privacy, entitlement, signing, and review preparation.
+- Google Play data-safety, signing, target-SDK, and review preparation.
+- Separate mobile threat models and penetration testing before public distribution.
 
 ## Phase 5 — Enterprise controls
 
