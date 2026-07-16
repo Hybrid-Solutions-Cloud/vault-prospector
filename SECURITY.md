@@ -4,13 +4,24 @@ Vault Prospector is a security-sensitive application that may access and locally
 
 ## Supported versions
 
-No production version is currently supported. This repository is in architecture and early development.
+Vault Prospector is currently a Preview product for non-production evaluation. Security fixes are
+provided only for the latest published Preview version. Older Preview builds may be withdrawn when
+a replacement is available.
+
+No version is supported for production use until the repository's GA readiness gates are complete.
+See the [release-readiness matrix](docs/product/release-readiness.md).
 
 ## Reporting a vulnerability
 
 Do not disclose suspected vulnerabilities in public issues, discussions, pull requests, or social media.
 
-Until a private security contact is published, repository maintainers should enable GitHub private vulnerability reporting before accepting external security reports.
+Email suspected vulnerabilities to <kris@hybridsolutions.cloud> with the subject
+`Vault Prospector security report`. Do not include live credentials, tokens, private keys, or secret
+values. Use synthetic reproduction data and ask for a secure transfer method if sensitive evidence
+is necessary.
+
+GitHub private vulnerability reporting should also be enabled when repository security settings and
+the installed GitHub App permissions permit it. Until then, email is the private reporting channel.
 
 A future security contact should request:
 
@@ -20,6 +31,14 @@ A future security contact should request:
 - Expected impact.
 - Any proposed remediation.
 - Whether secret material may have been exposed.
+
+The maintainer will attempt to acknowledge a report within three business days and provide an
+initial severity assessment or request for additional evidence within seven business days. These
+targets are Preview operational goals, not a contractual service-level agreement.
+
+Confirmed issues are handled privately until a fix or effective mitigation is available. The
+response includes affected versions, rotation or containment guidance when applicable, a new
+immutable release, and coordinated public disclosure appropriate to the risk.
 
 ## Security boundaries
 
@@ -45,3 +64,10 @@ The application must never:
 - Include secret values in crash reports.
 - Include secret values in logs.
 - Silently weaken encryption when a platform capability is unavailable.
+
+## Release withdrawal
+
+A release is withdrawn when a reachable critical/high vulnerability exposes protected data,
+bypasses required local verification, disables required encryption, or invalidates artifact trust.
+Published assets are never replaced under the same version. The maintainer preserves evidence,
+publishes containment guidance, rotates affected credentials, and issues a new version.

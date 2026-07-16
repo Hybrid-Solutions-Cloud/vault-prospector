@@ -61,6 +61,9 @@ Cached values are encrypted separately with AES-GCM. Their key is protected for 
 - For an MSI or package-manager installation, uninstall from **Settings > Apps > Installed apps**, WinGet, or Chocolatey. For a portable ZIP, delete the extracted application folder.
 - To remove all local application state, delete `%LOCALAPPDATA%\VaultProspector` after closing the app.
 
+For the complete inventory of locally processed data, network activity, retention, and deletion
+behavior, see [Privacy and local data handling](privacy.md).
+
 ## Backup and device migration
 
 Vault Prospector does not provide a backup/restore workflow in the preview. Metadata and offline-value keys are protected with Windows DPAPI for the current Windows user. Copying `%LOCALAPPDATA%\VaultProspector` to another device or user profile is not a supported migration and should not be treated as a recoverable backup. On a replacement device, install the app, connect identities again, and resynchronize metadata from Azure. Recreate any explicitly needed offline copies after reviewing policy; do not synchronize the protected-value directory through a consumer cloud-drive folder.

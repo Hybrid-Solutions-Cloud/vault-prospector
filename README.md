@@ -69,6 +69,7 @@ No local application can protect a deliberately revealed value from malware alre
 - [Architecture](docs/architecture/architecture-overview.md)
 - [Security requirements](docs/security/security-requirements.md)
 - [Threat model](docs/security/threat-model.md)
+- [Privacy and local data handling](docs/privacy.md)
 - [Release and artifact verification](docs/release.md)
 - [Windows package distribution](docs/package-distribution.md)
 - [Product requirements](docs/product/product-requirements.md)
