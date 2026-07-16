@@ -27,6 +27,10 @@ Needs occasional access to application secrets, connection strings, certificates
 - Allow an identity to be disabled without deleting indexed metadata.
 - Remove an identity and purge associated tokens.
 - Support guest access and cross-tenant authorization.
+- Keep app-owned authentication contexts independent from Azure CLI, Azure PowerShell, IDE, and terminal context files.
+- Distinguish interactive Entra users, service principals, and managed identities as separate connection types.
+- Offer managed identity authentication only when running on supported Azure compute.
+- Prefer brokered interactive authentication for Windows users and credential-free workload authentication where supported.
 
 ### Discovery
 
@@ -36,6 +40,7 @@ Needs occasional access to application secrets, connection strings, certificates
 - Determine which identity or identities can access each vault.
 - Record discovery failures without aborting unrelated discovery work.
 - Support selective inclusion and exclusion of subscriptions and vaults.
+- Show management-plane visibility and data-plane permissions separately for every discovered vault and connection.
 
 ### Indexing
 
@@ -66,6 +71,14 @@ Needs occasional access to application secrets, connection strings, certificates
 - Avoid displaying full values by default.
 - Require local unlock for high-risk actions based on policy.
 
+### Governed value mutation
+
+- Operate read-only by default regardless of broader permissions already held by the connected identity.
+- Define create or update capabilities separately for secrets, keys, and certificates.
+- Require explicit administrator policy, capable Azure authorization, local verification, target confirmation, and an elevated-state indicator before any mutation.
+- Record audit metadata without storing the value or private key material.
+- Do not publicly release mutation capabilities before a separate threat model and independent security review are complete.
+
 ### Offline mode
 
 - Metadata search must work offline.
@@ -88,6 +101,14 @@ Needs occasional access to application secrets, connection strings, certificates
 - Use Keychain and Secure Enclave-backed capabilities where available on Apple platforms.
 - Research Apple Password AutoFill and Windows credential-provider integration separately.
 - Never imply integration exists where the operating system does not expose a suitable API.
+- Support an optional Windows notification-area mode with an explicit locked background state.
+- Research browser-extension, native-messaging, browser password-vault, and origin-bound autofill models before implementation.
+- Require explicit mapping and user presence before a browser may receive a selected value.
+
+### Provider ecosystem
+
+- Add CyberArk as a planned provider with a provider-specific ADR, authentication model, permission mapping, and threat model.
+- Preserve provider boundaries rather than reducing every source to a least-common-denominator permission model.
 
 ## Non-functional requirements
 

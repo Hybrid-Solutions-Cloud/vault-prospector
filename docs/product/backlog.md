@@ -151,3 +151,163 @@ As an Android user, I need a mobile-safe experience using Android Keystore and B
 ### Story: Mobile autofill feasibility
 
 As a product owner, I need Apple Password AutoFill and Android Autofill framework capabilities validated without claiming that arbitrary Azure secrets can be exposed through unsupported credential-provider APIs.
+
+## Epic 9 — Secure first-run setup and identity architecture (highest priority)
+
+### Story: Secure first-run wizard
+
+As a new user, I need setup to establish the local unlock boundary and Azure connection method before any vault metadata is stored.
+
+Acceptance criteria:
+
+- The wizard explains the difference between unlocking Vault Prospector and authenticating to Azure.
+- Windows Hello or an equivalent platform-backed local verification mechanism protects high-risk local actions.
+- Microsoft Entra authentication uses MSAL and the system browser or Windows broker; Vault Prospector never collects an Entra password or implements its own MFA.
+- MFA, Conditional Access, passwordless credentials, and FIDO requirements remain enforced by Microsoft Entra and Windows.
+- An organization's external identity provider is supported through its Microsoft Entra federation; direct support for another provider requires a separate connector and threat model.
+- Setup fails closed if protected key storage or mandatory metadata encryption is unavailable.
+
+### Story: Mandatory local encryption verification
+
+As a security reviewer, I need proof that local metadata and every retained secret value are encrypted at rest so that no setup path can silently create plaintext storage.
+
+Acceptance criteria:
+
+- Metadata encryption is always enabled and has no disable toggle.
+- Offline secret-value caching remains opt-in, but every cached value is encrypted whenever caching is enabled.
+- Tests cover first run, upgrade, migration, backup guidance, key loss, corrupted storage, and unavailable platform protection.
+- Independent review confirms algorithms, key generation, key wrapping, file permissions, memory lifetime, and failure behavior.
+
+### Story: Isolated Azure authentication contexts
+
+As a multi-tenant user, I need Vault Prospector authentication to remain independent from Azure CLI, Azure PowerShell, IDE, and terminal sessions so that changing context elsewhere cannot redirect the app.
+
+Acceptance criteria:
+
+- Each connected human identity has an explicit label, tenant context, account identifier, and isolated MSAL cache entry.
+- The app does not read Azure CLI, Azure PowerShell, or developer-tool context files as an authentication source.
+- Every discovery, read, or future write action shows which identity and tenant will be used.
+- Removal purges the app-owned token-cache entry without altering another tool's session.
+
+### Story: Human and workload identity choices
+
+As an administrator, I need setup to distinguish interactive Entra accounts, service principals, and managed identities so that each access path uses an appropriate security model.
+
+Acceptance criteria:
+
+- Interactive Entra user authentication is the default desktop connection method.
+- Managed identity is offered only when Vault Prospector runs on a supported Azure compute resource that supplies that identity; an ordinary desktop does not claim a managed identity it cannot possess.
+- Service-principal support is an advanced workload option with certificate or workload-federation credentials preferred over client secrets.
+- Workload identities cannot silently inherit a human user's permissions or token cache.
+- Each identity type has separate threat-model, storage, rotation, revocation, and audit requirements.
+
+### Story: Discover and provision workload identities (advanced administration)
+
+As an authorized Azure administrator, I need setup to list eligible user-assigned managed identities or service principals and optionally prepare a new workload identity without granting broader access than requested.
+
+Acceptance criteria:
+
+- Listing identities occurs only after interactive authentication and only within subscriptions or directories the user is authorized to read.
+- The UI distinguishes permission to view an identity, permission to attach or use it, and its Key Vault data-plane permissions.
+- Creation is unavailable unless the signed-in account has the required managed-identity or application-management role.
+- Any identity creation or role assignment is a separate advanced workflow with a dry-run summary, exact scope, least-privilege role, explicit confirmation, and audit record.
+- The initial/default setup never creates identities or Azure role assignments.
+
+## Epic 10 — Vault discovery and governed write operations
+
+### Story: Discover vaults by selected access path
+
+As a user, I need Vault Prospector to discover every Azure Key Vault visible to the selected identity and clearly report which vaults allow metadata listing, value reads, or future writes.
+
+Acceptance criteria:
+
+- Discovery runs separately for each selected human or workload identity.
+- Results distinguish management-plane resource visibility from data-plane permissions for secrets, keys, and certificates.
+- Inaccessible subscriptions, vaults, or object types produce isolated safe errors without hiding accessible results.
+- No secret values are retrieved during discovery or metadata synchronization.
+
+### Story: Read-only by default
+
+As a security-conscious user, I need every new connection and workspace to begin in read-only mode so that installing or connecting Vault Prospector cannot change Azure resources.
+
+Acceptance criteria:
+
+- The default product requests and uses only the permissions required for discovery, metadata listing, and explicitly requested value retrieval.
+- Write controls are absent or disabled until an administrator policy and a capable identity explicitly enable them.
+- Existing broad permissions on the signed-in Entra account do not automatically enable write controls.
+
+### Story: Explicit write mode for secrets, keys, and certificates (future, high risk)
+
+As an authorized operator, I need a separately enabled mode for supported create or update operations so that approved changes can be made without weakening the default read-only product.
+
+Acceptance criteria:
+
+- Supported operations are defined individually; there is no generic unrestricted write toggle.
+- Enabling write mode requires policy approval, local verification, fresh Azure authorization when required, and a prominent elevated-state indicator.
+- Every mutation shows identity, tenant, subscription, vault, object, operation, and expected effect before confirmation.
+- Mutations use least-privilege Key Vault roles, produce an audit-friendly record without values, and are covered by rollback/recovery guidance.
+- Independent threat modeling and security review are complete before public release.
+
+## Epic 11 — Taskbar and background operation
+
+### Story: Continue securely in the notification area
+
+As a Windows user, I need an option for Vault Prospector to remain available from the taskbar notification area after I close the main window.
+
+Acceptance criteria:
+
+- The close action is configurable as exit, minimize to tray, or ask; it is never ambiguous.
+- The tray icon clearly shows locked, syncing, interaction-required, error, and offline states.
+- Background mode locks revealed values, clears sensitive UI state, and cannot reveal, copy, or cache a secret without foreground user verification.
+- Optional background synchronization retrieves metadata only and honors battery, network, policy, MFA, Conditional Access, and interaction-required states.
+- Exit actually terminates the process and clears temporary sensitive state.
+
+## Epic 12 — Desktop UI research and refinement
+
+### Story: Research password-manager interface patterns
+
+As a product designer, I need structured research into established password-manager and credential-vault interfaces so that Vault Prospector adopts understandable patterns without copying unsafe assumptions.
+
+Acceptance criteria:
+
+- Research covers onboarding, unlock, item lists, search, collections, identity context, security warnings, reveal/copy, autofill, audit history, and recovery.
+- The review includes keyboard navigation, screen readers, color contrast, reduced motion, and high-risk confirmation patterns.
+- Findings produce annotated workflows and prototypes for user testing before implementation.
+- Security state and source identity remain visible even when simplifying the interface.
+
+## Epic 13 — Browser and password-vault integration (research first)
+
+### Story: Browser extension and native messaging feasibility
+
+As a user, I want Vault Prospector to populate approved browser fields so that I can use selected credentials without manually copying them.
+
+Acceptance criteria:
+
+- Research covers Chromium and Firefox extension models, native messaging, extension signing, update security, permissions, and enterprise deployment.
+- A separate threat model covers malicious pages, compromised extensions, lookalike origins, iframes, clipboard bypass, confused-deputy attacks, and local malware.
+- No arbitrary Azure secret is offered for autofill without an explicit mapping to an allowed origin and field purpose.
+
+### Story: Browser password-vault interoperability
+
+As a user, I need the feasibility of integrating with browser password vaults assessed so that credentials are not duplicated or imported unsafely.
+
+Acceptance criteria:
+
+- The research documents supported browser APIs and prohibited/private storage access.
+- Import, export, synchronization, and one-way handoff options are evaluated separately.
+- Vault Prospector never scrapes browser credential databases or silently exports Azure values.
+- Any prototype requires explicit consent, origin binding, policy control, local verification, and minimal value exposure.
+
+## Epic 14 — CyberArk provider
+
+### Story: CyberArk source integration
+
+As an enterprise user, I need CyberArk available as a separately configured source so that I can discover and retrieve authorized objects without weakening Azure Key Vault isolation.
+
+Acceptance criteria:
+
+- An ADR selects the supported CyberArk product/API and authentication methods.
+- CyberArk accounts, safes, objects, permissions, versions, and audit semantics map explicitly rather than being forced into an Azure-specific model.
+- Provider credentials are isolated, encrypted, removable, and never logged.
+- Metadata sync does not retrieve values, and value retrieval requires explicit user action and applicable local verification.
+- Contract, integration, security, and redaction tests cover the provider before release.
