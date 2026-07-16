@@ -47,3 +47,6 @@ GitHub-native artifact attestations are unavailable for this private repository 
 7. Install the MSI on a clean supported Windows machine and complete the [release smoke-test checklist](release-checklist.md).
 
 Rollback is performed by marking the release as withdrawn, documenting the reason, and directing users to the last verified release. Never replace assets under an existing version tag.
+
+Exact publication, failure recovery, package withdrawal, incident response, and credential rotation
+steps are maintained in the [Release operations and incident runbook](release-operations-runbook.md).
