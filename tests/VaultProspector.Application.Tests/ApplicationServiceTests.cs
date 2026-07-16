@@ -6,6 +6,37 @@ namespace VaultProspector.Application.Tests;
 public sealed class ApplicationServiceTests
 {
     [Fact]
+    public async Task IdentityAdditionRejectsInvalidClientIdBeforeAuthentication()
+    {
+        var provider = new FakeIdentityProvider();
+        var service = new IdentityService(provider, new FakeRepository(Identity()));
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.AddAsync(
+            "../../outside-cache",
+            "Test",
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.SignInCalls);
+    }
+
+    [Fact]
+    public async Task IdentityAdditionCanonicalizesClientIdBeforeAuthentication()
+    {
+        var provider = new FakeIdentityProvider();
+        var repository = new FakeRepository(Identity());
+        var service = new IdentityService(provider, repository);
+
+        await service.AddAsync(
+            "{11111111-1111-1111-1111-111111111111}",
+            " Test ",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("11111111-1111-1111-1111-111111111111", provider.ClientId);
+        Assert.Equal("Test", provider.DisplayName);
+        Assert.NotNull(repository.UpsertedIdentity);
+    }
+
+    [Fact]
     public async Task SynchronizationPersistsPartialSuccessAndSafeErrors()
     {
         var identity = Identity();
@@ -234,11 +265,12 @@ public sealed class ApplicationServiceTests
     {
         public DiscoverySnapshot? AppliedSnapshot { get; private set; }
         public WorkspaceResourceLink? AddedLink { get; private set; }
+        public ConnectedIdentity? UpsertedIdentity { get; private set; }
         public (VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)? Resolved { get; set; }
         public Task InitializeAsync(CancellationToken c) => Task.CompletedTask;
         public Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(CancellationToken c) => Task.FromResult<IReadOnlyList<ConnectedIdentity>>([identity]);
         public Task<ConnectedIdentity?> GetIdentityAsync(Guid id, CancellationToken c) => Task.FromResult<ConnectedIdentity?>(identity);
-        public Task UpsertIdentityAsync(ConnectedIdentity x, CancellationToken c) => Task.CompletedTask;
+        public Task UpsertIdentityAsync(ConnectedIdentity x, CancellationToken c) { UpsertedIdentity = x; return Task.CompletedTask; }
         public Task RemoveIdentityAsync(Guid id, CancellationToken c) => Task.CompletedTask;
         public Task ApplyDiscoveryAsync(Guid id, DiscoverySnapshot snapshot, SyncRun run, CancellationToken c) { AppliedSnapshot = snapshot; return Task.CompletedTask; }
         public Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest r, DateTimeOffset n, CancellationToken c) => Task.FromResult<IReadOnlyList<SearchResult>>([]);
@@ -250,6 +282,20 @@ public sealed class ApplicationServiceTests
         public Task RemoveWorkspaceAsync(Guid id, CancellationToken c) => Task.CompletedTask;
         public Task AddWorkspaceLinkAsync(WorkspaceResourceLink link, CancellationToken c) { AddedLink = link; return Task.CompletedTask; }
         public Task RemoveWorkspaceLinkAsync(Guid workspaceId, ResourceLinkType resourceType, string resourceId, CancellationToken c) => Task.CompletedTask;
+    }
+    private sealed class FakeIdentityProvider : IIdentityProvider
+    {
+        public int SignInCalls { get; private set; }
+        public string? ClientId { get; private set; }
+        public string? DisplayName { get; private set; }
+        public Task<ConnectedIdentity> SignInAsync(string clientId, string displayName, CancellationToken cancellationToken)
+        {
+            SignInCalls++;
+            ClientId = clientId;
+            DisplayName = displayName;
+            return Task.FromResult(new ConnectedIdentity(Guid.NewGuid(), clientId, "account", "user@example.invalid", displayName, "tenant", AuthenticationState.Ready, DateTimeOffset.UtcNow));
+        }
+        public Task RemoveAsync(ConnectedIdentity identity, CancellationToken cancellationToken) => Task.CompletedTask;
     }
     private sealed class FakeDiagnostics : IDiagnosticSink { public void Information(string e, IReadOnlyDictionary<string, object?> f) { } public void WriteError(string e, Exception x, IReadOnlyDictionary<string, object?> f) { } }
     private sealed class AlwaysVerify : IUserVerificationService { public bool IsAvailable => true; public Task<bool> VerifyAsync(string r, CancellationToken c) => Task.FromResult(true); }

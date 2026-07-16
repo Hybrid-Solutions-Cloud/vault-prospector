@@ -27,4 +27,16 @@ public sealed class AuthenticationConfigurationTests
 
         await Assert.ThrowsAsync<MsalUiRequiredException>(() => provider.GetCredentialAsync(identity, TestContext.Current.CancellationToken));
     }
+
+    [Fact]
+    public async Task InvalidStoredClientIdIsRejectedBeforeCachePathConstruction()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"vault-prospector-msal-{Guid.NewGuid():N}");
+        var provider = new MsalIdentityProvider(directory);
+        var identity = new ConnectedIdentity(Guid.NewGuid(), "../../outside-cache", "account", "user@example.invalid", "Test", "tenant", AuthenticationState.Ready, DateTimeOffset.UtcNow);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => provider.GetCredentialAsync(identity, TestContext.Current.CancellationToken));
+
+        Assert.False(Directory.Exists(directory));
+    }
 }

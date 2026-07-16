@@ -8,8 +8,9 @@ public sealed class IdentityService(IIdentityProvider provider, IMetadataReposit
 {
     public async Task<ConnectedIdentity> AddAsync(string clientId, string displayName, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(clientId)) throw new ArgumentException("A Microsoft Entra public-client application ID is required.", nameof(clientId));
-        var identity = await provider.SignInAsync(clientId.Trim(), displayName.Trim(), cancellationToken);
+        if (!Guid.TryParse(clientId?.Trim(), out var parsedClientId))
+            throw new ArgumentException("A valid Microsoft Entra public-client application ID is required.", nameof(clientId));
+        var identity = await provider.SignInAsync(parsedClientId.ToString("D"), displayName.Trim(), cancellationToken);
         await repository.UpsertIdentityAsync(identity, cancellationToken);
         return identity;
     }

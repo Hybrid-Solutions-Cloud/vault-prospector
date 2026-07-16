@@ -56,6 +56,7 @@ public sealed class MsalIdentityProvider(string cacheDirectory) : IIdentityProvi
 
     private async Task<IPublicClientApplication> GetApplicationAsync(string clientId)
     {
+        clientId = NormalizeClientId(clientId);
         if (_applications.TryGetValue(clientId, out var existing)) return existing;
         if (!OperatingSystem.IsWindows())
         {
@@ -72,6 +73,13 @@ public sealed class MsalIdentityProvider(string cacheDirectory) : IIdentityProvi
         helper.RegisterCache(application.UserTokenCache);
         _applications[clientId] = application;
         return application;
+    }
+
+    private static string NormalizeClientId(string clientId)
+    {
+        if (!Guid.TryParse(clientId, out var parsed))
+            throw new ArgumentException("The Microsoft Entra public-client application ID must be a GUID.", nameof(clientId));
+        return parsed.ToString("D");
     }
 
     private static Guid StableId(string clientId, string accountIdentifier)
