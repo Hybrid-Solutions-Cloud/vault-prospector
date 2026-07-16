@@ -62,17 +62,17 @@ $productVersion = Get-MsiProperty -Path $installerPath -Property 'ProductVersion
 $upgradeCode = Get-MsiProperty -Path $installerPath -Property 'UpgradeCode'
 
 $versionManifest = @"
-# yaml-language-server: `$schema=https://aka.ms/winget-manifest.version.1.12.0.schema.json
+# yaml-language-server: `$schema=https://aka.ms/winget-manifest.version.1.10.0.schema.json
 # Created by scripts/PackageDistribution.ps1
 PackageIdentifier: HybridSolutionsCloud.VaultProspector
 PackageVersion: $Version
 DefaultLocale: en-US
 ManifestType: version
-ManifestVersion: 1.12.0
+ManifestVersion: 1.10.0
 "@
 
 $installerManifest = @"
-# yaml-language-server: `$schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
+# yaml-language-server: `$schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
 # Created by scripts/PackageDistribution.ps1
 PackageIdentifier: HybridSolutionsCloud.VaultProspector
 PackageVersion: $Version
@@ -97,11 +97,11 @@ Installers:
         UpgradeCode: '$upgradeCode'
         InstallerType: wix
 ManifestType: installer
-ManifestVersion: 1.12.0
+ManifestVersion: 1.10.0
 "@
 
 $localeManifest = @"
-# yaml-language-server: `$schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json
+# yaml-language-server: `$schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
 # Created by scripts/PackageDistribution.ps1
 PackageIdentifier: HybridSolutionsCloud.VaultProspector
 PackageVersion: $Version
@@ -123,7 +123,7 @@ Tags:
   - windows
 ReleaseNotesUrl: https://github.com/$DistributionRepository/releases/tag/v$Version
 ManifestType: defaultLocale
-ManifestVersion: 1.12.0
+ManifestVersion: 1.10.0
 "@
 
 Set-Content -LiteralPath (Join-Path $wingetRoot 'HybridSolutionsCloud.VaultProspector.yaml') -Value $versionManifest -Encoding utf8NoBOM
