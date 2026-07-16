@@ -55,3 +55,5 @@ pwsh ./scripts/SubmitPackageManagers.ps1 -Version 0.1.0-preview.2
 ```
 
 The script submits the validated WinGet manifest directory and pushes the Chocolatey `.nupkg`. Both community services perform independent automated checks and moderation before the commands become available to users.
+
+The first Microsoft contribution from a GitHub account may require that account holder to accept the Microsoft Contributor License Agreement on the generated pull request. This is a legal acceptance and must be completed by the account holder, not by release automation.
