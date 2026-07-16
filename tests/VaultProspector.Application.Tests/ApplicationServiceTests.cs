@@ -44,6 +44,49 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task CopyRequiresVerificationBeforeAzureOrClipboardAccess()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity) { Resolved = (item, Vault(), identity) };
+        var provider = new FakeProvider();
+        var clipboard = new FakeClipboard();
+        var service = new SecretAccessService(provider, repository, new FakeValueStore(), clipboard, new NeverVerify(), new FixedClock());
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.RetrieveAndCopyAsync(
+            item.Id,
+            TimeSpan.FromSeconds(30),
+            new CachePolicy(false, TimeSpan.FromHours(8), true, true),
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.RetrieveCalls);
+        Assert.Equal(0, clipboard.CopyCalls);
+    }
+
+    [Fact]
+    public async Task CopyUsesOneVerificationAndCopiesOneRetrievedValue()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity) { Resolved = (item, Vault(), identity) };
+        var provider = new FakeProvider();
+        var clipboard = new FakeClipboard();
+        var verification = new CountingVerify();
+        var service = new SecretAccessService(provider, repository, new FakeValueStore(), clipboard, verification, new FixedClock());
+
+        await service.RetrieveAndCopyAsync(
+            item.Id,
+            TimeSpan.FromSeconds(30),
+            new CachePolicy(false, TimeSpan.FromHours(8), true, true),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, verification.Calls);
+        Assert.Equal(1, provider.RetrieveCalls);
+        Assert.Equal(1, clipboard.CopyCalls);
+        Assert.Equal("value", clipboard.CopiedValue);
+    }
+
+    [Fact]
     public async Task DisabledOfflinePolicyRejectsBeforeVerificationOrAzureRetrieval()
     {
         var identity = Identity();
@@ -115,6 +158,27 @@ public sealed class ApplicationServiceTests
         Assert.Equal(1, store.StoreCalls);
         Assert.Equal("value", store.StoredValue);
         Assert.Equal("fingerprint", store.StoredFingerprint);
+    }
+
+    [Fact]
+    public async Task OfflineCachingCannotDisableLocalVerificationThroughPolicy()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity) { Resolved = (item, Vault(), identity) };
+        var provider = new FakeProvider();
+        var store = new FakeValueStore();
+        var service = new SecretAccessService(provider, repository, store, new FakeClipboard(), new NeverVerify(), new FixedClock());
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.RetrieveAndCacheAsync(
+            item.Id,
+            null,
+            TimeSpan.FromHours(1),
+            new CachePolicy(true, TimeSpan.FromHours(2), false, true),
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.RetrieveCalls);
+        Assert.Equal(0, store.StoreCalls);
     }
 
     [Fact]
@@ -196,7 +260,17 @@ public sealed class ApplicationServiceTests
         public int Calls { get; private set; }
         public Task<bool> VerifyAsync(string r, CancellationToken c) { Calls++; return Task.FromResult(true); }
     }
-    private sealed class FakeClipboard : IClipboardService { public Task CopyWithAutoClearAsync(SensitiveValue v, TimeSpan d, CancellationToken c) => Task.CompletedTask; }
+    private sealed class FakeClipboard : IClipboardService
+    {
+        public int CopyCalls { get; private set; }
+        public string? CopiedValue { get; private set; }
+        public Task CopyWithAutoClearAsync(SensitiveValue v, TimeSpan d, CancellationToken c)
+        {
+            CopyCalls++;
+            CopiedValue = v.Reveal();
+            return Task.CompletedTask;
+        }
+    }
     private sealed class FakeValueStore : IProtectedValueStore
     {
         public string? Value { get; init; }

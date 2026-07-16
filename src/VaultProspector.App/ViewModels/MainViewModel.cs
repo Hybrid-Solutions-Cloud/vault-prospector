@@ -130,8 +130,7 @@ public sealed partial class MainViewModel(
     private Task CopyAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
-        using var value = await secretAccessService.RetrieveAsync(SelectedResult.Id, cancellationToken);
-        await secretAccessService.CopyAsync(value, TimeSpan.FromSeconds(Math.Clamp(ClipboardClearSeconds, 5, 300)), CurrentPolicy(), cancellationToken);
+        await secretAccessService.RetrieveAndCopyAsync(SelectedResult.Id, TimeSpan.FromSeconds(Math.Clamp(ClipboardClearSeconds, 5, 300)), CurrentPolicy(), cancellationToken);
         StatusText = $"Copied. Clipboard clears after {Math.Clamp(ClipboardClearSeconds, 5, 300)} seconds if unchanged.";
     });
 

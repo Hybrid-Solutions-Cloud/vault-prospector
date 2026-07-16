@@ -76,18 +76,17 @@ public sealed class SecretAccessService(
         return value;
     }
 
-    public Task CopyAsync(SensitiveValue value, TimeSpan clearAfter, CachePolicy policy, CancellationToken cancellationToken)
+    public async Task RetrieveAndCopyAsync(Guid itemId, TimeSpan clearAfter, CachePolicy policy, CancellationToken cancellationToken)
     {
         if (!policy.AllowClipboard) throw new InvalidOperationException("Clipboard use is disabled by policy.");
-        return clipboard.CopyWithAutoClearAsync(value, clearAfter, cancellationToken);
-    }
-
-    public async Task<CachedSecretDescriptor> CacheAsync(Guid itemId, Guid? workspaceId, SensitiveValue value, string fingerprint, TimeSpan lifetime, CachePolicy policy, CancellationToken cancellationToken)
-    {
-        var expiresAt = policy.GetExpiration(clock.UtcNow, lifetime);
-        if (policy.RequireLocalUnlock && (!verification.IsAvailable || !await verification.VerifyAsync("Cache a secret for offline use", cancellationToken))) throw new UnauthorizedAccessException("Local verification was not completed.");
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
-        return await cache.StoreAsync(itemId, source.Vault.Id, workspaceId, value, fingerprint, expiresAt, cancellationToken);
+        if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be copied.");
+        if (!verification.IsAvailable || !await verification.VerifyAsync("Copy an Azure Key Vault secret", cancellationToken))
+            throw new UnauthorizedAccessException("Local verification was not completed.");
+
+        using var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
+        await clipboard.CopyWithAutoClearAsync(value, clearAfter, cancellationToken);
+        await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
     }
 
     public async Task<CachedSecretDescriptor> RetrieveAndCacheAsync(Guid itemId, Guid? workspaceId, TimeSpan lifetime, CachePolicy policy, CancellationToken cancellationToken)
@@ -95,7 +94,7 @@ public sealed class SecretAccessService(
         var expiresAt = policy.GetExpiration(clock.UtcNow, lifetime);
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be cached.");
-        if (policy.RequireLocalUnlock && (!verification.IsAvailable || !await verification.VerifyAsync("Retrieve and cache an Azure Key Vault secret", cancellationToken)))
+        if (!verification.IsAvailable || !await verification.VerifyAsync("Retrieve and cache an Azure Key Vault secret", cancellationToken))
             throw new UnauthorizedAccessException("Local verification was not completed.");
 
         using var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
