@@ -20,4 +20,4 @@
 
 - The release branch is ready for governed publication.
 - Repository writes must use an HCS governance-minted GitHub App installation token.
-- Publish by merging a reviewed pull request into `main`, tagging the merge as `v0.1.0-preview.1`, and verifying the release workflow, assets, checksums, SBOM, Sigstore bundle, and provenance attestation.
+- Publish by merging a reviewed pull request into `main`, tagging the merge as `v0.1.0-preview.1`, and verifying the release workflow, assets, checksums, SBOM, and Sigstore bundle. GitHub-native attestations are unavailable while the repository remains private under the current organization plan.
