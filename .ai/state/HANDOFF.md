@@ -16,11 +16,12 @@
 ## Publishing
 
 - Branch: `agent/update-vault-prospector-name`
-- Intended commit: `docs(vault-prospector): update product name`
+- Product-name commit: `bb6d44a` (`docs(vault-prospector): update product name`)
+- Branch pushed to `origin` with an HCS governance-minted GitHub App token.
+- Draft pull request: `https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/1`
 - HCS governance bootstrap succeeded with HCS scope.
 - Full-standard and local-path validation calls were unavailable because the MCP content files and Windows workspace path were not accessible to the service.
 
 ## Next steps
 
-- Commit the staged documentation set.
-- Push with an HCS governance-minted GitHub App token.
+- Review and merge pull request 1.
