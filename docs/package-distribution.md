@@ -48,6 +48,25 @@ Package-manager submission requires credentials owned by the publisher accounts:
 - the WinGet Manifest Creator OAuth credential cached by `wingetcreate token --store`;
 - `CHOCOLATEY_API_KEY`: the API key for the Chocolatey Community Repository publisher account.
 
+### WinGet publisher identity
+
+WinGet does not require a separate publisher portal account. Community-repository submissions
+are GitHub pull requests to `microsoft/winget-pkgs`. Vault Prospector submissions use the
+personal GitHub account `kristopherjturner`, because that account owns the contribution and has
+accepted the Microsoft Contributor License Agreement. The first submission is
+[`microsoft/winget-pkgs#403473`](https://github.com/microsoft/winget-pkgs/pull/403473).
+
+`wingetcreate token --store` initiates GitHub OAuth and stores the resulting credential in the
+local WinGetCreate token cache. It is not a Vault Prospector application secret and does not
+need a Key Vault entry for the current manual submission process. Do not pass a token with the
+`--token` command-line argument because it can be recorded in command history or logs.
+
+If WinGet submission is automated later, use a separately scoped GitHub credential owned by
+`kristopherjturner`, store it as a protected automation secret, and document its rotation. The
+Hybrid Solutions Cloud GitHub App cannot submit to `microsoft/winget-pkgs` unless Microsoft
+installs that app in its organization, so the HCS App token is not a substitute for this
+contributor credential.
+
 The Chocolatey key is stored in two places for separate consumers:
 
 - GitHub repository secret `CHOCOLATEY_API_KEY` for release automation;
@@ -78,4 +97,6 @@ pwsh ./scripts/SubmitPackageManagers.ps1 -Version 0.1.0-preview.2
 
 The script submits the validated WinGet manifest directory and pushes the Chocolatey `.nupkg`. Both community services perform independent automated checks and moderation before the commands become available to users.
 
-The first Microsoft contribution from a GitHub account may require that account holder to accept the Microsoft Contributor License Agreement on the generated pull request. This is a legal acceptance and must be completed by the account holder, not by release automation.
+The Microsoft CLA for `kristopherjturner` was accepted successfully on the first Vault Prospector
+submission. The acceptance applies to future Microsoft repository contributions from that GitHub
+identity unless Microsoft requires it to be renewed.
