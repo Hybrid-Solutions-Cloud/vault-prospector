@@ -1,0 +1,54 @@
+name: One-time Chocolatey key sync to HCS Key Vault
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-secret:
+    runs-on: windows-latest
+    steps:
+      - name: Copy GitHub secret to HCS Key Vault
+        shell: pwsh
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+          HCS_AZURE_ACCESS_TOKEN: ${{ secrets.HCS_AZURE_ACCESS_TOKEN }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          if ([string]::IsNullOrWhiteSpace($env:CHOCOLATEY_API_KEY)) {
+            throw 'CHOCOLATEY_API_KEY is not configured in this repository.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:HCS_AZURE_ACCESS_TOKEN)) {
+            throw 'The temporary HCS_AZURE_ACCESS_TOKEN is not configured.'
+          }
+
+          $expires = [DateTimeOffset]::UtcNow.AddDays(180)
+          $body = @{
+            value = $env:CHOCOLATEY_API_KEY
+            attributes = @{
+              enabled = $true
+              exp = $expires.ToUnixTimeSeconds()
+            }
+            tags = @{
+              owner = 'kris@hybridsolutions.cloud'
+              project = 'vault-prospector'
+              'rotation-days' = '180'
+              'managed-by' = 'github-actions'
+              lifecycle = 'permanent'
+            }
+          } | ConvertTo-Json -Depth 4 -Compress
+
+          $headers = @{ Authorization = "Bearer $env:HCS_AZURE_ACCESS_TOKEN" }
+          $uri = 'https://kv-hcs-vault-01.vault.azure.net/secrets/hcs-vault-prospector-chocolatey-publisher-api-key?api-version=7.4'
+          $result = Invoke-RestMethod -Method Put -Uri $uri -Headers $headers -ContentType 'application/json' -Body $body
+
+          if ($result.id -notmatch '/secrets/hcs-vault-prospector-chocolatey-publisher-api-key/') {
+            throw 'Key Vault returned an unexpected secret identifier.'
+          }
+
+          Write-Output 'Chocolatey publisher key stored in kv-hcs-vault-01.'
+          Write-Output "Expiration: $($expires.ToString('u'))"
