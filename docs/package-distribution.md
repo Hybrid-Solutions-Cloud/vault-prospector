@@ -45,10 +45,10 @@ The script creates or updates the matching release in the public distribution re
 
 Package-manager submission requires credentials owned by the publisher accounts:
 
-- `WINGET_GITHUB_TOKEN`: a GitHub token permitted to open the generated pull request in `microsoft/winget-pkgs`;
+- the WinGet Manifest Creator OAuth credential cached by `wingetcreate token --store`;
 - `CHOCOLATEY_API_KEY`: the API key for the Chocolatey Community Repository publisher account.
 
-Install WinGet Manifest Creator once with `winget install Microsoft.WingetCreate`, then run:
+Install WinGet Manifest Creator once with `winget install Microsoft.WingetCreate`, authenticate with `wingetcreate token --store`, then run:
 
 ```powershell
 pwsh ./scripts/SubmitPackageManagers.ps1 -Version 0.1.0-preview.2

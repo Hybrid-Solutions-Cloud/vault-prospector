@@ -22,10 +22,6 @@ $manifestRoot = Join-Path $outputRoot "distribution/winget/HybridSolutionsCloud.
 $chocolateyPackage = Join-Path $outputRoot "vault-prospector.$Version.nupkg"
 
 if (-not $SkipWinGet) {
-    if ([string]::IsNullOrWhiteSpace($env:WINGET_GITHUB_TOKEN)) {
-        throw 'Set WINGET_GITHUB_TOKEN to a GitHub token authorized to open a pull request in microsoft/winget-pkgs.'
-    }
-
     $wingetCreate = Get-Command 'wingetcreate' -ErrorAction SilentlyContinue
     if ($null -eq $wingetCreate) {
         throw 'WinGet Manifest Creator is required. Install it with: winget install Microsoft.WingetCreate'
@@ -34,7 +30,7 @@ if (-not $SkipWinGet) {
         throw "WinGet manifests were not found at '$manifestRoot'."
     }
 
-    & $wingetCreate.Source submit --token $env:WINGET_GITHUB_TOKEN $manifestRoot
+    & $wingetCreate.Source submit --no-open $manifestRoot
     if ($LASTEXITCODE -ne 0) {
         throw "WinGet submission failed with exit code $LASTEXITCODE."
     }
