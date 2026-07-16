@@ -48,6 +48,28 @@ Package-manager submission requires credentials owned by the publisher accounts:
 - the WinGet Manifest Creator OAuth credential cached by `wingetcreate token --store`;
 - `CHOCOLATEY_API_KEY`: the API key for the Chocolatey Community Repository publisher account.
 
+The Chocolatey key is stored in two places for separate consumers:
+
+- GitHub repository secret `CHOCOLATEY_API_KEY` for release automation;
+- HCS Key Vault secret
+  `keyvault://kv-hcs-vault-01/hcs-vault-prospector-chocolatey-publisher-api-key`
+  for local publishing sessions.
+
+To create or rotate the Key Vault copy, authenticate to Azure and run the secure prompt:
+
+```powershell
+az login
+pwsh ./scripts/Set-ChocolateyApiKeyInKeyVault.ps1
+```
+
+Paste the same API key used for the GitHub secret. The script does not echo or persist the
+entered value, and applies the HCS-required tags with a 180-day expiration. Load it into a
+later publishing session as `CHOCOLATEY_API_KEY` with the platform environment loader:
+
+```powershell
+. D:/git/platform/scripts/Load-HCSEnvironment.ps1
+```
+
 Install WinGet Manifest Creator once with `winget install Microsoft.WingetCreate`, authenticate with `wingetcreate token --store`, then run:
 
 ```powershell
