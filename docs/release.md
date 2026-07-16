@@ -1,5 +1,8 @@
 # Release and Artifact Verification
 
+Public Windows releases require the one-time [Azure Artifact Signing setup](artifact-signing.md)
+before a version tag can succeed. The release workflow refuses unsigned artifacts.
+
 ## Release contents
 
 Each Windows release contains:
@@ -11,7 +14,9 @@ Each Windows release contains:
 - an SPDX JSON software bill of materials;
 - Sigstore bundles for the installer and packaged artifacts.
 
-The preview packages are signed with Sigstore keyless signing. Authenticode signing of individual Windows binaries remains a supply-chain hardening item.
+Published candidates must carry both Windows Authenticode signatures with RFC 3161 timestamps and
+Sigstore keyless bundles. Authenticode establishes Windows publisher trust; Sigstore and GitHub
+provenance provide additional build transparency.
 
 ## Verify the checksum
 

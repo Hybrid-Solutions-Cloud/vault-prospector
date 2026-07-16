@@ -12,6 +12,14 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    environment: release
+    env:
+      AZURE_CLIENT_ID: ${{ vars.ARTIFACT_SIGNING_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.ARTIFACT_SIGNING_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.ARTIFACT_SIGNING_SUBSCRIPTION_ID }}
+      ARTIFACT_SIGNING_ENDPOINT: ${{ vars.ARTIFACT_SIGNING_ENDPOINT }}
+      ARTIFACT_SIGNING_ACCOUNT: ${{ vars.ARTIFACT_SIGNING_ACCOUNT }}
+      ARTIFACT_SIGNING_PROFILE: ${{ vars.ARTIFACT_SIGNING_PROFILE }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -19,16 +27,102 @@ jobs:
           dotnet-version: 9.0.x
           cache: true
           cache-dependency-path: '**/packages.lock.json'
-      - name: Build and test
-        shell: pwsh
-        run: ./scripts/Build.ps1 -Configuration Release
-      - name: Package Windows release
+      - name: Resolve release version and signing paths
+        id: release
         shell: pwsh
         run: |
           $version = '${{ github.ref_name }}'.TrimStart('v')
-          ./scripts/PackageInstaller.ps1 -Version $version
-          ./scripts/PackageDistribution.ps1 -Version $version
-          winget validate --manifest "./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/$version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "installer=${{ github.workspace }}\artifacts\VaultProspector-$version-win-x64.msi" >> $env:GITHUB_OUTPUT
+      - name: Require Artifact Signing configuration
+        shell: pwsh
+        run: |
+          $required = @(
+            'AZURE_CLIENT_ID',
+            'AZURE_TENANT_ID',
+            'AZURE_SUBSCRIPTION_ID',
+            'ARTIFACT_SIGNING_ENDPOINT',
+            'ARTIFACT_SIGNING_ACCOUNT',
+            'ARTIFACT_SIGNING_PROFILE'
+          )
+          $missing = @($required | Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) })
+          if ($missing.Count -gt 0) {
+            throw "Unsigned releases are prohibited. Configure the release environment variables documented in docs/artifact-signing.md. Missing: $($missing -join ', ')."
+          }
+      - name: Build and test
+        shell: pwsh
+        run: ./scripts/Build.ps1 -Configuration Release
+      - name: Publish Windows application
+        shell: pwsh
+        run: ./scripts/Package.ps1 -Version '${{ steps.release.outputs.version }}' -SkipArchive
+      - name: Authenticate to Azure with release OIDC identity
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+      - name: Sign application binaries with Azure Artifact Signing
+        uses: Azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
+        with:
+          endpoint: ${{ env.ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ env.ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ env.ARTIFACT_SIGNING_PROFILE }}
+          files-folder: ${{ github.workspace }}\artifacts\publish-win-x64
+          files-folder-filter: VaultProspector*.dll,*.exe
+          files-folder-recurse: true
+          file-digest: SHA256
+          timestamp-digest: SHA256
+          description: Vault Prospector
+          description-url: https://github.com/Hybrid-Solutions-Cloud/vault-prospector
+      - name: Verify signed application binaries
+        shell: pwsh
+        run: |
+          $targets = @(
+            Get-ChildItem '${{ github.workspace }}\artifacts\publish-win-x64' -Recurse -File |
+              Where-Object { $_.Extension -eq '.exe' -or $_.Name -like 'VaultProspector*.dll' }
+          )
+          if ($targets.Count -eq 0) { throw 'No application binaries were selected for signature verification.' }
+          foreach ($target in $targets) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $target.FullName
+            if ($signature.Status -ne 'Valid' -or $null -eq $signature.TimeStamperCertificate) {
+              throw "Authenticode or timestamp verification failed for '$($target.FullName)': $($signature.Status)."
+            }
+          }
+      - name: Archive signed portable application
+        shell: pwsh
+        run: |
+          $version = '${{ steps.release.outputs.version }}'
+          $archive = '${{ github.workspace }}\artifacts\VaultProspector-' + $version + '-win-x64.zip'
+          if (Test-Path -LiteralPath $archive) { Remove-Item -LiteralPath $archive -Force }
+          Compress-Archive -Path '${{ github.workspace }}\artifacts\publish-win-x64\*' -DestinationPath $archive -CompressionLevel Optimal
+          $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -LiteralPath "$archive.sha256" -Value "$hash  $(Split-Path -Leaf $archive)" -Encoding utf8NoBOM
+      - name: Build MSI from signed binaries
+        shell: pwsh
+        run: ./scripts/PackageInstaller.ps1 -Version '${{ steps.release.outputs.version }}' -SkipPublish
+      - name: Sign MSI with Azure Artifact Signing
+        uses: Azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
+        with:
+          endpoint: ${{ env.ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ env.ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ env.ARTIFACT_SIGNING_PROFILE }}
+          files: ${{ steps.release.outputs.installer }}
+          file-digest: SHA256
+          timestamp-digest: SHA256
+          description: Vault Prospector Windows Installer
+          description-url: https://github.com/Hybrid-Solutions-Cloud/vault-prospector
+      - name: Verify MSI signature and build distribution metadata
+        shell: pwsh
+        run: |
+          $installer = '${{ steps.release.outputs.installer }}'
+          $signature = Get-AuthenticodeSignature -LiteralPath $installer
+          if ($signature.Status -ne 'Valid' -or $null -eq $signature.TimeStamperCertificate) {
+            throw "MSI Authenticode or timestamp verification failed: $($signature.Status)."
+          }
+          $hash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -LiteralPath "$installer.sha256" -Value "$hash  $(Split-Path -Leaf $installer)" -Encoding utf8NoBOM
+          ./scripts/PackageDistribution.ps1 -Version '${{ steps.release.outputs.version }}'
+          winget validate --manifest "./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/${{ steps.release.outputs.version }}"
       - name: Generate SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:

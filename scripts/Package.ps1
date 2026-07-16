@@ -9,7 +9,9 @@ param(
     [string]$Runtime = 'win-x64',
 
     [ValidatePattern('^[0-9A-Za-z._-]+$')]
-    [string]$OutputDirectory = 'artifacts'
+    [string]$OutputDirectory = 'artifacts',
+
+    [switch]$SkipArchive
 )
 
 Set-StrictMode -Version Latest
@@ -50,11 +52,21 @@ Invoke-DotNet -Arguments @(
 
 Get-ChildItem -LiteralPath $publishDirectory -Recurse -File -Filter '*.pdb' | Remove-Item -Force
 
-if (Test-Path -LiteralPath $archivePath) {
-    Remove-Item -LiteralPath $archivePath -Force
-}
-Compress-Archive -Path (Join-Path $publishDirectory '*') -DestinationPath $archivePath -CompressionLevel Optimal
-$hash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
-Set-Content -LiteralPath "$archivePath.sha256" -Value "$hash  $(Split-Path -Leaf $archivePath)" -Encoding utf8NoBOM
+if (-not $SkipArchive) {
+    if (Test-Path -LiteralPath $archivePath) {
+        Remove-Item -LiteralPath $archivePath -Force
+    }
+    Compress-Archive -Path (Join-Path $publishDirectory '*') -DestinationPath $archivePath -CompressionLevel Optimal
+    $hash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+    Set-Content -LiteralPath "$archivePath.sha256" -Value "$hash  $(Split-Path -Leaf $archivePath)" -Encoding utf8NoBOM
 
-Write-Output $archivePath
+    Write-Output $archivePath
+}
+else {
+    foreach ($staleArchive in @($archivePath, "$archivePath.sha256")) {
+        if (Test-Path -LiteralPath $staleArchive) {
+            Remove-Item -LiteralPath $staleArchive -Force
+        }
+    }
+    Write-Output $publishDirectory
+}
