@@ -19,7 +19,7 @@ public sealed class WindowsDataProtectionKeyProvider(string keyDirectory) : IKey
             byte[]? protectedKey = null;
             try
             {
-                protectedKey = await File.ReadAllBytesAsync(path, cancellationToken);
+                protectedKey = await ReadPublishedKeyAsync(path, cancellationToken);
                 return ProtectedData.Unprotect(protectedKey, entropy, DataProtectionScope.CurrentUser);
             }
             finally
@@ -47,7 +47,7 @@ public sealed class WindowsDataProtectionKeyProvider(string keyDirectory) : IKey
             {
                 // Another process published a complete key first. Discard this candidate and
                 // use the winner so concurrent starts cannot split encrypted state.
-                var protectedKey = await File.ReadAllBytesAsync(path, cancellationToken);
+                var protectedKey = await ReadPublishedKeyAsync(path, cancellationToken);
                 try
                 {
                     return ProtectedData.Unprotect(protectedKey, entropy, DataProtectionScope.CurrentUser);
@@ -64,6 +64,24 @@ public sealed class WindowsDataProtectionKeyProvider(string keyDirectory) : IKey
             CryptographicOperations.ZeroMemory(entropy);
             if (!published) CryptographicOperations.ZeroMemory(key);
             if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+        }
+    }
+
+    private static async Task<byte[]> ReadPublishedKeyAsync(string path, CancellationToken cancellationToken)
+    {
+        const int maximumAttempts = 8;
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await File.ReadAllBytesAsync(path, cancellationToken);
+            }
+            catch (IOException) when (attempt < maximumAttempts && File.Exists(path))
+            {
+                // File.Move publishes the completed key atomically, but Windows can retain an
+                // exclusive rename handle for a few milliseconds after the name is visible.
+                await Task.Delay(TimeSpan.FromMilliseconds(attempt * 5), cancellationToken);
+            }
         }
     }
 
