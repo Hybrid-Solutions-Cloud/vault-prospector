@@ -1,5 +1,18 @@
 # User Guide
 
+## Install on Windows
+
+Download the Windows x64 MSI from the [public distribution releases](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases), verify its checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu.
+
+After the packages are approved by their community repositories, Windows users can also install with:
+
+```powershell
+winget install --id HybridSolutionsCloud.VaultProspector --exact
+choco install vault-prospector
+```
+
+Preview Chocolatey packages require `--pre`. The portable ZIP remains available for environments where an MSI cannot be used.
+
 ## Connect an identity
 
 Open **Identities**, enter a friendly label and the Microsoft Entra application client ID, then choose **Sign in interactively**. Complete the browser-based Microsoft sign-in. Repeat for employer, customer, personal, or lab identities.
@@ -45,7 +58,7 @@ Cached values are encrypted separately with AES-GCM. Their key is protected for 
 
 - Remove an identity from **Identities** to purge its MSAL token-cache account and local access mapping.
 - Purge offline values from **Settings**.
-- Uninstall by deleting the application folder.
+- For an MSI or package-manager installation, uninstall from **Settings > Apps > Installed apps**, WinGet, or Chocolatey. For a portable ZIP, delete the extracted application folder.
 - To remove all local application state, delete `%LOCALAPPDATA%\VaultProspector` after closing the app.
 
 ## Backup and device migration

@@ -23,12 +23,14 @@ Vault Prospector does not create Azure role assignments, rotate secrets, export 
 
 ### Install a release
 
-1. Download the Windows `win-x64` ZIP and its `.sha256` file from [GitHub Releases](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases).
+1. Download the Windows x64 MSI and its `.sha256` file from the [public distribution releases](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases).
 2. Verify the checksum and Sigstore bundle by following [the release verification guide](docs/release.md).
-3. Extract the ZIP to a user-writable folder.
-4. Run `VaultProspector.App.exe`.
+3. Run the MSI. It installs Vault Prospector for the computer and adds a Start menu shortcut.
+4. Open **Vault Prospector** from Start.
 5. On the **Identities** tab, enter the client ID from your Microsoft Entra public-client app registration and select **Sign in interactively**.
 6. Select the connected identity and choose **Sync selected**.
+
+The portable `win-x64` ZIP remains available for users who cannot run an installer. WinGet and Chocolatey commands will be enabled after their community repositories approve the package; see [Windows package distribution](docs/package-distribution.md).
 
 The required app registration takes about five minutes; see [Authentication setup](docs/authentication.md).
 
@@ -42,7 +44,8 @@ Prerequisites:
 
 ```powershell
 pwsh ./scripts/Build.ps1
-pwsh ./scripts/Package.ps1 -Version 0.1.0
+pwsh ./scripts/PackageInstaller.ps1 -Version 0.1.0-preview.2
+pwsh ./scripts/PackageDistribution.ps1 -Version 0.1.0-preview.2
 ```
 
 HCS Tier 1 WSL is supported for restore, formatting, build, and non-Windows tests. The protected desktop release is built on a Windows runner so the Windows Hello projection is included.
@@ -67,6 +70,7 @@ No local application can protect a deliberately revealed value from malware alre
 - [Security requirements](docs/security/security-requirements.md)
 - [Threat model](docs/security/threat-model.md)
 - [Release and artifact verification](docs/release.md)
+- [Windows package distribution](docs/package-distribution.md)
 - [Product requirements](docs/product/product-requirements.md)
 - [Preview release scope](docs/product/release-scope.md)
 - [Roadmap](docs/product/roadmap.md)
@@ -75,7 +79,7 @@ No local application can protect a deliberately revealed value from malware alre
 
 ## Mobile status
 
-Apple macOS/iOS and Google Android/Play applications are intentionally not part of this release. Their platform security, background execution, app-store distribution, and credential-provider work remain explicit deferred items in the roadmap and backlog.
+iPhone/iOS and Android/Google Play applications are **coming soon**. They are not included in the current Windows preview; their platform security, background execution, store distribution, and credential-provider work are tracked in the roadmap and backlog.
 
 ## License
 

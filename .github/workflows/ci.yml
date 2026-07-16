@@ -26,6 +26,12 @@ jobs:
         run: dotnet build VaultProspector.sln --configuration Release --no-restore
       - name: Test
         run: dotnet test VaultProspector.sln --configuration Release --no-build --logger "trx;LogFileName=tests.trx" --collect "XPlat Code Coverage" --results-directory TestResults
+      - name: Build Windows installer and package manifests
+        shell: pwsh
+        run: |
+          ./scripts/PackageInstaller.ps1 -Version 0.0.0-preview.1
+          ./scripts/PackageDistribution.ps1 -Version 0.0.0-preview.1
+          winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/0.0.0-preview.1
       - name: Check vulnerable dependencies
         run: dotnet list VaultProspector.sln package --vulnerable --include-transitive
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

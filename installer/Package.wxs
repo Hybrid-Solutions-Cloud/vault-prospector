@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Name="Vault Prospector"
+    Manufacturer="Hybrid Solutions Cloud"
+    Version="$(MsiVersion)"
+    UpgradeCode="{6E0981B0-6AD5-4B72-8ACA-ECEE660951B2}"
+    Language="1033"
+    Scope="perMachine"
+    Compressed="yes">
+
+    <SummaryInformation Description="Vault Prospector Windows desktop application" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Vault Prospector is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="VaultProspector.ico" SourceFile="..\src\VaultProspector.App\Assets\vault-prospector.ico" />
+    <Property Id="ARPPRODUCTICON" Value="VaultProspector.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases" />
+    <Property Id="ARPCONTACT" Value="Hybrid Solutions Cloud" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Vault Prospector" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="Vault Prospector" />
+    </StandardDirectory>
+
+    <Component Id="MainExecutable" Directory="INSTALLFOLDER" Guid="{B271A5FE-AEA5-4C2D-9765-EFEFDD7047E3}">
+      <File Id="MainExecutableFile" Source="$(PublishDirectory)\VaultProspector.App.exe" KeyPath="yes">
+        <Shortcut
+          Id="VaultProspectorStartMenuShortcut"
+          Directory="ApplicationProgramsFolder"
+          Name="Vault Prospector"
+          Description="Search Azure Key Vault metadata securely"
+          WorkingDirectory="INSTALLFOLDER"
+          Advertise="yes" />
+      </File>
+      <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+    </Component>
+
+    <ComponentGroup Id="ProductFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(PublishDirectory)\**">
+        <Exclude Files="$(PublishDirectory)\**\*.pdb" />
+        <Exclude Files="$(PublishDirectory)\VaultProspector.App.exe" />
+      </Files>
+    </ComponentGroup>
+
+    <Feature Id="MainFeature" Title="Vault Prospector" Level="1">
+      <ComponentGroupRef Id="ProductFiles" />
+      <ComponentRef Id="MainExecutable" />
+    </Feature>
+  </Package>
+</Wix>

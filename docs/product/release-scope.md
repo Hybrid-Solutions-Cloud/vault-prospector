@@ -1,10 +1,11 @@
 # Version 0.1 Preview Scope
 
-Version `0.1.0-preview.1` is the first Windows desktop evaluation release. It delivers the local-first Azure Key Vault workflow through encrypted metadata search, multi-identity discovery, explicit Windows Hello-gated secret retrieval, protected clipboard handling, optional expiring offline values, and workspaces.
+Version `0.1.0-preview.2` is the installable Windows desktop evaluation release. It delivers the local-first Azure Key Vault workflow through encrypted metadata search, multi-identity discovery, explicit Windows Hello-gated secret retrieval, protected clipboard handling, optional expiring offline values, and workspaces.
 
 ## Included
 
-- Windows `win-x64` self-contained desktop package.
+- Windows x64 MSI installer and portable self-contained ZIP.
+- Generated, validated WinGet manifests and a Chocolatey package for community-repository submission.
 - MSAL public-client interactive authentication with no client secret.
 - Multiple Microsoft Entra accounts and subscription/vault discovery.
 - Version-aware secret, key, and certificate metadata indexing.
@@ -22,6 +23,6 @@ Version `0.1.0-preview.1` is the first Windows desktop evaluation release. It de
 - The SQLCipher native bundle currently reports a NuGet deprecation/legacy-package advisory without a published replacement; the release gate separately confirms that no known vulnerable packages are present.
 - Azure end-to-end behavior depends on the evaluator's tenant, app registration, Conditional Access policy, and RBAC/data-plane permissions. Automated tests use provider contracts and do not contain a live tenant credential.
 - Individual binaries are not Authenticode-signed. Release archives have checksums, keyless Sigstore bundles, and SBOMs. GitHub-native artifact attestations are unavailable for this private repository under the organization's current plan; the workflow enables them automatically if the repository becomes public.
-- macOS, iOS, Android, Apple App Store, and Google Play delivery are deferred as listed in the [roadmap](roadmap.md) and [backlog](backlog.md).
+- iPhone/iOS and Android/Google Play applications are coming soon as listed in the [roadmap](roadmap.md) and [backlog](backlog.md); they are not part of this Windows release.
 
 Evaluate this preview in non-production environments. Azure remains the source of truth, and no release claim expands a user's existing Azure authorization.

@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is intentionally capability-based. Phases 0–3 form the `0.1.0-preview.1` Windows evaluation release; remaining hardening and platform phases stay open until their acceptance evidence exists.
+The roadmap is intentionally capability-based. Phases 0–3 form the `0.1.0-preview.2` Windows evaluation release; remaining hardening and platform phases stay open until their acceptance evidence exists.
 
 ## Phase 0 — Product and security foundation
 
@@ -56,9 +56,9 @@ Status: delivered for evaluation in the 0.1 preview; independent security review
 - Security review and attack testing.
 - No cloud synchronization.
 
-## Phase 4 — Apple and Google mobile applications (deferred)
+## Phase 4 — iPhone and Google mobile applications (coming soon)
 
-This phase is intentionally deferred. No Apple App Store or Google Play release is included in the Windows desktop preview.
+These applications are coming soon after the Windows distribution path. No Apple App Store or Google Play release is included in the current Windows desktop preview, and each mobile release must satisfy its own security and store review gates.
 
 - macOS validation.
 - iOS application shell.

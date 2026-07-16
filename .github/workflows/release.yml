@@ -26,28 +26,46 @@ jobs:
         shell: pwsh
         run: |
           $version = '${{ github.ref_name }}'.TrimStart('v')
-          ./scripts/Package.ps1 -Version $version
+          ./scripts/PackageInstaller.ps1 -Version $version
+          ./scripts/PackageDistribution.ps1 -Version $version
+          winget validate --manifest "./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/$version"
       - name: Generate SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
           path: artifacts/publish-win-x64
           format: spdx-json
           output-file: artifacts/VaultProspector-${{ github.ref_name }}-win-x64.spdx.json
+      - name: Normalize SBOM file name
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          Move-Item "artifacts/VaultProspector-${{ github.ref_name }}-win-x64.spdx.json" "artifacts/VaultProspector-$version-win-x64.spdx.json"
       - name: Attest build provenance
         if: ${{ github.event.repository.visibility == 'public' }}
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
-          subject-path: artifacts/VaultProspector-*.zip
+          subject-path: |
+            artifacts/VaultProspector-*.msi
+            artifacts/VaultProspector-*.zip
+            artifacts/vault-prospector.*.nupkg
       - name: Note private-repository attestation boundary
         if: ${{ github.event.repository.visibility != 'public' }}
         shell: pwsh
         run: Write-Host 'GitHub-native artifact attestations are unavailable for this private repository on the current organization plan; publishing the keyless Sigstore bundle instead.'
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
-      - name: Sign release archive with Sigstore
+      - name: Sign release packages with Sigstore
         shell: pwsh
         run: |
-          $archive = Get-ChildItem artifacts/VaultProspector-*.zip | Select-Object -First 1
-          cosign sign-blob --yes --bundle "$($archive.FullName).sigstore.json" $archive.FullName
+          $packages = @(
+            Get-ChildItem artifacts -File |
+              Where-Object Extension -in '.msi', '.zip', '.nupkg'
+          )
+          foreach ($package in $packages) {
+            cosign sign-blob --yes --bundle "$($package.FullName).sigstore.json" $package.FullName
+            if ($LASTEXITCODE -ne 0) {
+              throw "Sigstore signing failed for '$($package.Name)' with exit code $LASTEXITCODE."
+            }
+          }
       - name: Publish GitHub release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
@@ -55,6 +73,10 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/VaultProspector-*.zip
+            artifacts/VaultProspector-*.msi
             artifacts/VaultProspector-*.sha256
             artifacts/VaultProspector-*.spdx.json
             artifacts/VaultProspector-*.sigstore.json
+            artifacts/vault-prospector.*.nupkg
+            artifacts/vault-prospector.*.sha256
+            artifacts/vault-prospector.*.sigstore.json

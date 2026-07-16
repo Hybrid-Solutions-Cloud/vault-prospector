@@ -2,6 +2,15 @@
 
 All notable changes to Vault Prospector are documented here. The project follows semantic versioning for published artifacts.
 
+## [0.1.0-preview.2] - 2026-07-16
+
+### Added
+
+- Per-machine Windows x64 MSI with Start menu and Installed apps integration.
+- Validated WinGet manifests and a Chocolatey package generated from the release MSI.
+- Public binary-distribution and package-manager submission automation.
+- iPhone/iOS and Android/Google Play applications marked as coming soon in the product backlog.
+
 ## [0.1.0-preview.1] - 2026-07-16
 
 ### Added
@@ -15,4 +24,5 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.1.0-preview.2]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases/tag/v0.1.0-preview.2
 [0.1.0-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases/tag/v0.1.0-preview.1

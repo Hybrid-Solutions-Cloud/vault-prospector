@@ -6,6 +6,9 @@ Record the Windows version, package checksum, tester, and time with the release 
 
 - [ ] SHA-256 checksum matches the published checksum file.
 - [ ] Sigstore bundle verifies against the repository's GitHub Actions identity.
+- [ ] MSI installs silently with exit code 0, registers in Installed apps, and creates the Start menu shortcut.
+- [ ] MSI upgrade replaces the previous version without leaving duplicate Installed apps entries.
+- [ ] MSI uninstall removes program files and the Start menu shortcut without deleting user state.
 - [ ] ZIP extracts without an installer or administrator rights.
 - [ ] `VaultProspector.App.exe` starts and shows the Vault Prospector icon and title.
 - [ ] First start creates protected local state under `%LOCALAPPDATA%\VaultProspector` and no plaintext SQLite header.
@@ -39,4 +42,5 @@ Record the Windows version, package checksum, tester, and time with the release 
 
 - [ ] Logs contain event categories and pseudonymous IDs but no token, value, username, vault name, or object name.
 - [ ] CI build, tests, formatting, .NET analyzers, vulnerability scan, and secret scan are green for the tagged commit.
-- [ ] Release contains ZIP, checksum, SPDX SBOM, and Sigstore bundle.
+- [ ] Release contains MSI, ZIP, WinGet manifests, Chocolatey package, checksums, SPDX SBOM, and Sigstore bundles.
+- [ ] `winget validate` succeeds against the generated manifest directory without warnings.

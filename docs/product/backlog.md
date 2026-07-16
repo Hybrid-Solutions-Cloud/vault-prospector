@@ -132,19 +132,19 @@ As a Windows user, I need individual executable and library signatures from the 
 
 As a user, I need direct tenant and subscription assignment plus editable workspace-specific cache policy. The preview supports identity and vault assignment.
 
-## Epic 8 — Apple and Google mobile delivery (deferred)
+## Epic 8 — iPhone and Google mobile applications (coming soon)
 
-These stories remain out of scope for the Windows desktop preview.
+These applications are coming soon after the Windows distribution path. They remain out of scope for the current Windows desktop preview until their separate mobile security and store acceptance criteria are complete.
 
 ### Story: Apple platform security validation
 
 As a security reviewer, I need macOS and iOS Keychain, Secure Enclave, LocalAuthentication, background-state, and screenshot protections validated before an Apple build is distributed.
 
-### Story: iOS application and App Store release
+### Story: iPhone/iOS application and App Store release (coming soon)
 
 As an iOS user, I need a mobile-safe search and retrieval experience that passes a separate threat model, entitlement review, privacy declaration, signing, TestFlight validation, and App Store review.
 
-### Story: Android application and Google Play release
+### Story: Android application and Google Play release (coming soon)
 
 As an Android user, I need a mobile-safe experience using Android Keystore and BiometricPrompt that passes a separate threat model, data-safety declaration, target-SDK review, signing, closed testing, and Google Play review.
 
