@@ -7,8 +7,7 @@ Each Windows release contains:
 - a self-contained `win-x64` ZIP;
 - a SHA-256 checksum file;
 - an SPDX JSON software bill of materials;
-- a Sigstore bundle for the ZIP;
-- a GitHub build-provenance attestation.
+- a Sigstore bundle for the ZIP.
 
 The preview ZIP is signed with Sigstore keyless signing. Authenticode signing of individual Windows binaries remains a supply-chain hardening item.
 
@@ -33,20 +32,15 @@ cosign verify-blob `
   VaultProspector-0.1.0-preview.1-win-x64.zip
 ```
 
-GitHub's artifact attestation can also be verified with:
-
-```powershell
-gh attestation verify VaultProspector-0.1.0-preview.1-win-x64.zip `
-  --repo Hybrid-Solutions-Cloud/vault-prospector
-```
+GitHub-native artifact attestations are unavailable for this private repository under the organization's current plan. The workflow will also publish a GitHub attestation automatically if the repository becomes public.
 
 ## Maintainer release procedure
 
 1. Confirm CI on `main` passes build, tests, formatting, .NET analyzer enforcement, dependency vulnerability auditing, and secret scanning.
 2. Update release notes and version references.
 3. Create and push an annotated `vX.Y.Z` or `vX.Y.Z-preview.N` tag.
-4. The protected release workflow builds and tests on Windows, packages the self-contained application, generates the SBOM, signs and attests the archive, and creates the GitHub release.
-5. Download the published assets and independently verify the checksum, Sigstore bundle, and GitHub attestation.
+4. The protected release workflow builds and tests on Windows, packages the self-contained application, generates the SBOM, signs the archive with Sigstore, and creates the GitHub release.
+5. Download the published assets and independently verify the checksum and Sigstore bundle.
 6. Launch the extracted app on a clean supported Windows machine and complete the [release smoke-test checklist](release-checklist.md).
 
 Rollback is performed by marking the release as withdrawn, documenting the reason, and directing users to the last verified release. Never replace assets under an existing version tag.

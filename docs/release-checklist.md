@@ -5,7 +5,7 @@ Record the Windows version, package checksum, tester, and time with the release 
 ## Package and startup
 
 - [ ] SHA-256 checksum matches the published checksum file.
-- [ ] Sigstore bundle and GitHub provenance attestation verify.
+- [ ] Sigstore bundle verifies against the repository's GitHub Actions identity.
 - [ ] ZIP extracts without an installer or administrator rights.
 - [ ] `VaultProspector.App.exe` starts and shows the Vault Prospector icon and title.
 - [ ] First start creates protected local state under `%LOCALAPPDATA%\VaultProspector` and no plaintext SQLite header.
@@ -39,4 +39,4 @@ Record the Windows version, package checksum, tester, and time with the release 
 
 - [ ] Logs contain event categories and pseudonymous IDs but no token, value, username, vault name, or object name.
 - [ ] CI build, tests, formatting, .NET analyzers, vulnerability scan, and secret scan are green for the tagged commit.
-- [ ] Release contains ZIP, checksum, SPDX SBOM, Sigstore bundle, and GitHub attestation.
+- [ ] Release contains ZIP, checksum, SPDX SBOM, and Sigstore bundle.
