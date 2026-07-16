@@ -11,7 +11,7 @@ Version `0.1.0-preview.1` is the first Windows desktop evaluation release. It de
 - SQLCipher-encrypted local search with source context and filters.
 - Explicit secret reveal/copy and optional AES-GCM offline cache protected by DPAPI and Windows Hello.
 - Favorites, recent-access ordering, workspace scoping, cancelable sync, and isolated Azure errors.
-- CI build/test, dependency and secret scanning, CodeQL, SBOM, Sigstore bundle, and GitHub provenance attestation.
+- CI build/test, warnings-as-errors .NET security analysis, dependency vulnerability and secret scanning, SBOM, Sigstore bundle, and GitHub provenance attestation.
 
 ## Preview limitations tracked after 0.1
 

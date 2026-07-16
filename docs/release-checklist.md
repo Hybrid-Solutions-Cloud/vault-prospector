@@ -38,5 +38,5 @@ Record the Windows version, package checksum, tester, and time with the release 
 ## Diagnostic and release evidence
 
 - [ ] Logs contain event categories and pseudonymous IDs but no token, value, username, vault name, or object name.
-- [ ] CI build, tests, formatting, vulnerability scan, secret scan, and CodeQL are green for the tagged commit.
+- [ ] CI build, tests, formatting, .NET analyzers, vulnerability scan, and secret scan are green for the tagged commit.
 - [ ] Release contains ZIP, checksum, SPDX SBOM, Sigstore bundle, and GitHub attestation.

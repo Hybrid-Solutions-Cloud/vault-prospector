@@ -42,7 +42,7 @@ gh attestation verify VaultProspector-0.1.0-preview.1-win-x64.zip `
 
 ## Maintainer release procedure
 
-1. Confirm CI on `main` passes build, tests, formatting, CodeQL, dependency review, and secret scanning.
+1. Confirm CI on `main` passes build, tests, formatting, .NET analyzer enforcement, dependency vulnerability auditing, and secret scanning.
 2. Update release notes and version references.
 3. Create and push an annotated `vX.Y.Z` or `vX.Y.Z-preview.N` tag.
 4. The protected release workflow builds and tests on Windows, packages the self-contained application, generates the SBOM, signs and attests the archive, and creates the GitHub release.
