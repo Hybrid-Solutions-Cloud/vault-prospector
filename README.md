@@ -73,6 +73,7 @@ No local application can protect a deliberately revealed value from malware alre
 - [Windows package distribution](docs/package-distribution.md)
 - [Product requirements](docs/product/product-requirements.md)
 - [Preview release scope](docs/product/release-scope.md)
+- [Preview and GA release readiness](docs/product/release-readiness.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Backlog](docs/product/backlog.md)
 - [Contributing](CONTRIBUTING.md)

@@ -2,6 +2,8 @@
 
 The roadmap is intentionally capability-based. Phases 0–3 form the `0.1.0-preview.2` Windows evaluation release; remaining hardening and platform phases stay open until their acceptance evidence exists.
 
+Release promotion is controlled by the evidence-based [Preview and GA readiness matrix](release-readiness.md). A phase marked delivered here describes implemented capability; it does not override an incomplete release gate.
+
 ## Near-term sequencing
 
 The next work is ordered by security dependency rather than visual novelty. Secure onboarding, identity boundaries, encryption guarantees, and independent review come before write operations or browser autofill.
