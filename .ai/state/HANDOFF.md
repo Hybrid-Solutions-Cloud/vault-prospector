@@ -71,6 +71,10 @@
   success/cancel was not attempted without operator confirmation. All task, credential, guest, and
   host probe artifacts were removed. Evidence is in
   `docs/release-evidence/windows-hello-unavailable-2026-07-17.md`.
+- Windows Hello unavailable-boundary evidence commit `141c456` is pushed to `main`; exact-commit CI
+  run `29585217953` passed both `build-test` and full-history `secret-scan`. GitHub issues `#5` and
+  `#9` are synchronized with the narrow result; P-05 and P-08 remain open because interactive and
+  independent-review evidence is still outstanding.
 
 ## External publication state
 
