@@ -56,6 +56,12 @@
 - Security hardening commit `f586639` is pushed to `main`; exact-commit CI run `29582360571`
   passed both `build-test` and full-history `secret-scan`. GitHub issue `#9` now tracks independent
   P-08 execution, and issue `#5` is synchronized without incorrectly checking the gate.
+- A follow-up offline-cache attack pass found that descriptor metadata was checked before AES-GCM
+  authentication during retrieval and trusted directly during scoped purge. Source now
+  authenticates before item/expiry/fingerprint/scope decisions and removes untrusted entries
+  conservatively. Twelve additional cases cover cryptographic and descriptor tampering, missing
+  fields, malformed encodings, cross-item substitution, version behavior, and purge continuation;
+  the locked local gate passes 100/100 tests.
 
 ## External publication state
 

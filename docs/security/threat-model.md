@@ -69,6 +69,8 @@ Mitigations:
 
 - Separate metadata from value storage.
 - Encrypt every cached payload.
+- Authenticate expiry, fingerprint, item, vault, and workspace metadata before using it for release
+  or scoped-purge decisions.
 - Protect the data-encryption key with platform-backed secure storage.
 - Require local user verification before key release where supported.
 - Bind protected keys to the device where practical.

@@ -163,6 +163,176 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         await Assert.ThrowsAsync<AuthenticationTagMismatchException>(() =>
             store.RetrieveAsync(itemId, _clock.UtcNow, "new-fingerprint", TestContext.Current.CancellationToken));
+        Assert.False(File.Exists(path));
+    }
+
+    [Theory]
+    [InlineData("Nonce")]
+    [InlineData("Tag")]
+    [InlineData("Ciphertext")]
+    public async Task ModifiedCryptographicFieldFailsAuthenticationAndIsDeleted(string field)
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, $"tampered-{field.ToLowerInvariant()}-values");
+        var path = Path.Combine(valueDirectory, $"{itemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var value = new SensitiveValue("protected-value");
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, value, "fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+
+        var envelope = JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!.AsObject();
+        var bytes = Convert.FromBase64String(envelope[field]!.GetValue<string>());
+        bytes[0] ^= 0x01;
+        envelope[field] = Convert.ToBase64String(bytes);
+        await File.WriteAllTextAsync(path, envelope.ToJsonString(), TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAnyAsync<CryptographicException>(() =>
+            store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken));
+        Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public async Task ModifiedExpiryCannotTriggerAnUnauthenticatedExpiryDecision()
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "tampered-expiry-values");
+        var path = Path.Combine(valueDirectory, $"{itemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var value = new SensitiveValue("protected-value");
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, value, "fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+
+        var envelope = JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!.AsObject();
+        envelope["Descriptor"]!["ExpiresAt"] = _clock.UtcNow.AddMinutes(-1).ToString("O");
+        await File.WriteAllTextAsync(path, envelope.ToJsonString(), TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<AuthenticationTagMismatchException>(() =>
+            store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken));
+        Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public async Task SubstitutedEnvelopeCannotBeOpenedUnderAnotherItemPath()
+    {
+        var originalItemId = Guid.NewGuid();
+        var substitutedItemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "substituted-values");
+        var originalPath = Path.Combine(valueDirectory, $"{originalItemId:D}.vpcache");
+        var substitutedPath = Path.Combine(valueDirectory, $"{substitutedItemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var value = new SensitiveValue("protected-value");
+        await store.StoreAsync(originalItemId, Guid.NewGuid(), null, value, "fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+        File.Copy(originalPath, substitutedPath);
+
+        await Assert.ThrowsAsync<AuthenticationTagMismatchException>(() =>
+            store.RetrieveAsync(substitutedItemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken));
+
+        Assert.False(File.Exists(substitutedPath));
+        using var original = await store.RetrieveAsync(originalItemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken);
+        Assert.Equal("protected-value", original?.Reveal());
+    }
+
+    [Fact]
+    public async Task ScopedPurgeDeletesTamperedDescriptorInsteadOfTrustingItsScope()
+    {
+        var vaultId = Guid.NewGuid();
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "tampered-purge-values");
+        var path = Path.Combine(valueDirectory, $"{itemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var value = new SensitiveValue("protected-value");
+        await store.StoreAsync(itemId, vaultId, null, value, "fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+
+        var envelope = JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!.AsObject();
+        envelope["Descriptor"]!["VaultId"] = Guid.NewGuid().ToString("D");
+        await File.WriteAllTextAsync(path, envelope.ToJsonString(), TestContext.Current.CancellationToken);
+
+        await store.PurgeVaultAsync(vaultId, TestContext.Current.CancellationToken);
+
+        Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public async Task ScopedPurgeRemovesMalformedEntriesAndContinuesWithValidEntries()
+    {
+        var targetVaultId = Guid.NewGuid();
+        var retainedVaultId = Guid.NewGuid();
+        var targetItemId = Guid.NewGuid();
+        var retainedItemId = Guid.NewGuid();
+        var malformedItemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "malformed-purge-values");
+        var malformedPath = Path.Combine(valueDirectory, $"{malformedItemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var target = new SensitiveValue("target-value");
+        using var retained = new SensitiveValue("retained-value");
+        await store.StoreAsync(targetItemId, targetVaultId, null, target, "target", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+        await store.StoreAsync(retainedItemId, retainedVaultId, null, retained, "retained", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(malformedPath, "{not-json", TestContext.Current.CancellationToken);
+
+        await store.PurgeVaultAsync(targetVaultId, TestContext.Current.CancellationToken);
+
+        Assert.False(File.Exists(malformedPath));
+        Assert.Null(await store.RetrieveAsync(targetItemId, _clock.UtcNow, "target", TestContext.Current.CancellationToken));
+        using var restored = await store.RetrieveAsync(retainedItemId, _clock.UtcNow, "retained", TestContext.Current.CancellationToken);
+        Assert.Equal("retained-value", restored?.Reveal());
+    }
+
+    [Theory]
+    [InlineData("{not-json")]
+    [InlineData("{}")]
+    public async Task MalformedEnvelopeIsRejectedAndDeleted(string malformedEnvelope)
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "malformed-values");
+        var path = Path.Combine(valueDirectory, $"{itemId:D}.vpcache");
+        Directory.CreateDirectory(valueDirectory);
+        await File.WriteAllTextAsync(path, malformedEnvelope, TestContext.Current.CancellationToken);
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+
+        await Assert.ThrowsAsync<CryptographicException>(() =>
+            store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken));
+
+        Assert.False(File.Exists(path));
+    }
+
+    [Theory]
+    [InlineData("Nonce", "not-base64")]
+    [InlineData("Tag", "AA==")]
+    public async Task InvalidEnvelopeEncodingOrLengthIsRejectedAndDeleted(string field, string value)
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, $"invalid-{field.ToLowerInvariant()}-values");
+        var path = Path.Combine(valueDirectory, $"{itemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var secret = new SensitiveValue("protected-value");
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, secret, "fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+
+        var envelope = JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!.AsObject();
+        envelope[field] = value;
+        await File.WriteAllTextAsync(path, envelope.ToJsonString(), TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<CryptographicException>(() =>
+            store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken));
+
+        Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public async Task FutureKeyVersionFailsWithoutDestroyingPotentiallyNewerData()
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "future-version-values");
+        var path = Path.Combine(valueDirectory, $"{itemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var value = new SensitiveValue("future-value");
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, value, "fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+
+        var envelope = JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!.AsObject();
+        envelope["KeyVersion"] = 999;
+        await File.WriteAllTextAsync(path, envelope.ToJsonString(), TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<CryptographicException>(() =>
+            store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken));
+
+        Assert.True(File.Exists(path));
     }
 
     [Fact]

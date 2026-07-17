@@ -57,38 +57,54 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
         EnsureAvailable();
         var path = PathFor(vaultItemId);
         if (!File.Exists(path)) return null;
-        var envelope = JsonSerializer.Deserialize<Envelope>(await File.ReadAllTextAsync(path, cancellationToken))
-            ?? throw new CryptographicException("Invalid protected-value envelope.");
+        Envelope envelope;
+        try
+        {
+            envelope = await ReadEnvelopeAsync(path, cancellationToken);
+        }
+        catch (CryptographicException)
+        {
+            File.Delete(path);
+            throw;
+        }
+
         if (envelope.KeyVersion < CurrentKeyVersion)
         {
             File.Delete(path);
             return null;
         }
         if (envelope.KeyVersion > CurrentKeyVersion) throw new CryptographicException("Unsupported protected-value key version.");
-        if (envelope.Descriptor.VaultItemId != vaultItemId)
-            throw new CryptographicException("Protected-value envelope does not match the requested item.");
-        if (envelope.Descriptor.ExpiresAt <= now ||
-            (expectedFingerprint is not null && !string.Equals(envelope.Descriptor.SourceMetadataFingerprint, expectedFingerprint, StringComparison.Ordinal)))
-        {
-            File.Delete(path);
-            return null;
-        }
 
-        var key = await keyMaterial.GetOrCreateKeyAsync(KeyPurpose(envelope.KeyVersion), cancellationToken);
-        var ciphertext = Convert.FromBase64String(envelope.Ciphertext);
-        var plaintext = new byte[ciphertext.Length];
-        var associatedData = AssociatedData(envelope.KeyVersion, vaultItemId, envelope.Descriptor);
+        byte[] plaintext;
         try
         {
-            using var aes = new AesGcm(key, 16);
-            aes.Decrypt(Convert.FromBase64String(envelope.Nonce), ciphertext, Convert.FromBase64String(envelope.Tag), plaintext, associatedData);
+            plaintext = await DecryptAsync(envelope, vaultItemId, cancellationToken);
+        }
+        catch (CryptographicException)
+        {
+            File.Delete(path);
+            throw;
+        }
+
+        try
+        {
+            if (envelope.Descriptor.VaultItemId != vaultItemId)
+            {
+                File.Delete(path);
+                throw new CryptographicException("Protected-value envelope does not match the requested item.");
+            }
+            if (envelope.Descriptor.ExpiresAt <= now ||
+                (expectedFingerprint is not null && !string.Equals(envelope.Descriptor.SourceMetadataFingerprint, expectedFingerprint, StringComparison.Ordinal)))
+            {
+                File.Delete(path);
+                return null;
+            }
+
             return new SensitiveValue(Encoding.UTF8.GetString(plaintext));
         }
         finally
         {
             CryptographicOperations.ZeroMemory(plaintext);
-            CryptographicOperations.ZeroMemory(key);
-            CryptographicOperations.ZeroMemory(associatedData);
         }
     }
 
@@ -116,8 +132,96 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
         foreach (var path in Directory.EnumerateFiles(directory, "*.vpcache"))
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (!Guid.TryParse(Path.GetFileNameWithoutExtension(path), out var requestedVaultItemId))
+            {
+                File.Delete(path);
+                continue;
+            }
+
+            Envelope envelope;
+            try
+            {
+                envelope = await ReadEnvelopeAsync(path, cancellationToken);
+                if (envelope.KeyVersion != CurrentKeyVersion)
+                {
+                    File.Delete(path);
+                    continue;
+                }
+
+                var plaintext = await DecryptAsync(envelope, requestedVaultItemId, cancellationToken);
+                CryptographicOperations.ZeroMemory(plaintext);
+                if (envelope.Descriptor.VaultItemId != requestedVaultItemId)
+                    throw new CryptographicException("Protected-value envelope does not match its published item path.");
+            }
+            catch (CryptographicException)
+            {
+                File.Delete(path);
+                continue;
+            }
+
+            if (predicate(envelope)) File.Delete(path);
+        }
+    }
+
+    private static async Task<Envelope> ReadEnvelopeAsync(string path, CancellationToken cancellationToken)
+    {
+        try
+        {
             var envelope = JsonSerializer.Deserialize<Envelope>(await File.ReadAllTextAsync(path, cancellationToken));
-            if (envelope is not null && predicate(envelope)) File.Delete(path);
+            if (envelope?.Descriptor is null ||
+                string.IsNullOrWhiteSpace(envelope.Nonce) ||
+                string.IsNullOrWhiteSpace(envelope.Tag) ||
+                envelope.Ciphertext is null)
+            {
+                throw new CryptographicException("Invalid protected-value envelope.");
+            }
+
+            return envelope;
+        }
+        catch (Exception ex) when (ex is JsonException or NotSupportedException)
+        {
+            throw new CryptographicException("Invalid protected-value envelope.", ex);
+        }
+    }
+
+    private async Task<byte[]> DecryptAsync(Envelope envelope, Guid requestedVaultItemId, CancellationToken cancellationToken)
+    {
+        byte[] nonce;
+        byte[] tag;
+        byte[] ciphertext;
+        try
+        {
+            nonce = Convert.FromBase64String(envelope.Nonce);
+            tag = Convert.FromBase64String(envelope.Tag);
+            ciphertext = Convert.FromBase64String(envelope.Ciphertext);
+        }
+        catch (FormatException ex)
+        {
+            throw new CryptographicException("Invalid protected-value encoding.", ex);
+        }
+
+        if (nonce.Length != 12 || tag.Length != 16)
+            throw new CryptographicException("Invalid protected-value nonce or authentication tag length.");
+
+        var key = await keyMaterial.GetOrCreateKeyAsync(KeyPurpose(envelope.KeyVersion), cancellationToken);
+        var plaintext = new byte[ciphertext.Length];
+        var associatedData = AssociatedData(envelope.KeyVersion, requestedVaultItemId, envelope.Descriptor);
+        var authenticated = false;
+        try
+        {
+            using var aes = new AesGcm(key, tag.Length);
+            aes.Decrypt(nonce, ciphertext, tag, plaintext, associatedData);
+            authenticated = true;
+            return plaintext;
+        }
+        finally
+        {
+            if (!authenticated) CryptographicOperations.ZeroMemory(plaintext);
+            CryptographicOperations.ZeroMemory(key);
+            CryptographicOperations.ZeroMemory(associatedData);
+            CryptographicOperations.ZeroMemory(nonce);
+            CryptographicOperations.ZeroMemory(tag);
+            CryptographicOperations.ZeroMemory(ciphertext);
         }
     }
 
