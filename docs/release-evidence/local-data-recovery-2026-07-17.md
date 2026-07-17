@@ -53,6 +53,13 @@ tests (Domain 4, Application 18, Platform 10, Security 1, Azure 3, App 46, Infra
 known vulnerable direct or transitive NuGet package was detected; PowerShell parsing passed.
 GitHub Actions remains authoritative for workflow YAML and full-history secret scanning.
 
+Commit [`6cec5a4`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/commit/6cec5a46bee6d9711cb90f4590bf99a54a6aac7a)
+was pushed directly to the governed default branch with an HCS-minted GitHub App installation
+token. Exact-commit CI run
+[`29592049330`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/29592049330)
+passed both `build-test`—including tests, package construction, installer-sequence validation,
+WinGet manifest validation, and dependency inspection—and the full-history `secret-scan` job.
+
 ## Residual work before G-03 can pass
 
 1. Define and test key rotation without losing access to data encrypted under prior key versions.

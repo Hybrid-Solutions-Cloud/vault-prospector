@@ -90,7 +90,8 @@
   rejects future, corrupt, wrong-key, incomplete-schema, and invalid-relationship databases, and
   provides distinct redacted recovery guidance. The Release-equivalent local gate passes 111/111
   tests with 0 warnings/errors and no known vulnerable packages. Evidence is in
-  `docs/release-evidence/local-data-recovery-2026-07-17.md`; commit/CI synchronization is pending.
+  `docs/release-evidence/local-data-recovery-2026-07-17.md`. Commit `6cec5a4` is pushed to `main`;
+  exact-commit CI run `29592049330` passed both `build-test` and full-history `secret-scan`.
 
 ## External publication state
 
@@ -107,9 +108,7 @@
 
 ## Next actions
 
-1. Commit and push the G-03 recovery hardening, verify exact-commit CI, and synchronize readiness
-   tracking without claiming G-03 passed.
-2. Continue Preview-critical gates: arrange independent security review issue `#9`; run live
+1. Continue Preview-critical gates: arrange independent security review issue `#9`; run live
    identity, MFA, Conditional Access, and Windows Hello tests; complete keyboard, NVDA, Narrator,
    and usability evidence; finish signing setup, publish a new immutable corrected version, obtain
    replacement WinGet/Chocolatey acceptance, and complete the final signed-candidate go/no-go.
