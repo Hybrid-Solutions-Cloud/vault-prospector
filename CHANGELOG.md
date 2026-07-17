@@ -13,6 +13,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Changed
 
+- Reduce and center the initial Windows viewport, and make selected-object actions vertically scrollable so every action remains reachable in a 1024-by-768 work area.
 - Disable identity synchronization and removal until an identity is selected, removing unavailable actions from first-run keyboard navigation.
 - Disable result, secret, cache, workspace, filter, and general operation controls unless their exact selection, object-type, policy, input, and busy-state prerequisites are satisfied.
 - Clear stale result selections after search and reconcile identity selection after refresh or removal.

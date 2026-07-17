@@ -3,7 +3,8 @@
         xmlns:vm="using:VaultProspector.App.ViewModels"
         x:Class="VaultProspector.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Width="1180" Height="760" MinWidth="900" MinHeight="620"
+        Width="960" Height="640" MinWidth="900" MinHeight="620"
+        WindowStartupLocation="CenterScreen"
         Icon="/Assets/vault-prospector.ico"
         Title="Vault Prospector">
   <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource ApplicationPageBackgroundThemeBrush}">
@@ -81,6 +82,7 @@
               </Grid>
             </Border>
             <Border Grid.Column="1" Classes="card">
+              <ScrollViewer VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="10">
                 <TextBlock Text="Selected object" FontSize="18" FontWeight="SemiBold" />
                 <TextBlock Text="{Binding SelectedResult.Name, FallbackValue=Nothing selected}" FontSize="16" />
@@ -100,6 +102,7 @@
                 </WrapPanel>
                 <TextBlock Text="Values are retrieved only after explicit action and Windows Hello verification." FontSize="11" Opacity="0.7" TextWrapping="Wrap" />
               </StackPanel>
+              </ScrollViewer>
             </Border>
           </Grid>
           <TextBlock Grid.Row="2" Text="{Binding Results.Count, StringFormat={}{0} indexed objects}" Opacity="0.7" />

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "scenario": "windows-installer-lifecycle",
+  "started_at": "2026-07-17T02:54:30.9353635+00:00",
+  "completed_at": "2026-07-17T02:56:39.4890973+00:00",
+  "passed": true,
+  "failure": null,
+  "windows_version": "Microsoft Windows NT 10.0.26200.0",
+  "previous_msi": {
+    "file_name": "VaultProspector-0.1.0-preview.1-win-x64.msi",
+    "sha256": "0F959136B701FE5831AD36CB4913EDDE785B3892BD74E23E96635FEED79E7C88",
+    "product_code": "{0AA9B21B-826C-45B6-B71B-E1311F5BE6C1}",
+    "product_version": "0.1.1",
+    "upgrade_code": "{6E0981B0-6AD5-4B72-8ACA-ECEE660951B2}"
+  },
+  "current_msi": {
+    "file_name": "VaultProspector-0.1.0-preview.2-win-x64.msi",
+    "sha256": "416D9558518EB094596F83CEB2236C77138403CAEABF5675488B006290B139B3",
+    "product_code": "{A99D7A8E-AA60-4790-B579-97D74D760931}",
+    "product_version": "0.1.2",
+    "upgrade_code": "{6E0981B0-6AD5-4B72-8ACA-ECEE660951B2}"
+  },
+  "gates": [
+    { "name": "administrator-context", "result": "PASS", "detail": "Per-machine lifecycle runs in an elevated Windows session.", "observed_at": "2026-07-17T02:54:36.6399469+00:00" },
+    { "name": "clean-start", "result": "PASS", "detail": "No pre-existing Vault Prospector MSI registration is present.", "observed_at": "2026-07-17T02:54:37.5254659+00:00" },
+    { "name": "previous-checksum", "result": "PASS", "detail": "Previous MSI SHA-256 is 0F959136B701FE5831AD36CB4913EDDE785B3892BD74E23E96635FEED79E7C88.", "observed_at": "2026-07-17T02:54:37.5403753+00:00" },
+    { "name": "current-checksum", "result": "PASS", "detail": "Current MSI SHA-256 is 416D9558518EB094596F83CEB2236C77138403CAEABF5675488B006290B139B3.", "observed_at": "2026-07-17T02:54:37.5486455+00:00" },
+    { "name": "upgrade-code-stability", "result": "PASS", "detail": "UpgradeCode is {6E0981B0-6AD5-4B72-8ACA-ECEE660951B2}.", "observed_at": "2026-07-17T02:54:37.5563926+00:00" },
+    { "name": "product-code-change", "result": "PASS", "detail": "Major-upgrade candidates use distinct ProductCodes.", "observed_at": "2026-07-17T02:54:37.5658342+00:00" },
+    { "name": "version-order", "result": "PASS", "detail": "Version advances from 0.1.1 to 0.1.2.", "observed_at": "2026-07-17T02:54:37.5965733+00:00" },
+    { "name": "install-previous-exit", "result": "PASS", "detail": "msiexec returned 0.", "observed_at": "2026-07-17T02:55:07.4738126+00:00" },
+    { "name": "install-previous-registration", "result": "PASS", "detail": "Exactly one Installed apps entry reports 0.1.1.", "observed_at": "2026-07-17T02:55:07.9608675+00:00" },
+    { "name": "install-previous-files", "result": "PASS", "detail": "Executable and Start menu shortcut are present.", "observed_at": "2026-07-17T02:55:07.9808632+00:00" },
+    { "name": "upgrade-current-exit", "result": "PASS", "detail": "msiexec returned 0.", "observed_at": "2026-07-17T02:55:47.3579526+00:00" },
+    { "name": "upgrade-current-registration", "result": "PASS", "detail": "Exactly one Installed apps entry reports 0.1.2.", "observed_at": "2026-07-17T02:55:47.5615141+00:00" },
+    { "name": "repair-probe-changed", "result": "PASS", "detail": "A non-secret runtime configuration file was deliberately changed.", "observed_at": "2026-07-17T02:55:47.5969400+00:00" },
+    { "name": "repair-current-exit", "result": "PASS", "detail": "msiexec returned 0.", "observed_at": "2026-07-17T02:56:18.5259053+00:00" },
+    { "name": "repair-current-restored-file", "result": "PASS", "detail": "Forced repair restored the original packaged runtime configuration.", "observed_at": "2026-07-17T02:56:18.5382220+00:00" },
+    { "name": "downgrade-rejected", "result": "PASS", "detail": "Older MSI was rejected with the expected Windows Installer exit code 1603.", "observed_at": "2026-07-17T02:56:28.8018144+00:00" },
+    { "name": "downgrade-preserved-current", "result": "PASS", "detail": "Installed version remains 0.1.2.", "observed_at": "2026-07-17T02:56:28.9998322+00:00" },
+    { "name": "uninstall-current-exit", "result": "PASS", "detail": "msiexec returned 0.", "observed_at": "2026-07-17T02:56:38.9299615+00:00" },
+    { "name": "uninstall-registration-cleanup", "result": "PASS", "detail": "Installed apps registration is removed.", "observed_at": "2026-07-17T02:56:39.1260014+00:00" },
+    { "name": "uninstall-file-cleanup", "result": "PASS", "detail": "Executable and Start menu shortcut are removed.", "observed_at": "2026-07-17T02:56:39.1409003+00:00" },
+    { "name": "uninstall-retained-state", "result": "PASS", "detail": "Uninstall retained pre-existing LocalApplicationData state.", "observed_at": "2026-07-17T02:56:39.1470769+00:00" }
+  ]
+}
