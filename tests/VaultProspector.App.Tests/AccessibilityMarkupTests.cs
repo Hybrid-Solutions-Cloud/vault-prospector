@@ -98,6 +98,22 @@ public sealed class AccessibilityMarkupTests
         }
     }
 
+    [Fact]
+    public void NumericControlsProvideMinimumSizedTemplateButtons()
+    {
+        var document = XDocument.Load(FindMarkup("src/VaultProspector.App/App.axaml"));
+        var style = document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "Style" &&
+                Attribute(element, "Selector")?.Value == "NumericUpDown");
+        var setter = style
+            .Descendants()
+            .Single(element => Attribute(element, "Property")?.Value == "MinHeight");
+
+        Assert.Equal("26", Attribute(setter, "Value")?.Value);
+    }
+
     [Theory]
     [InlineData(null, 1)]
     [InlineData(50, 1)]

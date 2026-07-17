@@ -25,6 +25,9 @@
         <Style Selector="Window">
             <Setter Property="FontSize" Value="{DynamicResource VaultFontSize14}" />
         </Style>
+        <Style Selector="NumericUpDown">
+            <Setter Property="MinHeight" Value="26" />
+        </Style>
         <Style Selector="Button.primary">
             <Setter Property="Background" Value="#0A6E57" />
             <Setter Property="Foreground" Value="White" />
