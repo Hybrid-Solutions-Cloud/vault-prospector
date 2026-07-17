@@ -28,6 +28,17 @@
 - Evidence is recorded in
   `docs/release-evidence/ci-packaged-windows-candidate-2026-07-17.md`; related accessibility and
   readiness documents are synchronized.
+- Evidence commit `4ec5d43` is pushed to `main`; exact-commit CI run `29565396801` passed both the
+  build/test/package and full-history secret-scan jobs. GitHub issues `#5` and `#8` are synchronized.
+- The next source candidate explicitly preserves the initiating control across asynchronous
+  operations and waits for both operation completion and window reactivation before restoring
+  keyboard focus. Four coordinator tests cover active/inactive and valid/invalid target behavior.
+- A live Windows system-browser launch followed by in-app cancellation returned visible and UI
+  Automation keyboard focus to **Continue to Microsoft sign-in**. The full locked Release gate
+  passed with no known vulnerable packages, 0 warnings/errors, and 80/80 tests.
+- Focus-return evidence is recorded in
+  `docs/release-evidence/windows-external-focus-return-2026-07-17.md`. The VM and host scratch are
+  restored and clean.
 
 ## External publication state
 
@@ -43,10 +54,9 @@
 
 ## Next actions
 
-1. Commit and push the packaged-candidate evidence and synchronized readiness documents to `main`;
-   wait for exact-commit CI to pass.
-2. Synchronize GitHub issues `#5` and `#8` with the committed evidence. Keep P-09 and P-15 open.
-3. Continue Preview-critical gates: independent security review, live identity/MFA/Conditional
+1. Commit and push the focus-return implementation, tests, evidence, and synchronized readiness
+   documents to `main`; wait for exact-commit CI and synchronize GitHub issues `#5` and `#8`.
+2. Continue Preview-critical gates: independent security review, live identity/MFA/Conditional
    Access and Windows Hello tests, full keyboard/NVDA/Narrator/usability evidence, signing setup,
    WinGet acceptance, Chocolatey ingestion, and the final signed-candidate go/no-go.
 

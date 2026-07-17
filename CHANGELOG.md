@@ -14,6 +14,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Changed
 
+- Restore keyboard focus to the initiating control after external Entra, Windows Hello, or other asynchronous operation surfaces close, while rejecting controls that became unavailable.
 - Raise numeric stepper controls so their rendered increment and decrement targets meet the WCAG 2.2 AA 24-pixel minimum at default Windows scaling.
 - Honor the Windows 100–225% text-size preference through centralized font resources, choose the stacked layout from effective text-scaled width, and wrap the product title so all tabs and task boundaries remain reachable at 200% text-only scaling.
 - Follow Windows High Contrast changes at runtime and use system theme resources for readable text-entry placeholders and keyboard-focused selectors.

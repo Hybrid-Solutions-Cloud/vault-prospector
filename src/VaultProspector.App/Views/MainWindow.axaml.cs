@@ -1,6 +1,9 @@
+using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using VaultProspector.App.ViewModels;
 
@@ -12,11 +15,16 @@ public partial class MainWindow : Window
     private readonly double _textScaleFactor;
     private bool? _isNarrowLayout;
     private IPlatformSettings? _platformSettings;
+    private MainViewModel? _subscribedViewModel;
+    private readonly FocusReturnCoordinator<Control> _focusReturn = new();
 
     public MainWindow()
     {
         InitializeComponent();
         _textScaleFactor = WindowsTextScale.ReadFactor();
+        AddHandler(InputElement.GotFocusEvent, MainWindow_OnGotFocus, RoutingStrategies.Bubble, true);
+        DataContextChanged += MainWindow_OnDataContextChanged;
+        Activated += MainWindow_OnActivated;
         Opened += MainWindow_OnOpened;
         Closed += MainWindow_OnClosed;
         SizeChanged += (_, _) => ApplyResponsiveLayout(
@@ -39,9 +47,63 @@ public partial class MainWindow : Window
 
     private void MainWindow_OnClosed(object? sender, EventArgs e)
     {
+        DataContextChanged -= MainWindow_OnDataContextChanged;
+        Activated -= MainWindow_OnActivated;
+        UnsubscribeFromViewModel();
         if (_platformSettings is not null)
             _platformSettings.ColorValuesChanged -= PlatformSettings_OnColorValuesChanged;
         _platformSettings = null;
+    }
+
+    private void MainWindow_OnGotFocus(object? sender, FocusChangedEventArgs e)
+    {
+        if (e.Source is Control control) _focusReturn.Remember(control);
+    }
+
+    private void MainWindow_OnDataContextChanged(object? sender, EventArgs e)
+    {
+        UnsubscribeFromViewModel();
+        if (DataContext is not MainViewModel viewModel) return;
+        _subscribedViewModel = viewModel;
+        _subscribedViewModel.PropertyChanged += ViewModel_OnPropertyChanged;
+    }
+
+    private void UnsubscribeFromViewModel()
+    {
+        if (_subscribedViewModel is not null)
+            _subscribedViewModel.PropertyChanged -= ViewModel_OnPropertyChanged;
+        _subscribedViewModel = null;
+    }
+
+    private void ViewModel_OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MainViewModel.IsBusy) || sender is not MainViewModel viewModel) return;
+        if (viewModel.IsBusy)
+        {
+            var focused = FocusManager?.GetFocusedElement() as Control;
+            _focusReturn.OperationStarted(focused);
+            return;
+        }
+
+        _focusReturn.OperationCompleted();
+        Dispatcher.UIThread.Post(TryRestoreOperationFocus, DispatcherPriority.Input);
+    }
+
+    private void MainWindow_OnActivated(object? sender, EventArgs e)
+    {
+        if (_focusReturn.IsRestorePending)
+            Dispatcher.UIThread.Post(TryRestoreOperationFocus, DispatcherPriority.Input);
+    }
+
+    private void TryRestoreOperationFocus()
+    {
+        var control = _focusReturn.TakeRestoreTarget(IsActive, static candidate =>
+            candidate.Focusable &&
+            candidate.IsEffectivelyEnabled &&
+            candidate.IsEffectivelyVisible &&
+            candidate.IsAttachedToVisualTree());
+        if (control is null) return;
+        control.Focus(NavigationMethod.Tab);
     }
 
     private void PlatformSettings_OnColorValuesChanged(object? sender, PlatformColorValues values) =>
