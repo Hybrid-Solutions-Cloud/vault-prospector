@@ -56,6 +56,9 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _errorMessage = string.Empty;
     [ObservableProperty] private string _recoveryText = string.Empty;
 
+    public bool HasSelectedIdentity => SelectedIdentity is not null;
+    public bool HasSelectedWorkspace => SelectedWorkspace is not null;
+
     [RelayCommand]
     public async Task InitializeAsync()
     {
@@ -75,7 +78,7 @@ public sealed partial class MainViewModel(
         });
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartOperation))]
     private Task AddIdentityAsync() => RunAsync(async cancellationToken =>
     {
         var clientId = EffectiveClientId();
@@ -115,10 +118,10 @@ public sealed partial class MainViewModel(
         StatusText = "Cancelling the active operation…";
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartOperation))]
     private Task SearchAsync() => RunAsync(SearchCoreAsync);
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedResult))]
     private Task ToggleFavoriteAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
@@ -126,7 +129,7 @@ public sealed partial class MainViewModel(
         await SearchCoreAsync(cancellationToken);
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedSecret))]
     private Task RevealAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
@@ -136,7 +139,7 @@ public sealed partial class MainViewModel(
         StatusText = "Secret revealed for 10 seconds after Windows Hello verification.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedSecret))]
     private Task CopyAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
@@ -144,7 +147,7 @@ public sealed partial class MainViewModel(
         StatusText = $"Copied. Clipboard clears after {Math.Clamp(ClipboardClearSeconds, 5, 300)} seconds if unchanged.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanCacheSelectedSecret))]
     private Task CacheSelectedAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
@@ -152,7 +155,7 @@ public sealed partial class MainViewModel(
         StatusText = $"Encrypted offline copy expires in {MaximumCacheHours} hours.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedSecret))]
     private Task OpenOfflineAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
@@ -162,7 +165,7 @@ public sealed partial class MainViewModel(
         StatusText = "Offline secret opened for 10 seconds after Windows Hello verification.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedSecret))]
     private Task PurgeSelectedCachedValueAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
@@ -170,7 +173,7 @@ public sealed partial class MainViewModel(
         StatusText = "The selected offline value was purged.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedResult))]
     private Task PurgeSelectedVaultCacheAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
@@ -178,7 +181,7 @@ public sealed partial class MainViewModel(
         StatusText = "Offline values for the selected vault were purged.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedWorkspace))]
     private Task PurgeSelectedWorkspaceCacheAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedWorkspace is null) return;
@@ -186,14 +189,14 @@ public sealed partial class MainViewModel(
         StatusText = "Offline values for the selected workspace were purged.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartOperation))]
     private Task PurgeAllCachedValuesAsync() => RunAsync(async cancellationToken =>
     {
         await protectedValueStore.PurgeAllAsync(cancellationToken);
         StatusText = "All offline values were purged.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanCreateWorkspace))]
     private Task CreateWorkspaceAsync() => RunAsync(async cancellationToken =>
     {
         var workspace = new Workspace(Guid.NewGuid(), WorkspaceName.Trim(), string.Empty, Workspaces.Count, CurrentPolicy());
@@ -203,7 +206,7 @@ public sealed partial class MainViewModel(
         StatusText = $"Workspace {workspace.Name} created.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAddSelectedVaultToWorkspace))]
     private Task AddSelectedVaultToWorkspaceAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedWorkspace is null || SelectedResult is null) return;
@@ -212,7 +215,7 @@ public sealed partial class MainViewModel(
         StatusText = $"Added the selected vault to {SelectedWorkspace.Name}.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAddSelectedIdentityToWorkspace))]
     private Task AddSelectedIdentityToWorkspaceAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedWorkspace is null || SelectedIdentity is null) return;
@@ -221,7 +224,7 @@ public sealed partial class MainViewModel(
         StatusText = $"Added the selected identity to {SelectedWorkspace.Name}.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedWorkspace))]
     private Task RemoveWorkspaceAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedWorkspace is null) return;
@@ -233,7 +236,7 @@ public sealed partial class MainViewModel(
         StatusText = "Workspace and its workspace-scoped offline values were removed.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartOperation))]
     private Task SaveSettingsAsync() => RunAsync(async cancellationToken =>
     {
         await SaveSettingsCoreAsync(cancellationToken);
@@ -256,6 +259,7 @@ public sealed partial class MainViewModel(
             ExpiredOnly: ExpiredOnly,
             StaleOnly: StaleOnly,
             RecentlyAccessedFirst: RecentlyAccessedFirst), cancellationToken);
+        SelectedResult = null;
         Results.Clear();
         foreach (var result in results) Results.Add(new SearchResultRow(result));
         StatusText = $"{Results.Count} indexed objects. Values were not retrieved.";
@@ -263,9 +267,12 @@ public sealed partial class MainViewModel(
 
     private async Task ReloadIdentitiesAsync(CancellationToken cancellationToken)
     {
+        var selectedIdentityId = SelectedIdentity?.Id;
         Identities.Clear();
         foreach (var identity in await repository.GetIdentitiesAsync(cancellationToken)) Identities.Add(identity);
-        SelectedIdentity ??= Identities.FirstOrDefault();
+        SelectedIdentity = selectedIdentityId is null
+            ? Identities.FirstOrDefault()
+            : Identities.FirstOrDefault(identity => identity.Id == selectedIdentityId) ?? Identities.FirstOrDefault();
         IsFirstRun = Identities.Count == 0;
     }
 
@@ -283,18 +290,77 @@ public sealed partial class MainViewModel(
 
     private string EffectiveClientId() => UseCustomClientId ? ClientId.Trim() : ProductIdentity.DefaultClientId;
 
+    private bool CanStartOperation() => !IsBusy;
     private bool CanUseSelectedIdentity() => SelectedIdentity is not null && !IsBusy;
+    private bool CanUseSelectedResult() => SelectedResult is not null && !IsBusy;
+    private bool CanUseSelectedSecret() => SelectedResult?.Result.Item.ObjectType is VaultObjectType.Secret && !IsBusy;
+    private bool CanCacheSelectedSecret() => OfflineCacheEnabled && CanUseSelectedSecret();
+    private bool CanUseSelectedWorkspace() => SelectedWorkspace is not null && !IsBusy;
+    private bool CanCreateWorkspace() => !string.IsNullOrWhiteSpace(WorkspaceName) && !IsBusy;
+    private bool CanAddSelectedVaultToWorkspace() => SelectedWorkspace is not null && SelectedResult is not null && !IsBusy;
+    private bool CanAddSelectedIdentityToWorkspace() => SelectedWorkspace is not null && SelectedIdentity is not null && !IsBusy;
 
     partial void OnSelectedIdentityChanged(ConnectedIdentity? value)
     {
+        OnPropertyChanged(nameof(HasSelectedIdentity));
+        if (value is null) FilterSelectedIdentity = false;
         RemoveIdentityCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
+        AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedResultChanged(SearchResultRow? value)
+    {
+        ToggleFavoriteCommand.NotifyCanExecuteChanged();
+        RevealCommand.NotifyCanExecuteChanged();
+        CopyCommand.NotifyCanExecuteChanged();
+        CacheSelectedCommand.NotifyCanExecuteChanged();
+        OpenOfflineCommand.NotifyCanExecuteChanged();
+        PurgeSelectedCachedValueCommand.NotifyCanExecuteChanged();
+        PurgeSelectedVaultCacheCommand.NotifyCanExecuteChanged();
+        AddSelectedVaultToWorkspaceCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedWorkspaceChanged(Workspace? value)
+    {
+        OnPropertyChanged(nameof(HasSelectedWorkspace));
+        if (value is null) FilterSelectedWorkspace = false;
+        PurgeSelectedWorkspaceCacheCommand.NotifyCanExecuteChanged();
+        AddSelectedVaultToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
+        RemoveWorkspaceCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnOfflineCacheEnabledChanged(bool value)
+    {
+        CacheSelectedCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnWorkspaceNameChanged(string value)
+    {
+        CreateWorkspaceCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnIsBusyChanged(bool value)
     {
+        AddIdentityCommand.NotifyCanExecuteChanged();
         RemoveIdentityCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
+        SearchCommand.NotifyCanExecuteChanged();
+        ToggleFavoriteCommand.NotifyCanExecuteChanged();
+        RevealCommand.NotifyCanExecuteChanged();
+        CopyCommand.NotifyCanExecuteChanged();
+        CacheSelectedCommand.NotifyCanExecuteChanged();
+        OpenOfflineCommand.NotifyCanExecuteChanged();
+        PurgeSelectedCachedValueCommand.NotifyCanExecuteChanged();
+        PurgeSelectedVaultCacheCommand.NotifyCanExecuteChanged();
+        PurgeSelectedWorkspaceCacheCommand.NotifyCanExecuteChanged();
+        PurgeAllCachedValuesCommand.NotifyCanExecuteChanged();
+        CreateWorkspaceCommand.NotifyCanExecuteChanged();
+        AddSelectedVaultToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
+        RemoveWorkspaceCommand.NotifyCanExecuteChanged();
+        SaveSettingsCommand.NotifyCanExecuteChanged();
     }
 
     private CachePolicy CurrentPolicy() => new(OfflineCacheEnabled, TimeSpan.FromHours(Math.Clamp(MaximumCacheHours, 1, 168)), true, true);

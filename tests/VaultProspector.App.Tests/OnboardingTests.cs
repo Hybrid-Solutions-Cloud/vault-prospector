@@ -99,7 +99,7 @@ public sealed class OnboardingTests : IDisposable
     [Fact]
     public void IdentityActionsTrackSelectionAndBusyState()
     {
-        var viewModel = new MainViewModel(null!, null!, null!, null!, null!, null!, null!, null!);
+        var viewModel = CreateViewModel();
 
         Assert.False(viewModel.SynchronizeCommand.CanExecute(null));
         Assert.False(viewModel.RemoveIdentityCommand.CanExecute(null));
@@ -127,6 +127,166 @@ public sealed class OnboardingTests : IDisposable
 
         Assert.False(viewModel.SynchronizeCommand.CanExecute(null));
         Assert.False(viewModel.RemoveIdentityCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void ResultActionsRequireCompatibleSelectionAndCachePolicy()
+    {
+        var viewModel = CreateViewModel();
+
+        Assert.False(viewModel.ToggleFavoriteCommand.CanExecute(null));
+        Assert.False(viewModel.RevealCommand.CanExecute(null));
+        Assert.False(viewModel.PurgeSelectedVaultCacheCommand.CanExecute(null));
+
+        viewModel.SelectedResult = CreateResult(VaultObjectType.Key);
+
+        Assert.True(viewModel.ToggleFavoriteCommand.CanExecute(null));
+        Assert.True(viewModel.PurgeSelectedVaultCacheCommand.CanExecute(null));
+        Assert.False(viewModel.RevealCommand.CanExecute(null));
+        Assert.False(viewModel.CopyCommand.CanExecute(null));
+        Assert.False(viewModel.OpenOfflineCommand.CanExecute(null));
+        Assert.False(viewModel.PurgeSelectedCachedValueCommand.CanExecute(null));
+
+        viewModel.SelectedResult = CreateResult(VaultObjectType.Secret);
+
+        Assert.True(viewModel.RevealCommand.CanExecute(null));
+        Assert.True(viewModel.CopyCommand.CanExecute(null));
+        Assert.True(viewModel.OpenOfflineCommand.CanExecute(null));
+        Assert.True(viewModel.PurgeSelectedCachedValueCommand.CanExecute(null));
+        Assert.False(viewModel.CacheSelectedCommand.CanExecute(null));
+
+        viewModel.OfflineCacheEnabled = true;
+
+        Assert.True(viewModel.CacheSelectedCommand.CanExecute(null));
+
+        viewModel.IsBusy = true;
+
+        Assert.False(viewModel.ToggleFavoriteCommand.CanExecute(null));
+        Assert.False(viewModel.RevealCommand.CanExecute(null));
+        Assert.False(viewModel.CacheSelectedCommand.CanExecute(null));
+        Assert.False(viewModel.PurgeSelectedVaultCacheCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void WorkspaceActionsRequireTheirExactPrerequisites()
+    {
+        var viewModel = CreateViewModel();
+
+        Assert.False(viewModel.CreateWorkspaceCommand.CanExecute(null));
+        Assert.False(viewModel.RemoveWorkspaceCommand.CanExecute(null));
+        Assert.False(viewModel.AddSelectedVaultToWorkspaceCommand.CanExecute(null));
+        Assert.False(viewModel.AddSelectedIdentityToWorkspaceCommand.CanExecute(null));
+
+        viewModel.WorkspaceName = "  ";
+        Assert.False(viewModel.CreateWorkspaceCommand.CanExecute(null));
+        viewModel.WorkspaceName = "Operations";
+        Assert.True(viewModel.CreateWorkspaceCommand.CanExecute(null));
+
+        viewModel.SelectedWorkspace = new Workspace(Guid.NewGuid(), "Operations", string.Empty, 0);
+
+        Assert.True(viewModel.RemoveWorkspaceCommand.CanExecute(null));
+        Assert.True(viewModel.PurgeSelectedWorkspaceCacheCommand.CanExecute(null));
+        Assert.False(viewModel.AddSelectedVaultToWorkspaceCommand.CanExecute(null));
+        Assert.False(viewModel.AddSelectedIdentityToWorkspaceCommand.CanExecute(null));
+
+        viewModel.SelectedResult = CreateResult(VaultObjectType.Certificate);
+        Assert.True(viewModel.AddSelectedVaultToWorkspaceCommand.CanExecute(null));
+
+        viewModel.SelectedIdentity = CreateIdentity();
+        Assert.True(viewModel.AddSelectedIdentityToWorkspaceCommand.CanExecute(null));
+
+        viewModel.IsBusy = true;
+
+        Assert.False(viewModel.CreateWorkspaceCommand.CanExecute(null));
+        Assert.False(viewModel.RemoveWorkspaceCommand.CanExecute(null));
+        Assert.False(viewModel.PurgeSelectedWorkspaceCacheCommand.CanExecute(null));
+        Assert.False(viewModel.AddSelectedVaultToWorkspaceCommand.CanExecute(null));
+        Assert.False(viewModel.AddSelectedIdentityToWorkspaceCommand.CanExecute(null));
+
+        viewModel.IsBusy = false;
+        viewModel.SelectedWorkspace = null;
+
+        Assert.False(viewModel.RemoveWorkspaceCommand.CanExecute(null));
+        Assert.False(viewModel.PurgeSelectedWorkspaceCacheCommand.CanExecute(null));
+        Assert.False(viewModel.AddSelectedVaultToWorkspaceCommand.CanExecute(null));
+        Assert.False(viewModel.AddSelectedIdentityToWorkspaceCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void GeneralOperationsDisableWhileBusyAndEmptySelectionFiltersReset()
+    {
+        var viewModel = CreateViewModel();
+
+        Assert.True(viewModel.AddIdentityCommand.CanExecute(null));
+        Assert.True(viewModel.SearchCommand.CanExecute(null));
+        Assert.True(viewModel.SaveSettingsCommand.CanExecute(null));
+        Assert.True(viewModel.PurgeAllCachedValuesCommand.CanExecute(null));
+
+        viewModel.SelectedIdentity = CreateIdentity();
+        viewModel.SelectedWorkspace = new Workspace(Guid.NewGuid(), "Operations", string.Empty, 0);
+        Assert.True(viewModel.HasSelectedIdentity);
+        Assert.True(viewModel.HasSelectedWorkspace);
+        viewModel.FilterSelectedIdentity = true;
+        viewModel.FilterSelectedWorkspace = true;
+
+        viewModel.SelectedIdentity = null;
+        viewModel.SelectedWorkspace = null;
+
+        Assert.False(viewModel.HasSelectedIdentity);
+        Assert.False(viewModel.HasSelectedWorkspace);
+        Assert.False(viewModel.FilterSelectedIdentity);
+        Assert.False(viewModel.FilterSelectedWorkspace);
+
+        viewModel.IsBusy = true;
+
+        Assert.False(viewModel.AddIdentityCommand.CanExecute(null));
+        Assert.False(viewModel.SearchCommand.CanExecute(null));
+        Assert.False(viewModel.SaveSettingsCommand.CanExecute(null));
+        Assert.False(viewModel.PurgeAllCachedValuesCommand.CanExecute(null));
+    }
+
+    private static MainViewModel CreateViewModel() => new(null!, null!, null!, null!, null!, null!, null!, null!);
+
+    private static ConnectedIdentity CreateIdentity() => new(
+        Guid.NewGuid(),
+        ProductIdentity.DefaultClientId,
+        "account",
+        "user@example.invalid",
+        "Test identity",
+        "tenant",
+        AuthenticationState.Ready,
+        DateTimeOffset.UtcNow);
+
+    private static SearchResultRow CreateResult(VaultObjectType objectType)
+    {
+        var vaultId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var vault = new VaultResource(
+            vaultId,
+            $"/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/{vaultId:N}",
+            "vault",
+            "tenant",
+            "subscription",
+            "rg",
+            "eastus",
+            new Dictionary<string, string>(),
+            new Uri("https://vault.vault.azure.net/"),
+            now);
+        var item = new VaultItem(
+            Guid.NewGuid(),
+            vaultId,
+            "item",
+            objectType,
+            true,
+            new Dictionary<string, string>(),
+            null,
+            now,
+            now,
+            null,
+            "version",
+            "fingerprint",
+            now);
+        return new SearchResultRow(new SearchResult(item, vault, "identity", "tenant", false, null, false));
     }
 
     public void Dispose()

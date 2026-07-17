@@ -45,8 +45,8 @@
                 <CheckBox Content="Stale" IsChecked="{Binding StaleOnly}" Margin="0,0,14,6" />
                 <CheckBox Content="Enabled" IsChecked="{Binding EnabledOnly}" Margin="0,0,14,6" />
                 <CheckBox Content="Expired" IsChecked="{Binding ExpiredOnly}" Margin="0,0,14,6" />
-                <CheckBox Content="Selected identity" IsChecked="{Binding FilterSelectedIdentity}" Margin="0,0,14,6" />
-                <CheckBox Content="Selected workspace" IsChecked="{Binding FilterSelectedWorkspace}" Margin="0,0,14,6" />
+                <CheckBox Content="Selected identity" IsChecked="{Binding FilterSelectedIdentity}" IsEnabled="{Binding HasSelectedIdentity}" Margin="0,0,14,6" />
+                <CheckBox Content="Selected workspace" IsChecked="{Binding FilterSelectedWorkspace}" IsEnabled="{Binding HasSelectedWorkspace}" Margin="0,0,14,6" />
                 <CheckBox Content="Recent first" IsChecked="{Binding RecentlyAccessedFirst}" Margin="0,0,14,6" />
               </WrapPanel>
               <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
@@ -94,7 +94,7 @@
                   <Button Content="Reveal" Command="{Binding RevealCommand}" Margin="0,0,8,8" />
                   <Button Content="Copy securely" Command="{Binding CopyCommand}" Margin="0,0,8,8" />
                   <Button Content="Favorite" Command="{Binding ToggleFavoriteCommand}" Margin="0,0,8,8" />
-                  <Button Content="Cache offline" Command="{Binding CacheSelectedCommand}" Margin="0,0,8,8" IsEnabled="{Binding OfflineCacheEnabled}" />
+                  <Button Content="Cache offline" Command="{Binding CacheSelectedCommand}" Margin="0,0,8,8" />
                   <Button Content="Open offline" Command="{Binding OpenOfflineCommand}" Margin="0,0,8,8" />
                   <Button Content="Purge offline copy" Command="{Binding PurgeSelectedCachedValueCommand}" Margin="0,0,8,8" />
                 </WrapPanel>

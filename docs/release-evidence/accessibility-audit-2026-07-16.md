@@ -23,6 +23,7 @@ P-15 does not pass from this review. Complete keyboard behavior, actual assistiv
 | A11Y-05 | Screen reader and security prompts | 1.3.1, 4.1.2 | Major evidence gap | No NVDA or Narrator transcript exists for onboarding, Entra handoff/return, Windows Hello, errors, reveal masking, cache state, or purge confirmation. Test with real assistive technology on a clean supported machine. |
 | A11Y-06 | Reflow, scaling, and contrast modes | 1.4.4, 1.4.10, 1.4.11 | Major evidence gap | Test Windows text scaling and display scaling through 200%, minimum window size, High Contrast themes, and focus visibility without clipping or loss of function. |
 | A11Y-07 | Complete core-task usability | 2.1.1, 2.4.3, 3.3.1 | Release blocker | Structured tests must cover identity connection/removal, sync/cancel, search/filter, reveal, copy, cache/open/purge, settings, uninstall/exit, and failure recovery with representative users. |
+| A11Y-08 | Context-dependent command state | 2.1.1, 2.4.3, 3.2.4 | Implemented and unit tested; runtime retest pending | Command availability now follows identity/workspace/result selection, secret object type, offline-cache policy, non-empty workspace name, and busy state. Selected filters reset and disable when their context disappears; stale result and identity selections are reconciled after refresh. Eleven app tests cover the state matrix. The broader Windows keyboard retest could not run because the desktop-control helper returned access denied; do not treat this row as runtime-passed yet. |
 
 ## Fixed-color contrast checks
 

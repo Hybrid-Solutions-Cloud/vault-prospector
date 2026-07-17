@@ -12,6 +12,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 ### Changed
 
 - Disable identity synchronization and removal until an identity is selected, removing unavailable actions from first-run keyboard navigation.
+- Disable result, secret, cache, workspace, filter, and general operation controls unless their exact selection, object-type, policy, input, and busy-state prerequisites are satisfied.
+- Clear stale result selections after search and reconcile identity selection after refresh or removal.
 
 ### Security
 
