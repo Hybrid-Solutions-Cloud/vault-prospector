@@ -6,7 +6,7 @@
 
 **Last updated:** 2026-07-16
 
-**Last exercised:** Preview.2 build/install/upgrade/uninstall paths on 2026-07-16; package-service failure handling exercised during Chocolatey HTTP 504 responses
+**Last exercised:** Preview.2-to-corrected-candidate failed-upgrade rollback plus full MSI lifecycle on 2026-07-17; package-service failure handling exercised during Chocolatey HTTP 504 responses
 
 ## Purpose
 
@@ -249,6 +249,7 @@ timestamping, revocation, and compromise procedure must be approved before P-13 
 
 | Date | Operator | Result |
 | --- | --- | --- |
+| 2026-07-17 14:27 UTC | Codex under HCS governance | A deterministic post-`InstallFiles` failure first exposed that the default WiX major-upgrade schedule removed the working prior version. After moving `RemoveExistingProducts` inside the transaction, the corrected candidate restored the exact Preview.2 registration/files/shortcut/state and passed all 27 lifecycle gates. |
 | 2026-07-17 12:41 UTC | Codex under HCS governance | Revalidated the Preview.2 Chocolatey package hash and HCS Key Vault credential path; the service front door returned HTTP 200 but the sixth authenticated upload returned HTTP 504, followed by exact OData 404 and empty exact pre-release search |
 | 2026-07-17 UTC | Microsoft WinGet validation / Codex review | Build 368562 passed technical manifest, URL, scan, and installation validation; a Policy-Test-2.7 manual content review remains before merge |
 | 2026-07-17 03:44 UTC | Codex under HCS governance | Revalidated the Preview.2 Chocolatey package hash; a fifth authenticated push returned HTTP 504 and the exact post-check remained 404, proving no ingestion |

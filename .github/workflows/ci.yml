@@ -47,6 +47,7 @@ jobs:
         shell: pwsh
         run: |
           ./scripts/PackageInstaller.ps1 -Version $env:CI_CANDIDATE_VERSION
+          ./scripts/Test-InstallerUpgradeSchedule.ps1 -InstallerPath "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi"
           ./scripts/PackageDistribution.ps1 -Version $env:CI_CANDIDATE_VERSION
           winget validate --manifest "./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/$env:CI_CANDIDATE_VERSION"
 

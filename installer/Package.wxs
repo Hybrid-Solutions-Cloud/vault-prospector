@@ -10,7 +10,9 @@
     Compressed="yes">
 
     <SummaryInformation Description="Vault Prospector Windows desktop application" />
-    <MajorUpgrade DowngradeErrorMessage="A newer version of Vault Prospector is already installed." />
+    <MajorUpgrade
+      Schedule="afterInstallInitialize"
+      DowngradeErrorMessage="A newer version of Vault Prospector is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <Icon Id="VaultProspector.ico" SourceFile="..\src\VaultProspector.App\Assets\vault-prospector.ico" />

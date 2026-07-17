@@ -75,6 +75,13 @@
   run `29585217953` passed both `build-test` and full-history `secret-scan`. GitHub issues `#5` and
   `#9` are synchronized with the narrow result; P-05 and P-08 remain open because interactive and
   independent-review evidence is still outstanding.
+- P-09 failed-upgrade testing found a real installer defect: WiX's default major-upgrade schedule
+  left no installed version after a deterministic post-`InstallFiles` failure. The package now
+  schedules `RemoveExistingProducts` after `InstallInitialize`. An unreleased corrected candidate
+  then passed 27/27 gates from immutable Preview.2, including exact registration/file/shortcut/state
+  rollback, successful upgrade/repair, downgrade rejection, uninstall, and cleanup. Evidence is in
+  `docs/release-evidence/windows-installer-failed-upgrade-2026-07-17.md`; final signed-candidate and
+  independent repetition remain open.
 
 ## External publication state
 

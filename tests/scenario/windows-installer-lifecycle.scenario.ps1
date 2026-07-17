@@ -5,8 +5,9 @@
 
 .DESCRIPTION
     Runs a fail-closed scenario covering checksum verification, clean installation of the
-    previous Preview, major upgrade, forced repair of a deliberately changed non-secret
-    application file, downgrade rejection, uninstall cleanup, and retained user state.
+    previous Preview, transactional rollback of a deliberately failed major upgrade, successful
+    major upgrade, forced repair of a deliberately changed non-secret application file, downgrade
+    rejection, uninstall cleanup, and retained user state.
     The machine must start without Vault Prospector installed. The scenario restores that
     state in a best-effort cleanup block and writes structured JSON plus MSI logs.
 
@@ -28,13 +29,14 @@
 .NOTES
     Author: Kristopher Turner
     Contact: kris@hybridsolutions.cloud
-    Version: 1.0.0
-    ScriptVersion    = "1.0.0"
+    Version: 1.1.0
+    ScriptVersion    = "1.1.0"
     TaskReference    = "preview-readiness/P-09-installer-lifecycle"
     DocumentationRef = "docs/release-checklist.md"
-    LastUpdated      = "2026-07-16"
-    UpdatedBy        = "Kristopher Turner"
+    LastUpdated      = "2026-07-17"
+    UpdatedBy        = "Codex"
     ChangeLog        = @(
+        "1.1.0 - 2026-07-17 - Added deterministic post-InstallFiles failure and transactional rollback validation"
         "1.0.0 - 2026-07-16 - Added repeatable install, upgrade, repair, downgrade, uninstall, and retained-state scenario"
     )
 #>
@@ -82,6 +84,8 @@ $failureDetail = $null
 $sentinelCreated = $false
 $dataDirectoryExisted = $false
 $installationMutationStarted = $false
+$failedUpgradeMsiPath = $null
+$failedUpgradeMsiHash = $null
 
 function Write-Log {
     param(
@@ -139,6 +143,60 @@ function Get-MsiProperty {
         return $record.StringData(1).Trim()
     } catch {
         throw "Failed to read MSI property '$Property' from '$Path': $($_.Exception.Message)"
+    }
+}
+
+function New-DeliberatelyFailingMsi {
+    param(
+        [Parameter(Mandatory)] [string]$SourcePath,
+        [Parameter(Mandatory)] [string]$DestinationPath
+    )
+
+    Copy-Item -LiteralPath $SourcePath -Destination $DestinationPath -Force
+    $installer = $null
+    $database = $null
+    $tableView = $null
+    $createTableView = $null
+    $customActionView = $null
+    $sequenceView = $null
+    try {
+        $installer = New-Object -ComObject WindowsInstaller.Installer
+        $database = $installer.OpenDatabase($DestinationPath, 1)
+        $tableView = $database.OpenView(
+            "SELECT ``Name`` FROM ``_Tables`` WHERE ``Name`` = 'CustomAction'")
+        [void]$tableView.Execute()
+        $hasCustomActionTable = $null -ne $tableView.Fetch()
+        if (-not $hasCustomActionTable) {
+            $createTableView = $database.OpenView(
+                "CREATE TABLE ``CustomAction`` (" +
+                "``Action`` CHAR(72) NOT NULL, ``Type`` SHORT NOT NULL, " +
+                "``Source`` CHAR(72), ``Target`` CHAR(0), ``ExtendedType`` LONG " +
+                "PRIMARY KEY ``Action``)")
+            [void]$createTableView.Execute()
+        }
+        $customActionView = $database.OpenView(
+            "INSERT INTO ``CustomAction`` (``Action``, ``Type``, ``Source``, ``Target``) " +
+            "VALUES ('VP_TEST_FAIL_AFTER_FILES', 19, '', 'Deliberate update failure for rollback validation')")
+        [void]$customActionView.Execute()
+        $sequenceView = $database.OpenView(
+            "INSERT INTO ``InstallExecuteSequence`` (``Action``, ``Condition``, ``Sequence``) " +
+            "VALUES ('VP_TEST_FAIL_AFTER_FILES', 'NOT Installed', 4001)")
+        [void]$sequenceView.Execute()
+        [void]$database.Commit()
+    } catch {
+        throw "Failed to create the deliberate rollback-probe MSI: $($_.Exception.Message)"
+    } finally {
+        foreach ($comObject in @(
+                $sequenceView,
+                $customActionView,
+                $createTableView,
+                $tableView,
+                $database,
+                $installer)) {
+            if ($null -ne $comObject -and [Runtime.InteropServices.Marshal]::IsComObject($comObject)) {
+                [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($comObject)
+            }
+        }
     }
 }
 
@@ -202,6 +260,12 @@ function Write-ScenarioResult {
             product_version = $currentProductVersion
             upgrade_code = $currentUpgradeCode
         }
+        failed_upgrade_probe = [ordered]@{
+            file_name = if ($failedUpgradeMsiPath) { [System.IO.Path]::GetFileName($failedUpgradeMsiPath) } else { $null }
+            sha256 = $failedUpgradeMsiHash
+            failure_action = 'VP_TEST_FAIL_AFTER_FILES'
+            failure_sequence = 4001
+        }
         gates = @($gates)
     }
     $result | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $resultPath -Encoding utf8NoBOM
@@ -263,6 +327,24 @@ try {
     $previousRegistrations = @(Get-VaultProspectorInstallation)
     Add-Gate -Name 'install-previous-registration' -Passed ($previousRegistrations.Count -eq 1 -and $previousRegistrations[0].DisplayVersion -eq $previousProductVersion) -Detail "Exactly one Installed apps entry reports $previousProductVersion."
     Add-Gate -Name 'install-previous-files' -Passed ((Test-Path -LiteralPath $applicationPath -PathType Leaf) -and (Test-Path -LiteralPath $shortcutPath -PathType Leaf)) -Detail 'Executable and Start menu shortcut are present.'
+
+    $previousApplicationHash = (Get-FileHash -LiteralPath $applicationPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    $previousRuntimeConfigHash = (Get-FileHash -LiteralPath $repairProbePath -Algorithm SHA256).Hash.ToUpperInvariant()
+    $failedUpgradeMsiPath = Join-Path $runDirectory 'VaultProspector-deliberate-failed-upgrade.msi'
+    New-DeliberatelyFailingMsi -SourcePath $currentPath -DestinationPath $failedUpgradeMsiPath
+    $failedUpgradeMsiHash = (Get-FileHash -LiteralPath $failedUpgradeMsiPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    Add-Gate -Name 'failed-upgrade-probe-distinct' -Passed ($failedUpgradeMsiHash -ne $actualCurrentHash) -Detail "Test-only rollback probe has distinct SHA-256 $failedUpgradeMsiHash."
+
+    $failedUpgrade = Invoke-MsiExec -Step 'upgrade-current-deliberate-failure' -Arguments @('/i', "`"$failedUpgradeMsiPath`"")
+    Add-Gate -Name 'failed-upgrade-exit' -Passed ($failedUpgrade.ExitCode -eq 1603) -Detail "Injected post-InstallFiles failure returned Windows Installer exit code $($failedUpgrade.ExitCode)."
+    $afterFailedUpgrade = @(Get-VaultProspectorInstallation)
+    Add-Gate -Name 'failed-upgrade-registration-rollback' -Passed ($afterFailedUpgrade.Count -eq 1 -and $afterFailedUpgrade[0].DisplayVersion -eq $previousProductVersion) -Detail "Rollback restored exactly one Installed apps entry at $previousProductVersion."
+    Add-Gate -Name 'failed-upgrade-file-rollback' -Passed (
+        (Get-FileHash -LiteralPath $applicationPath -Algorithm SHA256).Hash.ToUpperInvariant() -eq $previousApplicationHash -and
+        (Get-FileHash -LiteralPath $repairProbePath -Algorithm SHA256).Hash.ToUpperInvariant() -eq $previousRuntimeConfigHash
+    ) -Detail 'Rollback restored byte-identical previous executable and runtime configuration.'
+    Add-Gate -Name 'failed-upgrade-shortcut-rollback' -Passed (Test-Path -LiteralPath $shortcutPath -PathType Leaf) -Detail 'Rollback preserved the previous Start menu shortcut.'
+    Add-Gate -Name 'failed-upgrade-state-rollback' -Passed (Test-Path -LiteralPath $sentinelPath -PathType Leaf) -Detail 'Rollback preserved pre-existing LocalApplicationData state.'
 
     $upgradeCurrent = Invoke-MsiExec -Step 'upgrade-current' -Arguments @('/i', "`"$currentPath`"")
     Add-Gate -Name 'upgrade-current-exit' -Passed (Test-SuccessExitCode $upgradeCurrent.ExitCode) -Detail "msiexec returned $($upgradeCurrent.ExitCode)."

@@ -9,6 +9,8 @@ Record the Windows version, package checksum, tester, and time with the release 
 - [ ] MSI installs silently with exit code 0, registers in Installed apps, and creates the Start menu shortcut.
 - [ ] Forced MSI repair restores a deliberately changed packaged non-secret file.
 - [ ] MSI upgrade replaces the previous version without leaving duplicate Installed apps entries.
+- [ ] A deliberately failed upgrade after `InstallFiles` restores the previous registration,
+  byte-identical packaged files, shortcut, and retained user state.
 - [ ] Installing the previous MSI over the current version is rejected and leaves the current version installed.
 - [ ] MSI uninstall removes program files and the Start menu shortcut without deleting user state.
 - [ ] ZIP extracts without an installer or administrator rights.
@@ -60,4 +62,4 @@ pwsh ./tests/scenario/windows-installer-lifecycle.scenario.ps1 `
   -CurrentSha256 <published-current-sha256>
 ```
 
-The scenario refuses a pre-existing installation and writes timestamped JSON plus verbose MSI logs under `artifacts/installer-lifecycle`. It installs the previous version, upgrades, deliberately changes a packaged non-secret runtime configuration, proves forced repair restores it, proves downgrade rejection preserves the current version, uninstalls, verifies program/shortcut cleanup and retained `%LOCALAPPDATA%` state, then removes only its own sentinel. Archive the result and logs with restricted release evidence; MSI logs can contain machine paths and should not be published without review.
+The scenario refuses a pre-existing installation and writes timestamped JSON plus verbose MSI logs under `artifacts/installer-lifecycle`. It installs the previous version, injects a deterministic post-`InstallFiles` failure into a test-only copy of the candidate, proves transactional rollback restores the previous version, then completes the genuine upgrade. It also deliberately changes a packaged non-secret runtime configuration, proves forced repair restores it, proves downgrade rejection preserves the current version, uninstalls, verifies program/shortcut cleanup and retained `%LOCALAPPDATA%` state, then removes only its own sentinel. Archive the structured result with release evidence. Keep verbose MSI logs restricted because they can contain machine paths; never publish the deliberately modified rollback-probe MSI.
