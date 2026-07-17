@@ -249,4 +249,5 @@ timestamping, revocation, and compromise procedure must be approved before P-13 
 
 | Date | Operator | Result |
 | --- | --- | --- |
+| 2026-07-17 UTC | Codex under HCS governance | Re-downloaded and hash-verified the immutable Preview.2 Chocolatey package; a fourth authenticated push returned HTTP 504 and exact post-checks proved no ingestion |
 | 2026-07-16 | Codex under HCS governance | Initial runbook created from Preview.2 evidence; Chocolatey 504 retry handling exercised; full end-to-end runbook exercise remains a Preview gate |
