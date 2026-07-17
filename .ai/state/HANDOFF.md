@@ -62,6 +62,9 @@
   conservatively. Twelve additional cases cover cryptographic and descriptor tampering, missing
   fields, malformed encodings, cross-item substitution, version behavior, and purge continuation;
   the locked local gate passes 100/100 tests.
+- Offline-cache hardening commit `9a602ba` is pushed to `main`; exact-commit CI run `29583938082`
+  passed both required jobs. GitHub issues `#5` and `#9` contain the findings, remediation, test
+  scope, and explicit remaining independent/runtime boundary.
 
 ## External publication state
 
