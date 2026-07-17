@@ -60,6 +60,13 @@ token. Exact-commit CI run
 passed both `build-test`—including tests, package construction, installer-sequence validation,
 WinGet manifest validation, and dependency inspection—and the full-history `secret-scan` job.
 
+The exact MSI was then published as public test prerelease
+[`v0.1.0-ci.68`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.0-ci.68)
+with its checksum and `ci-candidate.json` provenance. An unauthenticated download of the public MSI
+returned 45,727,744 bytes and independently matched SHA-256
+`C605DF2135F81EBF5B19B14F846A50A41801C8D945A1CCF419F08831B9A3546E`. This establishes a usable
+cross-machine test distribution path without claiming trusted signing or formal Preview approval.
+
 ## Residual work before G-03 can pass
 
 1. Define and test key rotation without losing access to data encrypted under prior key versions.

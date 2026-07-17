@@ -5,6 +5,9 @@
 - Branch: `main`; direct pushes are the operator-approved workflow.
 - Public release: `v0.1.0-preview.2` is **withdrawn** and retained only for immutable evidence and
   existing-install repair/uninstall. Do not install, resubmit, or reuse its artifacts.
+- Public test release: unsigned `v0.1.0-ci.68` is available from the public distribution repository
+  with checksum and CI provenance. Anonymous re-download matched the recorded MSI SHA-256. It is
+  usable for cross-machine evaluation but is not the formally approved Preview promotion.
 - Authoritative gate matrix: `docs/product/release-readiness.md`.
 - Decision: not ready for public Preview promotion or General Availability.
 - Latest pushed validation: withdrawal record commit `709ff3997e73c886168750034d6c8a7f963e9b3b`;
@@ -95,6 +98,9 @@
 
 ## External publication state
 
+- Public unsigned test prerelease `v0.1.0-ci.68` contains the exact green-CI MSI, checksum, and
+  provenance at `Hybrid-Solutions-Cloud/vault-prospector-releases`; anonymous download validation
+  passed. This unblocks immediate testing without changing the signing or formal promotion gates.
 - WinGet PR `microsoft/winget-pkgs#403473` is closed with a withdrawal notice. Microsoft validation
   had passed, but the later failed-upgrade result invalidated the submitted Preview.2 MSI. Submit a
   new PR only for a new signed immutable corrected version.
