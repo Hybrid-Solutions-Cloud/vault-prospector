@@ -14,6 +14,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Changed
 
+- Roll back newly authenticated MSAL accounts when encrypted identity persistence fails, audit offline-secret opens with fail-closed disposal, and track clipboard ownership with a zeroized digest instead of retaining a second plaintext copy.
 - Restore NVDA focus events throughout selected secondary tabs, announce complete safe actionable errors through a focused return control, and sequence polite status announcements before operation focus restoration.
 - Restore keyboard focus to the initiating control after external Entra, Windows Hello, or other asynchronous operation surfaces close, while rejecting controls that became unavailable.
 - Raise numeric stepper controls so their rendered increment and decrement targets meet the WCAG 2.2 AA 24-pixel minimum at default Windows scaling.

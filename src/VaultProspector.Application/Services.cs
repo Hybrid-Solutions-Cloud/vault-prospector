@@ -11,8 +11,27 @@ public sealed class IdentityService(IIdentityProvider provider, IMetadataReposit
         if (!Guid.TryParse(clientId?.Trim(), out var parsedClientId))
             throw new ArgumentException("A valid Microsoft Entra public-client application ID is required.", nameof(clientId));
         var identity = await provider.SignInAsync(parsedClientId.ToString("D"), displayName.Trim(), cancellationToken);
-        await repository.UpsertIdentityAsync(identity, cancellationToken);
-        return identity;
+        try
+        {
+            await repository.UpsertIdentityAsync(identity, cancellationToken);
+            return identity;
+        }
+        catch (Exception persistenceException)
+        {
+            try
+            {
+                await provider.RemoveAsync(identity, CancellationToken.None);
+            }
+            catch (Exception cleanupException)
+            {
+                throw new AggregateException(
+                    "Identity metadata persistence and token-cache rollback both failed.",
+                    persistenceException,
+                    cleanupException);
+            }
+
+            throw;
+        }
     }
 
     public async Task RemoveAsync(Guid identityId, CancellationToken cancellationToken)
@@ -119,8 +138,18 @@ public sealed class SecretAccessService(
         if (!verification.IsAvailable || !await verification.VerifyAsync("Open an offline secret", cancellationToken))
             throw new UnauthorizedAccessException("Local verification was not completed.");
 
-        return await cache.RetrieveAsync(itemId, clock.UtcNow, source.Item.MetadataFingerprint, cancellationToken)
+        var value = await cache.RetrieveAsync(itemId, clock.UtcNow, source.Item.MetadataFingerprint, cancellationToken)
             ?? throw new KeyNotFoundException("No unexpired offline copy exists for the selected secret.");
+        try
+        {
+            await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
+            return value;
+        }
+        catch
+        {
+            value.Dispose();
+            throw;
+        }
     }
 }
 

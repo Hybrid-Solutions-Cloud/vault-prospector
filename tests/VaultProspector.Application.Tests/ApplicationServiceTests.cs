@@ -37,6 +37,25 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task IdentityAdditionRollsBackTokenCacheWhenMetadataPersistenceFails()
+    {
+        var provider = new FakeIdentityProvider();
+        var repository = new FakeRepository(Identity())
+        {
+            UpsertIdentityException = new InvalidOperationException("metadata unavailable"),
+        };
+        var service = new IdentityService(provider, repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddAsync(
+            "11111111-1111-1111-1111-111111111111",
+            "Test",
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(1, provider.RemoveCalls);
+        Assert.Same(repository.UpsertedIdentity, provider.RemovedIdentity);
+    }
+
+    [Fact]
     public async Task SynchronizationPersistsPartialSuccessAndSafeErrors()
     {
         var identity = Identity();
@@ -174,6 +193,27 @@ public sealed class ApplicationServiceTests
         Assert.Equal("offline-value", value.Reveal());
         Assert.Equal(0, provider.RetrieveCalls);
         Assert.Equal(1, store.RetrieveCalls);
+        Assert.Equal(1, repository.RecordAccessCalls);
+    }
+
+    [Fact]
+    public async Task OfflineRetrievalDisposesValueWhenAccessHistoryCannotBeRecorded()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity)
+        {
+            Resolved = (item, Vault(), identity),
+            RecordAccessException = new InvalidOperationException("metadata unavailable"),
+        };
+        var store = new FakeValueStore { Value = "offline-value" };
+        var service = new SecretAccessService(new FakeProvider(), repository, store, new FakeClipboard(), new AlwaysVerify(), new FixedClock());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.RetrieveCachedAsync(item.Id, TestContext.Current.CancellationToken));
+
+        Assert.NotNull(store.LastRetrievedValue);
+        Assert.True(store.LastRetrievedValue.IsDisposed);
     }
 
     [Fact]
@@ -309,17 +349,25 @@ public sealed class ApplicationServiceTests
         public ConnectedIdentity? UpsertedIdentity { get; private set; }
         public (VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)? Resolved { get; set; }
         public Exception? RecordAccessException { get; init; }
+        public Exception? UpsertIdentityException { get; init; }
+        public int RecordAccessCalls { get; private set; }
         public Task InitializeAsync(CancellationToken c) => Task.CompletedTask;
         public Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(CancellationToken c) => Task.FromResult<IReadOnlyList<ConnectedIdentity>>([identity]);
         public Task<ConnectedIdentity?> GetIdentityAsync(Guid id, CancellationToken c) => Task.FromResult<ConnectedIdentity?>(identity);
-        public Task UpsertIdentityAsync(ConnectedIdentity x, CancellationToken c) { UpsertedIdentity = x; return Task.CompletedTask; }
+        public Task UpsertIdentityAsync(ConnectedIdentity x, CancellationToken c)
+        {
+            UpsertedIdentity = x;
+            return UpsertIdentityException is null ? Task.CompletedTask : Task.FromException(UpsertIdentityException);
+        }
         public Task RemoveIdentityAsync(Guid id, CancellationToken c) => Task.CompletedTask;
         public Task ApplyDiscoveryAsync(Guid id, DiscoverySnapshot snapshot, SyncRun run, CancellationToken c) { AppliedSnapshot = snapshot; return Task.CompletedTask; }
         public Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest r, DateTimeOffset n, CancellationToken c) => Task.FromResult<IReadOnlyList<SearchResult>>([]);
         public Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemAsync(Guid id, CancellationToken c) => Task.FromResult(Resolved);
-        public Task RecordAccessAsync(Guid id, DateTimeOffset at, CancellationToken c) => RecordAccessException is null
-            ? Task.CompletedTask
-            : Task.FromException(RecordAccessException);
+        public Task RecordAccessAsync(Guid id, DateTimeOffset at, CancellationToken c)
+        {
+            RecordAccessCalls++;
+            return RecordAccessException is null ? Task.CompletedTask : Task.FromException(RecordAccessException);
+        }
         public Task SetFavoriteAsync(Guid id, bool favorite, CancellationToken c) => Task.CompletedTask;
         public Task<IReadOnlyList<Workspace>> GetWorkspacesAsync(CancellationToken c) => Task.FromResult<IReadOnlyList<Workspace>>([]);
         public Task UpsertWorkspaceAsync(Workspace w, CancellationToken c) => Task.CompletedTask;
@@ -330,8 +378,10 @@ public sealed class ApplicationServiceTests
     private sealed class FakeIdentityProvider : IIdentityProvider
     {
         public int SignInCalls { get; private set; }
+        public int RemoveCalls { get; private set; }
         public string? ClientId { get; private set; }
         public string? DisplayName { get; private set; }
+        public ConnectedIdentity? RemovedIdentity { get; private set; }
         public Task<ConnectedIdentity> SignInAsync(string clientId, string displayName, CancellationToken cancellationToken)
         {
             SignInCalls++;
@@ -339,7 +389,12 @@ public sealed class ApplicationServiceTests
             DisplayName = displayName;
             return Task.FromResult(new ConnectedIdentity(Guid.NewGuid(), clientId, "account", "user@example.invalid", displayName, "tenant", AuthenticationState.Ready, DateTimeOffset.UtcNow));
         }
-        public Task RemoveAsync(ConnectedIdentity identity, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task RemoveAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
+        {
+            RemoveCalls++;
+            RemovedIdentity = identity;
+            return Task.CompletedTask;
+        }
     }
     private sealed class FakeDiagnostics : IDiagnosticSink { public void Information(string e, IReadOnlyDictionary<string, object?> f) { } public void WriteError(string e, Exception x, IReadOnlyDictionary<string, object?> f) { } }
     private sealed class AlwaysVerify : IUserVerificationService { public bool IsAvailable => true; public Task<bool> VerifyAsync(string r, CancellationToken c) => Task.FromResult(true); }
@@ -366,6 +421,7 @@ public sealed class ApplicationServiceTests
         public string? Value { get; init; }
         public int RetrieveCalls { get; private set; }
         public int StoreCalls { get; private set; }
+        public SensitiveValue? LastRetrievedValue { get; private set; }
         public string? StoredValue { get; private set; }
         public string? StoredFingerprint { get; private set; }
         public Task<CachedSecretDescriptor> StoreAsync(Guid i, Guid v, Guid? w, SensitiveValue s, string f, DateTimeOffset e, CancellationToken c)
@@ -375,7 +431,12 @@ public sealed class ApplicationServiceTests
             StoredFingerprint = f;
             return Task.FromResult(new CachedSecretDescriptor(Guid.NewGuid(), i, v, w, DateTimeOffset.MinValue, e, null, f));
         }
-        public Task<SensitiveValue?> RetrieveAsync(Guid i, DateTimeOffset n, string? f, CancellationToken c) { RetrieveCalls++; return Task.FromResult(Value is null ? null : new SensitiveValue(Value)); }
+        public Task<SensitiveValue?> RetrieveAsync(Guid i, DateTimeOffset n, string? f, CancellationToken c)
+        {
+            RetrieveCalls++;
+            LastRetrievedValue = Value is null ? null : new SensitiveValue(Value);
+            return Task.FromResult(LastRetrievedValue);
+        }
         public Task PurgeItemAsync(Guid i, CancellationToken c) => Task.CompletedTask;
         public Task PurgeVaultAsync(Guid i, CancellationToken c) => Task.CompletedTask;
         public Task PurgeWorkspaceAsync(Guid i, CancellationToken c) => Task.CompletedTask;

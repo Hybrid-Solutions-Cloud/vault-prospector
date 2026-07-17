@@ -6,6 +6,29 @@ namespace VaultProspector.App.Tests;
 public sealed class ClipboardSecurityTests
 {
     [Fact]
+    public void ClipboardOwnershipStateDoesNotRetainAPlaintextString()
+    {
+        var plaintextFields = typeof(AvaloniaClipboardService)
+            .GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            .Where(field => field.FieldType == typeof(string));
+
+        Assert.Empty(plaintextFields);
+    }
+
+    [Fact]
+    public async Task NonPositiveClearIntervalIsRejectedBeforeClipboardWrite()
+    {
+        var adapter = new FakeClipboardAdapter();
+        var clipboard = new AvaloniaClipboardService(adapter);
+        using var value = new SensitiveValue("secret-value");
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            clipboard.CopyWithAutoClearAsync(value, TimeSpan.Zero, TestContext.Current.CancellationToken));
+
+        Assert.Null(adapter.Text);
+    }
+
+    [Fact]
     public async Task OwnedClipboardValueIsClearedOnExplicitCleanup()
     {
         var adapter = new FakeClipboardAdapter();

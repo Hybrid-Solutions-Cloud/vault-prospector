@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
@@ -11,7 +13,7 @@ public sealed class AvaloniaClipboardService : IClipboardService
     private readonly ITextClipboardAdapter _clipboard;
     private readonly object _queueGate = new();
     private Task _operationTail = Task.CompletedTask;
-    private string? _ownedText;
+    private byte[]? _ownedDigest;
     private long _leaseId;
 
     public AvaloniaClipboardService() : this(new AvaloniaTextClipboardAdapter()) { }
@@ -21,17 +23,27 @@ public sealed class AvaloniaClipboardService : IClipboardService
 
     public async Task CopyWithAutoClearAsync(SensitiveValue value, TimeSpan clearAfter, CancellationToken cancellationToken)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(clearAfter, TimeSpan.Zero);
         cancellationToken.ThrowIfCancellationRequested();
         var copiedText = value.Reveal();
-        var leaseId = await RunExclusiveAsync(async () =>
+        byte[]? copiedDigest = Digest(copiedText);
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            await _clipboard.SetTextAsync(copiedText);
-            _ownedText = copiedText;
-            return ++_leaseId;
-        });
+            var leaseId = await RunExclusiveAsync(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await _clipboard.SetTextAsync(copiedText);
+                ReplaceOwnedDigest(copiedDigest);
+                copiedDigest = null;
+                return ++_leaseId;
+            });
 
-        _ = ClearLaterAsync(leaseId, clearAfter);
+            _ = ClearLaterAsync(leaseId, clearAfter);
+        }
+        finally
+        {
+            if (copiedDigest is not null) CryptographicOperations.ZeroMemory(copiedDigest);
+        }
     }
 
     public Task ClearIfOwnedAsync(CancellationToken cancellationToken) =>
@@ -69,10 +81,49 @@ public sealed class AvaloniaClipboardService : IClipboardService
 
     private async Task ClearOwnedCoreAsync(long? expectedLeaseId)
     {
-        if (_ownedText is null || (expectedLeaseId is not null && expectedLeaseId.Value != _leaseId)) return;
+        if (_ownedDigest is null || (expectedLeaseId is not null && expectedLeaseId.Value != _leaseId)) return;
         var current = await _clipboard.TryGetTextAsync();
-        if (string.Equals(current, _ownedText, StringComparison.Ordinal)) await _clipboard.ClearAsync();
-        _ownedText = null;
+        if (current is not null)
+        {
+            var currentDigest = Digest(current);
+            try
+            {
+                if (CryptographicOperations.FixedTimeEquals(currentDigest, _ownedDigest))
+                    await _clipboard.ClearAsync();
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(currentDigest);
+            }
+        }
+
+        ClearOwnedDigest();
+    }
+
+    private void ReplaceOwnedDigest(byte[] digest)
+    {
+        ClearOwnedDigest();
+        _ownedDigest = digest;
+    }
+
+    private void ClearOwnedDigest()
+    {
+        if (_ownedDigest is null) return;
+        CryptographicOperations.ZeroMemory(_ownedDigest);
+        _ownedDigest = null;
+    }
+
+    private static byte[] Digest(string value)
+    {
+        var bytes = Encoding.UTF8.GetBytes(value);
+        try
+        {
+            return SHA256.HashData(bytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(bytes);
+        }
     }
 
     private async Task<T> RunExclusiveAsync<T>(Func<Task<T>> operation)

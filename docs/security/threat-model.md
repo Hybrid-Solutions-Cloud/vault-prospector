@@ -56,6 +56,7 @@ Mitigations:
 - Never log token content.
 - Minimize scopes.
 - Purge token entries when an identity is removed.
+- Roll back a newly authenticated account if encrypted identity metadata cannot be persisted.
 - Document limitations against same-user malware and local administrators.
 
 ### Offline cache extraction
@@ -117,6 +118,7 @@ Mitigations:
 - Never silently switch to a broader identity without showing the selected access path.
 - Allow users to set preferred identities.
 - Record non-sensitive retrieval context locally.
+- Fail closed and dispose a decrypted value if retrieval-context persistence fails.
 
 ### Stale offline values
 

@@ -48,6 +48,11 @@
 - NVDA remediation and evidence commit `133f87f` is pushed to `main`; exact-commit CI run
   `29580268318` passed both `build-test` and full-history `secret-scan`. GitHub issues `#5` and
   `#8` are synchronized, while P-15 correctly remains open for its unverified requirements.
+- A subsequent internal security pass found three additional boundaries: orphaned MSAL accounts
+  after metadata-write failure, missing offline-open audit/disposal behavior, and clipboard
+  ownership retaining a second plaintext string. Source and regression tests remediate all three;
+  the locked local gate passes 88/88 tests. The independent-review execution plan is at
+  `docs/security/independent-review-plan.md`; internal work does not approve P-08.
 
 ## External publication state
 
@@ -65,7 +70,9 @@
 
 ## Next actions
 
-1. Continue Preview-critical gates: independent security review, live identity/MFA/Conditional
+1. Publish the current security hardening and independent-review plan, wait for exact-commit CI, and
+   create/synchronize a dedicated P-08 review issue.
+2. Continue Preview-critical gates: independent security review, live identity/MFA/Conditional
    Access and Windows Hello tests, full keyboard/NVDA/Narrator/usability evidence, signing setup,
    WinGet acceptance, Chocolatey ingestion, and the final signed-candidate go/no-go.
 
