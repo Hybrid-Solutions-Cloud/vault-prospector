@@ -53,9 +53,11 @@
 
 - WinGet PR `microsoft/winget-pkgs#403473` remains open. Automated validation passed; the
   `Policy-Test-2.7` classification is awaiting manual moderator review.
-- Chocolatey `0.1.0-preview.2` submission remains externally blocked after repeated HTTP 504
-  responses. Retry only after evidence of push-service recovery, then verify ingestion and
-  moderation.
+- Chocolatey `0.1.0-preview.2` submission remains externally blocked after six HTTP 504 responses.
+  At 2026-07-17 12:41 UTC, the service front door returned HTTP 200 but an authenticated upload of
+  the hash-verified package still returned 504; exact OData remained 404 and exact pre-release
+  search was empty. Retry only after evidence that the upload path recovered, then verify ingestion
+  and moderation.
 - Trusted Windows signing gate P-13 remains blocked until an HCS owner completes Azure Artifact
   Signing Public Trust identity and profile setup. The release workflow fails closed without it.
 - HCS drift cannot currently validate this local checkout because the MCP server cannot resolve the

@@ -249,6 +249,7 @@ timestamping, revocation, and compromise procedure must be approved before P-13 
 
 | Date | Operator | Result |
 | --- | --- | --- |
+| 2026-07-17 12:41 UTC | Codex under HCS governance | Revalidated the Preview.2 Chocolatey package hash and HCS Key Vault credential path; the service front door returned HTTP 200 but the sixth authenticated upload returned HTTP 504, followed by exact OData 404 and empty exact pre-release search |
 | 2026-07-17 UTC | Microsoft WinGet validation / Codex review | Build 368562 passed technical manifest, URL, scan, and installation validation; a Policy-Test-2.7 manual content review remains before merge |
 | 2026-07-17 03:44 UTC | Codex under HCS governance | Revalidated the Preview.2 Chocolatey package hash; a fifth authenticated push returned HTTP 504 and the exact post-check remained 404, proving no ingestion |
 | 2026-07-17 01:30 UTC | Codex under HCS governance | Re-downloaded and hash-verified the immutable Preview.2 Chocolatey package; a fourth authenticated push returned HTTP 504 and exact post-checks proved no ingestion |
