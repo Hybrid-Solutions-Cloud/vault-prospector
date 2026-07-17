@@ -70,3 +70,13 @@ or test roots. The original encrypted user-state files were byte-identical:
 
 P-09 remains in progress until the same rollback-capable installer behavior is repeated against the
 final signed candidate and receives independent sign-off.
+
+## Publication and continuous enforcement
+
+Fix and evidence commit `48535984516ebd17496bdea84c9f9562c20d680c` is published on `main`.
+Exact-commit CI run
+[`29588980444`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/29588980444)
+passed both `build-test` and full-history `secret-scan`. CI and protected release workflows now run
+`Test-InstallerUpgradeSchedule.ps1` against the MSI they build and fail unless
+`RemoveExistingProducts` is immediately after `InstallInitialize` and before file installation and
+finalization. GitHub readiness issue `#5` contains the synchronized result and remaining boundary.

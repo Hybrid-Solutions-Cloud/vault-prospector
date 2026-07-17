@@ -82,6 +82,9 @@
   rollback, successful upgrade/repair, downgrade rejection, uninstall, and cleanup. Evidence is in
   `docs/release-evidence/windows-installer-failed-upgrade-2026-07-17.md`; final signed-candidate and
   independent repetition remain open.
+- Installer rollback fix/evidence commit `4853598` is pushed to `main`; exact-commit CI run
+  `29588980444` passed both `build-test` (including the built-MSI sequence guard) and full-history
+  `secret-scan`. GitHub readiness issue `#5` is synchronized without incorrectly passing P-09.
 
 ## External publication state
 
