@@ -1,8 +1,8 @@
 # Preview Feedback and GA Promotion
 
-The first formal feedback window begins only after `0.1.1-preview.1` is publicly available and its
-anonymous download verification is recorded. The release-evidence record must capture that exact
-start timestamp; unpublished candidates and the superseded CI.68 test release do not start G-01.
+The first formal feedback window began at `2026-07-17T20:43:21Z`, when `0.1.1-preview.1` became
+public; its full credential-free asset verification subsequently passed. Unpublished candidates
+and the superseded CI.68 test release do not count toward G-01.
 
 This process defines the consent, privacy, triage, and measurable evidence required for the
 Preview reliability and feedback gate (G-01). It does not replace the other GA gates in

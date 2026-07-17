@@ -48,26 +48,24 @@ if ($visibility.Trim() -ne 'PUBLIC') {
 }
 
 & $gh.Source release view $tag --repo $DistributionRepository | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    $releaseArguments = @(
-        'release', 'create', $tag,
-        '--repo', $DistributionRepository,
-        '--title', "Vault Prospector $Version",
-        '--notes', "Windows x64 installer and package-manager artifacts for Vault Prospector $Version."
-    )
-    if ($Version.Contains('-')) {
-        $releaseArguments += '--prerelease'
-    }
-
-    & $gh.Source @releaseArguments
-    if ($LASTEXITCODE -ne 0) {
-        throw "Creating distribution release '$tag' failed with exit code $LASTEXITCODE."
-    }
+if ($LASTEXITCODE -eq 0) {
+    throw "Distribution release '$tag' already exists. Immutable releases and assets must never be replaced; publish a new version."
 }
 
-& $gh.Source release upload $tag --repo $DistributionRepository --clobber @($assets.FullName)
+$releaseArguments = @(
+    'release', 'create', $tag,
+    '--repo', $DistributionRepository,
+    '--title', "Vault Prospector $Version",
+    '--notes', "Windows x64 installer and package-manager artifacts for Vault Prospector $Version."
+)
+if ($Version.Contains('-')) {
+    $releaseArguments += '--prerelease'
+}
+$releaseArguments += @($assets.FullName)
+
+& $gh.Source @releaseArguments
 if ($LASTEXITCODE -ne 0) {
-    throw "Uploading distribution assets failed with exit code $LASTEXITCODE."
+    throw "Creating distribution release '$tag' and uploading its assets failed with exit code $LASTEXITCODE."
 }
 
 Write-Output "https://github.com/$DistributionRepository/releases/tag/$tag"

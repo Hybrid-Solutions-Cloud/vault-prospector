@@ -5,13 +5,12 @@
 - Branch: `main`; direct pushes are the operator-approved workflow.
 - Public release: `v0.1.0-preview.2` is **withdrawn** and retained only for immutable evidence and
   existing-install repair/uninstall. Do not install, resubmit, or reuse its artifacts.
-- Public test release: unsigned `v0.1.0-ci.68` remains available until formal Preview publication.
-- Promotion target: unsigned non-production `v0.1.1-preview.1`; release automation, release notes,
-  roadmap, backlog, scope, readiness, install/package/security/privacy/runbook/evidence documents,
-  and the named go/no-go record are being synchronized for publication.
+- Current public Preview: unsigned non-production `v0.1.1-preview.1` at
+  `https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1`.
+  CI.68 is superseded; Preview.2 remains withdrawn.
 - Authoritative gate matrix: `docs/product/release-readiness.md`.
-- Decision: Preview promotion pending exact-commit CI, tagged workflow artifacts, public mirroring,
-  and anonymous hash verification. GA remains blocked by the documented open gates.
+- Decision: `0.1.1-preview.1` is GO and published for non-production evaluation. GA remains blocked
+  by the documented open readiness gates.
 - Repository writes must use an HCS governance-minted GitHub App installation token for
   `Hybrid-Solutions-Cloud`; never use a personal token.
 
@@ -101,12 +100,17 @@
   including deterministic failed-upgrade rollback. The VM was restored with zero registrations or
   processes, its test root removed, and its pre-existing encrypted database/key hashes unchanged.
   Evidence is in `docs/release-evidence/0.1.1-preview.1.md`.
+- Tagged source commit `1cc391012de370bdb783485e28043642e000e288` passed CI run `29611412932`;
+  protected release run `29611845899` produced 13 assets. Their exact bytes were mirrored to the
+  public release and all 13 passed credential-free re-download comparison. The public MSI SHA-256
+  is `9F9DC0C04362F979FFA064D274961241F12D8789D910CE53C57B6EE119B5C8B0` and separately passed all
+  27 lifecycle gates. The guest was fully restored after validation.
 
 ## External publication state
 
-- Public unsigned test prerelease `v0.1.0-ci.68` contains the exact green-CI MSI, checksum, and
-  provenance at `Hybrid-Solutions-Cloud/vault-prospector-releases`; anonymous download validation
-  passed. This unblocks immediate testing without changing the signing or formal promotion gates.
+- Public unsigned Preview `v0.1.1-preview.1` is live with MSI, portable ZIP, WinGet bundle,
+  Chocolatey NUPKG, checksums, SPDX SBOM, Sigstore bundles, release notes, limitations, and Unknown
+  Publisher guidance. CI.68 is superseded.
 - WinGet PR `microsoft/winget-pkgs#403473` is closed with a withdrawal notice. Microsoft validation
   had passed, but the later failed-upgrade result invalidated the submitted Preview.2 MSI. Submit a
   new PR only after the immutable `0.1.1-preview.1` MSI is publicly published and hash-verified.
@@ -121,12 +125,11 @@
 
 ## Next actions
 
-1. Commit/push the synchronized `0.1.1-preview.1` source and documentation; require exact-commit CI.
-2. Push immutable tag `v0.1.1-preview.1`, verify the protected unsigned-Preview workflow, mirror the
-   exact full artifact set to the public release repository, anonymously re-download/hash it, and
-   finalize P-12/P-18 evidence plus issue `#5`.
-3. After direct Preview publication, submit the exact immutable MSI to WinGet and Chocolatey.
-4. Continue GA work: signing, independent security review issue `#9`, live Entra/MFA/Conditional
+1. Push the post-publication evidence/documentation commit, require exact CI, and synchronize issue
+   `#5` with the public URL, hashes, accepted Preview risks, and remaining GA gates.
+2. Submit the exact immutable MSI to WinGet and the NUPKG to Chocolatey; verify catalog ingestion
+   and installation before changing P-10/P-11.
+3. Continue GA work: signing, independent security review issue `#9`, live Entra/MFA/Conditional
    Access/Windows Hello testing, remaining accessibility/usability evidence, and G-01 feedback.
 
 ## Preserved external scratch

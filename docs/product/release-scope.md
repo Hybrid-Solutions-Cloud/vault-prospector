@@ -1,11 +1,11 @@
 # Version 0.1 Preview Scope
 
 Version [`0.1.1-preview.1`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1)
-is the current unsigned Windows desktop evaluation candidate. It delivers the
+is the current unsigned Windows desktop Preview for non-production evaluation. It delivers the
 local-first Azure Key Vault workflow through encrypted metadata search, multi-identity discovery,
 explicit Windows Hello-gated secret retrieval, protected clipboard handling, optional expiring
 offline values, and workspaces. `0.1.0-preview.2` is withdrawn and must not be installed or
-resubmitted to package managers; `0.1.0-ci.68` is superseded when this Preview publishes.
+resubmitted to package managers; `0.1.0-ci.68` is superseded by this Preview.
 
 ## Included
 

@@ -51,7 +51,9 @@ Set `GH_TOKEN` to the Hybrid Solutions Cloud GitHub App installation token. Do n
 pwsh ./scripts/PublishDistribution.ps1 -Version 0.1.1-preview.1
 ```
 
-The script creates or updates the matching release in the public distribution repository and uploads the immutable artifacts.
+The script creates the matching release in the public distribution repository and uploads the
+immutable artifacts. It refuses to run if that release already exists; publish a new version rather
+than replacing any asset.
 
 ## Submit to WinGet and Chocolatey
 

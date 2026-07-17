@@ -6,7 +6,9 @@
 
 **Last updated:** 2026-07-17
 
-**Last exercised:** Preview.2-to-corrected-candidate failed-upgrade rollback plus full MSI lifecycle on 2026-07-17; package-service failure handling exercised during Chocolatey HTTP 504 responses
+**Last exercised:** Exact public `0.1.1-preview.1` MSI completed the full 27-gate lifecycle and all
+13 public assets passed credential-free byte comparison on 2026-07-17; package-service failure
+handling was exercised during earlier Chocolatey HTTP 504 responses
 
 ## Purpose
 
