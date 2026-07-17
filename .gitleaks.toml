@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Known SHA-256 digest of the encrypted Windows VM test-state file; not secret material"
+condition = "AND"
+paths = ['''docs/release-evidence/0\.1\.1-preview\.1\.md''']
+regexes = ['''61AB767AB04345A2F7A6065BAB58E41F5F8D22DAB27B9D31516803D461D8F7C9''']
