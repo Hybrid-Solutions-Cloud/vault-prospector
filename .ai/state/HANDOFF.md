@@ -45,6 +45,9 @@
 - The locked Release gate passed with no known vulnerable packages, formatting unchanged,
   0 warnings/errors, and 84/84 tests. NVDA evidence is recorded in
   `docs/release-evidence/windows-nvda-accessibility-2026-07-17.md`.
+- NVDA remediation and evidence commit `133f87f` is pushed to `main`; exact-commit CI run
+  `29580268318` passed both `build-test` and full-history `secret-scan`. GitHub issues `#5` and
+  `#8` are synchronized, while P-15 correctly remains open for its unverified requirements.
 
 ## External publication state
 
@@ -60,9 +63,7 @@
 
 ## Next actions
 
-1. Publish the NVDA/focus implementation, tests, evidence, and synchronized readiness documents to
-   `main`; record exact-commit CI and synchronize GitHub issues `#5` and `#8`.
-2. Continue Preview-critical gates: independent security review, live identity/MFA/Conditional
+1. Continue Preview-critical gates: independent security review, live identity/MFA/Conditional
    Access and Windows Hello tests, full keyboard/NVDA/Narrator/usability evidence, signing setup,
    WinGet acceptance, Chocolatey ingestion, and the final signed-candidate go/no-go.
 
