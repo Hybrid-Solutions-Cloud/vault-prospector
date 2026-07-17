@@ -19,6 +19,13 @@ internal sealed class FocusReturnCoordinator<T> where T : class
 
     public void OperationCompleted() => IsRestorePending = true;
 
+    public void OperationFailed()
+    {
+        IsRestorePending = false;
+    }
+
+    public void RequestRestore() => IsRestorePending = _operationTarget is not null;
+
     public T? TakeRestoreTarget(bool hostIsActive, Func<T, bool> canRestore)
     {
         if (!IsRestorePending || !hostIsActive) return null;

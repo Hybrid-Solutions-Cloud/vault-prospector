@@ -77,6 +77,36 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public async Task ActionableFailureBuildsOneCompleteScreenReaderAnnouncement()
+    {
+        Directory.CreateDirectory(_directory);
+        var viewModel = new MainViewModel(
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new AppSettingsStore(Path.Combine(_directory, "settings.json")));
+        viewModel.UseCustomClientId = true;
+        viewModel.ClientId = string.Empty;
+        await viewModel.AddIdentityCommand.ExecuteAsync(null);
+
+        Assert.True(viewModel.HasActionableError);
+        Assert.Equal("Starting securely…", viewModel.StatusText);
+        Assert.Contains(viewModel.ErrorTitle, viewModel.ErrorAnnouncement, StringComparison.Ordinal);
+        Assert.Contains(viewModel.ErrorMessage, viewModel.ErrorAnnouncement, StringComparison.Ordinal);
+        Assert.Contains(viewModel.RecoveryText, viewModel.ErrorAnnouncement, StringComparison.Ordinal);
+
+        viewModel.UseCustomClientId = false;
+        await viewModel.SaveSettingsCommand.ExecuteAsync(null);
+
+        Assert.False(viewModel.HasActionableError);
+        Assert.Equal("Settings saved locally. No client secret is stored.", viewModel.StatusText);
+    }
+
+    [Fact]
     public void WindowsVerificationFailureExplainsThatNoValueWasReleased()
     {
         var error = UserFacingErrorMapper.From(new UnauthorizedAccessException("internal"));

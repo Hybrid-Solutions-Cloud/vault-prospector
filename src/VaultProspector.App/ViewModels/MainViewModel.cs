@@ -55,6 +55,7 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _errorTitle = string.Empty;
     [ObservableProperty] private string _errorMessage = string.Empty;
     [ObservableProperty] private string _recoveryText = string.Empty;
+    [ObservableProperty] private string _errorAnnouncement = string.Empty;
 
     public bool HasSelectedIdentity => SelectedIdentity is not null;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
@@ -395,7 +396,7 @@ public sealed partial class MainViewModel(
             ErrorMessage = error.Message;
             RecoveryText = error.Recovery;
             HasActionableError = true;
-            StatusText = error.Title;
+            ErrorAnnouncement = $"{error.Title}. {error.Message} {error.Recovery}";
             SecretPreview = "Secret hidden.";
         }
         finally { _activeOperation = null; IsBusy = false; }
@@ -404,10 +405,12 @@ public sealed partial class MainViewModel(
     private void ClearActionableError()
     {
         HasActionableError = false;
+        ErrorAnnouncement = string.Empty;
         ErrorTitle = string.Empty;
         ErrorMessage = string.Empty;
         RecoveryText = string.Empty;
     }
+
 }
 
 public sealed class SearchResultRow(SearchResult result)

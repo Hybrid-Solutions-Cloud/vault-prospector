@@ -34,11 +34,17 @@
   operations and waits for both operation completion and window reactivation before restoring
   keyboard focus. Four coordinator tests cover active/inactive and valid/invalid target behavior.
 - A live Windows system-browser launch followed by in-app cancellation returned visible and UI
-  Automation keyboard focus to **Continue to Microsoft sign-in**. The full locked Release gate
-  passed with no known vulnerable packages, 0 warnings/errors, and 80/80 tests.
+  Automation keyboard focus to **Continue to Microsoft sign-in**.
 - Focus-return evidence is recorded in
   `docs/release-evidence/windows-external-focus-return-2026-07-17.md`. The VM and host scratch are
   restored and clean.
+- Official NVDA `2026.1.1` testing on final local candidate `0.1.69` proved secondary-tab focus
+  announcements, routine status, complete safe actionable-error guidance, browser cancellation
+  status, and initiating-control return. The guest has no audio endpoint, so the proof is NVDA's
+  speech queue and Speech Viewer rather than audible output.
+- The locked Release gate passed with no known vulnerable packages, formatting unchanged,
+  0 warnings/errors, and 84/84 tests. NVDA evidence is recorded in
+  `docs/release-evidence/windows-nvda-accessibility-2026-07-17.md`.
 
 ## External publication state
 
@@ -54,8 +60,8 @@
 
 ## Next actions
 
-1. Commit and push the focus-return implementation, tests, evidence, and synchronized readiness
-   documents to `main`; wait for exact-commit CI and synchronize GitHub issues `#5` and `#8`.
+1. Publish the NVDA/focus implementation, tests, evidence, and synchronized readiness documents to
+   `main`; record exact-commit CI and synchronize GitHub issues `#5` and `#8`.
 2. Continue Preview-critical gates: independent security review, live identity/MFA/Conditional
    Access and Windows Hello tests, full keyboard/NVDA/Narrator/usability evidence, signing setup,
    WinGet acceptance, Chocolatey ingestion, and the final signed-candidate go/no-go.

@@ -54,4 +54,20 @@ public sealed class FocusReturnCoordinatorTests
 
         Assert.Same(target, coordinator.TakeRestoreTarget(true, _ => true));
     }
+
+    [Fact]
+    public void FailedOperationDiscardsTheCapturedRestoreTarget()
+    {
+        var coordinator = new FocusReturnCoordinator<object>();
+        coordinator.OperationStarted(new object());
+
+        coordinator.OperationFailed();
+
+        Assert.False(coordinator.IsRestorePending);
+        Assert.Null(coordinator.TakeRestoreTarget(true, _ => true));
+
+        coordinator.RequestRestore();
+
+        Assert.True(coordinator.IsRestorePending);
+    }
 }

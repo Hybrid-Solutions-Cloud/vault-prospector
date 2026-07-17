@@ -35,8 +35,38 @@ public sealed class AccessibilityMarkupTests
             .Descendants()
             .Single(element => Attribute(element, "Text")?.Value.Contains("StatusText", StringComparison.Ordinal) is true);
 
-        Assert.Equal("Application status", Attribute(status, "AutomationProperties.Name")?.Value);
+        Assert.Equal("TextBlock", status.Name.LocalName);
         Assert.Equal("Polite", Attribute(status, "AutomationProperties.LiveSetting")?.Value);
+    }
+
+    [Fact]
+    public void ActionableErrorIsAnAccessibleAssertiveLiveRegion()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var banner = document
+            .Descendants()
+            .Single(element => Attribute(element, "IsVisible")?.Value == "{Binding HasActionableError}");
+        var focusTarget = banner
+            .Descendants()
+            .Single(element => Attribute(element, "Name")?.Value == "ActionableErrorAnnouncementTarget");
+
+        Assert.Equal("{Binding ErrorAnnouncement}", Attribute(banner, "AutomationProperties.Name")?.Value);
+        Assert.Equal("Assertive", Attribute(banner, "AutomationProperties.LiveSetting")?.Value);
+        Assert.Equal("Button", focusTarget.Name.LocalName);
+        Assert.Equal("Return to previous action", Attribute(focusTarget, "Content")?.Value);
+        Assert.Equal("{Binding ErrorAnnouncement}", Attribute(focusTarget, "AutomationProperties.Name")?.Value);
+        Assert.Equal("#FECACA", Attribute(focusTarget, "Background")?.Value);
+        Assert.Equal("#3F1616", Attribute(focusTarget, "Foreground")?.Value);
+    }
+
+    [Fact]
+    public void NvdaFocusBridgeMatchesPinnedAvaloniaInternals()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var tabs = document.Descendants().Single(element => element.Name.LocalName == "TabControl");
+
+        Assert.Equal("MainTabs", Attribute(tabs, "Name")?.Value);
+        Assert.True(ReliableWindowAutomationPeer.HasExpectedAvaloniaFocusInternals);
     }
 
     [Fact]

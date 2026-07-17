@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -17,6 +18,7 @@ public partial class MainWindow : Window
     private IPlatformSettings? _platformSettings;
     private MainViewModel? _subscribedViewModel;
     private readonly FocusReturnCoordinator<Control> _focusReturn = new();
+    private IDisposable? _focusRestoreTimer;
 
     public MainWindow()
     {
@@ -30,6 +32,10 @@ public partial class MainWindow : Window
         SizeChanged += (_, _) => ApplyResponsiveLayout(
             WindowLayoutMetrics.RequiresNarrow(ClientSize.Width, _textScaleFactor, NarrowLayoutThreshold));
     }
+
+    internal bool IsSecondaryTabSelected => MainTabs.SelectedIndex > 0;
+
+    protected override AutomationPeer OnCreateAutomationPeer() => new ReliableWindowAutomationPeer(this);
 
     private async void SearchBox_OnKeyUp(object? sender, KeyEventArgs e)
     {
@@ -50,6 +56,8 @@ public partial class MainWindow : Window
         DataContextChanged -= MainWindow_OnDataContextChanged;
         Activated -= MainWindow_OnActivated;
         UnsubscribeFromViewModel();
+        _focusRestoreTimer?.Dispose();
+        _focusRestoreTimer = null;
         if (_platformSettings is not null)
             _platformSettings.ColorValuesChanged -= PlatformSettings_OnColorValuesChanged;
         _platformSettings = null;
@@ -57,7 +65,8 @@ public partial class MainWindow : Window
 
     private void MainWindow_OnGotFocus(object? sender, FocusChangedEventArgs e)
     {
-        if (e.Source is Control control) _focusReturn.Remember(control);
+        if (e.Source is not Control control) return;
+        _focusReturn.Remember(control);
     }
 
     private void MainWindow_OnDataContextChanged(object? sender, EventArgs e)
@@ -80,18 +89,37 @@ public partial class MainWindow : Window
         if (e.PropertyName != nameof(MainViewModel.IsBusy) || sender is not MainViewModel viewModel) return;
         if (viewModel.IsBusy)
         {
+            _focusRestoreTimer?.Dispose();
+            _focusRestoreTimer = null;
             var focused = FocusManager?.GetFocusedElement() as Control;
             _focusReturn.OperationStarted(focused);
             return;
         }
 
-        _focusReturn.OperationCompleted();
-        Dispatcher.UIThread.Post(TryRestoreOperationFocus, DispatcherPriority.Input);
+        if (viewModel.HasActionableError)
+        {
+            _focusRestoreTimer?.Dispose();
+            _focusRestoreTimer = null;
+            _focusReturn.OperationFailed();
+            Dispatcher.UIThread.Post(
+                () => ActionableErrorAnnouncementTarget.Focus(NavigationMethod.Tab),
+                DispatcherPriority.Input);
+        }
+        else
+        {
+            _focusReturn.OperationCompleted();
+            _focusRestoreTimer?.Dispose();
+            _focusRestoreTimer = DispatcherTimer.RunOnce(() =>
+            {
+                _focusRestoreTimer = null;
+                TryRestoreOperationFocus();
+            }, TimeSpan.FromMilliseconds(900), DispatcherPriority.Input);
+        }
     }
 
     private void MainWindow_OnActivated(object? sender, EventArgs e)
     {
-        if (_focusReturn.IsRestorePending)
+        if (_focusReturn.IsRestorePending && _focusRestoreTimer is null)
             Dispatcher.UIThread.Post(TryRestoreOperationFocus, DispatcherPriority.Input);
     }
 
@@ -104,6 +132,12 @@ public partial class MainWindow : Window
             candidate.IsAttachedToVisualTree());
         if (control is null) return;
         control.Focus(NavigationMethod.Tab);
+    }
+
+    private void ActionableErrorAnnouncementTarget_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _focusReturn.RequestRestore();
+        TryRestoreOperationFocus();
     }
 
     private void PlatformSettings_OnColorValuesChanged(object? sender, PlatformColorValues values) =>
