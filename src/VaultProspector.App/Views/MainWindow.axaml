@@ -39,7 +39,7 @@
               <Grid ColumnDefinitions="*,150,Auto" ColumnSpacing="10">
                 <TextBox PlaceholderText="Search names, tags, and metadata" Text="{Binding SearchText}" KeyUp="SearchBox_OnKeyUp" AutomationProperties.Name="Search vault metadata" />
                 <ComboBox Grid.Column="1" ItemsSource="{Binding ObjectTypes}" SelectedItem="{Binding SelectedObjectType}" AutomationProperties.Name="Object type filter" />
-                <Button Grid.Column="2" Classes="primary" Content="Search" Command="{Binding SearchCommand}" />
+                <Button Grid.Column="2" Classes="primary" Content="Search" Command="{Binding SearchCommand}" AutomationProperties.Name="Search vault metadata" />
               </Grid>
               <WrapPanel Orientation="Horizontal">
                 <CheckBox Content="Favorites" IsChecked="{Binding FavoritesOnly}" Margin="0,0,14,6" />
@@ -85,10 +85,10 @@
               <ScrollViewer VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="10">
                 <TextBlock Text="Selected object" FontSize="18" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding SelectedResult.Name, FallbackValue=Nothing selected}" FontSize="16" />
-                <TextBlock Text="{Binding SelectedResult.Vault}" Opacity="0.75" />
-                <TextBlock Text="{Binding SelectedResult.Identity}" Opacity="0.75" />
-                <TextBlock Text="{Binding SelectedResult.Tenant}" Opacity="0.75" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SelectedResult.Name, FallbackValue=Nothing selected}" FontSize="16" AutomationProperties.Name="Selected object name" />
+                <TextBlock Text="{Binding SelectedResult.Vault}" Opacity="0.75" AutomationProperties.Name="Selected object vault" />
+                <TextBlock Text="{Binding SelectedResult.Identity}" Opacity="0.75" AutomationProperties.Name="Selected object identity" />
+                <TextBlock Text="{Binding SelectedResult.Tenant}" Opacity="0.75" TextWrapping="Wrap" AutomationProperties.Name="Selected object tenant" />
                 <Border Background="#101D2B23" CornerRadius="6" Padding="12" Margin="0,8">
                   <TextBlock Text="{Binding SecretPreview}" FontFamily="Consolas" TextWrapping="Wrap" AutomationProperties.Name="Masked secret value" />
                 </Border>
@@ -115,7 +115,7 @@
             <StackPanel Spacing="10">
               <TextBlock Text="Connected identities" FontSize="20" FontWeight="SemiBold" />
               <TextBlock Text="Each identity keeps an explicit tenant and vault access path." TextWrapping="Wrap" Opacity="0.75" />
-              <ListBox ItemsSource="{Binding Identities}" SelectedItem="{Binding SelectedIdentity}" MinHeight="300">
+              <ListBox ItemsSource="{Binding Identities}" SelectedItem="{Binding SelectedIdentity}" MinHeight="300" AutomationProperties.Name="Connected Microsoft Entra identities">
                 <ListBox.ItemTemplate>
                   <DataTemplate>
                     <StackPanel Margin="6">
@@ -153,7 +153,7 @@
                 <TextBlock Text="The custom registration must allow multi-tenant public-client flows, http://localhost, Azure Resource Manager, and Azure Key Vault delegated access." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
               </StackPanel>
               <TextBlock Text="Friendly label" />
-              <TextBox Text="{Binding IdentityLabel}" PlaceholderText="Customer, employer, lab…" />
+              <TextBox Text="{Binding IdentityLabel}" PlaceholderText="Customer, employer, lab…" AutomationProperties.Name="Friendly identity label" />
               <TextBlock Text="Microsoft Entra controls the sign-in, consent, MFA, and Conditional Access experience. Vault Prospector receives no password." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
               <Button Classes="primary" Content="Continue to Microsoft sign-in" Command="{Binding AddIdentityCommand}" HorizontalAlignment="Left" />
             </StackPanel>
@@ -165,7 +165,7 @@
         <Grid ColumnDefinitions="1*,1*" Margin="4,14" ColumnSpacing="14">
           <Border Classes="card">
             <StackPanel Spacing="10"><TextBlock Text="Workspaces" FontSize="20" FontWeight="SemiBold" />
-              <ListBox ItemsSource="{Binding Workspaces}" SelectedItem="{Binding SelectedWorkspace}" MinHeight="300"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Margin="6" /></DataTemplate></ListBox.ItemTemplate></ListBox>
+              <ListBox ItemsSource="{Binding Workspaces}" SelectedItem="{Binding SelectedWorkspace}" MinHeight="300" AutomationProperties.Name="Vault Prospector workspaces"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Margin="6" /></DataTemplate></ListBox.ItemTemplate></ListBox>
               <WrapPanel>
                 <Button Content="Add selected vault" Command="{Binding AddSelectedVaultToWorkspaceCommand}" Margin="0,0,8,8" />
                 <Button Content="Add selected identity" Command="{Binding AddSelectedIdentityToWorkspaceCommand}" Margin="0,0,8,8" />
@@ -176,7 +176,7 @@
           <Border Grid.Column="1" Classes="card">
             <StackPanel Spacing="10"><TextBlock Text="Create workspace" FontSize="20" FontWeight="SemiBold" />
               <TextBlock Text="Group identities, tenants, subscriptions, and vaults without duplicating indexed data." TextWrapping="Wrap" />
-              <TextBox Text="{Binding WorkspaceName}" PlaceholderText="Workspace name" />
+              <TextBox Text="{Binding WorkspaceName}" PlaceholderText="Workspace name" AutomationProperties.Name="New workspace name" />
               <Button Classes="primary" Content="Create" Command="{Binding CreateWorkspaceCommand}" HorizontalAlignment="Left" />
             </StackPanel>
           </Border>
@@ -189,8 +189,8 @@
             <TextBlock Text="Security settings" FontSize="22" FontWeight="SemiBold" />
             <CheckBox Content="Enable encrypted offline value cache" IsChecked="{Binding OfflineCacheEnabled}" />
             <TextBlock Text="Offline values are disabled by default, encrypted separately, and require Windows Hello." TextWrapping="Wrap" Opacity="0.75" />
-            <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" />
-            <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" />
+            <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" AutomationProperties.Name="Maximum offline cache lifetime in hours" />
+            <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" AutomationProperties.Name="Clipboard clear delay in seconds" />
             <WrapPanel><Button Classes="primary" Content="Save settings" Command="{Binding SaveSettingsCommand}" Margin="0,0,8,8" /><Button Content="Purge selected vault" Command="{Binding PurgeSelectedVaultCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge selected workspace" Command="{Binding PurgeSelectedWorkspaceCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge all offline values" Command="{Binding PurgeAllCachedValuesCommand}" Margin="0,0,8,8" /></WrapPanel>
             <TextBlock Text="Telemetry is disabled. Logs contain no tokens, values, usernames, vault names, or object names." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
           </StackPanel>
@@ -209,7 +209,7 @@
     </TabControl>
 
     <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="18,10">
-      <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" /><ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" /></Grid>
+      <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" AutomationProperties.Name="Application status" AutomationProperties.LiveSetting="Polite" /><ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" AutomationProperties.Name="Operation in progress" /></Grid>
     </Border>
   </Grid>
 </Window>

@@ -13,6 +13,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Changed
 
+- Give every text-entry, selector, list, and numeric control an explicit UI Automation name, and expose application status changes as a polite live region for assistive technology.
 - Reduce and center the initial Windows viewport, and make selected-object actions vertically scrollable so every action remains reachable in a 1024-by-768 work area.
 - Disable identity synchronization and removal until an identity is selected, removing unavailable actions from first-run keyboard navigation.
 - Disable result, secret, cache, workspace, filter, and general operation controls unless their exact selection, object-type, policy, input, and busy-state prerequisites are satisfied.
