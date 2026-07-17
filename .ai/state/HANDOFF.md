@@ -53,6 +53,9 @@
   ownership retaining a second plaintext string. Source and regression tests remediate all three;
   the locked local gate passes 88/88 tests. The independent-review execution plan is at
   `docs/security/independent-review-plan.md`; internal work does not approve P-08.
+- Security hardening commit `f586639` is pushed to `main`; exact-commit CI run `29582360571`
+  passed both `build-test` and full-history `secret-scan`. GitHub issue `#9` now tracks independent
+  P-08 execution, and issue `#5` is synchronized without incorrectly checking the gate.
 
 ## External publication state
 
@@ -70,11 +73,10 @@
 
 ## Next actions
 
-1. Publish the current security hardening and independent-review plan, wait for exact-commit CI, and
-   create/synchronize a dedicated P-08 review issue.
-2. Continue Preview-critical gates: independent security review, live identity/MFA/Conditional
-   Access and Windows Hello tests, full keyboard/NVDA/Narrator/usability evidence, signing setup,
-   WinGet acceptance, Chocolatey ingestion, and the final signed-candidate go/no-go.
+1. Continue Preview-critical gates: arrange independent security review issue `#9`; run live
+   identity, MFA, Conditional Access, and Windows Hello tests; complete keyboard, NVDA, Narrator,
+   and usability evidence; finish signing setup, WinGet acceptance, Chocolatey ingestion, and the
+   final signed-candidate go/no-go.
 
 ## Preserved external scratch
 
