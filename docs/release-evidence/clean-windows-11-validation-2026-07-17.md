@@ -99,9 +99,11 @@ framebuffer hashes were:
 - scrolled detail view: `4B4BF49E6B2FAB9FA538C1B3E0B3E8C0E8B7302F9A1F5DD1D01888D91139434E`.
 
 These screenshots were retained only in the private scratch evidence area because public screenshots
-require an explicit privacy review. The remediation must be included in a fresh immutable candidate
-and rerun through MSI, signature, package-manager, scaling, keyboard, screen-reader, and independent
-review gates before P-15 can pass.
+require an explicit privacy review. The remediation was subsequently included in an
+[exact CI-packaged candidate](ci-packaged-windows-candidate-2026-07-17.md) and repeated through MSI,
+High Contrast Black, 200% Windows text size, and empty-state target checks. Signature,
+package-manager, complete keyboard, screen-reader, and independent review gates remain before P-15
+can pass.
 
 ## Boundaries and remaining gates
 
@@ -109,5 +111,7 @@ This run proves a clean supported Windows environment and repeatable installer b
 agent provisioned and exercised the VM. It does not satisfy independent review. This installer run also did not prove
 live Entra/MFA/Conditional Access, Azure Key Vault discovery or retrieval, Windows Hello presentation,
 WinGet or Chocolatey catalog acceptance, Authenticode trust, High Contrast, NVDA/Narrator, or
-final-candidate upgrade recovery. A later internal run now covers 200% display scaling, but packaged-candidate
-and independent validation remain open in the authoritative readiness matrix.
+final-candidate upgrade recovery. Later internal runs cover 200% display scaling and the exact
+CI-packaged candidate's High Contrast, text-size, target-size, repair, and uninstall behavior, but
+the final signed candidate and independent validation remain open in the authoritative readiness
+matrix.

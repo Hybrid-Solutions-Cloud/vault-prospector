@@ -62,4 +62,6 @@ After the runtime remediation, locked restore and formatting verification passed
 
 This run proves the AA target-size floor for authored focusable controls rendered in the five-tab empty-state candidate, including disabled commands. It does not yet measure populated result/list items, combo-box popup items, confirmation dialogs, Entra or Windows Hello surfaces, or every control under every supported scale/theme. Those states must be sampled during the complete keyboard, assistive-technology, authentication, and representative-user runs. The 44-by-44 Level AAA enhanced target remains desirable guidance, not a claimed conformance level.
 
+A later [exact CI-packaged candidate run](ci-packaged-windows-candidate-2026-07-17.md) repeated the five-tab empty-state sweep after MSI installation at default Windows text size and 200% text size; no measured target was undersized. It does not expand coverage to the unrendered states listed above or replace independent review.
+
 P-15 remains in progress.

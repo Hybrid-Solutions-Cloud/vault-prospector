@@ -10,7 +10,7 @@
 
 The first-run content exposes meaningful names and roles through Windows UI Automation and permits keyboard entry into the conditionally visible custom client-ID field. The unreleased source candidate assigns explicit automation names to every text-entry, selector, list, and numeric control and exposes application status changes as a polite live region; markup regression tests enforce those semantics. A live 200% display-scaling run found that first-run guidance inherited black text on its dark green panel; the actual foreground is now fixed to the verified white color. The original 1180-by-760 startup window and its later 900-by-620 minimum both clipped controls under tested Windows work areas. The candidate now fits the scaled work area, applies the separate Windows text-size preference through centralized font resources, adapts from effective text-scaled width, and keeps all five tabs plus the inspected task boundaries reachable at both 200% display scaling and 200% text-only scaling. High Contrast testing also exposed and verified remediation of selector placeholder and focus contrast defects.
 
-P-15 does not pass from this review. Complete keyboard behavior, actual assistive-technology output, populated/dialog target-size sampling, all custom contrast palettes, packaged-candidate behavior, representative-user usability, and every core task remain unverified. The empty-state identity action focus defect found during the initial run was remediated and passed a Windows keyboard retest.
+P-15 does not pass from this review. Complete keyboard behavior, actual assistive-technology output, populated/dialog target-size sampling, additional custom contrast palettes, representative-user usability, and every core task remain unverified. A later [exact CI-packaged candidate run](ci-packaged-windows-candidate-2026-07-17.md) verified the empty-state target sweep, High Contrast Black, and 200% Windows text size after MSI installation; it was internal and does not replace independent sign-off. The empty-state identity action focus defect found during the initial run was remediated and passed a Windows keyboard retest.
 
 ## Findings
 
@@ -43,6 +43,6 @@ Ratios use the WCAG relative-luminance formula. Dynamic theme colors still requi
 1. Continue auditing and testing command enabled/focus states beyond the remediated identity actions.
 2. Keyboard-only transcripts for every core task and failure recovery path.
 3. NVDA and Narrator results, including focus return from Entra and Windows Hello surfaces.
-4. Retest the corrected adaptive viewport, High Contrast behavior, focus visibility, and text-only scaling in a fresh immutable packaged candidate; exercise additional custom contrast palettes.
+4. Repeat the corrected adaptive viewport, High Contrast behavior, focus visibility, and text-only scaling against the final signed immutable candidate under independent review; exercise additional custom contrast palettes.
 5. Sample target sizes in populated results/lists, combo popups, confirmation dialogs, and live authentication/verification surfaces.
 6. Independent accessibility/usability reviewer sign-off with all blocking findings closed.
