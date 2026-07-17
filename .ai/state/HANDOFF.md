@@ -65,6 +65,12 @@
 - Offline-cache hardening commit `9a602ba` is pushed to `main`; exact-commit CI run `29583938082`
   passed both required jobs. GitHub issues `#5` and `#9` contain the findings, remediation, test
   scope, and explicit remaining independent/runtime boundary.
+- A transient production-service probe on the clean Windows guest proved the noninteractive
+  unavailable Windows Hello boundary: Windows returned `DeviceNotPresent`, `VerifyAsync` returned
+  `false`, and the task exited `0`. No logged-in Explorer session existed, so interactive
+  success/cancel was not attempted without operator confirmation. All task, credential, guest, and
+  host probe artifacts were removed. Evidence is in
+  `docs/release-evidence/windows-hello-unavailable-2026-07-17.md`.
 
 ## External publication state
 
