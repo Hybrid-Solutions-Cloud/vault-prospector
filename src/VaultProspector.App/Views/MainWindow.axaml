@@ -11,20 +11,20 @@
     <Border Grid.Row="0" Background="#073B34" Padding="22,14">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel>
-          <TextBlock Text="VAULT PROSPECTOR" Foreground="#A7F3D0" FontSize="12" FontWeight="Bold" LetterSpacing="2" />
-          <TextBlock Text="Find the right secret. Keep the boundaries clear." Foreground="White" FontSize="20" FontWeight="SemiBold" />
+          <TextBlock Text="VAULT PROSPECTOR" Foreground="#A7F3D0" FontSize="{StaticResource VaultFontSize12}" FontWeight="Bold" LetterSpacing="2" />
+          <TextBlock Text="Find the right secret. Keep the boundaries clear." Foreground="White" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" TextWrapping="Wrap" />
         </StackPanel>
         <Border x:Name="HeaderContextBadge" Grid.Column="1" Background="#14584E" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
-          <TextBlock Text="LOCAL-FIRST · AZURE KEY VAULT" Foreground="#D1FAE5" FontSize="11" />
+          <TextBlock Text="LOCAL-FIRST · AZURE KEY VAULT" Foreground="#D1FAE5" FontSize="{StaticResource VaultFontSize11}" />
         </Border>
       </Grid>
     </Border>
 
     <Border Grid.Row="1" IsVisible="{Binding HasActionableError}" Background="#3F1616" BorderBrush="#DC6B6B" BorderThickness="1" CornerRadius="6" Margin="18,12,18,0" Padding="14" AutomationProperties.LiveSetting="Assertive">
       <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-        <TextBlock Text="!" FontSize="22" FontWeight="Bold" Foreground="#FCA5A5" />
+        <TextBlock Text="!" FontSize="{StaticResource VaultFontSize22}" FontWeight="Bold" Foreground="#FCA5A5" />
         <StackPanel Grid.Column="1" Spacing="4">
-          <TextBlock Text="{Binding ErrorTitle}" FontSize="16" FontWeight="SemiBold" Foreground="White" />
+          <TextBlock Text="{Binding ErrorTitle}" FontSize="{StaticResource VaultFontSize16}" FontWeight="SemiBold" Foreground="White" />
           <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="White" />
           <TextBlock Text="{Binding RecoveryText}" TextWrapping="Wrap" Foreground="#FECACA" FontWeight="SemiBold" />
         </StackPanel>
@@ -63,10 +63,10 @@
               <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
               <Grid RowDefinitions="Auto,*" MinWidth="600">
                 <Grid ColumnDefinitions="36,2*,120,160,120" Margin="8,0,8,8">
-                  <TextBlock Text="" /><TextBlock Grid.Column="1" Text="NAME" FontWeight="Bold" FontSize="11" />
-                  <TextBlock Grid.Column="2" Text="TYPE" FontWeight="Bold" FontSize="11" />
-                  <TextBlock Grid.Column="3" Text="VAULT" FontWeight="Bold" FontSize="11" />
-                  <TextBlock Grid.Column="4" Text="STATE" FontWeight="Bold" FontSize="11" />
+                  <TextBlock Text="" /><TextBlock Grid.Column="1" Text="NAME" FontWeight="Bold" FontSize="{StaticResource VaultFontSize11}" />
+                  <TextBlock Grid.Column="2" Text="TYPE" FontWeight="Bold" FontSize="{StaticResource VaultFontSize11}" />
+                  <TextBlock Grid.Column="3" Text="VAULT" FontWeight="Bold" FontSize="{StaticResource VaultFontSize11}" />
+                  <TextBlock Grid.Column="4" Text="STATE" FontWeight="Bold" FontSize="{StaticResource VaultFontSize11}" />
                 </Grid>
                 <ListBox Grid.Row="1" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedResult}" AutomationProperties.Name="Vault search results">
                   <ListBox.ItemTemplate>
@@ -87,8 +87,8 @@
             <Border x:Name="SelectedObjectCard" Grid.Column="1" Classes="card">
               <ScrollViewer VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="10">
-                <TextBlock Text="Selected object" FontSize="18" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding SelectedResult.Name, FallbackValue=Nothing selected}" FontSize="16" AutomationProperties.Name="Selected object name" />
+                <TextBlock Text="Selected object" FontSize="{StaticResource VaultFontSize18}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding SelectedResult.Name, FallbackValue=Nothing selected}" FontSize="{StaticResource VaultFontSize16}" AutomationProperties.Name="Selected object name" />
                 <TextBlock Text="{Binding SelectedResult.Vault}" Opacity="0.75" AutomationProperties.Name="Selected object vault" />
                 <TextBlock Text="{Binding SelectedResult.Identity}" Opacity="0.75" AutomationProperties.Name="Selected object identity" />
                 <TextBlock Text="{Binding SelectedResult.Tenant}" Opacity="0.75" TextWrapping="Wrap" AutomationProperties.Name="Selected object tenant" />
@@ -103,7 +103,7 @@
                   <Button Content="Open offline" Command="{Binding OpenOfflineCommand}" Margin="0,0,8,8" />
                   <Button Content="Purge offline copy" Command="{Binding PurgeSelectedCachedValueCommand}" Margin="0,0,8,8" />
                 </WrapPanel>
-                <TextBlock Text="Values are retrieved only after explicit action and Windows Hello verification." FontSize="11" Opacity="0.7" TextWrapping="Wrap" />
+                <TextBlock Text="Values are retrieved only after explicit action and Windows Hello verification." FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" TextWrapping="Wrap" />
               </StackPanel>
               </ScrollViewer>
             </Border>
@@ -118,7 +118,7 @@
         <Grid x:Name="IdentityGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
           <Border Classes="card">
             <StackPanel Spacing="10">
-              <TextBlock Text="Connected identities" FontSize="20" FontWeight="SemiBold" />
+              <TextBlock Text="Connected identities" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
               <TextBlock Text="Each identity keeps an explicit tenant and vault access path." TextWrapping="Wrap" Opacity="0.75" />
               <ListBox ItemsSource="{Binding Identities}" SelectedItem="{Binding SelectedIdentity}" MinHeight="300" AutomationProperties.Name="Connected Microsoft Entra identities">
                 <ListBox.ItemTemplate>
@@ -141,13 +141,13 @@
             <StackPanel Spacing="10">
               <Border IsVisible="{Binding IsFirstRun}" Background="#123F36" BorderBrush="#2D8A76" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,6">
                 <StackPanel Spacing="5">
-                  <TextBlock Text="Welcome — connect your first identity" FontSize="17" FontWeight="SemiBold" Foreground="White" />
+                  <TextBlock Text="Welcome — connect your first identity" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Foreground="White" />
                   <TextBlock Text="1. Keep the recommended product registration unless your organization requires its own." TextWrapping="Wrap" Foreground="White" />
                   <TextBlock Text="2. Add an optional label so the account is easy to recognize." TextWrapping="Wrap" Foreground="White" />
                   <TextBlock Text="3. Continue to Microsoft sign-in and complete any MFA or Conditional Access prompts." TextWrapping="Wrap" Foreground="White" />
                 </StackPanel>
               </Border>
-              <TextBlock Text="Connect Microsoft Entra identity" FontSize="20" FontWeight="SemiBold" />
+              <TextBlock Text="Connect Microsoft Entra identity" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
               <TextBlock Text="Vault Prospector uses interactive browser sign-in. It never asks for or stores your password." TextWrapping="Wrap" />
               <TextBlock Text="Sign-in registration" FontWeight="SemiBold" />
               <TextBlock Text="Recommended — Vault Prospector product registration (no client secret)" TextWrapping="Wrap" />
@@ -155,11 +155,11 @@
               <StackPanel IsVisible="{Binding UseCustomClientId}" Spacing="5">
                 <TextBlock Text="Custom Application (client) ID" />
                 <TextBox Text="{Binding ClientId}" PlaceholderText="00000000-0000-0000-0000-000000000000" AutomationProperties.Name="Custom Microsoft Entra application client ID" />
-                <TextBlock Text="The custom registration must allow multi-tenant public-client flows, http://localhost, Azure Resource Manager, and Azure Key Vault delegated access." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
+                <TextBlock Text="The custom registration must allow multi-tenant public-client flows, http://localhost, Azure Resource Manager, and Azure Key Vault delegated access." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
               </StackPanel>
               <TextBlock Text="Friendly label" />
               <TextBox Text="{Binding IdentityLabel}" PlaceholderText="Customer, employer, lab…" AutomationProperties.Name="Friendly identity label" />
-              <TextBlock Text="Microsoft Entra controls the sign-in, consent, MFA, and Conditional Access experience. Vault Prospector receives no password." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
+              <TextBlock Text="Microsoft Entra controls the sign-in, consent, MFA, and Conditional Access experience. Vault Prospector receives no password." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
               <Button Classes="primary" Content="Continue to Microsoft sign-in" Command="{Binding AddIdentityCommand}" HorizontalAlignment="Left" />
             </StackPanel>
           </Border>
@@ -171,7 +171,7 @@
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Grid x:Name="WorkspaceGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
           <Border Classes="card">
-            <StackPanel Spacing="10"><TextBlock Text="Workspaces" FontSize="20" FontWeight="SemiBold" />
+            <StackPanel Spacing="10"><TextBlock Text="Workspaces" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
               <ListBox ItemsSource="{Binding Workspaces}" SelectedItem="{Binding SelectedWorkspace}" MinHeight="300" AutomationProperties.Name="Vault Prospector workspaces"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Margin="6" /></DataTemplate></ListBox.ItemTemplate></ListBox>
               <WrapPanel>
                 <Button Content="Add selected vault" Command="{Binding AddSelectedVaultToWorkspaceCommand}" Margin="0,0,8,8" />
@@ -181,7 +181,7 @@
             </StackPanel>
           </Border>
           <Border x:Name="CreateWorkspaceCard" Grid.Column="1" Classes="card">
-            <StackPanel Spacing="10"><TextBlock Text="Create workspace" FontSize="20" FontWeight="SemiBold" />
+            <StackPanel Spacing="10"><TextBlock Text="Create workspace" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
               <TextBlock Text="Group identities, tenants, subscriptions, and vaults without duplicating indexed data." TextWrapping="Wrap" />
               <TextBox Text="{Binding WorkspaceName}" PlaceholderText="Workspace name" AutomationProperties.Name="New workspace name" />
               <Button Classes="primary" Content="Create" Command="{Binding CreateWorkspaceCommand}" HorizontalAlignment="Left" />
@@ -194,13 +194,13 @@
       <TabItem Header="Settings">
         <ScrollViewer Margin="4,14"><Border Classes="card" MaxWidth="700" HorizontalAlignment="Left">
           <StackPanel Spacing="12">
-            <TextBlock Text="Security settings" FontSize="22" FontWeight="SemiBold" />
+            <TextBlock Text="Security settings" FontSize="{StaticResource VaultFontSize22}" FontWeight="SemiBold" />
             <CheckBox Content="Enable encrypted offline value cache" IsChecked="{Binding OfflineCacheEnabled}" />
             <TextBlock Text="Offline values are disabled by default, encrypted separately, and require Windows Hello." TextWrapping="Wrap" Opacity="0.75" />
             <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" AutomationProperties.Name="Maximum offline cache lifetime in hours" />
             <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" AutomationProperties.Name="Clipboard clear delay in seconds" />
             <WrapPanel><Button Classes="primary" Content="Save settings" Command="{Binding SaveSettingsCommand}" Margin="0,0,8,8" /><Button Content="Purge selected vault" Command="{Binding PurgeSelectedVaultCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge selected workspace" Command="{Binding PurgeSelectedWorkspaceCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge all offline values" Command="{Binding PurgeAllCachedValuesCommand}" Margin="0,0,8,8" /></WrapPanel>
-            <TextBlock Text="Telemetry is disabled. Logs contain no tokens, values, usernames, vault names, or object names." TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
+            <TextBlock Text="Telemetry is disabled. Logs contain no tokens, values, usernames, vault names, or object names." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
           </StackPanel>
         </Border></ScrollViewer>
       </TabItem>
@@ -208,7 +208,7 @@
       <TabItem Header="About">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Border Classes="card" Margin="4,14" MaxWidth="700" HorizontalAlignment="Left" VerticalAlignment="Top">
-          <StackPanel Spacing="10"><TextBlock Text="{Binding VersionLabel}" FontSize="24" FontWeight="SemiBold" />
+          <StackPanel Spacing="10"><TextBlock Text="{Binding VersionLabel}" FontSize="{StaticResource VaultFontSize24}" FontWeight="SemiBold" />
             <TextBlock Text="A local-first Azure Key Vault discovery, search, and secure retrieval desktop application." TextWrapping="Wrap" />
             <TextBlock Text="This preview never creates role assignments, rotates secrets, or silently caches values. Azure remains the source of truth." TextWrapping="Wrap" />
             <TextBlock Text="Mobile apps are intentionally deferred and tracked on the roadmap." TextWrapping="Wrap" Opacity="0.75" />

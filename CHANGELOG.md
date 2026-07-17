@@ -13,6 +13,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Changed
 
+- Honor the Windows 100–225% text-size preference through centralized font resources, choose the stacked layout from effective text-scaled width, and wrap the product title so all tabs and task boundaries remain reachable at 200% text-only scaling.
+- Follow Windows High Contrast changes at runtime and use system theme resources for readable text-entry placeholders and keyboard-focused selectors.
 - Fit the window to the scaled Windows work area and stack task panels below 720 logical pixels so Search, Identities, Workspaces, Settings, and About remain reachable at 200% display scaling.
 - Render first-run guidance with its verified white foreground instead of inheriting unreadable dark text on the dark green panel.
 - Give every text-entry, selector, list, and numeric control an explicit UI Automation name, and expose application status changes as a polite live region for assistive technology.

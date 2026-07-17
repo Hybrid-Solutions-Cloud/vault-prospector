@@ -12,6 +12,8 @@ namespace VaultProspector.App;
 
 public partial class App : Avalonia.Application
 {
+    private static readonly double[] FontSizes = [11, 12, 14, 16, 17, 18, 20, 22, 24];
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -21,6 +23,7 @@ public partial class App : Avalonia.Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            ApplyWindowsTextScale();
             var keyProvider = new WindowsDataProtectionKeyProvider(VaultProspectorPaths.KeyDirectory);
             var clock = new SystemClock();
             var repository = new EncryptedSqliteMetadataRepository(VaultProspectorPaths.DatabasePath, keyProvider);
@@ -68,5 +71,12 @@ public partial class App : Avalonia.Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void ApplyWindowsTextScale()
+    {
+        var factor = WindowsTextScale.ReadFactor();
+        foreach (var baseSize in FontSizes)
+            Resources[$"VaultFontSize{baseSize:0}"] = baseSize * factor;
     }
 }

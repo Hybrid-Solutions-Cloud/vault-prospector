@@ -52,19 +52,105 @@ public sealed class AccessibilityMarkupTests
         Assert.All(guidance, text => Assert.Equal("White", Attribute(text, "Foreground")?.Value));
     }
 
+    [Fact]
+    public void HighContrastTextBoxesUseReadablePlaceholderForeground()
+    {
+        var document = XDocument.Load(FindMarkup("src/VaultProspector.App/App.axaml"));
+        var style = document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "Style" &&
+                Attribute(element, "Selector")?.Value == "Window.high-contrast TextBox");
+        var setter = style
+            .Descendants()
+            .Single(element => Attribute(element, "Property")?.Value == "PlaceholderForeground");
+
+        Assert.Equal("{DynamicResource TextControlForeground}", Attribute(setter, "Value")?.Value);
+    }
+
+    [Fact]
+    public void HighContrastFocusedComboBoxesUseReadableSystemColors()
+    {
+        var document = XDocument.Load(FindMarkup("src/VaultProspector.App/App.axaml"));
+        var setters = document
+            .Descendants()
+            .Where(element => element.Name.LocalName == "Style")
+            .Where(element => Attribute(element, "Selector")?.Value.StartsWith(
+                "Window.high-contrast ComboBox:focus-visible /template/",
+                StringComparison.Ordinal) == true)
+            .Select(style => (
+                Selector: Attribute(style, "Selector")!.Value,
+                Setter: style.Descendants().Single(element => element.Name.LocalName == "Setter")))
+            .ToDictionary(item => item.Selector, item => item.Setter, StringComparer.Ordinal);
+
+        Assert.Equal(
+            "{DynamicResource TextControlBackground}",
+            Attribute(setters["Window.high-contrast ComboBox:focus-visible /template/ Border#HighlightBackground"], "Value")?.Value);
+        foreach (var selector in new[]
+                 {
+                     "Window.high-contrast ComboBox:focus-visible /template/ ContentControl#ContentPresenter",
+                     "Window.high-contrast ComboBox:focus-visible /template/ TextBlock#PlaceholderTextBlock",
+                     "Window.high-contrast ComboBox:focus-visible /template/ PathIcon#DropDownGlyph",
+                 })
+        {
+            Assert.Equal("Foreground", Attribute(setters[selector], "Property")?.Value);
+            Assert.Equal("{DynamicResource TextControlForeground}", Attribute(setters[selector], "Value")?.Value);
+        }
+    }
+
     [Theory]
-    [InlineData(1024, 720, 1, 960, 640, false)]
-    [InlineData(1024, 720, 2, 512, 360, true)]
-    [InlineData(1920, 1040, 2, 960, 520, false)]
+    [InlineData(null, 1)]
+    [InlineData(50, 1)]
+    [InlineData(100, 1)]
+    [InlineData(150, 1.5)]
+    [InlineData(200L, 2)]
+    [InlineData("225", 2.25)]
+    [InlineData(500, 2.25)]
+    [InlineData("invalid", 1)]
+    public void WindowsTextScaleIsNormalizedToTheSupportedRange(object? rawValue, double expectedFactor) =>
+        Assert.Equal(expectedFactor, WindowsTextScale.FactorFrom(rawValue));
+
+    [Fact]
+    public void ExplicitFontSizesUseApplicationScaleResources()
+    {
+        var application = XDocument.Load(FindMarkup("src/VaultProspector.App/App.axaml"));
+        var window = XDocument.Load(FindMainWindowMarkup());
+        var resources = application
+            .Descendants()
+            .Select(element => Attribute(element, "Key")?.Value)
+            .Where(value => value?.StartsWith("VaultFontSize", StringComparison.Ordinal) == true)
+            .Cast<string>()
+            .ToHashSet(StringComparer.Ordinal);
+        var fontSizes = window
+            .Descendants()
+            .Select(element => Attribute(element, "FontSize")?.Value)
+            .Where(value => value is not null)
+            .Cast<string>()
+            .ToArray();
+
+        Assert.NotEmpty(fontSizes);
+        Assert.All(fontSizes, value =>
+        {
+            Assert.StartsWith("{StaticResource VaultFontSize", value, StringComparison.Ordinal);
+            Assert.Contains(value[16..^1], resources);
+        });
+    }
+
+    [Theory]
+    [InlineData(1024, 720, 1, 1, 960, 640, false)]
+    [InlineData(1024, 720, 2, 1, 512, 360, true)]
+    [InlineData(1920, 1040, 2, 1, 960, 520, false)]
+    [InlineData(1920, 1040, 2, 2, 960, 520, true)]
     public void WindowFitsPhysicalWorkingAreaAndSelectsResponsiveLayout(
         double physicalWidth,
         double physicalHeight,
         double scale,
+        double textScale,
         double expectedWidth,
         double expectedHeight,
         bool expectedNarrow)
     {
-        var metrics = WindowLayoutMetrics.Fit(960, 640, physicalWidth, physicalHeight, scale, 720);
+        var metrics = WindowLayoutMetrics.Fit(960, 640, physicalWidth, physicalHeight, scale, textScale, 720);
 
         Assert.Equal(expectedWidth, metrics.Width);
         Assert.Equal(expectedHeight, metrics.Height);
@@ -83,9 +169,10 @@ public sealed class AccessibilityMarkupTests
             : $"{element.Name.LocalName} ({identifyingAttribute.Name.LocalName}={identifyingAttribute.Value})";
     }
 
-    private static string FindMainWindowMarkup()
+    private static string FindMainWindowMarkup() => FindMarkup("src/VaultProspector.App/Views/MainWindow.axaml");
+
+    private static string FindMarkup(string relativePath)
     {
-        const string relativePath = "src/VaultProspector.App/Views/MainWindow.axaml";
         foreach (var start in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
         {
             for (var directory = new DirectoryInfo(start); directory is not null; directory = directory.Parent)

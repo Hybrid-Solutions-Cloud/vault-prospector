@@ -1,5 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Platform;
+using Avalonia.VisualTree;
 using VaultProspector.App.ViewModels;
 
 namespace VaultProspector.App.Views;
@@ -7,18 +9,55 @@ namespace VaultProspector.App.Views;
 public partial class MainWindow : Window
 {
     private const double NarrowLayoutThreshold = 720;
+    private readonly double _textScaleFactor;
     private bool? _isNarrowLayout;
+    private IPlatformSettings? _platformSettings;
 
     public MainWindow()
     {
         InitializeComponent();
-        Opened += (_, _) => FitToWorkingArea();
-        SizeChanged += (_, _) => ApplyResponsiveLayout(ClientSize.Width < NarrowLayoutThreshold);
+        _textScaleFactor = WindowsTextScale.ReadFactor();
+        Opened += MainWindow_OnOpened;
+        Closed += MainWindow_OnClosed;
+        SizeChanged += (_, _) => ApplyResponsiveLayout(
+            WindowLayoutMetrics.RequiresNarrow(ClientSize.Width, _textScaleFactor, NarrowLayoutThreshold));
     }
 
     private async void SearchBox_OnKeyUp(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter && DataContext is MainViewModel viewModel) await viewModel.SearchCommand.ExecuteAsync(null);
+    }
+
+    private void MainWindow_OnOpened(object? sender, EventArgs e)
+    {
+        FitToWorkingArea();
+        _platformSettings = this.GetPlatformSettings();
+        if (_platformSettings is null) return;
+        ApplyContrastPreference(_platformSettings.GetColorValues());
+        _platformSettings.ColorValuesChanged += PlatformSettings_OnColorValuesChanged;
+    }
+
+    private void MainWindow_OnClosed(object? sender, EventArgs e)
+    {
+        if (_platformSettings is not null)
+            _platformSettings.ColorValuesChanged -= PlatformSettings_OnColorValuesChanged;
+        _platformSettings = null;
+    }
+
+    private void PlatformSettings_OnColorValuesChanged(object? sender, PlatformColorValues values) =>
+        ApplyContrastPreference(values);
+
+    private void ApplyContrastPreference(PlatformColorValues values)
+    {
+        const string highContrastClass = "high-contrast";
+        if (values.ContrastPreference == ColorContrastPreference.High)
+        {
+            if (!Classes.Contains(highContrastClass)) Classes.Add(highContrastClass);
+        }
+        else
+        {
+            Classes.Remove(highContrastClass);
+        }
     }
 
     private void FitToWorkingArea()
@@ -32,6 +71,7 @@ public partial class MainWindow : Window
             screen.WorkingArea.Width,
             screen.WorkingArea.Height,
             screen.Scaling,
+            _textScaleFactor,
             NarrowLayoutThreshold);
         Width = metrics.Width;
         Height = metrics.Height;

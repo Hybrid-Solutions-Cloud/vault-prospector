@@ -4,16 +4,46 @@
              xmlns:local="using:VaultProspector.App"
              RequestedThemeVariant="Default">
 
+    <Application.Resources>
+        <x:Double x:Key="VaultFontSize11">11</x:Double>
+        <x:Double x:Key="VaultFontSize12">12</x:Double>
+        <x:Double x:Key="VaultFontSize14">14</x:Double>
+        <x:Double x:Key="VaultFontSize16">16</x:Double>
+        <x:Double x:Key="VaultFontSize17">17</x:Double>
+        <x:Double x:Key="VaultFontSize18">18</x:Double>
+        <x:Double x:Key="VaultFontSize20">20</x:Double>
+        <x:Double x:Key="VaultFontSize22">22</x:Double>
+        <x:Double x:Key="VaultFontSize24">24</x:Double>
+    </Application.Resources>
+
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
 
     <Application.Styles>
         <FluentTheme DensityStyle="Compact" />
+        <Style Selector="Window">
+            <Setter Property="FontSize" Value="{DynamicResource VaultFontSize14}" />
+        </Style>
         <Style Selector="Button.primary">
             <Setter Property="Background" Value="#0A6E57" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Window.high-contrast TextBox">
+            <Setter Property="PlaceholderForeground" Value="{DynamicResource TextControlForeground}" />
+        </Style>
+        <Style Selector="Window.high-contrast ComboBox:focus-visible /template/ Border#HighlightBackground">
+            <Setter Property="Background" Value="{DynamicResource TextControlBackground}" />
+        </Style>
+        <Style Selector="Window.high-contrast ComboBox:focus-visible /template/ ContentControl#ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource TextControlForeground}" />
+        </Style>
+        <Style Selector="Window.high-contrast ComboBox:focus-visible /template/ TextBlock#PlaceholderTextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextControlForeground}" />
+        </Style>
+        <Style Selector="Window.high-contrast ComboBox:focus-visible /template/ PathIcon#DropDownGlyph">
+            <Setter Property="Foreground" Value="{DynamicResource TextControlForeground}" />
         </Style>
         <Style Selector="Border.card">
             <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
