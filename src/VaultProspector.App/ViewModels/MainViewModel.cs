@@ -89,7 +89,7 @@ public sealed partial class MainViewModel(
         StatusText = $"Connected {identity.DisplayName}. Select Sync to discover resources.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task RemoveIdentityAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedIdentity is null) return;
@@ -98,7 +98,7 @@ public sealed partial class MainViewModel(
         StatusText = "Identity and its cached tokens were removed.";
     });
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task SynchronizeAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedIdentity is null) throw new InvalidOperationException("Select an identity before synchronizing.");
@@ -282,6 +282,20 @@ public sealed partial class MainViewModel(
     }
 
     private string EffectiveClientId() => UseCustomClientId ? ClientId.Trim() : ProductIdentity.DefaultClientId;
+
+    private bool CanUseSelectedIdentity() => SelectedIdentity is not null && !IsBusy;
+
+    partial void OnSelectedIdentityChanged(ConnectedIdentity? value)
+    {
+        RemoveIdentityCommand.NotifyCanExecuteChanged();
+        SynchronizeCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsBusyChanged(bool value)
+    {
+        RemoveIdentityCommand.NotifyCanExecuteChanged();
+        SynchronizeCommand.NotifyCanExecuteChanged();
+    }
 
     private CachePolicy CurrentPolicy() => new(OfflineCacheEnabled, TimeSpan.FromHours(Math.Clamp(MaximumCacheHours, 1, 168)), true, true);
 

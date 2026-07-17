@@ -9,6 +9,10 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Provide a default multi-tenant Vault Prospector public-client registration, a guided first-identity experience, and an advanced organization-controlled registration option.
 - Show redacted, actionable recovery guidance for authentication, authorization, Windows verification, protected-data integrity, policy, and damaged-settings failures.
 
+### Changed
+
+- Disable identity synchronization and removal until an identity is selected, removing unavailable actions from first-run keyboard navigation.
+
 ### Security
 
 - Authenticate offline-cache expiration, source fingerprint, vault, workspace, and descriptor metadata with AES-GCM associated data.
