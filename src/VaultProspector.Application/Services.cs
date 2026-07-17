@@ -73,8 +73,16 @@ public sealed class SecretAccessService(
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be retrieved. Key material and certificate private keys are never exported.");
         if (!verification.IsAvailable || !await verification.VerifyAsync("Reveal an Azure Key Vault secret", cancellationToken)) throw new UnauthorizedAccessException("Local verification was not completed.");
         var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
-        await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
-        return value;
+        try
+        {
+            await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
+            return value;
+        }
+        catch
+        {
+            value.Dispose();
+            throw;
+        }
     }
 
     public async Task RetrieveAndCopyAsync(Guid itemId, TimeSpan clearAfter, CachePolicy policy, CancellationToken cancellationToken)
@@ -107,6 +115,7 @@ public sealed class SecretAccessService(
     {
         var source = await repository.ResolveItemAsync(itemId, cancellationToken)
             ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
+        if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only cached secret values can be opened.");
         if (!verification.IsAvailable || !await verification.VerifyAsync("Open an offline secret", cancellationToken))
             throw new UnauthorizedAccessException("Local verification was not completed.");
 

@@ -30,6 +30,7 @@ Record the Windows version, package checksum, tester, and time with the release 
 - [ ] Secret, key, and certificate versions display their source vault and identity.
 - [ ] Reveal and copy reject keys/certificates and require Windows Hello for secrets.
 - [ ] Revealed text is remasked and clipboard text clears only when it remains unchanged.
+- [ ] Closing the application clears an unchanged Vault Prospector clipboard value without clearing unrelated replacement content.
 
 ## Offline values and removal
 

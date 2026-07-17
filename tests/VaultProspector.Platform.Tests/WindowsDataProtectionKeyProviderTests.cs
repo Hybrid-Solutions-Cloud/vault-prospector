@@ -61,6 +61,25 @@ public sealed class WindowsDataProtectionKeyProviderTests : IDisposable
         }
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("metadata/database")]
+    [InlineData("metadata.database")]
+    [InlineData("-metadata")]
+    [InlineData("Metadata")]
+    [InlineData("métadata")]
+    [InlineData("con")]
+    public async Task InvalidPurposeIsRejectedInsteadOfCollapsingToAnotherKeyPath(string purpose)
+    {
+        var provider = new WindowsDataProtectionKeyProvider(_directory);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => provider.GetOrCreateKeyAsync(
+            purpose,
+            TestContext.Current.CancellationToken));
+
+        Assert.False(Directory.Exists(_directory));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory)) Directory.Delete(_directory, true);

@@ -15,6 +15,8 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
     public async Task<CachedSecretDescriptor> StoreAsync(Guid vaultItemId, Guid vaultId, Guid? workspaceId, SensitiveValue value, string fingerprint, DateTimeOffset expiresAt, CancellationToken cancellationToken)
     {
         EnsureAvailable();
+        if (expiresAt <= clock.UtcNow) throw new ArgumentOutOfRangeException(nameof(expiresAt), "Protected values must expire in the future.");
+        if (string.IsNullOrWhiteSpace(fingerprint)) throw new ArgumentException("A source metadata fingerprint is required.", nameof(fingerprint));
         Directory.CreateDirectory(directory);
         var descriptor = new CachedSecretDescriptor(Guid.NewGuid(), vaultItemId, vaultId, workspaceId, clock.UtcNow, expiresAt, null, fingerprint);
         var key = await keyMaterial.GetOrCreateKeyAsync(KeyPurpose(CurrentKeyVersion), cancellationToken);
@@ -36,7 +38,17 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
         }
 
         var envelope = new Envelope(CurrentKeyVersion, descriptor, Convert.ToBase64String(nonce), Convert.ToBase64String(tag), Convert.ToBase64String(ciphertext));
-        await File.WriteAllTextAsync(PathFor(vaultItemId), JsonSerializer.Serialize(envelope), cancellationToken);
+        var path = PathFor(vaultItemId);
+        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+        try
+        {
+            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(envelope), cancellationToken);
+            File.Move(temporaryPath, path, true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+        }
         return descriptor;
     }
 

@@ -18,6 +18,11 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Security
 
+- Reject non-canonical DPAPI key purposes instead of allowing distinct purposes to collapse onto one key path.
+- Publish encrypted offline-cache replacements atomically and validate their expiration and source fingerprint before writing.
+- Dispose retrieved secret material if access-history persistence fails, and reject non-secret metadata before cached-value verification or access.
+- Add best-effort finalizer zeroization for undisposed sensitive values.
+- Serialize clipboard leases, prevent stale timers from clearing newer copies, and clear an unchanged app-owned value during orderly exit.
 - Authenticate offline-cache expiration, source fingerprint, vault, workspace, and descriptor metadata with AES-GCM associated data.
 - Invalidate legacy preview cache envelopes whose descriptor metadata was not authenticated; users must explicitly cache those values again.
 - Require application-boundary Windows Hello verification for live retrieval, copy, offline caching, and cached retrieval.

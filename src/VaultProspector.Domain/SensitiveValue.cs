@@ -8,6 +8,8 @@ public sealed class SensitiveValue : IDisposable
 
     public SensitiveValue(ReadOnlySpan<char> value) => _value = value.ToArray();
 
+    ~SensitiveValue() => Clear();
+
     public int Length => _value?.Length ?? 0;
     public bool IsDisposed => _value is null;
 
@@ -21,10 +23,15 @@ public sealed class SensitiveValue : IDisposable
 
     public void Dispose()
     {
+        Clear();
+        GC.SuppressFinalize(this);
+    }
+
+    private void Clear()
+    {
         if (_value is null) return;
         CryptographicOperations.ZeroMemory(System.Runtime.InteropServices.MemoryMarshal.AsBytes(_value.AsSpan()));
         _value = null;
-        GC.SuppressFinalize(this);
     }
 
     public override string ToString() => "[REDACTED]";

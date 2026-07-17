@@ -90,6 +90,8 @@
 
 - Copy only after explicit action.
 - Clear after a configurable short interval.
+- Clear an unchanged application-owned value during orderly shutdown.
+- Prevent a delayed clear from an older copy operation from clearing a newer clipboard value.
 - Avoid restoring unrelated clipboard content unless platform behavior can be made reliable.
 - Warn that clipboard history and cross-device clipboard services may retain data.
 - Provide a policy to disable copying.

@@ -28,18 +28,42 @@ public partial class App : Avalonia.Application
             var azureProvider = new AzureVaultProvider(identityProvider);
             var diagnostics = new RedactingDiagnosticSink(VaultProspectorPaths.LogPath);
             var valueStore = new EncryptedFileValueStore(VaultProspectorPaths.CacheDirectory, keyProvider, clock);
+            var clipboard = new AvaloniaClipboardService();
             IUserVerificationService verification = new WindowsHelloVerificationService();
             var viewModel = new MainViewModel(
                 repository,
                 new IdentityService(identityProvider, repository),
                 new SynchronizationService(azureProvider, repository, clock, diagnostics),
                 new SearchService(repository, clock),
-                new SecretAccessService(azureProvider, repository, valueStore, new AvaloniaClipboardService(), verification, clock),
+                new SecretAccessService(azureProvider, repository, valueStore, clipboard, verification, clock),
                 new WorkspaceService(repository),
                 valueStore,
                 new AppSettingsStore(Path.Combine(VaultProspectorPaths.DataDirectory, "settings.json")));
             var window = new MainWindow { DataContext = viewModel };
             window.Opened += async (_, _) => await viewModel.InitializeAsync();
+            var clipboardCleanupInProgress = false;
+            var clipboardCleanupCompleted = false;
+            window.Closing += async (_, args) =>
+            {
+                if (clipboardCleanupCompleted) return;
+                args.Cancel = true;
+                if (clipboardCleanupInProgress) return;
+                clipboardCleanupInProgress = true;
+                try
+                {
+                    await clipboard.ClearIfOwnedAsync(CancellationToken.None);
+                }
+                catch (Exception exception)
+                {
+                    diagnostics.WriteError("clipboard_shutdown_clear_failed", exception, new Dictionary<string, object?>());
+                }
+                finally
+                {
+                    clipboardCleanupCompleted = true;
+                    clipboardCleanupInProgress = false;
+                    window.Close();
+                }
+            };
             desktop.MainWindow = window;
         }
 

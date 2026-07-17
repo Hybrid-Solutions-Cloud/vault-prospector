@@ -48,6 +48,7 @@ public interface IProtectedValueStore
 public interface IClipboardService
 {
     Task CopyWithAutoClearAsync(SensitiveValue value, TimeSpan clearAfter, CancellationToken cancellationToken);
+    Task ClearIfOwnedAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
 public interface IUserVerificationService

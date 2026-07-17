@@ -112,9 +112,27 @@ public sealed class EncryptedPersistenceTests : IDisposable
         var itemId = Guid.NewGuid();
         var store = new EncryptedFileValueStore(Path.Combine(_directory, "values"), _keys, _clock);
         using var value = new SensitiveValue("expired");
-        await store.StoreAsync(itemId, Guid.NewGuid(), null, value, "fingerprint", _clock.UtcNow.AddMinutes(-1), TestContext.Current.CancellationToken);
-        Assert.Null(await store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken));
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, value, "fingerprint", _clock.UtcNow.AddMinutes(1), TestContext.Current.CancellationToken);
+        Assert.Null(await store.RetrieveAsync(itemId, _clock.UtcNow.AddMinutes(2), "fingerprint", TestContext.Current.CancellationToken));
         Assert.False(File.Exists(Path.Combine(_directory, "values", $"{itemId:D}.vpcache")));
+    }
+
+    [Fact]
+    public async Task ReplacingProtectedValuePublishesOneCompleteEnvelopeWithoutTemporaryFiles()
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "replacement-values");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var first = new SensitiveValue("first-value");
+        using var replacement = new SensitiveValue("replacement-value");
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, first, "first-fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, replacement, "replacement-fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+
+        Assert.Single(Directory.GetFiles(valueDirectory, "*.vpcache"));
+        Assert.Empty(Directory.GetFiles(valueDirectory, "*.tmp"));
+        using var restored = await store.RetrieveAsync(itemId, _clock.UtcNow, "replacement-fingerprint", TestContext.Current.CancellationToken);
+        Assert.Equal("replacement-value", restored?.Reveal());
     }
 
     [Fact]

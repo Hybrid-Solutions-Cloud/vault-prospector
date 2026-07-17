@@ -84,6 +84,8 @@ Mitigations:
 
 - Use explicit copy actions.
 - Automatically clear the clipboard after a short interval.
+- Serialize clipboard leases so an older timer cannot clear a newer value.
+- During an orderly exit, clear the clipboard only when it still contains the value copied by Vault Prospector.
 - Warn that clipboard clearing cannot revoke data already read.
 - Research Windows clipboard history and Apple Universal Clipboard behavior.
 - Offer direct type or AutoFill integrations only after platform review.
