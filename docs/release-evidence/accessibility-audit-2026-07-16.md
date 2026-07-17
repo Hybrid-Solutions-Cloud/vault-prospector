@@ -18,7 +18,7 @@ P-15 does not pass from this review. Complete keyboard behavior, actual assistiv
 | --- | --- | --- | --- | --- |
 | A11Y-01 | First-run keyboard path | 2.1.1, 2.4.3 | Pass for tested path | From the Identities tab, Tab reaches the organization-registration checkbox; Space reveals the custom client-ID field; the next Tab focuses it. Continue through sign-in, cancellation, recovery, and return focus without automating credentials. |
 | A11Y-02 | Control names and live errors | 3.3.1, 3.3.2, 4.1.2 | Pass for inspected controls | UI Automation exposes the checkbox, `Custom Microsoft Entra application client ID`, friendly-label edit, and sign-in button. The global error region is assertive and contains an error, safe explanation, and recovery action. Validate announcements in NVDA and Narrator. |
-| A11Y-03 | Empty-state action focus | 2.4.3, 3.2.4 | Remediated; regression test pending | Before remediation, keyboard focus reached **Sync selected** and **Remove identity** even though those actions could not complete useful work. Both are now reported disabled by UI Automation without a selected identity and are skipped by Tab; the observed sequence proceeds from the Identities tab to the registration checkbox, friendly-label field, and sign-in button. Add automated command-state coverage. |
+| A11Y-03 | Empty-state action focus | 2.4.3, 3.2.4 | Remediated and tested | Before remediation, keyboard focus reached **Sync selected** and **Remove identity** even though those actions could not complete useful work. Both are now reported disabled by UI Automation without a selected identity and are skipped by Tab; the observed sequence proceeds from the Identities tab to the registration checkbox, friendly-label field, and sign-in button. A regression test covers no selection, selected identity, busy state, and removal of selection. |
 | A11Y-04 | Target size | 2.5.5 review target | Major evidence gap | Several desktop buttons and checkboxes visually appear below 44-by-44 logical pixels. Measure every interactive target, document the desktop exception/rationale where applicable, and enlarge blocking targets. |
 | A11Y-05 | Screen reader and security prompts | 1.3.1, 4.1.2 | Major evidence gap | No NVDA or Narrator transcript exists for onboarding, Entra handoff/return, Windows Hello, errors, reveal masking, cache state, or purge confirmation. Test with real assistive technology on a clean supported machine. |
 | A11Y-06 | Reflow, scaling, and contrast modes | 1.4.4, 1.4.10, 1.4.11 | Major evidence gap | Test Windows text scaling and display scaling through 200%, minimum window size, High Contrast themes, and focus visibility without clipping or loss of function. |
@@ -39,7 +39,7 @@ Ratios use the WCAG relative-luminance formula. Dynamic theme colors still requi
 
 ## Required completion evidence
 
-1. Remediation commits and regression tests for command enabled/focus states.
+1. Continue auditing and testing command enabled/focus states beyond the remediated identity actions.
 2. Keyboard-only transcripts for every core task and failure recovery path.
 3. NVDA and Narrator results, including focus return from Entra and Windows Hello surfaces.
 4. Default, 200% scaling, minimum-size, and High Contrast screenshots with defect tracking.

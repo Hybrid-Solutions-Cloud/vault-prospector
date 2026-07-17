@@ -1,5 +1,7 @@
 using System.Text.Json;
 using VaultProspector.App;
+using VaultProspector.App.ViewModels;
+using VaultProspector.Domain;
 
 namespace VaultProspector.App.Tests;
 
@@ -92,6 +94,39 @@ public sealed class OnboardingTests : IDisposable
         Assert.Contains("not deleted", error.Recovery, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("internal file content", error.Message, StringComparison.Ordinal);
         Assert.DoesNotContain("internal file content", error.Recovery, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void IdentityActionsTrackSelectionAndBusyState()
+    {
+        var viewModel = new MainViewModel(null!, null!, null!, null!, null!, null!, null!, null!);
+
+        Assert.False(viewModel.SynchronizeCommand.CanExecute(null));
+        Assert.False(viewModel.RemoveIdentityCommand.CanExecute(null));
+
+        viewModel.SelectedIdentity = new ConnectedIdentity(
+            Guid.NewGuid(),
+            ProductIdentity.DefaultClientId,
+            "account",
+            "user@example.invalid",
+            "Test identity",
+            "tenant",
+            AuthenticationState.Ready,
+            DateTimeOffset.UtcNow);
+
+        Assert.True(viewModel.SynchronizeCommand.CanExecute(null));
+        Assert.True(viewModel.RemoveIdentityCommand.CanExecute(null));
+
+        viewModel.IsBusy = true;
+
+        Assert.False(viewModel.SynchronizeCommand.CanExecute(null));
+        Assert.False(viewModel.RemoveIdentityCommand.CanExecute(null));
+
+        viewModel.IsBusy = false;
+        viewModel.SelectedIdentity = null;
+
+        Assert.False(viewModel.SynchronizeCommand.CanExecute(null));
+        Assert.False(viewModel.RemoveIdentityCommand.CanExecute(null));
     }
 
     public void Dispose()

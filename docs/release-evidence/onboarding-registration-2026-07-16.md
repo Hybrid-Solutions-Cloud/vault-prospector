@@ -34,7 +34,7 @@ The product registration is therefore suitable for an installed public client an
 
 `VaultProspector.App.Tests` covers the product-registration default, legacy settings migration, custom-registration preservation, malformed custom settings, redacted error handling, Windows Hello recovery wording, and narrow corrupted-settings recovery. `VaultProspector.Providers.Azure.Tests` asserts separate ARM token acquisition and Key Vault extra consent.
 
-The full local Release gate passed on 2026-07-16: locked restore, structured direct/transitive vulnerability inspection, formatting verification, a build with zero warnings and zero errors, and 40 tests. The final CI run must be linked after this evidence is committed.
+The full local Release gate passed on 2026-07-16: locked restore, structured direct/transitive vulnerability inspection, formatting verification, a build with zero warnings and zero errors, and 41 tests. The final CI run must be linked after this evidence is committed.
 
 ## Desktop smoke evidence
 
