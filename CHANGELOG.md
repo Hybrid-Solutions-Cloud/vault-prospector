@@ -6,6 +6,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Added
 
+- Retain each successful `main` CI run's commit-addressed unsigned Windows candidate for 14 days, including MSI, package-manager artifacts, checksums, and machine-readable source/run provenance for clean-machine validation.
 - Add HCS-governed public Preview intake, an explicit publication notice, a private security route, business-day triage, and measurable Preview-to-GA feedback criteria without enabling telemetry.
 - Add a fail-closed, structured Windows Installer lifecycle scenario covering published checksums, install, major upgrade, forced repair, downgrade rejection, uninstall cleanup, and retained user state.
 - Provide a default multi-tenant Vault Prospector public-client registration, a guided first-identity experience, and an advanced organization-controlled registration option.

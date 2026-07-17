@@ -31,6 +31,18 @@ winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.
 
 `PackageInstaller.ps1` creates the MSI and checksum. `PackageDistribution.ps1` reads the MSI product identifiers and checksum, then creates the WinGet manifests, manifest archive, Chocolatey source package, `.nupkg`, and checksums.
 
+## CI validation candidates
+
+Every successful push to `main` builds a unique `0.1.0-ci.<run-number>` package set and retains a
+`windows-candidate-<source-commit>` workflow artifact for 14 days. The artifact contains the MSI,
+WinGet manifest archive, Chocolatey package, their checksum files, and `ci-candidate.json`. The JSON
+binds the installer name, byte length, and SHA-256 to the repository, source commit/ref, workflow run,
+attempt, candidate version, and UTC creation time.
+
+These candidates exist only for clean-machine validation. They are unsigned, are not public releases,
+must not be submitted to WinGet or Chocolatey, and must be removed from the test machine after evidence
+capture. Only the protected release workflow may create a publishable signed version.
+
 ## Publish the public installer
 
 Set `GH_TOKEN` to the Hybrid Solutions Cloud GitHub App installation token. Do not use a personal access token to push or publish into the organization.

@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  CI_CANDIDATE_VERSION: 0.1.0-ci.${{ github.run_number }}
+
 on:
   pull_request:
   push:
@@ -43,12 +46,46 @@ jobs:
       - name: Build Windows installer and package manifests
         shell: pwsh
         run: |
-          ./scripts/PackageInstaller.ps1 -Version 0.0.0-preview.1
-          ./scripts/PackageDistribution.ps1 -Version 0.0.0-preview.1
-          winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/0.0.0-preview.1
+          ./scripts/PackageInstaller.ps1 -Version $env:CI_CANDIDATE_VERSION
+          ./scripts/PackageDistribution.ps1 -Version $env:CI_CANDIDATE_VERSION
+          winget validate --manifest "./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/$env:CI_CANDIDATE_VERSION"
+
+          $installer = Get-Item "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi"
+          $provenance = [ordered]@{
+            schemaVersion = 1
+            candidateVersion = $env:CI_CANDIDATE_VERSION
+            sourceCommit = '${{ github.sha }}'
+            sourceRef = '${{ github.ref }}'
+            workflowRunId = '${{ github.run_id }}'
+            workflowRunAttempt = '${{ github.run_attempt }}'
+            repository = '${{ github.repository }}'
+            createdAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
+            installer = [ordered]@{
+              name = $installer.Name
+              length = $installer.Length
+              sha256 = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash
+            }
+          }
+          $provenance | ConvertTo-Json -Depth 4 | Set-Content ./artifacts/ci-candidate.json -Encoding utf8NoBOM
       - name: Check vulnerable dependencies
         shell: pwsh
         run: ./scripts/Test-VulnerablePackages.ps1
+      - name: Upload commit-addressed Windows candidate
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-candidate-${{ github.sha }}
+          path: |
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-win-x64.msi
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-win-x64.msi.sha256
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-winget-manifests.zip
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-winget-manifests.zip.sha256
+            artifacts/vault-prospector.${{ env.CI_CANDIDATE_VERSION }}.nupkg
+            artifacts/vault-prospector.${{ env.CI_CANDIDATE_VERSION }}.nupkg.sha256
+            artifacts/ci-candidate.json
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
