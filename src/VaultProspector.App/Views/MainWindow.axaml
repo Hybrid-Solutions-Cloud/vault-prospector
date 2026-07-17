@@ -3,7 +3,7 @@
         xmlns:vm="using:VaultProspector.App.ViewModels"
         x:Class="VaultProspector.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Width="960" Height="640" MinWidth="900" MinHeight="620"
+        Width="960" Height="640" MinWidth="320" MinHeight="300"
         WindowStartupLocation="CenterScreen"
         Icon="/Assets/vault-prospector.ico"
         Title="Vault Prospector">
@@ -14,7 +14,7 @@
           <TextBlock Text="VAULT PROSPECTOR" Foreground="#A7F3D0" FontSize="12" FontWeight="Bold" LetterSpacing="2" />
           <TextBlock Text="Find the right secret. Keep the boundaries clear." Foreground="White" FontSize="20" FontWeight="SemiBold" />
         </StackPanel>
-        <Border Grid.Column="1" Background="#14584E" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
+        <Border x:Name="HeaderContextBadge" Grid.Column="1" Background="#14584E" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
           <TextBlock Text="LOCAL-FIRST · AZURE KEY VAULT" Foreground="#D1FAE5" FontSize="11" />
         </Border>
       </Grid>
@@ -33,13 +33,14 @@
 
     <TabControl Grid.Row="2" Margin="18">
       <TabItem Header="Search">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Grid RowDefinitions="Auto,*,Auto" Margin="4,14,4,4">
           <Border Classes="card">
             <StackPanel Spacing="10">
-              <Grid ColumnDefinitions="*,150,Auto" ColumnSpacing="10">
-                <TextBox PlaceholderText="Search names, tags, and metadata" Text="{Binding SearchText}" KeyUp="SearchBox_OnKeyUp" AutomationProperties.Name="Search vault metadata" />
-                <ComboBox Grid.Column="1" ItemsSource="{Binding ObjectTypes}" SelectedItem="{Binding SelectedObjectType}" AutomationProperties.Name="Object type filter" />
-                <Button Grid.Column="2" Classes="primary" Content="Search" Command="{Binding SearchCommand}" AutomationProperties.Name="Search vault metadata" />
+              <Grid x:Name="SearchCommandGrid" ColumnDefinitions="*,150,Auto" ColumnSpacing="10" RowSpacing="8">
+                <TextBox x:Name="SearchTextBox" PlaceholderText="Search names, tags, and metadata" Text="{Binding SearchText}" KeyUp="SearchBox_OnKeyUp" AutomationProperties.Name="Search vault metadata" />
+                <ComboBox x:Name="ObjectTypeComboBox" Grid.Column="1" ItemsSource="{Binding ObjectTypes}" SelectedItem="{Binding SelectedObjectType}" AutomationProperties.Name="Object type filter" />
+                <Button x:Name="SearchButton" Grid.Column="2" Classes="primary" Content="Search" Command="{Binding SearchCommand}" AutomationProperties.Name="Search vault metadata" />
               </Grid>
               <WrapPanel Orientation="Horizontal">
                 <CheckBox Content="Favorites" IsChecked="{Binding FavoritesOnly}" Margin="0,0,14,6" />
@@ -50,16 +51,17 @@
                 <CheckBox Content="Selected workspace" IsChecked="{Binding FilterSelectedWorkspace}" IsEnabled="{Binding HasSelectedWorkspace}" Margin="0,0,14,6" />
                 <CheckBox Content="Recent first" IsChecked="{Binding RecentlyAccessedFirst}" Margin="0,0,14,6" />
               </WrapPanel>
-              <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                <TextBox PlaceholderText="Tenant ID contains…" Text="{Binding TenantFilter}" AutomationProperties.Name="Tenant filter" />
-                <TextBox Grid.Column="1" PlaceholderText="Subscription ID contains…" Text="{Binding SubscriptionFilter}" AutomationProperties.Name="Subscription filter" />
-                <TextBox Grid.Column="2" PlaceholderText="Vault name contains…" Text="{Binding VaultFilter}" AutomationProperties.Name="Vault name filter" />
+              <Grid x:Name="SearchFilterGrid" ColumnDefinitions="*,*,*" ColumnSpacing="10" RowSpacing="8">
+                <TextBox x:Name="TenantFilterTextBox" PlaceholderText="Tenant ID contains…" Text="{Binding TenantFilter}" AutomationProperties.Name="Tenant filter" />
+                <TextBox x:Name="SubscriptionFilterTextBox" Grid.Column="1" PlaceholderText="Subscription ID contains…" Text="{Binding SubscriptionFilter}" AutomationProperties.Name="Subscription filter" />
+                <TextBox x:Name="VaultFilterTextBox" Grid.Column="2" PlaceholderText="Vault name contains…" Text="{Binding VaultFilter}" AutomationProperties.Name="Vault name filter" />
               </Grid>
             </StackPanel>
           </Border>
-          <Grid Grid.Row="1" ColumnDefinitions="2*,1*" Margin="0,14,0,14" ColumnSpacing="14">
+          <Grid x:Name="SearchResultsGrid" Grid.Row="1" ColumnDefinitions="2*,1*" RowDefinitions="*" MinHeight="260" Margin="0,14,0,14" ColumnSpacing="14" RowSpacing="14">
             <Border Classes="card">
-              <Grid RowDefinitions="Auto,*">
+              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+              <Grid RowDefinitions="Auto,*" MinWidth="600">
                 <Grid ColumnDefinitions="36,2*,120,160,120" Margin="8,0,8,8">
                   <TextBlock Text="" /><TextBlock Grid.Column="1" Text="NAME" FontWeight="Bold" FontSize="11" />
                   <TextBlock Grid.Column="2" Text="TYPE" FontWeight="Bold" FontSize="11" />
@@ -80,8 +82,9 @@
                   </ListBox.ItemTemplate>
                 </ListBox>
               </Grid>
+              </ScrollViewer>
             </Border>
-            <Border Grid.Column="1" Classes="card">
+            <Border x:Name="SelectedObjectCard" Grid.Column="1" Classes="card">
               <ScrollViewer VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="10">
                 <TextBlock Text="Selected object" FontSize="18" FontWeight="SemiBold" />
@@ -107,10 +110,12 @@
           </Grid>
           <TextBlock Grid.Row="2" Text="{Binding Results.Count, StringFormat={}{0} indexed objects}" Opacity="0.7" />
         </Grid>
+        </ScrollViewer>
       </TabItem>
 
       <TabItem Header="Identities">
-        <Grid ColumnDefinitions="1*,1*" Margin="4,14" ColumnSpacing="14">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <Grid x:Name="IdentityGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
           <Border Classes="card">
             <StackPanel Spacing="10">
               <TextBlock Text="Connected identities" FontSize="20" FontWeight="SemiBold" />
@@ -132,14 +137,14 @@
               </WrapPanel>
             </StackPanel>
           </Border>
-          <Border Grid.Column="1" Classes="card">
+          <Border x:Name="ConnectIdentityCard" Grid.Column="1" Classes="card">
             <StackPanel Spacing="10">
               <Border IsVisible="{Binding IsFirstRun}" Background="#123F36" BorderBrush="#2D8A76" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,6">
                 <StackPanel Spacing="5">
-                  <TextBlock Text="Welcome — connect your first identity" FontSize="17" FontWeight="SemiBold" />
-                  <TextBlock Text="1. Keep the recommended product registration unless your organization requires its own." TextWrapping="Wrap" />
-                  <TextBlock Text="2. Add an optional label so the account is easy to recognize." TextWrapping="Wrap" />
-                  <TextBlock Text="3. Continue to Microsoft sign-in and complete any MFA or Conditional Access prompts." TextWrapping="Wrap" />
+                  <TextBlock Text="Welcome — connect your first identity" FontSize="17" FontWeight="SemiBold" Foreground="White" />
+                  <TextBlock Text="1. Keep the recommended product registration unless your organization requires its own." TextWrapping="Wrap" Foreground="White" />
+                  <TextBlock Text="2. Add an optional label so the account is easy to recognize." TextWrapping="Wrap" Foreground="White" />
+                  <TextBlock Text="3. Continue to Microsoft sign-in and complete any MFA or Conditional Access prompts." TextWrapping="Wrap" Foreground="White" />
                 </StackPanel>
               </Border>
               <TextBlock Text="Connect Microsoft Entra identity" FontSize="20" FontWeight="SemiBold" />
@@ -159,10 +164,12 @@
             </StackPanel>
           </Border>
         </Grid>
+        </ScrollViewer>
       </TabItem>
 
       <TabItem Header="Workspaces">
-        <Grid ColumnDefinitions="1*,1*" Margin="4,14" ColumnSpacing="14">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <Grid x:Name="WorkspaceGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
           <Border Classes="card">
             <StackPanel Spacing="10"><TextBlock Text="Workspaces" FontSize="20" FontWeight="SemiBold" />
               <ListBox ItemsSource="{Binding Workspaces}" SelectedItem="{Binding SelectedWorkspace}" MinHeight="300" AutomationProperties.Name="Vault Prospector workspaces"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Margin="6" /></DataTemplate></ListBox.ItemTemplate></ListBox>
@@ -173,7 +180,7 @@
               </WrapPanel>
             </StackPanel>
           </Border>
-          <Border Grid.Column="1" Classes="card">
+          <Border x:Name="CreateWorkspaceCard" Grid.Column="1" Classes="card">
             <StackPanel Spacing="10"><TextBlock Text="Create workspace" FontSize="20" FontWeight="SemiBold" />
               <TextBlock Text="Group identities, tenants, subscriptions, and vaults without duplicating indexed data." TextWrapping="Wrap" />
               <TextBox Text="{Binding WorkspaceName}" PlaceholderText="Workspace name" AutomationProperties.Name="New workspace name" />
@@ -181,6 +188,7 @@
             </StackPanel>
           </Border>
         </Grid>
+        </ScrollViewer>
       </TabItem>
 
       <TabItem Header="Settings">
@@ -198,6 +206,7 @@
       </TabItem>
 
       <TabItem Header="About">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Border Classes="card" Margin="4,14" MaxWidth="700" HorizontalAlignment="Left" VerticalAlignment="Top">
           <StackPanel Spacing="10"><TextBlock Text="{Binding VersionLabel}" FontSize="24" FontWeight="SemiBold" />
             <TextBlock Text="A local-first Azure Key Vault discovery, search, and secure retrieval desktop application." TextWrapping="Wrap" />
@@ -205,6 +214,7 @@
             <TextBlock Text="Mobile apps are intentionally deferred and tracked on the roadmap." TextWrapping="Wrap" Opacity="0.75" />
           </StackPanel>
         </Border>
+        </ScrollViewer>
       </TabItem>
     </TabControl>
 

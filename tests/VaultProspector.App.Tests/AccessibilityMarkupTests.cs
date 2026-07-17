@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using VaultProspector.App.Views;
 
 namespace VaultProspector.App.Tests;
 
@@ -36,6 +37,38 @@ public sealed class AccessibilityMarkupTests
 
         Assert.Equal("Application status", Attribute(status, "AutomationProperties.Name")?.Value);
         Assert.Equal("Polite", Attribute(status, "AutomationProperties.LiveSetting")?.Value);
+    }
+
+    [Fact]
+    public void FirstRunGuidanceUsesTheVerifiedForegroundOnItsDarkPanel()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var panel = document
+            .Descendants()
+            .Single(element => Attribute(element, "Background")?.Value == "#123F36");
+
+        var guidance = panel.Descendants().Where(element => element.Name.LocalName == "TextBlock").ToArray();
+        Assert.NotEmpty(guidance);
+        Assert.All(guidance, text => Assert.Equal("White", Attribute(text, "Foreground")?.Value));
+    }
+
+    [Theory]
+    [InlineData(1024, 720, 1, 960, 640, false)]
+    [InlineData(1024, 720, 2, 512, 360, true)]
+    [InlineData(1920, 1040, 2, 960, 520, false)]
+    public void WindowFitsPhysicalWorkingAreaAndSelectsResponsiveLayout(
+        double physicalWidth,
+        double physicalHeight,
+        double scale,
+        double expectedWidth,
+        double expectedHeight,
+        bool expectedNarrow)
+    {
+        var metrics = WindowLayoutMetrics.Fit(960, 640, physicalWidth, physicalHeight, scale, 720);
+
+        Assert.Equal(expectedWidth, metrics.Width);
+        Assert.Equal(expectedHeight, metrics.Height);
+        Assert.Equal(expectedNarrow, metrics.UseNarrowLayout);
     }
 
     private static XAttribute? Attribute(XElement element, string localName) =>

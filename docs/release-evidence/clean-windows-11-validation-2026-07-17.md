@@ -84,6 +84,11 @@ beyond the 1024x768 clean-VM work area. The unreleased source candidate now:
   window outside the work area; and
 - gives the selected-object detail card a vertical scrollbar.
 
+The 900x620 minimum recorded in this run was subsequently shown to be unusable at 200% display
+scaling and was replaced by a work-area-aware adaptive layout. See the same-day
+[200% scaling validation](windows-200-percent-scaling-2026-07-17.md); the observations below remain
+the historical evidence for this earlier 100% viewport run.
+
 A self-contained `0.1.0-preview.3` validation build was launched through the guest's real Explorer
 desktop by Hyper-V synthetic keyboard input. The centered window fit completely within the work
 area. Hyper-V synthetic mouse input scrolled the detail card and exposed all six actions, including
@@ -101,7 +106,8 @@ review gates before P-15 can pass.
 ## Boundaries and remaining gates
 
 This run proves a clean supported Windows environment and repeatable installer behavior, but the same
-agent provisioned and exercised the VM. It does not satisfy independent review. It also does not prove
+agent provisioned and exercised the VM. It does not satisfy independent review. This installer run also did not prove
 live Entra/MFA/Conditional Access, Azure Key Vault discovery or retrieval, Windows Hello presentation,
-WinGet or Chocolatey catalog acceptance, Authenticode trust, 200% scaling, High Contrast, NVDA/Narrator,
-or final-candidate upgrade recovery. Those gates remain open in the authoritative readiness matrix.
+WinGet or Chocolatey catalog acceptance, Authenticode trust, High Contrast, NVDA/Narrator, or
+final-candidate upgrade recovery. A later internal run now covers 200% display scaling, but packaged-candidate
+and independent validation remain open in the authoritative readiness matrix.

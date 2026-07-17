@@ -13,6 +13,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Changed
 
+- Fit the window to the scaled Windows work area and stack task panels below 720 logical pixels so Search, Identities, Workspaces, Settings, and About remain reachable at 200% display scaling.
+- Render first-run guidance with its verified white foreground instead of inheriting unreadable dark text on the dark green panel.
 - Give every text-entry, selector, list, and numeric control an explicit UI Automation name, and expose application status changes as a polite live region for assistive technology.
 - Reduce and center the initial Windows viewport, and make selected-object actions vertically scrollable so every action remains reachable in a 1024-by-768 work area.
 - Disable identity synchronization and removal until an identity is selected, removing unavailable actions from first-run keyboard navigation.
