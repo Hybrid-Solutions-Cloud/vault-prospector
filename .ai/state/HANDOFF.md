@@ -3,11 +3,12 @@
 ## Current state
 
 - Branch: `main`; direct pushes are the operator-approved workflow.
-- Public release: `v0.1.0-preview.2`.
+- Public release: `v0.1.0-preview.2` is **withdrawn** and retained only for immutable evidence and
+  existing-install repair/uninstall. Do not install, resubmit, or reuse its artifacts.
 - Authoritative gate matrix: `docs/product/release-readiness.md`.
 - Decision: not ready for public Preview promotion or General Availability.
-- Current exact CI validation candidate: `0.1.0-ci.52` from commit
-  `50f6e2f9321b4441830aee953809d879f099e267`, workflow run `29563316747`.
+- Current exact CI validation candidate: `0.1.0-ci.65` from commit
+  `94c051364310ad8f1cdf4e3950dea0d598d392d6`, workflow run `29589392012`.
 - Repository writes must use an HCS governance-minted GitHub App installation token for
   `Hybrid-Solutions-Cloud`; never use a personal token.
 
@@ -88,13 +89,12 @@
 
 ## External publication state
 
-- WinGet PR `microsoft/winget-pkgs#403473` remains open. Automated validation passed; the
-  `Policy-Test-2.7` classification is awaiting manual moderator review.
-- Chocolatey `0.1.0-preview.2` submission remains externally blocked after six HTTP 504 responses.
-  At 2026-07-17 12:41 UTC, the service front door returned HTTP 200 but an authenticated upload of
-  the hash-verified package still returned 504; exact OData remained 404 and exact pre-release
-  search was empty. Retry only after evidence that the upload path recovered, then verify ingestion
-  and moderation.
+- WinGet PR `microsoft/winget-pkgs#403473` is closed with a withdrawal notice. Microsoft validation
+  had passed, but the later failed-upgrade result invalidated the submitted Preview.2 MSI. Submit a
+  new PR only for a new signed immutable corrected version.
+- Chocolatey never ingested `0.1.0-preview.2` after six HTTP 504 responses. That version is now
+  withdrawn and must not be retried. Submit a new signed rollback-safe version only after the upload
+  path recovers, then verify ingestion and moderation.
 - Trusted Windows signing gate P-13 remains blocked until an HCS owner completes Azure Artifact
   Signing Public Trust identity and profile setup. The release workflow fails closed without it.
 - HCS drift cannot currently validate this local checkout because the MCP server cannot resolve the
@@ -104,8 +104,8 @@
 
 1. Continue Preview-critical gates: arrange independent security review issue `#9`; run live
    identity, MFA, Conditional Access, and Windows Hello tests; complete keyboard, NVDA, Narrator,
-   and usability evidence; finish signing setup, WinGet acceptance, Chocolatey ingestion, and the
-   final signed-candidate go/no-go.
+   and usability evidence; finish signing setup, publish a new immutable corrected version, obtain
+   replacement WinGet/Chocolatey acceptance, and complete the final signed-candidate go/no-go.
 
 ## Preserved external scratch
 

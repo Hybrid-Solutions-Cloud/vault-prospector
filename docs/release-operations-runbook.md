@@ -249,9 +249,10 @@ timestamping, revocation, and compromise procedure must be approved before P-13 
 
 | Date | Operator | Result |
 | --- | --- | --- |
+| 2026-07-17 14:45 UTC | Codex under HCS governance | Applied rollback containment: marked public Preview.2 **WITHDRAWN — DO NOT INSTALL OR SUBMIT**, preserved immutable assets for evidence/repair, posted the defect rationale to WinGet PR `#403473`, and closed the PR before catalog acceptance. Chocolatey never ingested the version and it must not be retried. |
 | 2026-07-17 14:27 UTC | Codex under HCS governance | A deterministic post-`InstallFiles` failure first exposed that the default WiX major-upgrade schedule removed the working prior version. After moving `RemoveExistingProducts` inside the transaction, the corrected candidate restored the exact Preview.2 registration/files/shortcut/state and passed all 27 lifecycle gates. |
 | 2026-07-17 12:41 UTC | Codex under HCS governance | Revalidated the Preview.2 Chocolatey package hash and HCS Key Vault credential path; the service front door returned HTTP 200 but the sixth authenticated upload returned HTTP 504, followed by exact OData 404 and empty exact pre-release search |
-| 2026-07-17 UTC | Microsoft WinGet validation / Codex review | Build 368562 passed technical manifest, URL, scan, and installation validation; a Policy-Test-2.7 manual content review remains before merge |
+| 2026-07-17 UTC | Microsoft WinGet validation / Codex review | Build 368562 passed technical manifest, URL, scan, and installation validation; later failed-upgrade evidence invalidated the MSI, so the PR was withdrawn and closed before merge. |
 | 2026-07-17 03:44 UTC | Codex under HCS governance | Revalidated the Preview.2 Chocolatey package hash; a fifth authenticated push returned HTTP 504 and the exact post-check remained 404, proving no ingestion |
 | 2026-07-17 01:30 UTC | Codex under HCS governance | Re-downloaded and hash-verified the immutable Preview.2 Chocolatey package; a fourth authenticated push returned HTTP 504 and exact post-checks proved no ingestion |
 | 2026-07-16 | Codex under HCS governance | Initial runbook created from Preview.2 evidence; Chocolatey 504 retry handling exercised; full end-to-end runbook exercise remains a Preview gate |

@@ -80,3 +80,8 @@ passed both `build-test` and full-history `secret-scan`. CI and protected releas
 `Test-InstallerUpgradeSchedule.ps1` against the MSI they build and fail unless
 `RemoveExistingProducts` is immediately after `InstallInitialize` and before file installation and
 finalization. GitHub readiness issue `#5` contains the synchronized result and remaining boundary.
+
+The defect met the release-readiness rollback trigger for a broken supported upgrade path. The
+public Preview.2 release was retained immutably but renamed **WITHDRAWN — DO NOT INSTALL OR SUBMIT TO
+PACKAGE MANAGERS**, and WinGet PR `microsoft/winget-pkgs#403473` was closed with the technical reason
+before moderation. Chocolatey never ingested Preview.2, and that package must not be retried.
