@@ -63,10 +63,11 @@ through the [Preview feedback process](product/preview-feedback.md). Vault Prosp
 create an issue, upload diagnostics, or associate application activity with a GitHub account.
 
 A submitted issue and its attachments are public and are processed under GitHub's privacy terms.
-The forms require the evaluator to confirm that the report uses synthetic or non-production data
-and excludes credentials, tokens, identity and Azure-resource identifiers, resource/object names,
-secret values, and unreviewed diagnostics or screenshots. Suspected vulnerabilities use the private
-channel in [SECURITY.md](../SECURITY.md), not the feedback forms.
+The feedback notice requires synthetic or non-production data and excludes credentials, tokens,
+identity and Azure-resource identifiers, resource/object names, secret values, and unreviewed
+diagnostics or screenshots. Choosing to submit after reading that public notice is the evaluator's
+explicit publication action. Suspected vulnerabilities use the private channel in
+[SECURITY.md](../SECURITY.md), not the feedback forms.
 
 ## Removal and device migration
 

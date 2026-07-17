@@ -9,14 +9,16 @@ Preview reliability and feedback gate (G-01). It does not replace the other GA g
 Vault Prospector sends no project-controlled telemetry. Feedback is voluntary and user initiated
 through the public release repository:
 
-- [Preview bug form](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/issues/new?template=preview-bug.yml)
-- [Preview experience form](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/issues/new?template=preview-experience.yml)
+- [Standard Bug intake](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/issues/new?template=bug.yml)
+- [Standard Feature intake for experience improvements](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/issues/new?template=feature.yml)
 - [Private security reporting](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/SECURITY.md)
 
-The public forms require explicit publication consent, synthetic or non-production data, and a
-confirmation that prohibited sensitive content was removed. They collect only user-entered product
-version, installation path, Windows version, task, outcome, reproducibility, impact, and sanitized
-comments. GitHub processes the public issue under its own terms. The application never submits it.
+The public feedback notice states that submitting is an explicit, voluntary publication action and
+requires synthetic or non-production data with prohibited sensitive content removed. It provides a
+structured block for user-entered product version, installation path, Windows version, task,
+outcome, ease, and sanitized friction. The repositories use the HCS-governed standard Bug, Feature,
+and Task forms, native issue types/fields, and only reserved workflow labels. GitHub processes the
+public issue under its own terms. The application never submits it.
 
 Do not request or accept a credential, token, secret value, private key, tenant/subscription/account
 identifier, Azure resource/object name, unreviewed diagnostic, database, crash dump, clipboard
@@ -53,7 +55,7 @@ issues only and must never be described as population telemetry.
 G-01 can move to **Passed** only when all of the following evidence exists for the latest GA
 candidate and is linked from the release-readiness matrix:
 
-- The public forms and private security channel have remained operational for at least 30
+- The public feedback intake and private security channel have remained operational for at least 30
   consecutive days after the latest Preview refresh.
 - At least five distinct consenting evaluators have submitted experience feedback spanning at least
   three supported Windows 11 build/edition combinations and all three intended install paths: direct

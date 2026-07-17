@@ -323,10 +323,11 @@ data so that I can report product outcomes without hidden telemetry or unsafe di
 
 Acceptance criteria:
 
-- Separate public forms collect reproducible bugs and core-task experience feedback.
-- Submission requires explicit publication consent, synthetic/non-production use, and confirmation
-  that credentials, tokens, identifiers, Azure resource/object names, secret values, and unreviewed
-  diagnostics or screenshots were removed.
+- HCS-governed standard Bug and Feature intake collect reproducible failures and structured
+  core-task experience feedback using native issue types/fields and reserved workflow labels.
+- The public notice makes submission an explicit publication action, requires
+  synthetic/non-production use, and prohibits credentials, tokens, identifiers, Azure
+  resource/object names, secret values, and unreviewed diagnostics or screenshots.
 - Suspected vulnerabilities are routed to a private channel and never solicited in public issues.
 - The application does not submit telemetry, diagnostics, or issues automatically.
 

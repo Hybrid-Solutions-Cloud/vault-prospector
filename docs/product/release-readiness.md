@@ -49,7 +49,7 @@ GA requires every Preview gate to remain green plus the following evidence.
 
 | ID | Gate | Status | GA evidence required |
 | --- | --- | --- | --- |
-| G-01 | Preview reliability and feedback cycle | In progress | The [privacy-safe feedback process](preview-feedback.md), public consent forms, triage cadence, and measurable exit criteria are defined. Passing still requires the 30-day collection window, evaluator/task/install-path coverage, triage results, zero release blockers, supported-preview upgrade matrix, and final 14-day stability window. |
+| G-01 | Preview reliability and feedback cycle | In progress | The [privacy-safe feedback process](preview-feedback.md), explicit public-submission notice, HCS-governed intake, triage cadence, and measurable exit criteria are defined. Passing still requires the 30-day collection window, evaluator/task/install-path coverage, triage results, zero release blockers, supported-preview upgrade matrix, and final 14-day stability window. |
 | G-02 | Security assessment and vulnerability closure | Not started | Final independent assessment or penetration test, zero unresolved critical/high findings, accepted medium-risk exceptions with owners and dates, and a tested disclosure/response process. |
 | G-03 | Data migration, backup, recovery, and device replacement | Not started | Test schema/key rotation, corrupted-state recovery, backup limitations, device migration, uninstall/reinstall, and supported upgrade paths without silent plaintext fallback or data loss. |
 | G-04 | Production accessibility conformance | Not started | Complete a WCAG-aligned desktop accessibility assessment, remediate blocking findings, and publish supported assistive-technology behavior. |
