@@ -26,6 +26,20 @@ jobs:
         run: dotnet build VaultProspector.sln --configuration Release --no-restore
       - name: Test
         run: dotnet test VaultProspector.sln --configuration Release --no-build --logger "trx;LogFileName=tests.trx" --collect "XPlat Code Coverage" --results-directory TestResults
+      - name: Verify PowerShell syntax
+        shell: pwsh
+        run: |
+          $parseErrors = @()
+          Get-ChildItem scripts, tests -Recurse -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) { $parseErrors += $errors }
+          }
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | Format-List
+            throw "$($parseErrors.Count) PowerShell parser error(s) found."
+          }
       - name: Build Windows installer and package manifests
         shell: pwsh
         run: |

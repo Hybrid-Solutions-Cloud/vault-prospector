@@ -141,6 +141,11 @@ system for direct MSI, WinGet, and Chocolatey. Include install, repair, upgrade 
 supported version, launch, core workflows, uninstall, and retained-data behavior. Record the tester,
 Windows build, commands, results, artifact hashes, and time.
 
+For the direct MSI lifecycle, run `tests/scenario/windows-installer-lifecycle.scenario.ps1` with the
+previous and current immutable MSI paths and their independently obtained published SHA-256 hashes.
+Archive its structured result and verbose MSI logs with the release evidence. The harness must begin
+without an installed copy; it is not authorized to replace or remove a user's existing installation.
+
 ## Failed update and rollback
 
 1. Stop the rollout when a rollback trigger in the readiness matrix occurs.
