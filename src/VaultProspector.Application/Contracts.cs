@@ -61,7 +61,20 @@ public interface IKeyMaterialProvider
 {
     bool IsAvailable { get; }
     Task<byte[]> GetOrCreateKeyAsync(string purpose, CancellationToken cancellationToken);
+    Task<byte[]> GetExistingKeyAsync(string purpose, CancellationToken cancellationToken);
 }
+
+public sealed class ProtectedKeyUnavailableException(string message) : Exception(message);
+
+public sealed class IncompatibleLocalDataVersionException(int observedVersion, int supportedVersion)
+    : Exception($"Local data schema version {observedVersion} is newer than supported version {supportedVersion}.")
+{
+    public int ObservedVersion { get; } = observedVersion;
+    public int SupportedVersion { get; } = supportedVersion;
+}
+
+public sealed class LocalDataIntegrityException(string message, Exception? innerException = null)
+    : Exception(message, innerException);
 
 public interface IDiagnosticSink
 {

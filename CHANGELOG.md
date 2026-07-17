@@ -31,6 +31,11 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Security
 
+- Refuse to mint replacement DPAPI keys when an existing encrypted database or offline-value
+  envelope has lost its matching key, preserving the encrypted state for explicit recovery.
+- Reject corrupted SQLCipher databases, incomplete current schemas, invalid foreign-key
+  relationships, wrong keys, and future schema versions without silently rebuilding or
+  downgrading protected local data.
 - Reject non-canonical DPAPI key purposes instead of allowing distinct purposes to collapse onto one key path.
 - Publish encrypted offline-cache replacements atomically and validate their expiration and source fingerprint before writing.
 - Dispose retrieved secret material if access-history persistence fails, and reject non-secret metadata before cached-value verification or access.

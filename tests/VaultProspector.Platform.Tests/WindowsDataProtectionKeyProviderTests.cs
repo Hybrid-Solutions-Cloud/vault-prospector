@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using VaultProspector.Application;
 using VaultProspector.Platform;
 
 namespace VaultProspector.Platform.Tests;
@@ -59,6 +60,18 @@ public sealed class WindowsDataProtectionKeyProviderTests : IDisposable
             CryptographicOperations.ZeroMemory(metadata);
             CryptographicOperations.ZeroMemory(offline);
         }
+    }
+
+    [Fact]
+    public async Task MissingExistingKeyFailsWithoutCreatingDirectoryOrReplacementKey()
+    {
+        var provider = new WindowsDataProtectionKeyProvider(_directory);
+
+        await Assert.ThrowsAsync<ProtectedKeyUnavailableException>(() => provider.GetExistingKeyAsync(
+            "metadata-database",
+            TestContext.Current.CancellationToken));
+
+        Assert.False(Directory.Exists(_directory));
     }
 
     [Theory]

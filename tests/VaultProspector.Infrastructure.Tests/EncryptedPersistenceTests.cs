@@ -388,6 +388,201 @@ public sealed class EncryptedPersistenceTests : IDisposable
         Assert.Equal(identity.ClientId, (await repository.GetIdentityAsync(identity.Id, TestContext.Current.CancellationToken))?.ClientId);
     }
 
+    [Fact]
+    public async Task MissingMetadataKeyPreservesDatabaseUntilMatchedKeyIsRestored()
+    {
+        var path = Path.Combine(_directory, "missing-key.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = TestIdentity("missing-key-account");
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        var before = SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+        var originalKey = _keys.RemoveKey("metadata-database");
+
+        try
+        {
+            await Assert.ThrowsAsync<ProtectedKeyUnavailableException>(() =>
+                new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
+
+            Assert.False(_keys.ContainsKey("metadata-database"));
+            Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)));
+
+            _keys.RestoreKey("metadata-database", originalKey);
+            var recovered = new EncryptedSqliteMetadataRepository(path, _keys);
+            await recovered.InitializeAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(identity.Id, (await recovered.GetIdentityAsync(identity.Id, TestContext.Current.CancellationToken))?.Id);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(originalKey);
+        }
+    }
+
+    [Fact]
+    public async Task MissingOfflineValueKeyPreservesEnvelopeUntilMatchedKeyIsRestored()
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(_directory, "missing-cache-key");
+        var path = Path.Combine(valueDirectory, $"{itemId:D}.vpcache");
+        var store = new EncryptedFileValueStore(valueDirectory, _keys, _clock);
+        using var value = new SensitiveValue("recoverable-value");
+        await store.StoreAsync(itemId, Guid.NewGuid(), null, value, "fingerprint", _clock.UtcNow.AddHours(1), TestContext.Current.CancellationToken);
+        var before = await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken);
+        var originalKey = _keys.RemoveKey("offline-values-v2");
+
+        try
+        {
+            await Assert.ThrowsAsync<ProtectedKeyUnavailableException>(() =>
+                store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken));
+
+            Assert.False(_keys.ContainsKey("offline-values-v2"));
+            Assert.Equal(before, await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+
+            _keys.RestoreKey("offline-values-v2", originalKey);
+            using var recovered = await store.RetrieveAsync(itemId, _clock.UtcNow, "fingerprint", TestContext.Current.CancellationToken);
+            Assert.Equal("recoverable-value", recovered?.Reveal());
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(originalKey);
+        }
+    }
+
+    [Fact]
+    public async Task FutureDatabaseSchemaIsRejectedWithoutModification()
+    {
+        var path = Path.Combine(_directory, "future-schema.db");
+        await new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken);
+        await ExecuteDatabaseCommandAsync(path, "PRAGMA user_version=99;");
+        var before = SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+
+        var exception = await Assert.ThrowsAsync<IncompatibleLocalDataVersionException>(() =>
+            new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(99, exception.ObservedVersion);
+        Assert.Equal(2, exception.SupportedVersion);
+        Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)));
+        Assert.Equal(99, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+    }
+
+    [Fact]
+    public async Task CorruptDatabaseIsRejectedAndPreserved()
+    {
+        var path = Path.Combine(_directory, "corrupt.db");
+        Directory.CreateDirectory(_directory);
+        await File.WriteAllBytesAsync(path, RandomNumberGenerator.GetBytes(4096), TestContext.Current.CancellationToken);
+        var before = SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+        await _keys.GetOrCreateKeyAsync("metadata-database", TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<LocalDataIntegrityException>(() =>
+            new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)));
+        Assert.True(_keys.ContainsKey("metadata-database"));
+    }
+
+    [Fact]
+    public async Task WrongMetadataKeyIsRejectedWithoutReplacingDatabase()
+    {
+        var path = Path.Combine(_directory, "wrong-key.db");
+        await new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken);
+        var before = SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+        var originalKey = _keys.ReplaceKey("metadata-database", RandomNumberGenerator.GetBytes(32));
+
+        try
+        {
+            await Assert.ThrowsAsync<LocalDataIntegrityException>(() =>
+                new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
+            Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)));
+        }
+        finally
+        {
+            _keys.RestoreKey("metadata-database", originalKey);
+            CryptographicOperations.ZeroMemory(originalKey);
+        }
+
+        await new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task CurrentVersionWithMissingTableFailsInsteadOfSilentlyRecreatingIt()
+    {
+        var path = Path.Combine(_directory, "missing-table.db");
+        await new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken);
+        await ExecuteDatabaseCommandAsync(path, "DROP TABLE sync_runs;");
+
+        await Assert.ThrowsAsync<LocalDataIntegrityException>(() =>
+            new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name='sync_runs'"));
+        Assert.Equal(2, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+    }
+
+    [Fact]
+    public async Task CurrentVersionWithMissingColumnFailsInsteadOfStartingWithLatentDamage()
+    {
+        var path = Path.Combine(_directory, "missing-column.db");
+        await new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken);
+        await ExecuteDatabaseCommandAsync(path, "ALTER TABLE sync_runs DROP COLUMN error_count;");
+
+        await Assert.ThrowsAsync<LocalDataIntegrityException>(() =>
+            new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM pragma_table_info('sync_runs') WHERE name='error_count'"));
+        Assert.Equal(2, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+    }
+
+    private ConnectedIdentity TestIdentity(string accountIdentifier) => new(
+        Guid.NewGuid(),
+        "11111111-1111-1111-1111-111111111111",
+        accountIdentifier,
+        "user@example.invalid",
+        "Recovery Test",
+        "tenant",
+        AuthenticationState.Ready,
+        _clock.UtcNow);
+
+    private async Task ExecuteDatabaseCommandAsync(string path, string sql)
+    {
+        await using var connection = await OpenDatabaseAsync(path);
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    private async Task<T> ReadDatabaseScalarAsync<T>(string path, string sql)
+    {
+        await using var connection = await OpenDatabaseAsync(path);
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        return (T)Convert.ChangeType(
+            await command.ExecuteScalarAsync(TestContext.Current.CancellationToken) ?? throw new InvalidOperationException("Expected a database value."),
+            typeof(T),
+            System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private async Task<SqliteConnection> OpenDatabaseAsync(string path)
+    {
+        SQLitePCL.Batteries_V2.Init();
+        var key = await _keys.GetExistingKeyAsync("metadata-database", TestContext.Current.CancellationToken);
+        try
+        {
+            var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = path,
+                Mode = SqliteOpenMode.ReadWrite,
+                Password = Convert.ToBase64String(key),
+                Pooling = false,
+            }.ToString());
+            await connection.OpenAsync(TestContext.Current.CancellationToken);
+            return connection;
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(key);
+        }
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory)) Directory.Delete(_directory, true);
@@ -404,6 +599,36 @@ public sealed class EncryptedPersistenceTests : IDisposable
             cancellationToken.ThrowIfCancellationRequested();
             if (!_keys.TryGetValue(purpose, out var key)) _keys[purpose] = key = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
             return Task.FromResult(key.ToArray());
+        }
+
+        public Task<byte[]> GetExistingKeyAsync(string purpose, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!_keys.TryGetValue(purpose, out var key))
+                throw new ProtectedKeyUnavailableException("The required test key does not exist.");
+            return Task.FromResult(key.ToArray());
+        }
+
+        public bool ContainsKey(string purpose) => _keys.ContainsKey(purpose);
+
+        public byte[] RemoveKey(string purpose)
+        {
+            if (!_keys.Remove(purpose, out var key)) throw new KeyNotFoundException(purpose);
+            return key;
+        }
+
+        public byte[] ReplaceKey(string purpose, byte[] replacement)
+        {
+            if (!_keys.TryGetValue(purpose, out var original)) throw new KeyNotFoundException(purpose);
+            _keys[purpose] = replacement.ToArray();
+            CryptographicOperations.ZeroMemory(replacement);
+            return original;
+        }
+
+        public void RestoreKey(string purpose, byte[] key)
+        {
+            if (_keys.Remove(purpose, out var replaced)) CryptographicOperations.ZeroMemory(replaced);
+            _keys[purpose] = key.ToArray();
         }
     }
 }

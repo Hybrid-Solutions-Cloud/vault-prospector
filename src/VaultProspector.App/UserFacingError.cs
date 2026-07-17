@@ -3,6 +3,7 @@ using System.Text.Json;
 using Azure;
 using Azure.Identity;
 using Microsoft.Identity.Client;
+using VaultProspector.Application;
 
 namespace VaultProspector.App;
 
@@ -60,6 +61,18 @@ public static class UserFacingErrorMapper
             "Required Windows security is unavailable",
             "This operation requires Windows Hello and DPAPI in a supported Windows user session.",
             "Use a supported Windows 10 or Windows 11 session and configure Windows Hello."),
+        ProtectedKeyUnavailableException => new(
+            "Protected local data key is unavailable",
+            "Vault Prospector stopped without replacing the missing Windows-protected key or changing encrypted local data.",
+            "Restore the matching Vault Prospector data and key backup under the same Windows account. If no matched backup exists, remove the local VaultProspector data folder and reconnect to Azure."),
+        IncompatibleLocalDataVersionException => new(
+            "A newer Vault Prospector version is required",
+            "This installation is older than the encrypted local-data format and refused to modify it.",
+            "Install the same or a newer Vault Prospector version than the one that last opened this data."),
+        LocalDataIntegrityException => new(
+            "Encrypted local metadata failed validation",
+            "Vault Prospector preserved the encrypted database and stopped without rebuilding or using it.",
+            "Keep the local data for support or restore a matched data-and-key backup. If recovery is not needed, remove the local VaultProspector data folder and reconnect to Azure."),
         AuthenticationTagMismatchException or CryptographicException => new(
             "Protected local data failed integrity verification",
             "Vault Prospector refused to use modified, corrupted, or incompatible protected data.",

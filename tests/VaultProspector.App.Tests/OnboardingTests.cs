@@ -1,6 +1,7 @@
 using System.Text.Json;
 using VaultProspector.App;
 using VaultProspector.App.ViewModels;
+using VaultProspector.Application;
 using VaultProspector.Domain;
 
 namespace VaultProspector.App.Tests;
@@ -124,6 +125,40 @@ public sealed class OnboardingTests : IDisposable
         Assert.Contains("not deleted", error.Recovery, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("internal file content", error.Message, StringComparison.Ordinal);
         Assert.DoesNotContain("internal file content", error.Recovery, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MissingProtectedKeyRecoveryDoesNotSuggestCreatingAReplacement()
+    {
+        var error = UserFacingErrorMapper.From(new ProtectedKeyUnavailableException("sensitive path"));
+
+        Assert.Contains("key is unavailable", error.Title, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("without replacing", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("matching", error.Recovery, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("sensitive path", error.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("sensitive path", error.Recovery, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FutureSchemaRecoveryRequiresCompatibleApplicationVersion()
+    {
+        var error = UserFacingErrorMapper.From(new IncompatibleLocalDataVersionException(99, 2));
+
+        Assert.Contains("newer", error.Title, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("refused to modify", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("same or a newer", error.Recovery, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void MetadataIntegrityRecoveryPreservesEvidenceOrAllowsExplicitReset()
+    {
+        var error = UserFacingErrorMapper.From(new LocalDataIntegrityException("sensitive database detail"));
+
+        Assert.Contains("failed validation", error.Title, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("preserved", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("support", error.Recovery, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("sensitive database detail", error.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("sensitive database detail", error.Recovery, StringComparison.Ordinal);
     }
 
     [Fact]

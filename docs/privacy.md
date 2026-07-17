@@ -79,6 +79,12 @@ state. To remove all Vault Prospector data, close the application, uninstall it,
 directory. DPAPI-protected keys are bound to the Windows user; copying the directory to another
 device or profile is not a supported backup or migration.
 
+An existing encrypted database or offline-value envelope is opened only with its existing matched
+protected key. If that key is missing, Vault Prospector does not generate a replacement or alter
+the encrypted file. A same-account recovery copy is useful only when its data and `keys` directory
+are restored as one matched set. The Preview has no supported cross-device key migration or
+application-managed backup/restore workflow.
+
 ## Security and privacy contact
 
 Report suspected vulnerabilities privately as described in [SECURITY.md](../SECURITY.md). For a

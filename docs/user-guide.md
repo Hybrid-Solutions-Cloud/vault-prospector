@@ -65,6 +65,18 @@ Cached values are encrypted separately with AES-GCM. Their key is protected for 
 
 If startup reports that only the settings file is damaged, close the app and delete `%LOCALAPPDATA%\VaultProspector\settings.json`. This resets non-secret preferences and does not delete the encrypted metadata database, protected offline values, or app-owned token cache.
 
+If startup reports that a protected key is unavailable, do not create a replacement key or delete
+individual encrypted files. Vault Prospector leaves the encrypted state unchanged. A recoverable
+copy must contain the matching data and `keys` directory from the same Windows account; restore
+the matched set together. If no matched recovery copy exists and Azure remains authoritative,
+close the app, preserve a copy for support if needed, delete the entire
+`%LOCALAPPDATA%\VaultProspector` directory, reconnect identities, and synchronize again.
+
+If startup reports that a newer Vault Prospector version is required, install the same or a newer
+version than the build that last opened the local data. Do not use an older binary to reset the
+database. If startup reports metadata integrity failure, preserve the local directory for support
+or restore a matched data-and-key set; Vault Prospector will not silently rebuild that database.
+
 For the complete inventory of locally processed data, network activity, retention, and deletion
 behavior, see [Privacy and local data handling](privacy.md).
 

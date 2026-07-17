@@ -124,6 +124,12 @@ As a maintainer, I need automated dependency and secret scanning in CI.
 
 As a maintainer, I need forward-only encrypted database migrations tested against every previously published schema before an upgrade release.
 
+Implementation status (2026-07-17): the internal version-1-to-2 migration is transactional and
+tested. Startup rejects future versions, corrupt or wrong-key databases, incomplete current
+schemas, and invalid foreign-key relationships without silent repair or plaintext fallback.
+Every actually published schema must still be added to the upgrade matrix before its successor is
+released; key rotation, backup/restore, and device replacement remain open under G-03.
+
 ### Story: Authenticode signing (post-preview)
 
 As a Windows user, I need individual executable and library signatures from the approved code-signing identity in addition to archive checksums, Sigstore, SBOM, and provenance.

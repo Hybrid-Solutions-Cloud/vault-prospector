@@ -21,22 +21,10 @@ public sealed class WindowsDataProtectionKeyProvider(string keyDirectory) : IKey
         ValidatePurpose(purpose);
         Directory.CreateDirectory(keyDirectory);
         var path = Path.Combine(keyDirectory, $"{purpose}.key");
-        var entropy = SHA256.HashData(Encoding.UTF8.GetBytes($"VaultProspector:{purpose}:v1"));
         if (File.Exists(path))
-        {
-            byte[]? protectedKey = null;
-            try
-            {
-                protectedKey = await ReadPublishedKeyAsync(path, cancellationToken);
-                return ProtectedData.Unprotect(protectedKey, entropy, DataProtectionScope.CurrentUser);
-            }
-            finally
-            {
-                if (protectedKey is not null) CryptographicOperations.ZeroMemory(protectedKey);
-                CryptographicOperations.ZeroMemory(entropy);
-            }
-        }
+            return await ReadAndUnprotectAsync(path, purpose, cancellationToken);
 
+        var entropy = Entropy(purpose);
         var key = RandomNumberGenerator.GetBytes(32);
         var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
         byte[]? encrypted = null;
@@ -74,6 +62,36 @@ public sealed class WindowsDataProtectionKeyProvider(string keyDirectory) : IKey
             if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
         }
     }
+
+    public async Task<byte[]> GetExistingKeyAsync(string purpose, CancellationToken cancellationToken)
+    {
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Windows Data Protection API is unavailable.");
+        ValidatePurpose(purpose);
+        var path = Path.Combine(keyDirectory, $"{purpose}.key");
+        if (!File.Exists(path))
+            throw new ProtectedKeyUnavailableException("The required platform-protected key does not exist.");
+
+        return await ReadAndUnprotectAsync(path, purpose, cancellationToken);
+    }
+
+    private static async Task<byte[]> ReadAndUnprotectAsync(string path, string purpose, CancellationToken cancellationToken)
+    {
+        var entropy = Entropy(purpose);
+        byte[]? protectedKey = null;
+        try
+        {
+            protectedKey = await ReadPublishedKeyAsync(path, cancellationToken);
+            return ProtectedData.Unprotect(protectedKey, entropy, DataProtectionScope.CurrentUser);
+        }
+        finally
+        {
+            if (protectedKey is not null) CryptographicOperations.ZeroMemory(protectedKey);
+            CryptographicOperations.ZeroMemory(entropy);
+        }
+    }
+
+    private static byte[] Entropy(string purpose) =>
+        SHA256.HashData(Encoding.UTF8.GetBytes($"VaultProspector:{purpose}:v1"));
 
     private static async Task<byte[]> ReadPublishedKeyAsync(string path, CancellationToken cancellationToken)
     {

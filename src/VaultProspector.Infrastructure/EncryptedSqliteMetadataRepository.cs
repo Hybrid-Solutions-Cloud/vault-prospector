@@ -9,6 +9,7 @@ namespace VaultProspector.Infrastructure;
 
 public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyMaterialProvider keyMaterial) : IMetadataRepository
 {
+    private const int CurrentSchemaVersion = 2;
     private string? _connectionString;
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
@@ -16,9 +17,12 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         if (!keyMaterial.IsAvailable)
             throw new PlatformNotSupportedException("Platform-protected key storage is required. Plaintext databases are prohibited.");
 
+        var databaseExists = File.Exists(databasePath);
         Directory.CreateDirectory(Path.GetDirectoryName(databasePath) ?? ".");
         SQLitePCL.Batteries_V2.Init();
-        var key = await keyMaterial.GetOrCreateKeyAsync("metadata-database", cancellationToken);
+        var key = databaseExists
+            ? await keyMaterial.GetExistingKeyAsync("metadata-database", cancellationToken)
+            : await keyMaterial.GetOrCreateKeyAsync("metadata-database", cancellationToken);
         try
         {
             _connectionString = new SqliteConnectionStringBuilder
@@ -34,10 +38,21 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
             CryptographicOperations.ZeroMemory(key);
         }
 
-        await using var connection = await OpenAsync(cancellationToken);
-        await ExecuteAsync(connection, null, Schema, cancellationToken);
-        await EnsureClientIdColumnAsync(connection, cancellationToken);
-        await ExecuteAsync(connection, null, "PRAGMA user_version=2", cancellationToken);
+        var validated = await OpenValidatedAsync(cancellationToken);
+        await using var connection = validated.Connection;
+        await ExecuteAsync(connection, null, Configuration, cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        if (validated.SchemaVersion < CurrentSchemaVersion)
+        {
+            await ExecuteAsync(connection, transaction, Schema, cancellationToken);
+            await EnsureClientIdColumnAsync(connection, transaction, cancellationToken);
+            await ExecuteAsync(connection, transaction, $"PRAGMA user_version={CurrentSchemaVersion}", cancellationToken);
+        }
+
+        await ValidateSchemaAsync(connection, transaction, cancellationToken);
+        await ValidateForeignKeysAsync(connection, transaction, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        await VerifyDatabaseIntegrityAsync(connection, cancellationToken);
     }
 
     public async Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(CancellationToken cancellationToken)
@@ -209,6 +224,111 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         return connection;
     }
 
+    private async Task<(SqliteConnection Connection, int SchemaVersion)> OpenValidatedAsync(CancellationToken cancellationToken)
+    {
+        SqliteConnection? connection = null;
+        try
+        {
+            connection = await OpenAsync(cancellationToken);
+            var schemaVersion = await GetSchemaVersionAsync(connection, cancellationToken);
+            if (schemaVersion > CurrentSchemaVersion)
+                throw new IncompatibleLocalDataVersionException(schemaVersion, CurrentSchemaVersion);
+
+            await VerifyDatabaseIntegrityAsync(connection, cancellationToken);
+            return (connection, schemaVersion);
+        }
+        catch (IncompatibleLocalDataVersionException)
+        {
+            if (connection is not null) await connection.DisposeAsync();
+            throw;
+        }
+        catch (LocalDataIntegrityException)
+        {
+            if (connection is not null) await connection.DisposeAsync();
+            throw;
+        }
+        catch (SqliteException ex)
+        {
+            if (connection is not null) await connection.DisposeAsync();
+            throw new LocalDataIntegrityException("Encrypted local metadata could not be opened or verified.", ex);
+        }
+    }
+
+    private static async Task<int> GetSchemaVersionAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA user_version";
+        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture);
+    }
+
+    private static async Task VerifyDatabaseIntegrityAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA quick_check";
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        var sawResult = false;
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            sawResult = true;
+            if (!string.Equals(reader.GetString(0), "ok", StringComparison.OrdinalIgnoreCase))
+                throw new LocalDataIntegrityException("Encrypted local metadata failed its integrity check.");
+        }
+
+        if (!sawResult) throw new LocalDataIntegrityException("Encrypted local metadata integrity could not be determined.");
+    }
+
+    private static async Task ValidateSchemaAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        Dictionary<string, string[]> requiredSchema = new(StringComparer.Ordinal)
+        {
+            ["identities"] = ["id", "client_id", "account_identifier", "username_hint", "display_name", "home_tenant_id", "auth_state", "last_interactive", "is_enabled"],
+            ["tenants"] = ["id", "identity_id", "tenant_id", "display_name", "tenant_type", "last_validated", "status"],
+            ["subscriptions"] = ["id", "tenant_access_id", "subscription_id", "display_name", "state", "is_selected", "last_discovered"],
+            ["vaults"] = ["id", "resource_id", "name", "tenant_id", "subscription_id", "resource_group", "location", "tags", "vault_uri", "last_indexed"],
+            ["vault_access"] = ["id", "vault_id", "identity_id", "tenant_id", "status", "last_validated", "failure_category", "preferred_rank"],
+            ["items"] = ["id", "vault_id", "name", "object_type", "enabled", "tags", "content_type", "created_at", "updated_at", "expires_at", "provider_version", "fingerprint", "last_indexed", "is_deleted"],
+            ["favorites"] = ["item_id"],
+            ["access_history"] = ["item_id", "last_accessed"],
+            ["workspaces"] = ["id", "name", "description", "sort_order", "cache_enabled", "cache_lifetime_minutes", "require_unlock", "allow_clipboard"],
+            ["workspace_links"] = ["id", "workspace_id", "resource_type", "resource_id"],
+            ["sync_runs"] = ["id", "scope", "started_at", "completed_at", "status", "vault_count", "item_count", "error_count"],
+        };
+        var actualTables = new HashSet<string>(StringComparer.Ordinal);
+        await using (var command = connection.CreateCommand())
+        {
+            command.Transaction = transaction;
+            command.CommandText = "SELECT name FROM sqlite_schema WHERE type='table'";
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken)) actualTables.Add(reader.GetString(0));
+        }
+
+        foreach (var (table, requiredColumns) in requiredSchema)
+        {
+            if (!actualTables.Contains(table))
+                throw new LocalDataIntegrityException("Encrypted local metadata schema is incomplete or incompatible.");
+
+            var actualColumns = new HashSet<string>(StringComparer.Ordinal);
+            await using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = "SELECT name FROM pragma_table_info($table)";
+            command.Parameters.AddWithValue("$table", table);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken)) actualColumns.Add(reader.GetString(0));
+            if (requiredColumns.Any(column => !actualColumns.Contains(column)))
+                throw new LocalDataIntegrityException("Encrypted local metadata schema is incomplete or incompatible.");
+        }
+    }
+
+    private static async Task ValidateForeignKeysAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "PRAGMA foreign_key_check";
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (await reader.ReadAsync(cancellationToken))
+            throw new LocalDataIntegrityException("Encrypted local metadata contains invalid resource relationships.");
+    }
+
     private static async Task ExecuteAsync(SqliteConnection connection, SqliteTransaction? transaction, string sql, CancellationToken cancellationToken, params (string Name, object Value)[] values)
     {
         await using var command = connection.CreateCommand();
@@ -225,12 +345,17 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
     private static Task UpsertItemAsync(SqliteConnection c, SqliteTransaction t, VaultItem x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO items(id,vault_id,name,object_type,enabled,tags,content_type,created_at,updated_at,expires_at,provider_version,fingerprint,last_indexed,is_deleted) VALUES($id,$vault,$name,$type,$enabled,$tags,$content,$created,$updated,$expires,$version,$fingerprint,$last,$deleted) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled,tags=excluded.tags,content_type=excluded.content_type,updated_at=excluded.updated_at,expires_at=excluded.expires_at,provider_version=excluded.provider_version,fingerprint=excluded.fingerprint,last_indexed=excluded.last_indexed,is_deleted=excluded.is_deleted", ct, ("$id", x.Id.ToString("D")), ("$vault", x.VaultId.ToString("D")), ("$name", x.ProviderObjectName), ("$type", (int)x.ObjectType), ("$enabled", x.Enabled ? 1 : 0), ("$tags", JsonSerializer.Serialize(x.Tags)), ("$content", x.ContentType ?? (object)DBNull.Value), ("$created", x.CreatedAt is null ? DBNull.Value : Format(x.CreatedAt.Value)), ("$updated", x.UpdatedAt is null ? DBNull.Value : Format(x.UpdatedAt.Value)), ("$expires", x.ExpiresAt is null ? DBNull.Value : Format(x.ExpiresAt.Value)), ("$version", x.ProviderVersion), ("$fingerprint", x.MetadataFingerprint), ("$last", Format(x.LastIndexedAt)), ("$deleted", x.IsDeletedOrUnavailable ? 1 : 0));
 
     private static void AddNullable(SqliteCommand command, string name, object? value) => command.Parameters.AddWithValue(name, value ?? DBNull.Value);
-    private static async Task EnsureClientIdColumnAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    private static async Task<bool> HasClientIdColumnAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = "SELECT COUNT(*) FROM pragma_table_info('identities') WHERE name='client_id'";
-        var exists = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture) > 0;
-        if (!exists) await ExecuteAsync(connection, null, "ALTER TABLE identities ADD COLUMN client_id TEXT NOT NULL DEFAULT ''", cancellationToken);
+        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture) > 0;
+    }
+    private static async Task EnsureClientIdColumnAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (!await HasClientIdColumnAsync(connection, transaction, cancellationToken))
+            await ExecuteAsync(connection, transaction, "ALTER TABLE identities ADD COLUMN client_id TEXT NOT NULL DEFAULT ''", cancellationToken);
     }
     private static string Format(DateTimeOffset value) => value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
     private static DateTimeOffset? ReadDate(SqliteDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : DateTimeOffset.Parse(reader.GetString(ordinal), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
@@ -263,8 +388,8 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         FROM items i JOIN vaults v ON v.id=i.vault_id JOIN vault_access va ON va.vault_id=v.id JOIN identities ident ON ident.id=va.identity_id
         WHERE i.id=$id AND ident.is_enabled=1 ORDER BY va.preferred_rank LIMIT 1
         """;
+    private const string Configuration = "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA secure_delete=ON;";
     private const string Schema = """
-        PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA secure_delete=ON;
         CREATE TABLE IF NOT EXISTS identities(id TEXT PRIMARY KEY,client_id TEXT NOT NULL,account_identifier TEXT NOT NULL UNIQUE,username_hint TEXT NOT NULL,display_name TEXT NOT NULL,home_tenant_id TEXT NOT NULL,auth_state INTEGER NOT NULL,last_interactive TEXT NOT NULL,is_enabled INTEGER NOT NULL);
         CREATE TABLE IF NOT EXISTS tenants(id TEXT PRIMARY KEY,identity_id TEXT NOT NULL REFERENCES identities(id) ON DELETE CASCADE,tenant_id TEXT NOT NULL,display_name TEXT NOT NULL,tenant_type TEXT NOT NULL,last_validated TEXT NOT NULL,status TEXT NOT NULL,UNIQUE(identity_id,tenant_id));
         CREATE TABLE IF NOT EXISTS subscriptions(id TEXT PRIMARY KEY,tenant_access_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,subscription_id TEXT NOT NULL,display_name TEXT NOT NULL,state TEXT NOT NULL,is_selected INTEGER NOT NULL,last_discovered TEXT NOT NULL,UNIQUE(tenant_access_id,subscription_id));

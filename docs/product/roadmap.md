@@ -11,6 +11,7 @@ The next work is ordered by security dependency rather than visual novelty. Secu
 | Horizon | Initiative | Status | Dependency or trade-off |
 | --- | --- | --- | --- |
 | Now | Security hardening and secure first-run setup | In progress | Product-registration onboarding and actionable safe errors are implemented; runtime usability, Windows Hello recovery, tenant-policy, and independent security evidence remain. |
+| Now | Encrypted local-data recovery and migration | In progress | Missing/wrong keys, corruption, incomplete/future schemas, and the internal v1-to-v2 migration fail closed under tests; rotation, supported backup, device replacement, reinstall, and independent evidence remain under G-03. |
 | Now | Preview feedback and reliability cycle | In progress | Governed public intake, an explicit submission notice, privacy boundaries, triage cadence, and measurable G-01 thresholds are defined; collection, upgrade coverage, blocker closure, and stability windows still require evidence. |
 | Now | Desktop UI and password-manager interface research | Planned | Research and prototype before committing to navigation or interaction changes. |
 | Next | Taskbar background operation and metadata synchronization | Planned | Requires a locked background state, explicit close behavior, and Conditional Access-safe token handling. |

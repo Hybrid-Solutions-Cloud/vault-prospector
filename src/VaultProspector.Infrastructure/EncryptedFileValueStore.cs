@@ -203,7 +203,7 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
         if (nonce.Length != 12 || tag.Length != 16)
             throw new CryptographicException("Invalid protected-value nonce or authentication tag length.");
 
-        var key = await keyMaterial.GetOrCreateKeyAsync(KeyPurpose(envelope.KeyVersion), cancellationToken);
+        var key = await keyMaterial.GetExistingKeyAsync(KeyPurpose(envelope.KeyVersion), cancellationToken);
         var plaintext = new byte[ciphertext.Length];
         var associatedData = AssociatedData(envelope.KeyVersion, requestedVaultItemId, envelope.Descriptor);
         var authenticated = false;

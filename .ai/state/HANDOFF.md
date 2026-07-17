@@ -7,8 +7,8 @@
   existing-install repair/uninstall. Do not install, resubmit, or reuse its artifacts.
 - Authoritative gate matrix: `docs/product/release-readiness.md`.
 - Decision: not ready for public Preview promotion or General Availability.
-- Current exact CI validation candidate: `0.1.0-ci.65` from commit
-  `94c051364310ad8f1cdf4e3950dea0d598d392d6`, workflow run `29589392012`.
+- Latest pushed validation: withdrawal record commit `709ff3997e73c886168750034d6c8a7f963e9b3b`;
+  exact-commit workflow run `29590038115` passed. There is no publishable release candidate.
 - Repository writes must use an HCS governance-minted GitHub App installation token for
   `Hybrid-Solutions-Cloud`; never use a personal token.
 
@@ -86,6 +86,11 @@
 - Installer rollback fix/evidence commit `4853598` is pushed to `main`; exact-commit CI run
   `29588980444` passed both `build-test` (including the built-MSI sequence guard) and full-history
   `secret-scan`. GitHub readiness issue `#5` is synchronized without incorrectly passing P-09.
+- Local G-03 recovery hardening now requires existing keys for existing SQLCipher/AES-GCM state,
+  rejects future, corrupt, wrong-key, incomplete-schema, and invalid-relationship databases, and
+  provides distinct redacted recovery guidance. The Release-equivalent local gate passes 111/111
+  tests with 0 warnings/errors and no known vulnerable packages. Evidence is in
+  `docs/release-evidence/local-data-recovery-2026-07-17.md`; commit/CI synchronization is pending.
 
 ## External publication state
 
@@ -102,7 +107,9 @@
 
 ## Next actions
 
-1. Continue Preview-critical gates: arrange independent security review issue `#9`; run live
+1. Commit and push the G-03 recovery hardening, verify exact-commit CI, and synchronize readiness
+   tracking without claiming G-03 passed.
+2. Continue Preview-critical gates: arrange independent security review issue `#9`; run live
    identity, MFA, Conditional Access, and Windows Hello tests; complete keyboard, NVDA, Narrator,
    and usability evidence; finish signing setup, publish a new immutable corrected version, obtain
    replacement WinGet/Chocolatey acceptance, and complete the final signed-candidate go/no-go.
