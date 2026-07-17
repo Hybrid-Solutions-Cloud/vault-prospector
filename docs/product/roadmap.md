@@ -11,6 +11,7 @@ The next work is ordered by security dependency rather than visual novelty. Secu
 | Horizon | Initiative | Status | Dependency or trade-off |
 | --- | --- | --- | --- |
 | Now | Security hardening and secure first-run setup | In progress | Product-registration onboarding and actionable safe errors are implemented; runtime usability, Windows Hello recovery, tenant-policy, and independent security evidence remain. |
+| Now | Preview feedback and reliability cycle | In progress | Public consent forms, privacy boundaries, triage cadence, and measurable G-01 thresholds are defined; collection, upgrade coverage, blocker closure, and stability windows still require evidence. |
 | Now | Desktop UI and password-manager interface research | Planned | Research and prototype before committing to navigation or interaction changes. |
 | Next | Taskbar background operation and metadata synchronization | Planned | Requires a locked background state, explicit close behavior, and Conditional Access-safe token handling. |
 | Next | Identity-source expansion and read-only/write-mode policy | Planned | Human and workload identities need distinct setup, authorization, and audit boundaries. Write operations remain gated behind security review. |
@@ -133,3 +134,14 @@ Provider expansion must not weaken the Azure security model or create a lowest-c
 - Browser password-vault interoperability research without importing or exposing credentials by default.
 - Origin-bound autofill prototypes that require explicit item mapping, user action, policy approval, and local verification for sensitive values.
 - Separate browser-extension threat model, permission review, signing, update, and compromise-response plan before distribution.
+
+## Phase 8 — Preview learning and GA promotion
+
+Status: in progress. The process is operational; real evaluator and reliability evidence remains.
+
+- Voluntary public Preview bug and experience forms with explicit consent and sensitive-data exclusions.
+- Private security reporting separated from public product feedback.
+- Business-day triage and weekly sanitized evidence rollups.
+- Measurable evaluator, task-completion, Windows-build, install-path, upgrade, blocker, and stability thresholds.
+- Formal G-01 decision only after [all feedback-cycle criteria](preview-feedback.md) are evidenced.
+- GA promotion only after every remaining [release-readiness gate](release-readiness.md) passes.

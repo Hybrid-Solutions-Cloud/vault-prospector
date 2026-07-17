@@ -2,7 +2,7 @@
 
 Vault Prospector is a local-first Windows desktop application for discovering and searching Azure Key Vault metadata across multiple Microsoft Entra identities, tenants, and subscriptions. Secret values are retrieved only after an explicit action and Windows Hello verification.
 
-> **Release status:** `0.1.0` preview. Use non-production environments while evaluating the application and report security issues privately as described in [SECURITY.md](SECURITY.md).
+> **Release status:** `0.1.0` preview. Use non-production environments while evaluating the application. Submit voluntary, non-sensitive feedback through the [public Preview feedback process](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/FEEDBACK.md), and report security issues privately as described in [SECURITY.md](SECURITY.md).
 
 ## What works
 
@@ -70,6 +70,7 @@ No local application can protect a deliberately revealed value from malware alre
 - [Security requirements](docs/security/security-requirements.md)
 - [Threat model](docs/security/threat-model.md)
 - [Privacy and local data handling](docs/privacy.md)
+- [Preview feedback and GA promotion](docs/product/preview-feedback.md)
 - [Release and artifact verification](docs/release.md)
 - [Release operations and incident runbook](docs/release-operations-runbook.md)
 - [Windows package distribution](docs/package-distribution.md)

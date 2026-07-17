@@ -56,6 +56,18 @@ them under organizational policy.
 If telemetry is proposed later, it requires an updated public schema, explicit release review, and
 an updated notice before activation.
 
+## Voluntary Preview feedback
+
+Preview feedback is collected only when an evaluator explicitly submits a public GitHub issue
+through the [Preview feedback process](product/preview-feedback.md). Vault Prospector does not
+create an issue, upload diagnostics, or associate application activity with a GitHub account.
+
+A submitted issue and its attachments are public and are processed under GitHub's privacy terms.
+The forms require the evaluator to confirm that the report uses synthetic or non-production data
+and excludes credentials, tokens, identity and Azure-resource identifiers, resource/object names,
+secret values, and unreviewed diagnostics or screenshots. Suspected vulnerabilities use the private
+channel in [SECURITY.md](../SECURITY.md), not the feedback forms.
+
 ## Removal and device migration
 
 Removing an identity removes its MSAL account entry and local access mapping. Use application

@@ -6,6 +6,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Added
 
+- Add voluntary public Preview bug and experience forms, a private security route, business-day triage, and measurable Preview-to-GA feedback criteria without enabling telemetry.
 - Add a fail-closed, structured Windows Installer lifecycle scenario covering published checksums, install, major upgrade, forced repair, downgrade rejection, uninstall cleanup, and retained user state.
 - Provide a default multi-tenant Vault Prospector public-client registration, a guided first-identity experience, and an advanced organization-controlled registration option.
 - Show redacted, actionable recovery guidance for authentication, authorization, Windows verification, protected-data integrity, policy, and damaged-settings failures.

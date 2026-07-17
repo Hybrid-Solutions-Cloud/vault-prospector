@@ -313,3 +313,33 @@ Acceptance criteria:
 - Provider credentials are isolated, encrypted, removable, and never logged.
 - Metadata sync does not retrieve values, and value retrieval requires explicit user action and applicable local verification.
 - Contract, integration, security, and redaction tests cover the provider before release.
+
+## Epic 15 — Preview feedback and GA promotion
+
+### Story: Consent-based Preview feedback
+
+As a Preview evaluator, I need a clearly public, voluntary feedback channel that excludes sensitive
+data so that I can report product outcomes without hidden telemetry or unsafe disclosure.
+
+Acceptance criteria:
+
+- Separate public forms collect reproducible bugs and core-task experience feedback.
+- Submission requires explicit publication consent, synthetic/non-production use, and confirmation
+  that credentials, tokens, identifiers, Azure resource/object names, secret values, and unreviewed
+  diagnostics or screenshots were removed.
+- Suspected vulnerabilities are routed to a private channel and never solicited in public issues.
+- The application does not submit telemetry, diagnostics, or issues automatically.
+
+### Story: Evidence-based GA feedback gate
+
+As a release approver, I need measurable feedback, triage, upgrade, and stability thresholds so that
+GA is based on observed reliability rather than an undocumented judgment.
+
+Acceptance criteria:
+
+- The release owner triages every report and publishes a weekly sanitized rollup during Preview.
+- G-01 tracks a 30-day operational window, at least five consenting evaluators, at least 20 core-task
+  attempts, supported Windows and MSI/WinGet/Chocolatey coverage, and a 90% unaided completion rate.
+- Every failure has a disposition; no security-sensitive or release-blocking defect remains open.
+- All published Preview versions upgrade through every supported distribution path.
+- The final candidate completes a 14-day blocker-free stability window before G-01 passes.

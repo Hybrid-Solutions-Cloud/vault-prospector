@@ -1,0 +1,63 @@
+name: Internal engineering defect
+description: Track a sanitized implementation defect in the private source repository.
+title: "[Defect]: "
+labels:
+  - bug
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Record only sanitized engineering details. Keep credentials, tokens, secret values, production identifiers, and sensitive evidence out of GitHub.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data-safety confirmation
+      options:
+        - label: This issue contains no credential, token, secret value, private key, production identity/resource identifier, or unreviewed diagnostic or screenshot.
+          required: true
+        - label: This is not an uncontained security incident; suspected vulnerabilities are being handled through the private security process.
+          required: true
+  - type: input
+    id: source
+    attributes:
+      label: Sanitized source or public feedback reference
+      placeholder: Public issue number, test, review, or operator report
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Affected version or commit
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and impact
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Sanitized reproduction
+    validations:
+      required: true
+  - type: dropdown
+    id: disposition
+    attributes:
+      label: Release disposition
+      options:
+        - Preview and GA blocker
+        - GA blocker
+        - Non-blocking major
+        - Minor or documentation
+        - Needs classification
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Required closure evidence
+    validations:
+      required: true

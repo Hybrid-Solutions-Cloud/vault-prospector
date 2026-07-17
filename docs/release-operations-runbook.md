@@ -21,7 +21,8 @@ signature always receives a new immutable version.
 
 | Situation | Channel | Owner |
 | --- | --- | --- |
-| Normal product support or reproducible non-sensitive defect | Private repository issue | Repository maintainers |
+| Preview experience or reproducible non-sensitive defect | [Public Preview feedback forms](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/FEEDBACK.md) | Release owner |
+| Internal engineering work derived from feedback | Private source-repository issue | Repository maintainers |
 | Suspected vulnerability or sensitive incident | <kris@hybridsolutions.cloud> with subject `Vault Prospector security report` | Kristopher Turner |
 | WinGet validation/moderation | The package PR in `microsoft/winget-pkgs` | `kristopherjturner` contributor account |
 | Chocolatey validation/moderation | Chocolatey package page and publisher dashboard | Vault Prospector Chocolatey publisher account |
@@ -29,6 +30,22 @@ signature always receives a new immutable version.
 
 Do not place credentials, tokens, secret values, private keys, sensitive screenshots, or unredacted
 diagnostics in an issue or package-review comment.
+
+## Preview feedback triage
+
+During an active Preview, review the public feedback queue each business day and perform the full
+classification within three business days. Follow [Preview feedback and GA promotion](product/preview-feedback.md)
+for consent boundaries, prohibited data, severity, measurable G-01 thresholds, and the weekly
+sanitized rollup. Never move sensitive issue content into the private engineering repository; link
+only sanitized metadata and use the private security process when appropriate.
+
+Before each Preview refresh and the GA decision:
+
+1. reconcile every public report to a disposition or private engineering work item;
+2. verify no security-sensitive or release-blocking report remains open;
+3. record task-outcome, Windows-build, install-path, and triage-latency totals;
+4. rerun the supported-version upgrade matrix after any installer or storage change; and
+5. update G-01 without claiming Passed until every numerical and stability threshold is evidenced.
 
 ## Release prerequisites
 

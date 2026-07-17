@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Submit public Preview feedback
+    url: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/FEEDBACK.md
+    about: Use the public consent forms for non-sensitive evaluator feedback.
+  - name: Report a security vulnerability privately
+    url: https://github.com/Hybrid-Solutions-Cloud/vault-prospector/blob/main/SECURITY.md
+    about: Never disclose vulnerabilities or sensitive evidence in a public issue.
