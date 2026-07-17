@@ -4,6 +4,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+## [0.1.1-preview.1] - 2026-07-17
+
 ### Added
 
 - Retain each successful `main` CI run's commit-addressed unsigned Windows candidate for 14 days, including MSI, package-manager artifacts, checksums, and machine-readable source/run provenance for clean-machine validation.
@@ -14,6 +16,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Changed
 
+- Permit only explicitly versioned unsigned Preview evaluation tags through the protected release
+  workflow when Artifact Signing is unavailable; stable and GA tags remain fail-closed.
 - Authenticate encrypted-cache descriptors before applying expiry, fingerprint, or scoped-purge decisions; reject and remove malformed, substituted, or tampered entries without trusting their claimed scope.
 - Roll back newly authenticated MSAL accounts when encrypted identity persistence fails, audit offline-secret opens with fail-closed disposal, and track clipboard ownership with a zeroized digest instead of retaining a second plaintext copy.
 - Restore NVDA focus events throughout selected secondary tabs, announce complete safe actionable errors through a focused return control, and sequence polite status announcements before operation focus restoration.
@@ -69,5 +73,6 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.1.1-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1
 [0.1.0-preview.2]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases/tag/v0.1.0-preview.2
 [0.1.0-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases/tag/v0.1.0-preview.1

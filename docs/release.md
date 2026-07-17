@@ -1,7 +1,8 @@
 # Release and Artifact Verification
 
-Public Windows releases require the one-time [Azure Artifact Signing setup](artifact-signing.md)
-before a version tag can succeed. The release workflow refuses unsigned artifacts.
+Stable and GA Windows releases require the one-time [Azure Artifact Signing setup](artifact-signing.md).
+The protected workflow may publish an explicitly labeled `vX.Y.Z-preview.N` evaluation release
+without Authenticode when signing is unavailable; all stable tags still fail closed.
 
 ## Release contents
 
@@ -14,14 +15,14 @@ Each Windows release contains:
 - an SPDX JSON software bill of materials;
 - Sigstore bundles for the installer and packaged artifacts.
 
-Published candidates must carry both Windows Authenticode signatures with RFC 3161 timestamps and
-Sigstore keyless bundles. Authenticode establishes Windows publisher trust; Sigstore and GitHub
-provenance provide additional build transparency.
+Unsigned Preview evaluation candidates must carry checksums, an SPDX SBOM, keyless Sigstore
+bundles, explicit Unknown Publisher guidance, and immutable provenance. Stable and GA candidates
+must additionally carry Windows Authenticode signatures with RFC 3161 timestamps.
 
 ## Verify the checksum
 
 ```powershell
-$artifact = 'VaultProspector-0.1.0-preview.2-win-x64.msi'
+$artifact = 'VaultProspector-0.1.1-preview.1-win-x64.msi'
 $expected = (Get-Content "$artifact.sha256").Split(' ')[0]
 $actual = (Get-FileHash $artifact -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($actual -ne $expected) { throw 'Checksum verification failed.' }
@@ -33,10 +34,10 @@ Install Cosign, then run:
 
 ```powershell
 cosign verify-blob `
-  --bundle VaultProspector-0.1.0-preview.2-win-x64.msi.sigstore.json `
+  --bundle VaultProspector-0.1.1-preview.1-win-x64.msi.sigstore.json `
   --certificate-identity-regexp '^https://github.com/Hybrid-Solutions-Cloud/vault-prospector/' `
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' `
-  VaultProspector-0.1.0-preview.2-win-x64.msi
+  VaultProspector-0.1.1-preview.1-win-x64.msi
 ```
 
 GitHub-native artifact attestations are unavailable for this private repository under the organization's current plan. The workflow will also publish a GitHub attestation automatically if the repository becomes public.

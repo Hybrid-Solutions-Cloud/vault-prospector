@@ -115,7 +115,7 @@
 
 ## Release security
 
-- Signed artifacts.
+- Explicitly labeled unsigned Preview evaluation artifacts; trusted signing required for stable/GA.
 - Protected release workflow.
 - Dependency scanning.
 - Secret scanning.

@@ -4,7 +4,7 @@
 
 **Frequency:** Every release, package update, credential rotation, or incident
 
-**Last updated:** 2026-07-16
+**Last updated:** 2026-07-17
 
 **Last exercised:** Preview.2-to-corrected-candidate failed-upgrade rollback plus full MSI lifecycle on 2026-07-17; package-service failure handling exercised during Chocolatey HTTP 504 responses
 
@@ -49,7 +49,8 @@ Before each Preview refresh and the GA decision:
 
 ## Release prerequisites
 
-- [ ] Every required gate in the [release-readiness matrix](product/release-readiness.md) is Passed for the target release stage.
+- [ ] Every required gate in the [release-readiness matrix](product/release-readiness.md) is Passed
+  or has a named, dated Preview-only risk acceptance recorded in the go/no-go record.
 - [ ] `main` is clean, pushed, and protected CI is green for the exact candidate commit.
 - [ ] Version, release notes, evidence template, installer metadata, and package manifests agree.
 - [ ] The candidate has no unresolved critical/high security defect.
@@ -100,6 +101,10 @@ git push origin "v$version"
 
 Expected result: the protected GitHub release workflow builds/tests again and publishes source-repo
 artifacts, hashes, SPDX SBOM, and Sigstore bundles.
+
+For an unsigned Preview, the tag must match `vX.Y.Z-preview.N`; the workflow records the unsigned
+classification and verifies that project binaries and MSI are actually `NotSigned`. Stable and GA
+tags remain blocked until Artifact Signing is configured.
 
 If it fails: do not reuse the tag after any artifact was published. Diagnose the workflow, increment
 the version, and create a new candidate.

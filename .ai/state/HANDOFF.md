@@ -5,13 +5,13 @@
 - Branch: `main`; direct pushes are the operator-approved workflow.
 - Public release: `v0.1.0-preview.2` is **withdrawn** and retained only for immutable evidence and
   existing-install repair/uninstall. Do not install, resubmit, or reuse its artifacts.
-- Public test release: unsigned `v0.1.0-ci.68` is available from the public distribution repository
-  with checksum and CI provenance. Anonymous re-download matched the recorded MSI SHA-256. It is
-  usable for cross-machine evaluation but is not the formally approved Preview promotion.
+- Public test release: unsigned `v0.1.0-ci.68` remains available until formal Preview publication.
+- Promotion target: unsigned non-production `v0.1.1-preview.1`; release automation, release notes,
+  roadmap, backlog, scope, readiness, install/package/security/privacy/runbook/evidence documents,
+  and the named go/no-go record are being synchronized for publication.
 - Authoritative gate matrix: `docs/product/release-readiness.md`.
-- Decision: not ready for public Preview promotion or General Availability.
-- Latest pushed validation: withdrawal record commit `709ff3997e73c886168750034d6c8a7f963e9b3b`;
-  exact-commit workflow run `29590038115` passed. There is no publishable release candidate.
+- Decision: Preview promotion pending exact-commit CI, tagged workflow artifacts, public mirroring,
+  and anonymous hash verification. GA remains blocked by the documented open gates.
 - Repository writes must use an HCS governance-minted GitHub App installation token for
   `Hybrid-Solutions-Cloud`; never use a personal token.
 
@@ -95,6 +95,12 @@
   tests with 0 warnings/errors and no known vulnerable packages. Evidence is in
   `docs/release-evidence/local-data-recovery-2026-07-17.md`. Commit `6cec5a4` is pushed to `main`;
   exact-commit CI run `29592049330` passed both `build-test` and full-history `secret-scan`.
+- Exact local `0.1.1-preview.1` packaging passed the locked Release gate (111/111 tests, zero
+  warnings/errors, no known vulnerable packages), MSI schedule guard, WinGet validation, and
+  Chocolatey packing. The exact MSI then passed all 27 lifecycle gates on isolated Windows 11,
+  including deterministic failed-upgrade rollback. The VM was restored with zero registrations or
+  processes, its test root removed, and its pre-existing encrypted database/key hashes unchanged.
+  Evidence is in `docs/release-evidence/0.1.1-preview.1.md`.
 
 ## External publication state
 
@@ -103,21 +109,25 @@
   passed. This unblocks immediate testing without changing the signing or formal promotion gates.
 - WinGet PR `microsoft/winget-pkgs#403473` is closed with a withdrawal notice. Microsoft validation
   had passed, but the later failed-upgrade result invalidated the submitted Preview.2 MSI. Submit a
-  new PR only for a new signed immutable corrected version.
+  new PR only after the immutable `0.1.1-preview.1` MSI is publicly published and hash-verified.
 - Chocolatey never ingested `0.1.0-preview.2` after six HTTP 504 responses. That version is now
-  withdrawn and must not be retried. Submit a new signed rollback-safe version only after the upload
-  path recovers, then verify ingestion and moderation.
+  withdrawn and must not be retried. Submit the rollback-safe `0.1.1-preview.1` NUPKG only after
+  public hash verification and upload-path recovery, then verify ingestion and moderation.
 - Trusted Windows signing gate P-13 remains blocked until an HCS owner completes Azure Artifact
-  Signing Public Trust identity and profile setup. The release workflow fails closed without it.
+  Signing Public Trust identity and profile setup. The workflow permits only explicitly versioned
+  unsigned Preview evaluation tags without it; stable/GA tags remain fail-closed.
 - HCS drift cannot currently validate this local checkout because the MCP server cannot resolve the
   unregistered repository/path; do not report a drift pass.
 
 ## Next actions
 
-1. Continue Preview-critical gates: arrange independent security review issue `#9`; run live
-   identity, MFA, Conditional Access, and Windows Hello tests; complete keyboard, NVDA, Narrator,
-   and usability evidence; finish signing setup, publish a new immutable corrected version, obtain
-   replacement WinGet/Chocolatey acceptance, and complete the final signed-candidate go/no-go.
+1. Commit/push the synchronized `0.1.1-preview.1` source and documentation; require exact-commit CI.
+2. Push immutable tag `v0.1.1-preview.1`, verify the protected unsigned-Preview workflow, mirror the
+   exact full artifact set to the public release repository, anonymously re-download/hash it, and
+   finalize P-12/P-18 evidence plus issue `#5`.
+3. After direct Preview publication, submit the exact immutable MSI to WinGet and Chocolatey.
+4. Continue GA work: signing, independent security review issue `#9`, live Entra/MFA/Conditional
+   Access/Windows Hello testing, remaining accessibility/usability evidence, and G-01 feedback.
 
 ## Preserved external scratch
 

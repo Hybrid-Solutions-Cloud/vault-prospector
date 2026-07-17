@@ -1,20 +1,21 @@
 # Azure Artifact Signing Setup
 
-Vault Prospector public Windows releases must use Microsoft-trusted Authenticode signatures and
-RFC 3161 timestamps. Sigstore provenance remains additive; it does not replace Windows trust for
-the executable and MSI.
+Vault Prospector stable and GA Windows releases must use Microsoft-trusted Authenticode signatures
+and RFC 3161 timestamps. An explicitly labeled non-production Preview evaluation may be unsigned
+when its release page warns about Unknown Publisher and retains checksums, SBOM, Sigstore, and
+provenance. Sigstore does not replace Windows publisher trust.
 
 ## Current state
 
 As of 2026-07-16, an HCS-governed Azure resource inventory query found no
 `Microsoft.CodeSigning/codeSigningAccounts` resource in subscription
-`be069ae1-fc96-4a07-9f8e-5994d83a137d`. The release workflow therefore fails closed before
-building a tag when its Artifact Signing configuration is absent. It cannot publish an unsigned
-replacement release.
+`be069ae1-fc96-4a07-9f8e-5994d83a137d`. The release workflow therefore fails closed for stable and
+GA tags when Artifact Signing configuration is absent. Only a tag matching
+`vX.Y.Z-preview.N` may take the explicit unsigned evaluation path.
 
 The intended trust model is **Public Trust**. Azure recommends Public Trust for publicly
 distributed Win32 applications. Do not substitute a Public Trust Test or Private Trust profile for
-a public Preview or GA release.
+a signed release.
 
 ## One-time Azure and GitHub setup
 
@@ -57,7 +58,8 @@ Azure keeps the signing key in the managed service.
 
 For every version tag, `.github/workflows/release.yml`:
 
-1. requires all signing variables and refuses an unsigned release;
+1. requires all signing variables for stable/GA, while permitting only an explicitly versioned
+   Preview evaluation to proceed unsigned;
 2. builds and tests with locked dependencies and enforced vulnerability/secret gates;
 3. publishes the Windows app, then signs and timestamps the Vault Prospector executables and
    assemblies before creating the portable ZIP;

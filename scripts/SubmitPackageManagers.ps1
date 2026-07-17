@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.1.0-preview.2',
+    [string]$Version = '0.1.1-preview.1',
 
     [ValidatePattern('^[0-9A-Za-z._-]+$')]
     [string]$OutputDirectory = 'artifacts',

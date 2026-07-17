@@ -6,6 +6,8 @@ Record the Windows version, package checksum, tester, and time with the release 
 
 - [ ] SHA-256 checksum matches the published checksum file.
 - [ ] Sigstore bundle verifies against the repository's GitHub Actions identity.
+- [ ] Unsigned Preview: Authenticode status is `NotSigned` and the release page warns about Unknown
+  Publisher. Stable/GA: MSI and project binaries have valid timestamped Authenticode signatures.
 - [ ] MSI installs silently with exit code 0, registers in Installed apps, and creates the Start menu shortcut.
 - [ ] Forced MSI repair restores a deliberately changed packaged non-secret file.
 - [ ] MSI upgrade replaces the previous version without leaving duplicate Installed apps entries.

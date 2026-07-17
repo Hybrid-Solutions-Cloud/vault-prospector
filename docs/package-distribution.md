@@ -24,9 +24,9 @@ Never replace an asset under an existing version tag. Publish a new version if a
 Run on Windows with PowerShell 7, .NET 9, WiX, WinGet, and Chocolatey available:
 
 ```powershell
-pwsh ./scripts/PackageInstaller.ps1 -Version 0.1.0-preview.2
-pwsh ./scripts/PackageDistribution.ps1 -Version 0.1.0-preview.2
-winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/0.1.0-preview.2
+pwsh ./scripts/PackageInstaller.ps1 -Version 0.1.1-preview.1
+pwsh ./scripts/PackageDistribution.ps1 -Version 0.1.1-preview.1
+winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/0.1.1-preview.1
 ```
 
 `PackageInstaller.ps1` creates the MSI and checksum. `PackageDistribution.ps1` reads the MSI product identifiers and checksum, then creates the WinGet manifests, manifest archive, Chocolatey source package, `.nupkg`, and checksums.
@@ -39,16 +39,16 @@ WinGet manifest archive, Chocolatey package, their checksum files, and `ci-candi
 binds the installer name, byte length, and SHA-256 to the repository, source commit/ref, workflow run,
 attempt, candidate version, and UTC creation time.
 
-These candidates exist only for clean-machine validation. They are unsigned, are not public releases,
-must not be submitted to WinGet or Chocolatey, and must be removed from the test machine after evidence
-capture. Only the protected release workflow may create a publishable signed version.
+CI candidates exist for clean-machine validation and are not package-manager submissions. The
+protected tag workflow creates publishable Preview or stable artifacts. A Preview may be unsigned
+only when explicitly labeled and documented; stable and GA artifacts require trusted signing.
 
 ## Publish the public installer
 
 Set `GH_TOKEN` to the Hybrid Solutions Cloud GitHub App installation token. Do not use a personal access token to push or publish into the organization.
 
 ```powershell
-pwsh ./scripts/PublishDistribution.ps1 -Version 0.1.0-preview.2
+pwsh ./scripts/PublishDistribution.ps1 -Version 0.1.1-preview.1
 ```
 
 The script creates or updates the matching release in the public distribution repository and uploads the immutable artifacts.
@@ -104,7 +104,7 @@ later publishing session as `CHOCOLATEY_API_KEY` with the platform environment l
 Install WinGet Manifest Creator once with `winget install Microsoft.WingetCreate`, authenticate with `wingetcreate token --store`, then run:
 
 ```powershell
-pwsh ./scripts/SubmitPackageManagers.ps1 -Version 0.1.0-preview.2
+pwsh ./scripts/SubmitPackageManagers.ps1 -Version 0.1.1-preview.1
 ```
 
 The script submits the validated WinGet manifest directory and pushes the Chocolatey `.nupkg`. Both community services perform independent automated checks and moderation before the commands become available to users.

@@ -1,5 +1,15 @@
 # Initial Product Backlog
 
+## Current delivery focus — 0.1.1-preview.1
+
+The immediate target is a public, unsigned Windows Preview for non-production evaluation. Direct
+MSI and portable ZIP publication, complete checksums/SBOM/provenance, exact-package lifecycle
+validation, and a named go/no-go record are release requirements. Authenticode signing, WinGet and
+Chocolatey catalog acceptance, independent security review, remaining live identity/accessibility
+scenarios, and the measured Preview feedback window remain tracked work for Preview refreshes and
+GA. The authoritative status is the [release-readiness matrix](release-readiness.md); the
+[roadmap](roadmap.md) defines sequencing.
+
 ## Epic 1 — Application foundation
 
 ### Story: Scaffold solution

@@ -2,9 +2,9 @@
 
 ## Install on Windows
 
-Download the Windows x64 MSI from the [public distribution releases](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases), verify its checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu.
+Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
 
-After the packages are approved by their community repositories, Windows users can also install with:
+After this exact Preview is approved by the community repositories, Windows users can also install with:
 
 ```powershell
 winget install --id HybridSolutionsCloud.VaultProspector --exact
