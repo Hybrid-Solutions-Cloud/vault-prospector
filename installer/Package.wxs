@@ -35,6 +35,8 @@
           Directory="ApplicationProgramsFolder"
           Name="Vault Prospector"
           Description="Search Azure Key Vault metadata securely"
+          Icon="VaultProspector.ico"
+          IconIndex="0"
           WorkingDirectory="INSTALLFOLDER"
           Advertise="yes" />
       </File>

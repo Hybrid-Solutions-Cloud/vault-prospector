@@ -67,10 +67,10 @@ exit criteria.
 | 7.4 | Schema upgrade validation | Partial | Phases 3 and 7 |
 | 7.5 | Authenticode signing | Not started externally | Phase 14 |
 | 7.6 | Complete workspace resource assignment | Partial | Phase 7 |
-| 8.1 | Apple platform security validation | Not started | Phase 13 |
-| 8.2 | iPhone/iOS application and App Store release | Not started | Phase 13 |
-| 8.3 | Android application and Google Play release | Not started | Phase 13 |
-| 8.4 | Mobile autofill feasibility | Not started | Phase 13 |
+| 8.1 | Apple platform security validation | On hold | On hold |
+| 8.2 | iPhone/iOS application and App Store release | On hold | On hold |
+| 8.3 | Android application and Google Play release | On hold | On hold |
+| 8.4 | Mobile autofill feasibility | On hold | On hold |
 | 9.1 | Secure first-run wizard | Partial | Phase 3 |
 | 9.2 | Mandatory local encryption verification | Implemented; independent review open | Phases 3 and 14 |
 | 9.3 | Isolated Azure authentication contexts | Implemented; live matrix open | Phases 2 and 14 |
@@ -81,9 +81,9 @@ exit criteria.
 | 10.3 | Explicit write mode | Not started | Phase 8 |
 | 11.1 | Continue securely in the notification area | Not started | Phase 10 |
 | 12.1 | Research password-manager interface patterns | Not started | Phase 9 |
-| 13.1 | Browser extension and native messaging feasibility | Not started | Phase 11 |
-| 13.2 | Browser password-vault interoperability | Not started | Phase 11 |
-| 14.1 | CyberArk source integration | Not started | Phase 12 |
+| 13.1 | Browser extension and native messaging feasibility | On hold | On hold |
+| 13.2 | Browser password-vault interoperability | On hold | On hold |
+| 14.1 | CyberArk source integration | On hold | On hold |
 | 15.1 | Consent-based Preview feedback | Delivered as process | Phase 15 operation |
 | 15.2 | Evidence-based GA feedback gate | In progress | Phase 15 |
 
@@ -368,6 +368,7 @@ Acceptance criteria:
 - Research covers onboarding, unlock, item lists, search, collections, identity context, security warnings, reveal/copy, autofill, audit history, and recovery.
 - The review includes keyboard navigation, screen readers, color contrast, reduced motion, and high-risk confirmation patterns.
 - Findings produce annotated workflows and prototypes for user testing before implementation.
+- At least 4 distinct UI mockup versions are designed and delivered for user review (covering setup, search, secret reveal, and settings).
 - Security state and source identity remain visible even when simplifying the interface.
 
 ## Epic 13 — Browser and password-vault integration (research first)

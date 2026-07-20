@@ -129,6 +129,9 @@ jobs:
       - name: Verify rollback-safe MSI sequence
         shell: pwsh
         run: ./scripts/Test-InstallerUpgradeSchedule.ps1 -InstallerPath '${{ steps.release.outputs.installer }}'
+      - name: Verify Start-menu shortcut icon
+        shell: pwsh
+        run: ./scripts/Test-InstallerShortcutIcon.ps1 -InstallerPath '${{ steps.release.outputs.installer }}'
       - name: Sign MSI with Azure Artifact Signing
         if: steps.signing.outputs.configured == 'true'
         uses: Azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0

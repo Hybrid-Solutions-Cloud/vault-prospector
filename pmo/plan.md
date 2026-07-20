@@ -281,12 +281,13 @@ is executed in the dependency order below; a phase may be split into multiple Pr
   navigation, search, collections, source identity, reveal/copy, autofill, warnings, audit, and
   recovery.
 - Produce research findings, task flows, wireframes, and at least one interactive prototype.
+- Design and deliver 4 distinct UI mockup versions (covering setup, search, secret reveal, and settings) for user alignment.
 - Test prototypes with representative Windows users and assistive technologies.
 - Select and implement the design while keeping identity/source/security state visible.
 
 ### Exit criteria
 
-- The redesign is based on recorded research and usability evidence, not cosmetic preference.
+- The redesign is based on recorded research, 4 delivered mockup versions, and usability evidence, not cosmetic preference.
 - Core tasks are materially easier to discover and complete.
 - Keyboard, Narrator, NVDA, High Contrast, scaling, text size, and target-size gates pass.
 
@@ -315,6 +316,8 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P2
 
+**Status:** On hold
+
 **Backlog coverage:** Epic 13
 
 ### Scope
@@ -335,6 +338,8 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P2
 
+**Status:** On hold
+
 **Backlog coverage:** Epic 14
 
 ### Scope
@@ -353,6 +358,8 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 ## Phase 13 — iPhone/iOS and Android applications
 
 **Priority:** P3
+
+**Status:** On hold
 
 **Backlog coverage:** Epic 8
 

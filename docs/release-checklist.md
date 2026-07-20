@@ -17,6 +17,8 @@ Record the Windows version, package checksum, tester, and time with the release 
 - [ ] MSI uninstall removes program files and the Start menu shortcut without deleting user state.
 - [ ] ZIP extracts without an installer or administrator rights.
 - [ ] `VaultProspector.App.exe` starts and shows the Vault Prospector icon and title.
+- [ ] The Start-menu and Windows Search entry show the Vault Prospector icon rather than a generic
+  document; `Test-InstallerShortcutIcon.ps1` passes against the exact candidate MSI.
 - [ ] First start creates protected local state under `%LOCALAPPDATA%\VaultProspector` and no plaintext SQLite header.
 
 ## Authentication and discovery
