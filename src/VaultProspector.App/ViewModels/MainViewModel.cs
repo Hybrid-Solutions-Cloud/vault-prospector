@@ -103,6 +103,33 @@ public sealed partial class MainViewModel(
     });
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    private Task DisableIdentityAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null) return;
+        await identityService.DisableAsync(SelectedIdentity.Id, cancellationToken);
+        await ReloadIdentitiesAsync(cancellationToken);
+        StatusText = $"Identity {SelectedIdentity.DisplayName} is now disabled.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    private Task EnableIdentityAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null) return;
+        await identityService.EnableAsync(SelectedIdentity.Id, cancellationToken);
+        await ReloadIdentitiesAsync(cancellationToken);
+        StatusText = $"Identity {SelectedIdentity.DisplayName} is now enabled.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    private Task ReauthenticateIdentityAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null) return;
+        await identityService.ReauthenticateAsync(SelectedIdentity.Id, cancellationToken);
+        await ReloadIdentitiesAsync(cancellationToken);
+        StatusText = $"Identity {SelectedIdentity.DisplayName} reauthenticated successfully.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task SynchronizeAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedIdentity is null) throw new InvalidOperationException("Select an identity before synchronizing.");

@@ -127,6 +127,7 @@
                     <StackPanel Margin="6">
                       <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
                       <TextBlock Text="{Binding UsernameHint}" Opacity="0.7" />
+                      <TextBlock Text="{Binding AuthenticationState, StringFormat='State: {0}'}" Opacity="0.75" />
                     </StackPanel>
                   </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -134,6 +135,9 @@
               <WrapPanel>
                 <Button Classes="primary" Content="Sync selected" Command="{Binding SynchronizeCommand}" Margin="0,0,8,8" />
                 <Button Content="Cancel" Command="{Binding CancelOperationCommand}" IsEnabled="{Binding IsBusy}" Margin="0,0,8,8" />
+                <Button Content="Reauthenticate" Command="{Binding ReauthenticateIdentityCommand}" Margin="0,0,8,8" />
+                <Button Content="Disable" Command="{Binding DisableIdentityCommand}" Margin="0,0,8,8" />
+                <Button Content="Enable" Command="{Binding EnableIdentityCommand}" Margin="0,0,8,8" />
                 <Button Content="Remove identity" Command="{Binding RemoveIdentityCommand}" Margin="0,0,8,8" />
               </WrapPanel>
             </StackPanel>

@@ -45,8 +45,8 @@ exit criteria.
 | 1.2 | Application shell | Delivered | Existing; redesign in Phase 9 |
 | 2.1 | Connect an Azure identity | Delivered | Phase 2 live validation |
 | 2.2 | Connect multiple identities | Delivered | Phase 2 live validation |
-| 2.3 | Reauthentication | Partial | Phase 2 |
-| 2.4 | Disable and re-enable an identity | Not started | Phase 2 |
+| 2.3 | Reauthentication | Delivered | Phase 2 |
+| 2.4 | Disable and re-enable an identity | Delivered | Phase 2 |
 | 3.1 | Discover subscriptions | Delivered | Phase 6 permission completion |
 | 3.2 | Discover Key Vaults | Delivered basic path | Phase 6 permission completion |
 | 3.3 | Map access paths | Partial | Phase 6 |

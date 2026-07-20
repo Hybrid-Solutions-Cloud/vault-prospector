@@ -39,6 +39,34 @@ public sealed class MsalIdentityProvider(string cacheDirectory) : IIdentityProvi
             DateTimeOffset.UtcNow);
     }
 
+    public async Task<ConnectedIdentity> ReauthenticateAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
+    {
+        var application = await GetApplicationAsync(identity.ClientId);
+        var accounts = await application.GetAccountsAsync();
+        var account = accounts.FirstOrDefault(x => x.HomeAccountId.Identifier == identity.AccountIdentifier);
+
+        var builder = application.AcquireTokenInteractive(AzureAuthenticationScopes.InteractiveSignIn)
+            .WithExtraScopesToConsent(AzureAuthenticationScopes.AdditionalConsent)
+            .WithPrompt(Prompt.SelectAccount);
+
+        if (account != null)
+        {
+            builder = builder.WithAccount(account);
+        }
+        else if (!string.IsNullOrWhiteSpace(identity.UsernameHint))
+        {
+            builder = builder.WithLoginHint(identity.UsernameHint);
+        }
+
+        await builder.ExecuteAsync(cancellationToken);
+        
+        return identity with
+        {
+            AuthenticationState = AuthenticationState.Ready,
+            LastInteractiveAuthentication = DateTimeOffset.UtcNow
+        };
+    }
+
     public async Task RemoveAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

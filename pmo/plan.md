@@ -116,6 +116,8 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P1
 
+**Status:** Implemented
+
 **Backlog coverage:** Epic 2; remaining human-identity portions of Epic 9
 
 ### Scope

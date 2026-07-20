@@ -41,6 +41,31 @@ public sealed class IdentityService(IIdentityProvider provider, IMetadataReposit
         await provider.RemoveAsync(identity, cancellationToken);
         await repository.RemoveIdentityAsync(identityId, cancellationToken);
     }
+
+    public async Task DisableAsync(Guid identityId, CancellationToken cancellationToken)
+    {
+        var identity = await repository.GetIdentityAsync(identityId, cancellationToken);
+        if (identity is null) return;
+        var disabled = identity with { IsEnabled = false, AuthenticationState = AuthenticationState.Disabled };
+        await repository.UpsertIdentityAsync(disabled, cancellationToken);
+    }
+
+    public async Task EnableAsync(Guid identityId, CancellationToken cancellationToken)
+    {
+        var identity = await repository.GetIdentityAsync(identityId, cancellationToken);
+        if (identity is null) return;
+        var enabled = identity with { IsEnabled = true, AuthenticationState = AuthenticationState.Ready };
+        await repository.UpsertIdentityAsync(enabled, cancellationToken);
+    }
+
+    public async Task ReauthenticateAsync(Guid identityId, CancellationToken cancellationToken)
+    {
+        var identity = await repository.GetIdentityAsync(identityId, cancellationToken);
+        if (identity is null) return;
+        var refreshed = await provider.ReauthenticateAsync(identity, cancellationToken);
+        var updated = refreshed with { IsEnabled = true, AuthenticationState = AuthenticationState.Ready };
+        await repository.UpsertIdentityAsync(updated, cancellationToken);
+    }
 }
 
 public sealed class SynchronizationService(IVaultProvider provider, IMetadataRepository repository, IClock clock, IDiagnosticSink diagnostics)
@@ -60,6 +85,13 @@ public sealed class SynchronizationService(IVaultProvider provider, IMetadataRep
         catch (OperationCanceledException)
         {
             return new SyncRun(Guid.NewGuid(), identity.DisplayName, started, clock.UtcNow, SyncStatus.Cancelled, 0, 0, [], "User cancelled");
+        }
+        catch (Exception ex) when (ex.GetType().Name == "AuthenticationFailedException" || ex.GetType().Name == "MsalUiRequiredException")
+        {
+            diagnostics.WriteError("sync_auth_failed", ex, new Dictionary<string, object?> { ["identity_id"] = identity.Id });
+            var required = identity with { AuthenticationState = AuthenticationState.InteractionRequired };
+            await repository.UpsertIdentityAsync(required, cancellationToken);
+            return new SyncRun(Guid.NewGuid(), identity.DisplayName, started, clock.UtcNow, SyncStatus.Failed, 0, 0, [ex.Message], "Authentication required");
         }
         catch (Exception ex)
         {

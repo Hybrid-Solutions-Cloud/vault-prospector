@@ -7,6 +7,7 @@ public interface IClock { DateTimeOffset UtcNow { get; } }
 public interface IIdentityProvider
 {
     Task<ConnectedIdentity> SignInAsync(string clientId, string displayName, CancellationToken cancellationToken);
+    Task<ConnectedIdentity> ReauthenticateAsync(ConnectedIdentity identity, CancellationToken cancellationToken);
     Task RemoveAsync(ConnectedIdentity identity, CancellationToken cancellationToken);
 }
 
