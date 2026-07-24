@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus2"
+    },
+    "containerAppsEnvironmentId": {
+      "value": "/subscriptions/{{HCS_AZURE_SUBSCRIPTION_ID}}/resourceGroups/rg-hcs-gh-runners-eus2-01/providers/Microsoft.App/managedEnvironments/cae-hcs-gh-runners-eus2-01"
+    },
+    "githubPat": {
+      "reference": {
+        "keyVault": {
+          "id": "{{HCS_KEY_VAULT_ID}}"
+        },
+        "secretName": "hcs-platform-github-org-pat"
+      }
+    },
+    "maxRunners": {
+      "value": 3
+    }
+  }
+}

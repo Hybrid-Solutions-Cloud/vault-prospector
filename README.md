@@ -81,6 +81,7 @@ No local application can protect a deliberately revealed value from malware alre
 - [Browser integration and administrator policy](docs/browser-integration.md)
 - [CyberArk Privilege Cloud integration](docs/cyberark-integration.md)
 - [Mobile applications](docs/mobile-applications.md)
+- [CI build environments](docs/ci-build-environments.md)
 - [Preview feedback and GA promotion](docs/product/preview-feedback.md)
 - [Release and artifact verification](docs/release.md)
 - [Release operations and incident runbook](docs/release-operations-runbook.md)
