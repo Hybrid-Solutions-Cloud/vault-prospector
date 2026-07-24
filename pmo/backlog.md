@@ -31,7 +31,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | Notification-area/background operation | Implemented locally, unreleased | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power | Live tray/sleep/session-lock/network/token-expiry matrix and independent validation |
 | Password-manager UI research/redesign | In progress locally | Primary-source research, four interactive concepts, sixteen automated concept/task states, narrow-viewport and console validation | Participant usability sessions, concept selection, production implementation, accessibility validation |
 | Browser autofill/password-vault integration | Implemented locally, validation open | Toolbar-only Chromium/Firefox extension source, strict protocol, authenticated native host/broker, exact mappings, protected machine policy, desktop confirmation, fresh Windows verification, audit, MSI registration, tests | Signed extension distribution, independent review, live installed-browser/compromise/revocation/usability/AT evidence |
-| CyberArk source | Implemented locally, validation open | Privilege Cloud ADR/threat model, isolated provider and DPAPI credential store, SQLCipher metadata, verified retrieval, fail-closed local revoke/remove controls, explicit UI, automated tests | Governed live tenant, independent review, signed exact-artifact validation |
+| CyberArk source | Implemented and merged, validation open | Privilege Cloud ADR/threat model, isolated provider and DPAPI credential store, SQLCipher metadata, verified retrieval, fail-closed local revoke/remove controls, explicit UI, automated tests, exact-commit CI | Governed live tenant, independent review, signed exact-artifact validation |
 | iPhone/iOS and Android/Google apps | Not implemented | Roadmap and store/security requirements only | Mobile applications, platform secure storage, testing, signing, store submission |
 
 ## Story status and plan mapping
@@ -84,7 +84,7 @@ exit criteria.
 | 12.1 | Research password-manager interface patterns | In progress; research and 4 concepts complete | Phase 9 participant validation |
 | 13.1 | Browser extension and native messaging feasibility | Implemented locally, validation open | Phase 11 |
 | 13.2 | Browser password-vault interoperability | Research complete; private-store access prohibited | Phase 11 |
-| 14.1 | CyberArk source integration | Implemented locally, validation open | Phase 12 |
+| 14.1 | CyberArk source integration | Implemented and merged, validation open | Phase 12 |
 | 15.1 | Consent-based Preview feedback | Delivered as process | Phase 15 operation |
 | 15.2 | Evidence-based GA feedback gate | In progress | Phase 15 |
 

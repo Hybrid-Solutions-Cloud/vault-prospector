@@ -372,14 +372,11 @@
 
 ## Next actions
 
-1. Commit and push `feature/browser-origin-bound-fill` with the HCS-minted GitHub App token, open a
-   PR, require exact branch CI, deliberately self-review, and merge only after passing checks.
-2. Record the exact commit/PR/CI/merge evidence without marking signed, live-browser, independent,
-   participant, or exact-release gates complete.
-3. Continue Phase 12 with an explicit CyberArk product/API/authentication ADR and threat model
-   before adding provider credentials or network behavior.
-4. Continue remaining external GA work: signing, independent security review issue `#9`, live
-   Entra/MFA/Conditional Access/Windows Hello/browser testing, package-catalog ingestion,
+1. Synchronize the Phase 12 merge evidence without marking external gates complete.
+2. Execute Phase 13 mobile applications in the canonical plan, beginning with architecture,
+   threat models, shared contract boundaries, and platform toolchain/repository constraints.
+3. Continue remaining external GA work: signing, independent security review issue `#9`, live
+   Entra/MFA/Conditional Access/Windows Hello/browser/CyberArk testing, package-catalog ingestion,
    accessibility/usability evidence, and G-01 feedback.
 
 ## Preserved external scratch
@@ -389,10 +386,11 @@ quarantined pre-existing untracked source file with SHA-256
 `69AC58A44284A1D5B3947F81783288BE19B64C41ECECAC7538C874829849BBDC`; it is intentionally outside
 the repository and must not be committed.
 
-## Phase 12 CyberArk Privilege Cloud (local, unreleased) — 2026-07-24
+## Phase 12 CyberArk Privilege Cloud (merged, unreleased) — 2026-07-24
 
-- Active branch: `feature/cyberark-privilege-cloud`, based on Phase 11 merge
-  `f44929c`; Phase 11 PR `#10` and exact CI run `30066830924` passed.
+- PR `#11` merged exact head `31a4f3918cc92d529150bd8578047989c562497c` as
+  `6b9d5cd85ca453e561c34d966bfc47efc581b551`. Exact-commit CI run `30069509556`
+  passed `build-test` and `secret-scan`.
 - ADR-0015 selects CyberArk Privilege Cloud Shared Services with CyberArk Identity service-user
   authentication. Conjur, on-premises PVWA, custom domains, and interactive authentication are
   outside this first provider boundary.
@@ -421,16 +419,11 @@ the repository and must not be committed.
   to `D:\tmp\vault-prospector-phase12-artifacts-20260724`.
 - HCS `which_standards_apply("vault-prospector")` resolved standards by repository type, but
   `check_drift` still returned Path not found. Do not claim drift passed.
-- Remaining Phase 12 gates: exact-commit CI and merge, governed live Privilege Cloud matrix,
-  external service-user revoke/rotation drill, independent security review, representative
-  user/AT evidence, and exact signed release artifact validation.
+- Remaining Phase 12 gates: governed live Privilege Cloud matrix, external service-user
+  revoke/rotation drill, independent security review, representative user/AT evidence, and exact
+  signed release artifact validation.
 
 ## Immediate next actions
 
-1. Review/stage only the Phase 12 source, tests, docs, solution, and substantive lockfiles.
-2. Commit with a conventional message; no ADO reference exists because the HCS registry cannot
-   resolve an owning project/work item.
-3. Push with an HCS-minted GitHub App token, open a PR, require both checks, deliberately review,
-   and merge only after exact-commit CI passes.
-4. Record PR/commit/run/merge evidence, then continue Phase 13 without marking Phase 12 external
-   gates complete.
+1. Merge the Phase 12 evidence synchronization through passing CI.
+2. Begin Phase 13 architecture and implementation without marking Phase 12 external gates complete.

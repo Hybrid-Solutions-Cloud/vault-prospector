@@ -454,7 +454,7 @@ assistive-technology behavior remain required evidence.
 
 **Priority:** P2
 
-**Status:** Implemented locally; validation open
+**Status:** Implemented and merged; external validation open
 
 **Backlog coverage:** Epic 14
 
@@ -482,6 +482,8 @@ assistive-technology behavior remain required evidence.
   cross-profile rollback, verification, audit-failure disposal, and accessibility tests are present.
 - Governed live tenant, independent security review, and exact signed-artifact evidence remain
   required before the exit criteria pass.
+- PR #11 merged exact verified head `31a4f391` after CI run `30069509556` passed both required
+  jobs; this establishes source/CI evidence only and does not close the external gates.
 
 ## Phase 13 — iPhone/iOS and Android applications
 
