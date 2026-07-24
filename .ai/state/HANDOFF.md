@@ -628,3 +628,26 @@ the repository and must not be committed.
   `https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/21#issuecomment-5069245820`.
   This is an external infrastructure block, not a code-test result. Leave the PR unmerged until
   exact-head required checks execute and pass.
+
+## Readiness integration candidate — 2026-07-24
+
+- Branch `integration/readiness-candidate` combines PRs `#16`–`#21` on merged main
+  `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`.
+- Integration commit `1185747307c6f0ca6b916abfbfc29cb16b125d4b` fixes the performance-probe
+  .NET target/lock mismatch, updates the operational contract to .NET 10 LTS through 2028-11-14,
+  regenerates the exact 225-record legal inventory, validates packaged legal files in CI, and
+  prevents parallel TRX overwrite.
+- Exact local evidence passes: locked restore/format, 0-warning/error Release build, 370/370
+  desktop/shared tests, 44/44 managed mobile tests, Android arm64 Release production, Windows iOS
+  reference compilation, six browser tests/build, vulnerability scan, and 141-commit gitleaks.
+- Readiness checks pass: performance 8/8 at 50,000 objects, operations 35/35 with live endpoints,
+  legal/privacy source 25/25 and package 29/29, enterprise policy source 42/42 and package 44/44.
+- Disposable `0.1.0-ci.940` MSI SHA-256 is
+  `1E67B6267CA7A69EC6A529A185A9364512D968714F3AC323B1002F538D6C97AB`; ZIP SHA-256 is
+  `16B7168D6EC0E5D7E54DCC2D3B447F731B133CB067C626A28B50F90D96F77EFC`. Package smoke,
+  rollback schedule, shortcut/icon, browser host, MSI legal/policy payload, Chocolatey, and WinGet
+  validation pass.
+- Evidence: `docs/release-evidence/readiness-integration-candidate-2026-07-24.md`.
+- This remains local/disposable evidence. Hosted checks, trusted signing, clean-machine installed
+  lifecycle, live services/devices, independent and human approvals, stores, exercises, and
+  stability windows remain mandatory.
