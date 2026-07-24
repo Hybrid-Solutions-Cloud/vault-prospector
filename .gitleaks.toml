@@ -13,3 +13,9 @@ condition = "AND"
 commits = ['''41aa0c528a0f642b920e98712ccf4e01e0bd5434''']
 paths = ['''tests/VaultProspector\.Application\.Tests/ApplicationServiceTests\.cs''']
 regexes = ['''AA11BB22CC33DD44EE55FF660011223344556677''']
+
+[[allowlists]]
+description = "Reviewed Chromium extension public key that deterministically pins the extension ID; no private key material"
+condition = "AND"
+paths = ['''browser-extension/manifests/chromium\.json''']
+regexes = ['''MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxkz3FY0thmDPBVeHNi81pxOFeXuRBfrsMd1DpFZciqgWmJzfMP5w20xO2eJT8Ya8yc8U3qnXmitcsAueDP3SO1ICbEAXX6aPVIwYfveFQ3M9T5ldU9AA8aF\+Q3R2nb5Z3a4L/D8HRWBJvjLrKLuVLqMfdLF4UCuYq010nW/iVK1naFC9DpUC/ijaJnR46GKGE1xMA7h6M3zTUYHunx\+fIDXc5zoUkr8z7RQLJg8DwUu75n/9z60TbPvKa2dfvocfuPTAr6B6PejOUM4bSB\+\+r9cYWotI8TLop4yUwpj\+N5SCpyJCTVYxFvrD4PPeNFmLxW\+/dkKu6WQBLF3AVIA5jQIDAQAB''']
