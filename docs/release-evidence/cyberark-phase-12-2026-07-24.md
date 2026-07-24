@@ -52,7 +52,14 @@ independent-review, and exact signed-artifact gates remain open.
   `VaultProspector.Providers.CyberArk.dll`. This disposable local package is build evidence only,
   not a release candidate.
 
-Exact CI-run evidence remains required before merge.
+PR [#11](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/11) merged verified head
+`31a4f3918cc92d529150bd8578047989c562497c` as merge commit
+`6b9d5cd85ca453e561c34d966bfc47efc581b551`. Exact-commit CI run
+[`30069509556`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30069509556)
+passed both required jobs. It repeated full-history secret scanning, locked restore, format, build,
+342 tests, extension build/tests, PowerShell parsing, MSI/package validation, and vulnerable
+dependency inspection. The PR received a deliberate maintainer review before merge. CI did not
+publish a signed or release candidate, and this result does not close any gate below.
 
 ## Open release gates
 
