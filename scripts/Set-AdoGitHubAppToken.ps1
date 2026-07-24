@@ -33,11 +33,11 @@ function ConvertTo-Base64Url {
 
 $rsa = [System.Security.Cryptography.RSA]::Create()
 try {
-    $keyBytes = [Convert]::FromBase64String(
-        $PrivateKeyPem.
-            Replace('-----BEGIN RSA PRIVATE KEY-----', '').
-            Replace('-----END RSA PRIVATE KEY-----', '') -replace '\s', ''
-    )
+    $normalizedPrivateKey = $PrivateKeyPem.
+        Replace('-----BEGIN RSA PRIVATE KEY-----', '').
+        Replace('-----END RSA PRIVATE KEY-----', '')
+    $normalizedPrivateKey = $normalizedPrivateKey -replace '\s', ''
+    $keyBytes = [Convert]::FromBase64String($normalizedPrivateKey)
     $rsa.ImportRSAPrivateKey($keyBytes, [ref]$null)
 
     $header = ConvertTo-Base64Url -Bytes (
