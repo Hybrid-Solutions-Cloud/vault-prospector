@@ -21,6 +21,9 @@
   <ItemGroup>
     <ProjectReference Include="..\VaultProspector.Mobile\VaultProspector.Mobile.csproj" />
     <ProjectReference Include="..\VaultProspector.Mobile.Core\VaultProspector.Mobile.Core.csproj" />
+    <ProjectReference Include="..\VaultProspector.Mobile.iOS.CredentialProvider\VaultProspector.Mobile.iOS.CredentialProvider.csproj">
+      <IsAppExtension>true</IsAppExtension>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

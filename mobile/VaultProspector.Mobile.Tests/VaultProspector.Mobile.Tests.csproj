@@ -19,4 +19,22 @@
     <ProjectReference Include="..\VaultProspector.Mobile.Core\VaultProspector.Mobile.Core.csproj" />
     <ProjectReference Include="..\VaultProspector.Mobile\VaultProspector.Mobile.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\VaultProspector.Mobile.Android\Properties\AndroidManifest.xml"
+          Link="NativeContracts\AndroidManifest.xml"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\VaultProspector.Mobile.Android\Resources\xml\autofill_service.xml"
+          Link="NativeContracts\autofill_service.xml"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\VaultProspector.Mobile.iOS\Entitlements.plist"
+          Link="NativeContracts\iOS-App-Entitlements.plist"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\VaultProspector.Mobile.iOS.CredentialProvider\Entitlements.plist"
+          Link="NativeContracts\iOS-Extension-Entitlements.plist"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\VaultProspector.Mobile.iOS.CredentialProvider\Info.plist"
+          Link="NativeContracts\iOS-Extension-Info.plist"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

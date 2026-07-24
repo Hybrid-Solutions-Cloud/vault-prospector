@@ -7,5 +7,6 @@
   <Project Path="VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj">
     <Deploy />
   </Project>
+  <Project Path="VaultProspector.Mobile.iOS.CredentialProvider/VaultProspector.Mobile.iOS.CredentialProvider.csproj" />
   <Project Path="VaultProspector.Mobile.Tests/VaultProspector.Mobile.Tests.csproj" />
 </Solution>
