@@ -93,6 +93,16 @@ The exact MSI also passed all three existing deterministic guards:
 
 The disposable artifacts are unsigned local evidence and are not release candidates.
 
+## Hosted validation
+
+PR [#21](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/21) was opened using the
+HCS GitHub App installation identity. On initial exact head
+`930dc361de8999b4320900af5e50f1c88a2e2c4d`, CI run `30088899332` and Mobile CI run `30088899350`
+finished as failures, but none of their five jobs started a step. Every job annotation states that
+recent account payments failed or the organization spending limit must be increased. This is an
+external GitHub Actions infrastructure block and is not a passing or failing code-test result.
+The PR remains unmerged until exact-head checks execute and pass.
+
 ## Remaining G-06 gates
 
 G-06 remains **In progress**. Required evidence still includes:
