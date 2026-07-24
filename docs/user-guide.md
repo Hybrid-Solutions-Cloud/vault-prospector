@@ -2,7 +2,7 @@
 
 ## Install on Windows
 
-Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
+Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.1), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
 
 After this exact Preview is approved by the community repositories, Windows users can also install with:
 
@@ -36,7 +36,7 @@ Open **Identities**, optionally enter a friendly label, keep the recommended Vau
 
 If the tenant blocks the product registration or requires an administrator-controlled application, enable **Use my organization's own public-client registration** and enter its Application (client) ID. See [Authentication setup](authentication.md) for consent and registration requirements. Vault Prospector never asks for an Entra password or client secret.
 
-Development builds after `0.1.1-preview.1` also expose advanced workload profiles:
+`0.2.0-preview.1` also exposes advanced workload profiles:
 
 - **Managed identity** appears only when Vault Prospector detects an Azure host managed-identity
   endpoint or Azure Instance Metadata Service. A system-assigned identity needs no client ID; a
@@ -51,8 +51,9 @@ Development builds after `0.1.1-preview.1` also expose advanced workload profile
   content remains in the issuer-managed file.
 
 Workload profiles use separate Azure credential objects and never inherit Azure CLI, Azure
-PowerShell, IDE, terminal, or human MSAL token-cache context. These paths remain unreleased and
-require live Azure validation before they are supported.
+PowerShell, IDE, terminal, or human MSAL token-cache context. These paths are included for
+non-production Preview evaluation and still require the documented live Azure validation before
+production support.
 
 For a selected certificate or federated service principal, enter a replacement credential under
 **Rotate workload credential** and choose **Validate and rotate**. Azure token validation must
@@ -63,7 +64,7 @@ or managed-identity assignments at their external issuer.
 
 ## Discover and preview workload identities
 
-Development builds after `0.1.1-preview.1` include a read-only **Administration** tab:
+`0.2.0-preview.1` includes a read-only **Administration** tab:
 
 1. Select an enabled, ready interactive identity on **Identities**.
 2. Enter an exact subscription GUID and choose **List managed identities** to list user-assigned
@@ -133,7 +134,7 @@ The Workspaces tab also edits the selected workspace's offline-cache enablement,
 and clipboard permission. Save the workspace policy before using it. Windows verification cannot
 be disabled: it remains mandatory for reveal, copy, caching, and reopening an offline value.
 
-## Machine-managed policy (unreleased)
+## Machine-managed policy (Preview)
 
 Settings shows a read-only summary when an administrator manages Vault Prospector through HKLM
 policy. The policy can restrict Azure tenants, providers, identity types, clipboard use, and
@@ -180,9 +181,9 @@ It never calls secret-value
 retrieval, clipboard, or offline-cache operations. Azure interaction-required or network failures
 remain visible as status and do not unlock foreground access.
 
-## Browser fill (unreleased)
+## Browser fill (Preview)
 
-The source build includes an unreleased Browser tab for exact, one-time fills. A local mapping is
+The current Preview includes a Browser tab for exact, one-time fills. A local mapping is
 not enough: an administrator must also enable the same HTTPS destination, browser family, and field
 purpose in protected machine policy. Each request displays its destination, purpose, secret, vault,
 and identity in the desktop app and requires **Verify and fill once** plus fresh Windows
@@ -192,9 +193,9 @@ Vault Prospector never scans saved browser passwords and does not fill in the ba
 [Browser integration](browser-integration.md) for setup, policy format, limitations, and release
 status.
 
-## CyberArk Privilege Cloud (unreleased)
+## CyberArk Privilege Cloud (Preview)
 
-The source build includes a separate **CyberArk** destination for Privilege Cloud Shared Services.
+The current Preview includes a separate **CyberArk** destination for Privilege Cloud Shared Services.
 Create or select a profile, enter its Identity and Privilege Cloud root URLs, service user,
 authorization application, and client credential, then choose **Validate and protect credential**.
 The credential is validated before it replaces an existing credential and is stored in a

@@ -230,14 +230,52 @@
 - Branch: `main`; direct pushes are the operator-approved workflow.
 - Public release: `v0.1.0-preview.2` is **withdrawn** and retained only for immutable evidence and
   existing-install repair/uninstall. Do not install, resubmit, or reuse its artifacts.
-- Current public Preview: unsigned non-production `v0.1.1-preview.1` at
-  `https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1`.
-  CI.68 is superseded; Preview.2 remains withdrawn.
+- Current public Preview: unsigned non-production `v0.2.0-preview.1` at
+  `https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.1`.
+  It supersedes `v0.1.1-preview.1`; Preview.2 remains withdrawn.
 - Authoritative gate matrix: `docs/product/release-readiness.md`.
-- Decision: `0.1.1-preview.1` is GO and published for non-production evaluation. GA remains blocked
+- Decision: `0.2.0-preview.1` is GO and published for non-production evaluation. GA remains blocked
   by the documented open readiness gates.
 - Repository writes must use an HCS governance-minted GitHub App installation token for
   `Hybrid-Solutions-Cloud`; never use a personal token.
+
+## Release delivery completed on 2026-07-24
+
+- PR `#22` merged as `c7c8cb3191e392901f1dc0c8271ab62a0947e758`.
+- Exact `main` ADO CI build `284` passed Windows build/package and 370 tests, full-history secret
+  scan, native iOS application plus credential-provider extension, and 44 managed mobile tests plus
+  Android Release App Bundle.
+- Immutable tag `v0.2.0-preview.1` points to that exact merge commit.
+- ADO release build `287` passed tag/version, locked build/test, packaging, SBOM, and Key
+  Vault-backed Cosign sign/verify stages. The final publication helper failed on an invalid
+  `Convert.FromBase64String` overload; retained artifact `release-0.2.0-preview.1` was complete.
+- The retained artifact was published as a one-time recovery through the HCS GitHub App boundary.
+  The public prerelease has exactly 13 assets, and a credential-free check matched every public
+  size and GitHub SHA-256 digest to the ADO artifact.
+- Public package hashes are MSI
+  `DC15AF609EE6D55933551D24339DB914060E9616D40604D2AD9F10E7625EA4F2`, ZIP
+  `0C4017FC532704E5D3B86339A202C2A31E00D166972546216B5539A82F8F66F8`, NUPKG
+  `D2C1A22C3CA13083B1C68D06D36D816326BC9505F90DD4BA9975499D61D584F9`, and WinGet archive
+  `00EF9ED0DA0E56C9FB8FF43F9529A10FEDC13F335CC2899805520D41418F1DA2`.
+- Corrective PR `#24` fixes private-key normalization in `Set-AdoGitHubAppToken.ps1`; a real HCS
+  GitHub App token-mint smoke test passed, ADO PR build `288` passed all four jobs, and the PR
+  merged as `ea1bbdccf96811acdd86d2a8f39893b488f91324`. Exact-merge `main` build `290` passed all
+  four jobs.
+- The exact public MSI passed all 27 installer lifecycle gates on isolated Windows 11 Enterprise
+  Evaluation 25H2 from `2026-07-24T21:03:59Z` through `21:05:23Z`. The run covered `0.1.1` install,
+  deliberate failed-upgrade rollback, `0.2.0` upgrade, repair, downgrade rejection, uninstall, and
+  retained state. The checkpoint was restored and removed; final state is VM off, zero
+  registrations, no test root, and Guest Service disabled.
+- WinGet PR `microsoft/winget-pkgs#407541` is open and mergeable with CLA passed; acceptance is
+  external and pending.
+- Two exact Chocolatey submissions returned HTTP 504 and catalog lookup remains empty. Do not
+  claim ingestion or catalog availability.
+- The exact tag-guarded cleanup script deleted ephemeral resource group
+  `rg-hcs-vp-winbuild-eus2-01`. Its two temporary Key Vault credentials were soft-deleted and
+  remain recoverable under Key Vault retention policy.
+- GA remains open for trusted Authenticode, independent security/legal, governed live Azure and
+  CyberArk, representative accessibility/usability, physical-device/mobile store, operational
+  exercise, and stability-window evidence.
 
 ## Validation completed on 2026-07-17
 

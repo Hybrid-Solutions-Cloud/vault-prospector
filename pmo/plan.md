@@ -36,21 +36,23 @@ Status terms used in PMO reporting:
 
 ## Current product state
 
-- Current public version: `0.1.1-preview.1`, unsigned and restricted to non-production evaluation.
+- Current public version: `0.2.0-preview.1`, unsigned and restricted to non-production evaluation.
 - Core implemented path: interactive Entra sign-in, multiple app-owned MSAL identities,
   subscription and Key Vault discovery, secret/key/certificate metadata indexing, search, explicit
   value retrieval, verified copy, encrypted optional offline access, workspaces, and read-only Azure
   behavior.
-- Current installer follow-up: the Start-menu shortcut icon correction is implemented locally but
-  remains unreleased.
-- Major local in-flight work: workload profiles, read-only identity discovery/provisioning
-  previews, permission-aware discovery, workspace/reconciliation completion, recovery-archive
-  retention, notification-area operation, and four desktop concepts. Each still requires its
-  phase-specific live, independent, usability, accessibility, and release evidence.
-- Major unimplemented product work: governed Azure mutations, the selected production desktop
-  redesign, and mobile applications. Browser and CyberArk implementations are locally complete
-  but remain unreleased while their live, usability, accessibility, and independent-review gates
-  are open.
+- Current installer state: the exact public MSI passed all 27 Windows lifecycle gates, including
+  upgrade from `0.1.1-preview.1`, failed-upgrade rollback, repair, downgrade rejection, uninstall,
+  and retained state.
+- The 0.2 Preview includes workload profiles, read-only identity discovery/provisioning previews,
+  permission-aware discovery, workspace/reconciliation completion, recovery-archive retention,
+  notification-area operation, enterprise policy, browser/CyberArk validation paths, and four
+  desktop concepts. Their named live, independent, usability, accessibility, and GA evidence
+  remains open.
+- Major unimplemented product work: governed Azure mutations and the selected production desktop
+  redesign. Mobile source/prototypes are implemented but are not distributed; browser and CyberArk
+  are included as non-production Preview paths while live, usability, accessibility,
+  physical-device/store, and independent-review gates remain open.
 - Major GA work: signing, independent security review, complete live identity/accessibility test
   matrices, public package catalogs, feedback thresholds, and stability evidence.
 
@@ -99,7 +101,7 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P0
 
-**Status:** Implemented on `main`; public Preview refresh and exact-artifact validation remain open
+**Status:** Delivered in `0.2.0-preview.1`; exact public MSI lifecycle passed 27/27
 
 ### Scope
 
@@ -120,7 +122,7 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P1
 
-**Status:** Implemented on `main`; CI repair is local and uncommitted, and public release remains open
+**Status:** Included in `0.2.0-preview.1`; live multi-tenant validation remains open
 
 **Backlog coverage:** Epic 2; remaining human-identity portions of Epic 9
 
@@ -144,10 +146,10 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P1
 
-**Status:** In progress locally; the guided first-run unlock/identity workflow, recovery,
+**Status:** Included in `0.2.0-preview.1`; the guided first-run unlock/identity workflow, recovery,
 schema-v4 behavior, and an internal crash-recoverable all-or-rollback key-rotation engine plus
 verified recovery-archive retention UX are implemented and automated tests pass, but rotation is
-not user-exposed, released, live-validated, or independently reviewed
+not user-exposed, live-validated, or independently reviewed
 
 **Backlog coverage:** Secure first-run wizard; mandatory encryption; schema upgrade validation
 
@@ -191,8 +193,8 @@ exact-release evidence remain open.
 
 **Status:** Certificate and federated service-principal plus detected-host managed-identity
 profiles, validate-before-persist rotation, local revocation, fail-closed use, and machine-managed
-provider/identity-type/tenant boundaries are implemented locally with automated validation;
-release, independent review, and live Azure/administrator evidence remain open
+provider/identity-type/tenant boundaries are included in `0.2.0-preview.1` with automated
+validation; independent review and live Azure/administrator evidence remain open
 
 **Backlog coverage:** Human and workload identity choices
 
@@ -220,8 +222,8 @@ release, independent review, and live Azure/administrator evidence remain open
 **Priority:** P1
 
 **Status:** Explicit-account identity discovery, fail-closed effective authorization evidence, and
-user-reachable deterministic non-mutating plans are implemented locally; governed execution,
-release, independent review, and live evidence remain open
+user-reachable deterministic non-mutating plans are included in `0.2.0-preview.1`; governed
+execution, independent review, and live evidence remain open
 
 **Backlog coverage:** Discover and provision workload identities
 
@@ -258,8 +260,8 @@ and zero build warnings/errors; see
 
 **Priority:** P1
 
-**Status:** Implemented locally for explicit subscription/vault scope, observed permission display,
-and machine-managed tenant filtering before and after discovery; unreleased, live Azure,
+**Status:** Included in `0.2.0-preview.1` for explicit subscription/vault scope, observed
+permission display, and machine-managed tenant filtering before and after discovery; live Azure,
 administrator-deployment, and independent validation remain open
 
 **Backlog coverage:** Epic 3; discover vaults by selected access path; read-only policy UI
@@ -302,8 +304,8 @@ exact signed-candidate validation remain open.
 
 **Priority:** P1
 
-**Status:** Implemented locally for reconciliation, complete workspace assignment, per-workspace
-policy, and schema v4 migration; unreleased and final lifecycle validation remains open
+**Status:** Included in `0.2.0-preview.1` for reconciliation, complete workspace assignment,
+per-workspace policy, and schema v4 migration; independent lifecycle validation remains open
 
 **Backlog coverage:** Reconcile removed objects; complete workspace assignment; remaining schema work
 
@@ -393,9 +395,8 @@ redesign.
 
 **Priority:** P2
 
-**Status:** Implemented locally for explicit close behavior, notification-area lifecycle, immediate
-foreground lock, and opt-in metadata-only sync; unreleased and live lifecycle validation remains
-open
+**Status:** Included in `0.2.0-preview.1` for explicit close behavior, notification-area lifecycle,
+immediate foreground lock, and opt-in metadata-only sync; live lifecycle validation remains open
 
 **Backlog coverage:** Epic 11
 
@@ -430,7 +431,7 @@ assistive-technology behavior remain required evidence.
 
 **Priority:** P2
 
-**Status:** In progress locally
+**Status:** Included in `0.2.0-preview.1`; live browser, distribution, and independent validation open
 
 **Backlog coverage:** Epic 13
 
@@ -543,12 +544,12 @@ external platform/store gates open
 - Maintain SBOM, checksums, Sigstore bundles, provenance, release notes, rollback, and vulnerability
   response for every release.
 
-Toolchain progress note (2026-07-24): the desktop solution, tests, lock files, CI, release workflow,
-self-contained application, MSI, ZIP, WinGet manifests, and Chocolatey package are migrated locally
-from .NET 9 to .NET 10 LTS. The locked 343-test Release gate, self-contained startup, rollback-safe
-MSI inspection, shortcut/icon and browser-host/policy inspection, and WinGet validation pass.
-Exact-head hosted CI, clean-machine installed lifecycle, trusted signing, and public-candidate
-repetition remain open.
+Toolchain progress note (2026-07-24): the desktop solution, tests, lock files, ADO CI/release
+workflows, self-contained application, MSI, ZIP, WinGet manifests, and Chocolatey package are on
+.NET 10 LTS. Exact `main` ADO build 284 passed 370 Windows/shared tests, 44 mobile tests, native iOS,
+Android packaging, and all integrated gates. Release build 287 produced and Key Vault-signed the
+public candidate; the exact public MSI then passed all 27 clean Windows lifecycle gates. Trusted
+Authenticode, independent/live validation, and catalog acceptance remain open.
 
 Progress note (2026-07-24): G-09 source controls now generate a deterministic 225-record integrated
 NuGet/npm inventory and third-party notice, fail CI on lock-file or disclosure drift, document
@@ -568,9 +569,9 @@ declaration review, and named human approval are external decision gates.
 
 **Priority:** GA
 
-**Status:** In progress; operational automation and lifecycle policy are implemented locally,
-while hosted history, backup ownership, exercises, evaluator thresholds, and stability evidence
-remain open
+**Status:** In progress; operational automation and lifecycle policy are included in
+`0.2.0-preview.1`, while retained hosted history, backup ownership, exercises, evaluator
+thresholds, and stability evidence remain open
 
 **Backlog coverage:** Epic 15
 
@@ -598,7 +599,7 @@ remain open
 
 Progress note (2026-07-24): a machine-readable operational-readiness contract, fail-closed
 PowerShell validator, weekly Dependabot coverage, scheduled vulnerability/runtime/public-endpoint
-monitor, and support/EOS policy are implemented. The integrated contract now passes all 35 checks
+monitor, and support/EOS policy are implemented. The integrated contract now passes all 34 checks
 with both desktop and mobile pinned to .NET 10 LTS and its recorded 2028-11-14 support date. The
 earlier local baseline also passed all three public endpoints. G-08 remains In progress pending a
 backup operator, retained hosted runs, the complete exercise, and Authenticode lifecycle approval.

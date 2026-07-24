@@ -2,10 +2,10 @@
 
 ## Current delivery state
 
-`0.1.1-preview.1` is the current public, unsigned Windows Preview for non-production evaluation.
-The installed Start-menu/Search icon fix and Phases 3–13 implementation are complete or in progress
-locally but
-remain unreleased and subject to the validation gates recorded below.
+`0.2.0-preview.1` is the current public, unsigned Windows Preview for non-production evaluation.
+The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
+in `0.2.0-preview.1` and remain subject to the live, independent, signing, store, and GA validation
+gates recorded below.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).
@@ -19,18 +19,18 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | --- | --- | --- | --- |
 | Normal Windows installer and update path | Implemented | MSI, portable ZIP, immutable GitHub Preview releases, upgrade/repair/uninstall/rollback validation | Trusted signing, WinGet catalog acceptance, Chocolatey catalog acceptance |
 | Interactive Entra user login | Implemented | MSAL public-client system-browser authentication with app-owned token caches | Full live tenant/guest/MFA/Conditional Access evidence |
-| Local login/unlock and MFA boundary | Implemented locally, unreleased | Fail-closed app unlock and sensitive operations use Windows verification; recovery archives failed state after typed confirmation and fresh verification | Full live Windows Hello/recovery coverage and independent review |
+| Local login/unlock and MFA boundary | Included in 0.2 Preview; validation open | Fail-closed app unlock and sensitive operations use Windows verification; recovery archives failed state after typed confirmation and fresh verification | Full live Windows Hello/recovery coverage and independent review |
 | Mandatory local encryption | Implemented locally, review open | SQLCipher metadata and AES-GCM offline values with DPAPI keys; verified archive plus authenticated-journal all-or-rollback rotation engine; startup recovery; explicit verified per-archive retention/deletion UX; no plaintext toggle | User-exposed rotation only after independent review, live power-loss validation, supported cross-device decision remains resync |
 | Isolation from Azure CLI/PowerShell terminal context | Implemented | App-owned MSAL accounts and caches; no terminal-context credential provider | Broader live multi-account validation and clearer active identity/tenant UI |
-| Managed-identity authentication | Implemented locally, unreleased | Azure-host detection, profile UI, isolated credential flow, ARM-token validation, local disable/revoke controls, automated tests | Live Azure matrix, external assignment-revocation evidence, independent review |
-| Service-principal authentication | Implemented locally, unreleased | Certificate and federated-token-file profiles, private-key/token isolation, validate-first rotation, local revocation/cache purge, redacted lifecycle events, automated tests | Live Azure matrix, external issuer-revocation evidence, independent review |
-| List existing managed identities/SPNs | Implemented locally, unreleased | Exact-subscription managed-identity and explicit-consent Graph service-principal discovery, user workflow, bounded pagination, honest permission distinctions | Effective inherited/deny/conditional RBAC analysis, live validation, independent review |
+| Managed-identity authentication | Included in 0.2 Preview; validation open | Azure-host detection, profile UI, isolated credential flow, ARM-token validation, local disable/revoke controls, automated tests | Live Azure matrix, external assignment-revocation evidence, independent review |
+| Service-principal authentication | Included in 0.2 Preview; validation open | Certificate and federated-token-file profiles, private-key/token isolation, validate-first rotation, local revocation/cache purge, redacted lifecycle events, automated tests | Live Azure matrix, external issuer-revocation evidence, independent review |
+| List existing managed identities/SPNs | Included in 0.2 Preview; validation open | Exact-subscription managed-identity and explicit-consent Graph service-principal discovery, user workflow, bounded pagination, honest permission distinctions | Effective inherited/deny/conditional RBAC analysis, live validation, independent review |
 | Create a managed identity/SPN during setup | Preview implemented locally | User-reachable deterministic non-mutating managed-identity and service-principal plans with exact optional Key Vault/role scope; no execution command | Security gate, fresh write authorization, confirmation, encrypted audit, rollback, governed creation/live tests |
-| Discover accessible Key Vaults | Implemented locally, unreleased | Selected identity enumerates visible resources; explicit subscription/vault scope and per-vault observed permission display are user-accessible | Live human/workload Azure permission matrix and independent validation |
+| Discover accessible Key Vaults | Included in 0.2 Preview; validation open | Selected identity enumerates visible resources; explicit subscription/vault scope and per-vault observed permission display are user-accessible | Live human/workload Azure permission matrix and independent validation |
 | Machine-managed enterprise access policy | Implemented locally, validation open | HKLM/ADMX policy for allowed tenants, providers, and identity types plus clipboard/offline-cache boundaries; service-layer enforcement, safe Settings status, package templates, and automated fail-closed tests | Governed Group Policy/Intune deployment, live Azure/CyberArk administrator matrix, diagnostics review, independent review, exact signed artifact |
 | Read-only default | Implemented | No Key Vault mutation or Azure role-assignment operations exist; UI states observed list access, unprobed value read, and policy-disabled writes | Independent policy/security validation |
 | Optional governed write mode | Not implemented | Requirements only | All mutation commands, policy/verification/authorization/audit controls |
-| Notification-area/background operation | Implemented locally, unreleased | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power | Live tray/sleep/session-lock/network/token-expiry matrix and independent validation |
+| Notification-area/background operation | Included in 0.2 Preview; validation open | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power | Live tray/sleep/session-lock/network/token-expiry matrix and independent validation |
 | Password-manager UI research/redesign | In progress locally | Primary-source research, four interactive concepts, sixteen automated concept/task states, narrow-viewport and console validation | Participant usability sessions, concept selection, production implementation, accessibility validation |
 | Browser autofill/password-vault integration | Implemented locally, validation open | Toolbar-only Chromium/Firefox extension source, strict protocol, authenticated native host/broker, exact mappings, protected machine policy, desktop confirmation, fresh Windows verification, audit, MSI registration, tests | Signed extension distribution, independent review, live installed-browser/compromise/revocation/usability/AT evidence |
 | CyberArk source | Implemented and merged, validation open | Privilege Cloud ADR/threat model, isolated provider and DPAPI credential store, SQLCipher metadata, verified retrieval, fail-closed local revoke/remove controls, explicit UI, automated tests, exact-commit CI | Governed live tenant, independent review, signed exact-artifact validation |
@@ -48,12 +48,12 @@ exit criteria.
 | 1.2 | Application shell | Delivered | Existing; redesign in Phase 9 |
 | 2.1 | Connect an Azure identity | Delivered | Phase 2 live validation |
 | 2.2 | Connect multiple identities | Delivered | Phase 2 live validation |
-| 2.3 | Reauthentication | Implemented, unreleased | Phase 2 |
-| 2.4 | Disable and re-enable an identity | Implemented, unreleased | Phase 2 |
+| 2.3 | Reauthentication | Included in 0.2 Preview; validation open | Phase 2 |
+| 2.4 | Disable and re-enable an identity | Included in 0.2 Preview; validation open | Phase 2 |
 | 3.1 | Discover subscriptions | Delivered | Phase 6 permission completion |
 | 3.2 | Discover Key Vaults | Delivered basic path | Phase 6 permission completion |
-| 3.3 | Map access paths | Implemented locally, unreleased | Phase 6 validation |
-| 3.4 | Configure discovery inclusion | Implemented locally, unreleased | Phase 6 validation |
+| 3.3 | Map access paths | Included in 0.2 Preview; validation open | Phase 6 validation |
+| 3.4 | Configure discovery inclusion | Included in 0.2 Preview; validation open | Phase 6 validation |
 | 4.1 | Index secret metadata | Delivered | Phase 7 lifecycle completion |
 | 4.2 | Search by name | Delivered | Phase 9 usability validation |
 | 4.3 | Filter search | Delivered | Phase 9 usability validation |
@@ -69,7 +69,7 @@ exit criteria.
 | 7.3 | Dependency scanning | Delivered | Phase 14 continuous operation |
 | 7.4 | Schema upgrade validation | In progress locally | Phases 3 and 7 |
 | 7.5 | Authenticode signing | Blocked externally | Phase 14 |
-| 7.6 | Complete workspace resource assignment | Implemented locally, unreleased | Phase 7 validation |
+| 7.6 | Complete workspace resource assignment | Included in 0.2 Preview; validation open | Phase 7 validation |
 | 8.1 | Apple platform security validation | Implemented and merged; live/independent validation open | Phase 13 |
 | 8.2 | iPhone/iOS application and App Store release | Implemented and merged; signing/store gates open | Phase 13 |
 | 8.3 | Android application and Google Play release | Implemented and merged; signing/store gates open | Phase 13 |
@@ -80,10 +80,10 @@ exit criteria.
 | 9.4 | Human and workload identity choices | In progress locally | Phase 4 |
 | 9.5 | Discover and provision workload identities | Discovery prototype locally | Phase 5 |
 | 9.6 | Enforce machine-managed enterprise access policy | Implemented locally, validation open | Phases 4, 6, and 14 |
-| 10.1 | Discover vaults by selected access path | Implemented locally, unreleased | Phase 6 validation |
+| 10.1 | Discover vaults by selected access path | Included in 0.2 Preview; validation open | Phase 6 validation |
 | 10.2 | Read-only by default | Delivered | Phases 6 and 14 validation |
 | 10.3 | Explicit write mode | Not started | Phase 8 |
-| 11.1 | Continue securely in the notification area | Implemented locally, unreleased | Phase 10 validation |
+| 11.1 | Continue securely in the notification area | Included in 0.2 Preview; validation open | Phase 10 validation |
 | 12.1 | Research password-manager interface patterns | In progress; research and 4 concepts complete | Phase 9 participant validation |
 | 13.1 | Browser extension and native messaging feasibility | Implemented locally, validation open | Phase 11 |
 | 13.2 | Browser password-vault interoperability | Research complete; private-store access prohibited | Phase 11 |
@@ -175,7 +175,7 @@ Acceptance criteria:
 
 Source evidence: `VaultProspector.sln`, `src/VaultProspector.App/VaultProspector.App.csproj`
 
-Implementation status: Delivered in `0.1.1-preview.1`. The unreleased desktop source, tests,
+Implementation status: Delivered in `0.1.1-preview.1` and refreshed in `0.2.0-preview.1`. The desktop source, tests,
 locked dependency graphs, ADO CI/release workflows, and self-contained packaging are migrated to
 .NET 10 LTS. Exact PR validation ADO build `281` passes Windows, secret scan, Android, and native iOS;
 merge-commit, clean-machine, signed-artifact, and supported-platform validation remain open in
@@ -263,7 +263,7 @@ Source evidence: `src/VaultProspector.Providers.Azure/AzureVaultProvider.cs`
 
 Implementation status: Basic discovery is delivered in `0.1.1-preview.1`. Explicit per-identity
 subscription inclusion is implemented locally, persisted, user-accessible, and respected before
-subsequent synchronization; it remains unreleased and needs live validation.
+subsequent synchronization; it is included in `0.2.0-preview.1` and needs live validation.
 
 ### Story: Discover Key Vaults
 
@@ -287,7 +287,7 @@ Acceptance criteria:
 
 Source evidence: `src/VaultProspector.Providers.Azure/AzureVaultProvider.cs`
 
-Implementation status: Implemented locally and unreleased. The UI displays each vault's selected
+Implementation status: Included in `0.2.0-preview.1`; validation remains open. The UI displays each vault's selected
 identity, tenant, subscription, observed metadata-list permissions, explicit value-read
 non-probing, and policy-disabled write state.
 
@@ -299,7 +299,7 @@ Acceptance criteria:
 - Configuration allows explicit include/exclude rules for subscriptions and vaults.
 - Sync engine respects these inclusion scopes.
 
-Implementation status: Implemented locally and unreleased for both subscription and vault rules.
+Implementation status: Included in `0.2.0-preview.1`; validation remains open for both subscription and vault rules.
 Rules are persisted per identity/access path and applied before provider metadata enumeration.
 Excluded scope records are retained so the user can reverse a choice.
 
@@ -503,7 +503,7 @@ Acceptance criteria:
 - Workspaces support direct assignment of tenants and subscriptions.
 - Each workspace allows editable, separate cache policies.
 
-Implementation status: Implemented locally and unreleased. Identity, tenant, subscription, and
+Implementation status: Included in `0.2.0-preview.1`; validation remains open. Identity, tenant, subscription, and
 vault links are user-accessible. Each workspace has an editable encrypted-cache enablement,
 maximum lifetime, and clipboard policy; Windows verification remains mandatory. Workspace
 deletion removes its links transactionally and purges workspace-scoped offline values through the
@@ -593,7 +593,7 @@ Acceptance criteria:
 - An organization's external identity provider is supported through its Microsoft Entra federation; direct support for another provider requires a separate connector and threat model.
 - Setup fails closed if protected key storage or mandatory metadata encryption is unavailable.
 
-Implementation status (2026-07-23): implemented locally and unreleased. Product-registration
+Implementation status (2026-07-24): included in `0.2.0-preview.1`; validation remains open. Product-registration
 sign-in, custom-registration fallback, extra Key Vault consent, legacy client-ID settings
 migration, and redacted recovery messages are implemented. After local verification, a first run
 opens directly to a three-step Identities workflow that distinguishes local unlock from Microsoft
@@ -701,7 +701,7 @@ Acceptance criteria:
 
 Source evidence: `src/VaultProspector.Providers.Azure/AzureVaultProvider.cs`
 
-Implementation status: Implemented locally and unreleased for human and configured workload
+Implementation status: Included in `0.2.0-preview.1`; validation remains open for human and configured workload
 profiles. The UI separates management visibility from observed secret/key/certificate metadata
 listing, never probes values during discovery, and states that writes are disabled. Live Azure
 permission matrices and independent validation remain open.
@@ -749,7 +749,7 @@ Acceptance criteria:
 - Background mode locks revealed values, clears sensitive UI state, and cannot reveal, copy, or cache a secret without foreground user verification.
 - Exit actually terminates the process and clears temporary sensitive state.
 
-Implementation status: Implemented locally and unreleased. Close behavior is explicitly Ask, Exit,
+Implementation status: Included in `0.2.0-preview.1`; validation remains open. Close behavior is explicitly Ask, Exit,
 or Lock to notification area. Backgrounding cancels active work, invalidates sensitive
 presentation, masks values, locks foreground access, and hides the taskbar entry. The tray exposes
 state plus Show/Exit. Opt-in background work invokes metadata discovery only while hidden and
@@ -878,7 +878,7 @@ Acceptance criteria:
   exercised against the exact candidate.
 
 Implementation status (2026-07-24): source policy and automation are implemented locally. The
-integrated validator passes all 35 contract checks with desktop and mobile pinned to .NET 10 LTS
+integrated validator passes all 34 contract checks with desktop and mobile pinned to .NET 10 LTS
 and its recorded 2028-11-14 support date. A named backup operator, successful hosted-monitor
 history, complete runbook exercise, Authenticode lifecycle approval, and exact-candidate review
 remain open.

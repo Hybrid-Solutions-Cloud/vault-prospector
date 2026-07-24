@@ -4,6 +4,10 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+No changes recorded after `0.2.0-preview.1`.
+
+## [0.2.0-preview.1] - 2026-07-24
+
 ### Added
 
 - Add an operational-readiness contract and validator, weekly dependency update coverage, scheduled
@@ -32,14 +36,14 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Add explicit identity-scoped offline-value purge, including historical removed access paths.
 - Add comparative desktop UI research and four interactive setup/search/reveal/settings concepts;
   production selection remains gated on representative-user and assistive-technology evidence.
-- Add an unreleased Chromium/Firefox browser-fill implementation with toolbar-only activation,
+- Add a Preview Chromium/Firefox browser-fill implementation with toolbar-only activation,
   exact origin/frame/purpose mappings, authenticated native messaging, protected fail-closed
   machine policy, one-time desktop confirmation, fresh Windows verification, and value-free audit.
-- Add an unreleased CyberArk Privilege Cloud provider with explicit service-user profiles, safes,
+- Add a Preview CyberArk Privilege Cloud provider with explicit service-user profiles, safes,
   accounts, versions, direct safe-member evidence, SQLCipher schema v6 metadata, DPAPI-isolated
   credentials, bounded metadata sync, fresh-verified reveal/copy, fail-closed local revocation,
   explicit removal, and value-free audit.
-- Add unreleased iOS and Android applications with a shared fail-closed search/retrieval workflow,
+- Add iOS and Android source prototypes with a shared fail-closed search/retrieval workflow,
   platform-native protected storage and verification hosts, lifecycle/clipboard/capture controls,
   locked builds, and package-disabled native autofill feasibility extensions.
 - Add a CI-enforced 50,000-object performance probe covering encrypted initialization/reopen,
@@ -47,7 +51,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Add a deterministic NuGet/npm component inventory and generated third-party notice, legal/privacy
   CI drift checks, package/store metadata and open-review records, and product license, privacy,
   and notice files in Windows distributable payloads.
-- Add unreleased versioned HKLM enterprise policy with packaged ADMX/ADML templates, allowed
+- Add Preview versioned HKLM enterprise policy with packaged ADMX/ADML templates, allowed
   tenant/provider/identity-type controls, clipboard and offline-cache restrictions, service-layer
   enforcement, safe Settings status, and deterministic fail-closed package validation.
 
@@ -146,6 +150,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.2.0-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.1
 [0.1.1-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1
 [0.1.0-preview.2]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases/tag/v0.1.0-preview.2
 [0.1.0-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases/tag/v0.1.0-preview.1
