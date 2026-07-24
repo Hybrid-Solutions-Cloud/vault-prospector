@@ -47,6 +47,159 @@ public sealed class EncryptedPersistenceTests : IDisposable
     }
 
     [Fact]
+    public async Task BrowserMappingsRemainIdentityBoundAndAuditSurvivesMappingRemoval()
+    {
+        var path = Path.Combine(_directory, "browser-mappings.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = TestIdentity("browser-mapping-account");
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        var tenant = new TenantAccess(
+            Guid.NewGuid(),
+            identity.Id,
+            "tenant",
+            "Tenant",
+            "Home",
+            _clock.UtcNow,
+            "Available");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            tenant.Id,
+            "subscription",
+            "Subscription",
+            "Enabled",
+            true,
+            _clock.UtcNow);
+        var vault = new VaultResource(
+            Guid.NewGuid(),
+            "/resource/browser-vault",
+            "browser-vault",
+            "tenant",
+            "subscription",
+            "rg",
+            "eastus",
+            new Dictionary<string, string>(),
+            new Uri("https://browser-vault.vault.azure.net/"),
+            _clock.UtcNow);
+        var access = new VaultAccess(
+            Guid.NewGuid(),
+            vault.Id,
+            identity.Id,
+            "tenant",
+            "Ready",
+            _clock.UtcNow,
+            null,
+            0);
+        var item = new VaultItem(
+            Guid.NewGuid(),
+            vault.Id,
+            "browser-password",
+            VaultObjectType.Secret,
+            true,
+            new Dictionary<string, string>(),
+            "text/plain",
+            _clock.UtcNow,
+            _clock.UtcNow,
+            null,
+            "v1",
+            "fingerprint",
+            _clock.UtcNow);
+        await repository.ApplyDiscoveryAsync(
+            identity.Id,
+            new DiscoverySnapshot([tenant], [subscription], [vault], [access], [item], []),
+            new SyncRun(
+                Guid.NewGuid(),
+                "test",
+                _clock.UtcNow,
+                _clock.UtcNow,
+                SyncStatus.Completed,
+                1,
+                1,
+                []),
+            TestContext.Current.CancellationToken);
+
+        var mapping = new BrowserFillMapping(
+            Guid.NewGuid(),
+            item.Id,
+            identity.Id,
+            "https://login.example.com",
+            "https://login.example.com",
+            BrowserMappingFieldPurpose.Password,
+            true,
+            _clock.UtcNow,
+            _clock.UtcNow);
+        await repository.UpsertBrowserFillMappingAsync(
+            mapping,
+            TestContext.Current.CancellationToken);
+        await repository.RecordBrowserFillAuditAsync(
+            new BrowserFillAuditEvent(
+                Guid.NewGuid(),
+                _clock.UtcNow,
+                mapping.Id,
+                item.Id,
+                identity.Id,
+                mapping.TopOrigin,
+                mapping.FrameOrigin,
+                mapping.FieldPurpose,
+                "Approved"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            mapping,
+            await repository.FindBrowserFillMappingAsync(
+                mapping.TopOrigin,
+                mapping.FrameOrigin,
+                mapping.FieldPurpose,
+                TestContext.Current.CancellationToken));
+        Assert.NotNull(await repository.ResolveItemForIdentityAsync(
+            item.Id,
+            identity.Id,
+            TestContext.Current.CancellationToken));
+        Assert.Null(await repository.ResolveItemForIdentityAsync(
+            item.Id,
+            Guid.NewGuid(),
+            TestContext.Current.CancellationToken));
+        Assert.Single(await repository.GetBrowserFillAuditAsync(
+            10,
+            TestContext.Current.CancellationToken));
+
+        await repository.RemoveIdentityAsync(identity.Id, TestContext.Current.CancellationToken);
+
+        Assert.Empty(await repository.GetBrowserFillMappingsAsync(
+            TestContext.Current.CancellationToken));
+        Assert.Single(await repository.GetBrowserFillAuditAsync(
+            10,
+            TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task VersionFourDatabaseAddsBrowserTablesWithoutRebuildingExistingState()
+    {
+        var path = Path.Combine(_directory, "version-four-browser.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = TestIdentity("version-four-browser-account");
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        await ExecuteDatabaseCommandAsync(
+            path,
+            """
+            DROP TABLE browser_fill_mappings;
+            DROP TABLE browser_fill_audit;
+            PRAGMA user_version=4;
+            """);
+
+        var migrated = new EncryptedSqliteMetadataRepository(path, _keys);
+        await migrated.InitializeAsync(TestContext.Current.CancellationToken);
+
+        Assert.NotNull(await migrated.GetIdentityAsync(
+            identity.Id,
+            TestContext.Current.CancellationToken));
+        Assert.Empty(await migrated.GetBrowserFillMappingsAsync(
+            TestContext.Current.CancellationToken));
+        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+    }
+
+    [Fact]
     public async Task WorkloadIdentityProfileRoundTripsThroughEncryptedMetadata()
     {
         var path = Path.Combine(_directory, "workload-profile.db");
@@ -124,7 +277,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
         Assert.NotNull(restored);
         Assert.Equal(IdentityType.InteractiveUser, restored.Type);
         Assert.Equal(string.Empty, restored.CredentialData);
-        Assert.Equal(4, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -155,7 +308,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         Assert.Single(summaries);
         Assert.True(summaries[0].Access.IsSelected);
-        Assert.Equal(4, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -746,7 +899,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(99, exception.ObservedVersion);
-        Assert.Equal(4, exception.SupportedVersion);
+        Assert.Equal(5, exception.SupportedVersion);
         Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)));
         Assert.Equal(99, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
@@ -801,7 +954,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name='sync_runs'"));
-        Assert.Equal(4, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -815,7 +968,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM pragma_table_info('sync_runs') WHERE name='error_count'"));
-        Assert.Equal(4, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     private ConnectedIdentity TestIdentity(string accountIdentifier) => new(

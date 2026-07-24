@@ -1,0 +1,10 @@
+{
+  "protocolVersion": 1,
+  "pipeName": "VaultProspector.BrowserBroker.v1",
+  "chromiumExtensionIds": [
+    "fmkdaepdbgdbhdhcednhppbhhejeabin"
+  ],
+  "firefoxExtensionIds": [
+    "vault-prospector@hybrid-solutions.cloud"
+  ]
+}

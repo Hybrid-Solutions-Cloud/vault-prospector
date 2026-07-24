@@ -50,9 +50,32 @@
       </Files>
     </ComponentGroup>
 
+    <Component
+      Id="BrowserNativeMessagingRegistration"
+      Directory="INSTALLFOLDER"
+      Guid="{B407253B-3A80-4F50-BC67-F99C48EAA0C9}">
+      <RegistryValue
+        Root="HKLM"
+        Key="SOFTWARE\Google\Chrome\NativeMessagingHosts\com.hybridsolutionscloud.vaultprospector"
+        Type="string"
+        Value="[INSTALLFOLDER]BrowserHost\com.hybridsolutionscloud.vaultprospector.chromium.json"
+        KeyPath="yes" />
+      <RegistryValue
+        Root="HKLM"
+        Key="SOFTWARE\Microsoft\Edge\NativeMessagingHosts\com.hybridsolutionscloud.vaultprospector"
+        Type="string"
+        Value="[INSTALLFOLDER]BrowserHost\com.hybridsolutionscloud.vaultprospector.chromium.json" />
+      <RegistryValue
+        Root="HKLM"
+        Key="SOFTWARE\Mozilla\NativeMessagingHosts\com.hybridsolutionscloud.vaultprospector"
+        Type="string"
+        Value="[INSTALLFOLDER]BrowserHost\com.hybridsolutionscloud.vaultprospector.firefox.json" />
+    </Component>
+
     <Feature Id="MainFeature" Title="Vault Prospector" Level="1">
       <ComponentGroupRef Id="ProductFiles" />
       <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="BrowserNativeMessagingRegistration" />
     </Feature>
   </Package>
 </Wix>

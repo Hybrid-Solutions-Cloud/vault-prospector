@@ -103,6 +103,18 @@ There is no automatic age or size deletion policy. Permanent deletion requires s
 archive, typing `DELETE ARCHIVE` exactly, and completing fresh Windows verification; delete it only
 after deciding that recovery and support evidence are no longer needed.
 
+## Browser integration
+
+The unreleased browser integration does not inspect or import saved browser passwords. A toolbar
+action sends only bounded page context needed for an exact fill decision: browser family, tab and
+frame identifiers, opaque document/gesture/field tokens, canonical top and frame HTTPS origins,
+field purpose, request identifier, and time. The extension does not persist a returned value.
+
+Local browser mappings and value-free audit events are stored in the encrypted metadata database.
+The audit records include time, result, canonical origins, field purpose, and local identifiers but
+not the secret value. Vault Prospector does not send browser activity to project-controlled
+telemetry.
+
 ## Security and privacy contact
 
 Report suspected vulnerabilities privately as described in [SECURITY.md](../SECURITY.md). For a

@@ -78,6 +78,9 @@ if (-not $SkipPublish) {
 if (-not (Test-Path -LiteralPath (Join-Path $publishDirectory 'VaultProspector.App.exe'))) {
     throw "Published application was not found at '$publishDirectory'."
 }
+if (-not (Test-Path -LiteralPath (Join-Path $publishDirectory 'BrowserHost/VaultProspector.BrowserHost.exe'))) {
+    throw "Published browser native host was not found under '$publishDirectory'."
+}
 
 if (Test-Path -LiteralPath $installerOutput) {
     Remove-Item -LiteralPath $installerOutput -Recurse -Force

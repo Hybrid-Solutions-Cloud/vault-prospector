@@ -2,6 +2,9 @@
   "version": 1,
   "dependencies": {
     "net9.0": {
+      "vaultprospector.browserprotocol": {
+        "type": "Project"
+      },
       "vaultprospector.domain": {
         "type": "Project"
       }

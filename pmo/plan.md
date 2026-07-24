@@ -415,7 +415,7 @@ assistive-technology behavior remain required evidence.
 
 **Priority:** P2
 
-**Status:** On hold
+**Status:** In progress locally
 
 **Backlog coverage:** Epic 13
 
@@ -426,6 +426,21 @@ assistive-technology behavior remain required evidence.
 - Require policy and local verification for sensitive fills.
 - Research supported browser password-vault APIs without scraping browser credential databases.
 - Define extension permissions, signing, updates, compromise response, and revocation.
+
+### Current implementation
+
+- ADR-0014, the browser threat model, and the feasibility spike define toolbar-only, one-shot fill
+  and prohibit private browser credential-database access.
+- Chromium and Firefox MV3 sources use no persistent host permissions or content scripts and
+  validate the live tab, frame, document, focused element, origin, and field purpose before fill.
+- A bounded strict protocol, exact extension identities, authenticated native host/current-user
+  broker, process verification, encrypted mappings, value-free audit, protected fail-closed
+  machine policy, visible desktop confirmation, and fresh Windows verification are implemented.
+- The MSI packages the native host and registers exact HKLM Chrome, Edge, and Firefox native-host
+  manifests. Automated source and package validation exists.
+- Signed extension packages, browser distribution review, exact installed live-browser evidence,
+  independent security review, compromise/revocation exercise, and representative-user/AT
+  validation remain open.
 
 ### Exit criteria
 

@@ -1,0 +1,9 @@
+{
+  "name": "com.hybridsolutionscloud.vaultprospector",
+  "description": "Vault Prospector one-shot browser fill host",
+  "path": "VaultProspector.BrowserHost.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://fmkdaepdbgdbhdhcednhppbhhejeabin/"
+  ]
+}

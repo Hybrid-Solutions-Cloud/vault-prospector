@@ -47,6 +47,21 @@ Record the Windows version, package checksum, tester, and time with the release 
 - [ ] Item, vault, workspace, and global purge remove only the intended encrypted payloads.
 - [ ] Identity removal clears the account cache entry; full local-state removal works after the app closes.
 
+## Browser integration
+
+- [ ] The packaged default machine browser-fill policy is disabled and protected from standard-user writes.
+- [ ] The exact reviewed Chrome/Edge and Firefox extension packages are signed and their identities match the native-host allowlists.
+- [ ] The MSI contains the native host and exact HKLM Chrome, Edge, and Firefox registrations.
+- [ ] Unmapped, disabled-policy, wrong-origin, wrong-frame, wrong-purpose, wrong-extension,
+  wrong-host-process, replayed, expired, navigated, hidden-window, locked-session, and denied
+  requests return no value.
+- [ ] A successful fill requires a toolbar gesture, unchanged focused field, visible desktop
+  confirmation, and fresh Windows verification.
+- [ ] Browser audit and diagnostic inspection contains no values, tokens, usernames, vault names,
+  or object names.
+- [ ] Update, rollback, extension compromise/revocation, native-host removal, and browser uninstall
+  exercises pass on the exact signed candidate.
+
 ## Diagnostic and release evidence
 
 - [ ] Logs contain event categories and pseudonymous IDs but no token, value, username, vault name, or object name.

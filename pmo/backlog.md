@@ -3,7 +3,8 @@
 ## Current delivery state
 
 `0.1.1-preview.1` is the current public, unsigned Windows Preview for non-production evaluation.
-The next refresh must fix the installed Start-menu/Search icon before feature delivery continues.
+The installed Start-menu/Search icon fix and Phases 3–11 implementation are complete locally but
+remain unreleased and subject to the validation gates recorded below.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).
@@ -29,7 +30,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | Optional governed write mode | Not implemented | Requirements only | All mutation commands, policy/verification/authorization/audit controls |
 | Notification-area/background operation | Implemented locally, unreleased | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power | Live tray/sleep/session-lock/network/token-expiry matrix and independent validation |
 | Password-manager UI research/redesign | In progress locally | Primary-source research, four interactive concepts, sixteen automated concept/task states, narrow-viewport and console validation | Participant usability sessions, concept selection, production implementation, accessibility validation |
-| Browser autofill/password-vault integration | Not implemented | Threat-model and feasibility requirements only | Extension/native messaging, origin binding, mappings, policy, browser review |
+| Browser autofill/password-vault integration | Implemented locally, validation open | Toolbar-only Chromium/Firefox extension source, strict protocol, authenticated native host/broker, exact mappings, protected machine policy, desktop confirmation, fresh Windows verification, audit, MSI registration, tests | Signed extension distribution, independent review, live installed-browser/compromise/revocation/usability/AT evidence |
 | CyberArk source | Not implemented | Provider requirements only | Product/API decision, authentication, provider adapter, tests, UI |
 | iPhone/iOS and Android/Google apps | Not implemented | Roadmap and store/security requirements only | Mobile applications, platform secure storage, testing, signing, store submission |
 
@@ -81,8 +82,8 @@ exit criteria.
 | 10.3 | Explicit write mode | Not started | Phase 8 |
 | 11.1 | Continue securely in the notification area | Implemented locally, unreleased | Phase 10 validation |
 | 12.1 | Research password-manager interface patterns | In progress; research and 4 concepts complete | Phase 9 participant validation |
-| 13.1 | Browser extension and native messaging feasibility | On hold | On hold |
-| 13.2 | Browser password-vault interoperability | On hold | On hold |
+| 13.1 | Browser extension and native messaging feasibility | Implemented locally, validation open | Phase 11 |
+| 13.2 | Browser password-vault interoperability | Research complete; private-store access prohibited | Phase 11 |
 | 14.1 | CyberArk source integration | On hold | On hold |
 | 15.1 | Consent-based Preview feedback | Delivered as process | Phase 15 operation |
 | 15.2 | Evidence-based GA feedback gate | In progress | Phase 15 |
@@ -136,8 +137,8 @@ not implementation.
 | 10.3 | ADR-0010 and `governed-write-threat-model.md`; no mutation source exists | Accepted review followed by per-operation authorization/concurrency/rollback/redaction/audit/live/signed-release proof. |
 | 11.1 | Tray lifecycle in `App.axaml.cs`, background policy, Windows boundary monitor | Automated cancellation/metadata-only tests and installed tray/sleep/session/network/token/accessibility matrix. |
 | 12.1 | `docs/design` research, four-concept React prototype, usability protocol | Representative participants, assistive-technology results, recorded selection, production implementation, exact-candidate validation. |
-| 13.1 | Phase 11 threat-model and feasibility requirements; no production extension exists | Signed extension/native host, authenticated channel, origin/frame/tab/mapping/user-presence tests and browser review. |
-| 13.2 | Phase 11 supported-API/consent requirements; no interoperability source exists | Supported browser API proof, explicit consent, import/export/sync separation, disclosure and live tests. |
+| 13.1 | `browser-extension`, BrowserProtocol/BrowserHost/Platform broker source, encrypted mapping/audit service and UI, MSI native-host registration, ADR-0014 and browser threat model | Signed extension/native host candidate, installed Chrome/Edge/Firefox matrix, independent review, update/compromise/revocation exercise, usability/AT evidence, and exact-release browser review. |
+| 13.2 | Feasibility spike documents supported public extension/native-messaging APIs and prohibits browser credential-database access; no import/export/sync source exists | Explicit-consent product decision for any future supported handoff, live tests, privacy review, and browser distribution approval. |
 | 14.1 | Provider contract plus Phase 12 product/API decision requirements; no CyberArk adapter exists | Accepted ADR/threat model, isolated credential/provider/UI implementation, permission/failure/redaction/live tests. |
 | 15.1 | `preview-feedback.md`, privacy notice, HCS-governed intake and triage process | Sanitized operational records proving notice, consent, privacy boundary, response targets, and escalation. |
 | 15.2 | Readiness G-01 thresholds and go/no-go process | Required evaluator/task/build/install/upgrade coverage, completion rate, blocker closure, 14-day stability, named approval. |
@@ -744,7 +745,9 @@ Acceptance criteria:
 - Research covers Chromium and Firefox extension models, native messaging, extension signing, update security, permissions, and enterprise deployment.
 - No arbitrary Azure secret is offered for autofill without an explicit mapping to an allowed origin and field purpose.
 
-Implementation status: On hold.
+Implementation status: Implemented locally with automated protocol, host, broker, mapping, policy,
+audit, UI, and installer validation. Signed packages, installed live-browser evidence, independent
+review, compromise/revocation exercise, and representative-user/accessibility evidence remain.
 
 ### Story: Browser password-vault interoperability
 
@@ -756,7 +759,10 @@ Acceptance criteria:
 - Import, export, synchronization, and one-way handoff options are evaluated separately.
 - Any prototype requires explicit consent, origin binding, policy control, local verification, and minimal value exposure.
 
-Implementation status: On hold.
+Implementation status: Research complete. Public settings APIs do not expose a supported saved-
+credential inventory, so private database access, scraping, and implicit import/export/sync are
+prohibited. No browser password-vault interoperability beyond explicit one-time mapped fill is
+implemented.
 
 ## Epic 14 — CyberArk provider
 

@@ -17,7 +17,7 @@ The next work is ordered by security dependency rather than visual novelty. Secu
 | Next | Taskbar background operation and metadata synchronization | In progress locally | Lock-on-hide notification-area lifecycle, session/suspend/resume boundary locking, and opt-in metadata-only synchronization are implemented; installed Windows lifecycle and policy evidence remain. |
 | Next | Identity-source expansion and read-only/write-mode policy | In progress locally | Workload profiles, discovery, dry-run provisioning plans, and permission-aware read-only discovery are implemented locally. Governed mutations remain gated behind independent security review. |
 | Next | CyberArk provider integration | Planned | Requires a provider-specific threat model and contracts that preserve source boundaries. |
-| Later | Browser extension, browser-vault interoperability, and autofill research | Research | Must prove origin binding, user presence, least disclosure, and safe native messaging before implementation. |
+| Next | Browser extension and explicit one-time fill | In progress locally | Origin/frame/purpose binding, authenticated native messaging, protected machine policy, mappings, confirmation, verification, audit, and MSI host registration are implemented; signed distribution, live installed-browser, independent-review, compromise/revocation, usability, and AT gates remain. Private browser password-store access is prohibited. |
 | Parallel | iPhone/iOS and Android/Google Play applications | Coming soon | Mobile delivery continues, but does not bypass the same security and store-review gates. |
 
 Identity planning follows current Microsoft platform boundaries:

@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using VaultProspector.BrowserProtocol;
 using VaultProspector.Domain;
 
 namespace VaultProspector.Application;
@@ -129,6 +130,14 @@ public interface IMetadataRepository
     Task ApplyDiscoveryAsync(Guid identityId, DiscoverySnapshot snapshot, SyncRun run, CancellationToken cancellationToken);
     Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest request, DateTimeOffset now, CancellationToken cancellationToken);
     Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemAsync(Guid itemId, CancellationToken cancellationToken);
+    async Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemForIdentityAsync(
+        Guid itemId,
+        Guid identityId,
+        CancellationToken cancellationToken)
+    {
+        var source = await ResolveItemAsync(itemId, cancellationToken);
+        return source?.Identity.Id == identityId ? source : null;
+    }
     Task RecordAccessAsync(Guid itemId, DateTimeOffset accessedAt, CancellationToken cancellationToken);
     Task SetFavoriteAsync(Guid itemId, bool isFavorite, CancellationToken cancellationToken);
     Task<IReadOnlyList<Workspace>> GetWorkspacesAsync(CancellationToken cancellationToken);
@@ -136,6 +145,20 @@ public interface IMetadataRepository
     Task RemoveWorkspaceAsync(Guid id, CancellationToken cancellationToken);
     Task AddWorkspaceLinkAsync(WorkspaceResourceLink link, CancellationToken cancellationToken);
     Task RemoveWorkspaceLinkAsync(Guid workspaceId, ResourceLinkType resourceType, string resourceId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<BrowserFillMapping>> GetBrowserFillMappingsAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<BrowserFillMapping>>([]);
+    Task<BrowserFillMapping?> GetBrowserFillMappingAsync(Guid id, CancellationToken cancellationToken) =>
+        Task.FromResult<BrowserFillMapping?>(null);
+    Task<BrowserFillMapping?> FindBrowserFillMappingAsync(string topOrigin, string frameOrigin, BrowserMappingFieldPurpose fieldPurpose, CancellationToken cancellationToken) =>
+        Task.FromResult<BrowserFillMapping?>(null);
+    Task UpsertBrowserFillMappingAsync(BrowserFillMapping mapping, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Browser fill mappings are not supported by this repository.");
+    Task RemoveBrowserFillMappingAsync(Guid id, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Browser fill mappings are not supported by this repository.");
+    Task RecordBrowserFillAuditAsync(BrowserFillAuditEvent auditEvent, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Browser fill audit is not supported by this repository.");
+    Task<IReadOnlyList<BrowserFillAuditEvent>> GetBrowserFillAuditAsync(int limit, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<BrowserFillAuditEvent>>([]);
 }
 
 public interface IProtectedValueStore
@@ -334,4 +357,29 @@ public interface IDiagnosticSink
 {
     void Information(string eventName, IReadOnlyDictionary<string, object?> fields);
     void WriteError(string eventName, Exception exception, IReadOnlyDictionary<string, object?> fields);
+}
+
+public sealed record BrowserFillApproval(
+    Guid ApprovalId,
+    ValidatedBrowserFillRequest Request,
+    BrowserFillMapping Mapping,
+    string ItemName,
+    string VaultName,
+    string IdentityDisplayName,
+    DateTimeOffset ExpiresAt);
+
+public sealed record BrowserFillPolicyDecision(
+    bool IsAllowed,
+    string SafeReason);
+
+public interface IBrowserFillPolicy
+{
+    Task<BrowserFillPolicyDecision> EvaluateAsync(
+        BrowserFamily browserFamily,
+        CanonicalBrowserOrigin topOrigin,
+        CanonicalBrowserOrigin frameOrigin,
+        BrowserMappingFieldPurpose fieldPurpose,
+        CancellationToken cancellationToken);
+
+    Task<string> GetStatusAsync(CancellationToken cancellationToken);
 }

@@ -30,6 +30,9 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Add explicit identity-scoped offline-value purge, including historical removed access paths.
 - Add comparative desktop UI research and four interactive setup/search/reveal/settings concepts;
   production selection remains gated on representative-user and assistive-technology evidence.
+- Add an unreleased Chromium/Firefox browser-fill implementation with toolbar-only activation,
+  exact origin/frame/purpose mappings, authenticated native messaging, protected fail-closed
+  machine policy, one-time desktop confirmation, fresh Windows verification, and value-free audit.
 
 ### Security
 

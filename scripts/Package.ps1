@@ -20,6 +20,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $outputRoot = Join-Path $repoRoot $OutputDirectory
 $publishDirectory = Join-Path $outputRoot "publish-$Runtime"
+$browserHostPublishDirectory = Join-Path $publishDirectory 'BrowserHost'
 $archivePath = Join-Path $outputRoot "VaultProspector-$Version-$Runtime.zip"
 
 function Invoke-DotNet {
@@ -43,6 +44,20 @@ Invoke-DotNet -Arguments @(
     '--runtime', $Runtime,
     '--self-contained', 'true',
     '--output', $publishDirectory,
+    "-p:Version=$Version",
+    '-p:VaultProspectorPackaging=true',
+    '-p:RestoreLockedMode=false',
+    '-p:DebugType=None',
+    '-p:DebugSymbols=false'
+)
+
+Invoke-DotNet -Arguments @(
+    'publish',
+    (Join-Path $repoRoot 'src/VaultProspector.BrowserHost/VaultProspector.BrowserHost.csproj'),
+    '--configuration', 'Release',
+    '--runtime', $Runtime,
+    '--self-contained', 'true',
+    '--output', $browserHostPublishDirectory,
     "-p:Version=$Version",
     '-p:VaultProspectorPackaging=true',
     '-p:RestoreLockedMode=false',

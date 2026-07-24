@@ -40,6 +40,31 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void BrowserFillConfirmationAndPolicyAreAccessibleLiveRegions()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var confirmation = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Browser fill confirmation");
+        var policy = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Browser fill machine policy status");
+
+        Assert.Equal("Assertive", Attribute(
+            confirmation,
+            "AutomationProperties.LiveSetting")?.Value);
+        Assert.Contains(
+            policy.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value == "{Binding BrowserPolicyStatus}" &&
+                Attribute(element, "AutomationProperties.LiveSetting")?.Value == "Polite");
+    }
+
+    [Fact]
     public void ActionableErrorIsAnAccessibleAssertiveLiveRegion()
     {
         var document = XDocument.Load(FindMainWindowMarkup());

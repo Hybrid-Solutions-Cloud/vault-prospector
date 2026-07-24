@@ -13,3 +13,4 @@ artifacts/
 *.log
 *.pfx
 *.snk
+browser-extension/dist/
