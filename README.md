@@ -16,6 +16,8 @@ Vault Prospector is a local-first Windows desktop application for discovering an
 - Optional AES-GCM encrypted offline values, disabled by default and protected with Windows DPAPI.
 - Version-aware indexing, workspaces, favorites, access recency, cancelable synchronization, partial-sync diagnostics, and per-vault error isolation.
 - Redacted local diagnostics with no tokens, secret values, usernames, vault names, or object names.
+- Unreleased machine-managed enterprise policy for allowed tenants, providers, and identity types,
+  clipboard/offline-cache restrictions, packaged ADMX/ADML templates, and fail-closed enforcement.
 - Unreleased, fail-closed browser-fill source with explicit origin/field mappings, protected machine
   policy, one-time desktop confirmation, and fresh Windows verification.
 - Unreleased CyberArk Privilege Cloud source with separate profiles, safes, accounts, versions,
@@ -71,6 +73,7 @@ No local application can protect a deliberately revealed value from malware alre
 
 - [User guide](docs/user-guide.md)
 - [Authentication setup](docs/authentication.md)
+- [Machine-managed enterprise policy](docs/enterprise-policy.md)
 - [Architecture](docs/architecture/architecture-overview.md)
 - [Security requirements](docs/security/security-requirements.md)
 - [Threat model](docs/security/threat-model.md)

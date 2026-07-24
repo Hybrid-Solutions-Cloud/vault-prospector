@@ -27,6 +27,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | List existing managed identities/SPNs | Implemented locally, unreleased | Exact-subscription managed-identity and explicit-consent Graph service-principal discovery, user workflow, bounded pagination, honest permission distinctions | Effective inherited/deny/conditional RBAC analysis, live validation, independent review |
 | Create a managed identity/SPN during setup | Preview implemented locally | User-reachable deterministic non-mutating managed-identity and service-principal plans with exact optional Key Vault/role scope; no execution command | Security gate, fresh write authorization, confirmation, encrypted audit, rollback, governed creation/live tests |
 | Discover accessible Key Vaults | Implemented locally, unreleased | Selected identity enumerates visible resources; explicit subscription/vault scope and per-vault observed permission display are user-accessible | Live human/workload Azure permission matrix and independent validation |
+| Machine-managed enterprise access policy | Implemented locally, validation open | HKLM/ADMX policy for allowed tenants, providers, and identity types plus clipboard/offline-cache boundaries; service-layer enforcement, safe Settings status, package templates, and automated fail-closed tests | Governed Group Policy/Intune deployment, live Azure/CyberArk administrator matrix, diagnostics review, independent review, exact signed artifact |
 | Read-only default | Implemented | No Key Vault mutation or Azure role-assignment operations exist; UI states observed list access, unprobed value read, and policy-disabled writes | Independent policy/security validation |
 | Optional governed write mode | Not implemented | Requirements only | All mutation commands, policy/verification/authorization/audit controls |
 | Notification-area/background operation | Implemented locally, unreleased | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power | Live tray/sleep/session-lock/network/token-expiry matrix and independent validation |
@@ -78,6 +79,7 @@ exit criteria.
 | 9.3 | Isolated Azure authentication contexts | Implemented; live matrix open | Phases 2 and 14 |
 | 9.4 | Human and workload identity choices | In progress locally | Phase 4 |
 | 9.5 | Discover and provision workload identities | Discovery prototype locally | Phase 5 |
+| 9.6 | Enforce machine-managed enterprise access policy | Implemented locally, validation open | Phases 4, 6, and 14 |
 | 10.1 | Discover vaults by selected access path | Implemented locally, unreleased | Phase 6 validation |
 | 10.2 | Read-only by default | Delivered | Phases 6 and 14 validation |
 | 10.3 | Explicit write mode | Not started | Phase 8 |
@@ -133,6 +135,7 @@ not implementation.
 | 9.3 | Explicit MSAL credentials and isolated app-owned caches | Automated cache/account isolation and live CLI/PowerShell/IDE/multi-tenant independence. |
 | 9.4 | Typed workload credentials, host detection, identity lifecycle UI | Contract/negative/redaction/rotation/revocation tests plus live Azure and independent review. |
 | 9.5 | `WorkloadIdentityDiscoveryService`, authorization evaluator, non-mutating plan UI | Permission/deny/condition tests, governed-write gate, live Azure least-privilege matrix, and independent review. |
+| 9.6 | `EnterprisePolicySnapshot`, `WindowsRegistryEnterprisePolicy`, application-service enforcement, Settings status, ADMX/ADML, packaging, and `Test-EnterprisePolicyReadiness.ps1` | Parser/type/deny-before-network tests; governed Group Policy/Intune deployment; live allowed/denied Azure and CyberArk matrix; safe diagnostics inspection; independent review; exact signed-candidate validation. |
 | 10.1 | Selected identity/scope provider flow and permission-aware vault UI | Human/workload live Azure visibility/list/read-deny matrix and independent redaction validation. |
 | 10.2 | Read-only provider surface and policy-disabled UI | Static/behavioral proof of no mutation plus least-privilege and independent policy review. |
 | 10.3 | ADR-0010 and `governed-write-threat-model.md`; no mutation source exists | Accepted review followed by per-operation authorization/concurrency/rollback/redaction/audit/live/signed-release proof. |

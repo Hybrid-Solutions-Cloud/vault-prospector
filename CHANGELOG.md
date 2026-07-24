@@ -37,6 +37,9 @@ All notable changes to Vault Prospector are documented here. The project follows
   accounts, versions, direct safe-member evidence, SQLCipher schema v6 metadata, DPAPI-isolated
   credentials, bounded metadata sync, fresh-verified reveal/copy, fail-closed local revocation,
   explicit removal, and value-free audit.
+- Add unreleased versioned HKLM enterprise policy with packaged ADMX/ADML templates, allowed
+  tenant/provider/identity-type controls, clipboard and offline-cache restrictions, service-layer
+  enforcement, safe Settings status, and deterministic fail-closed package validation.
 
 ### Security
 

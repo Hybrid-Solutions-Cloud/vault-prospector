@@ -482,3 +482,35 @@ the repository and must not be committed.
 - Remaining evidence: hosted macOS bundle CI on the exact PR head, enabled signed physical-device
   framework matrices, encrypted one-record mapping exchange, Android association/signature
   validation, accessibility, independent review, and store acceptance.
+
+## G-06 machine-managed enterprise policy (PR pending) — 2026-07-24
+
+- Active worktree: `D:\tmp\vault-prospector-enterprise-policy`; branch:
+  `feature/enterprise-policy`; implementation commit:
+  `5d20399ce37370213fdf280a2b9ff97918fbf1ef`.
+- Added versioned read-only HKLM policy plus packaged ADMX/ADML for allowed tenant GUIDs, providers,
+  Azure identity types, clipboard disablement, offline-value disablement, and maximum offline-value
+  lifetime. Invalid/unreadable enabled configuration fails closed; `Enabled=0` remains unmanaged
+  without requiring the enabled-only `PolicyVersion` value.
+- Application services enforce policy before governed sign-in/validation/network/value paths.
+  Azure receives tenant constraints before enumeration and returned/local metadata is filtered
+  again. Disable/revoke/purge/remove cleanup remains available.
+- Settings displays a safe live status and managed controls cannot weaken the effective boundary.
+  Workload candidate assessment enforces the target identity type before ARM access.
+- Exact implementation-commit `scripts/Build.ps1` passed locked restore, package vulnerability
+  scan, format, zero-warning/error Release build, and 368/368 tests.
+- Source readiness passed 42/42; exact publish readiness passed 44/44. Local HKLM observation was
+  readable with no policy key and made no registry changes. Full-history gitleaks scanned 123
+  commits with no leaks.
+- Disposable exact-source `0.1.0-ci.930` ZIP SHA-256:
+  `CD033441AE37B5579DE96C3C0C396C55BD22256AF5517C8F4229EACE7F0B3834`; MSI SHA-256:
+  `9177A473B88DFEDAD5EB0E6C0725A717557DC2F1B2149F0EDA1EB174D931671D`.
+  MSI File-table inspection found both policy templates. Browser-host, shortcut/icon, and
+  rollback-safe-upgrade guards passed.
+- Evidence: `docs/release-evidence/enterprise-policy-2026-07-24.md`.
+- G-06 remains in progress. Governed Group Policy/Intune deployment, live Azure/CyberArk
+  allowed/denied matrices, diagnostics review, independent review, and exact trusted-signed
+  candidate validation are still required.
+- Next: commit documentation/evidence, push with the HCS GitHub App token, create the governed PR,
+  inspect exact-head checks, and leave unmerged if the organization payment/spending-limit block
+  again prevents jobs from executing.

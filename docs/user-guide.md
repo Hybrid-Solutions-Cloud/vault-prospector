@@ -133,6 +133,19 @@ The Workspaces tab also edits the selected workspace's offline-cache enablement,
 and clipboard permission. Save the workspace policy before using it. Windows verification cannot
 be disabled: it remains mandatory for reveal, copy, caching, and reopening an offline value.
 
+## Machine-managed policy (unreleased)
+
+Settings shows a read-only summary when an administrator manages Vault Prospector through HKLM
+policy. The policy can restrict Azure tenants, providers, identity types, clipboard use, and
+offline-value retention. User and workspace settings cannot weaken it; the most restrictive
+applicable setting wins.
+
+When a connected source becomes disallowed, governed search, synchronization, and value operations
+stop, but local disable, revoke, purge, and remove actions remain available. Ask an administrator
+to review the deployed policy rather than editing the registry as a standard user. See
+[Machine-managed enterprise policy](enterprise-policy.md) for the ADMX/ADML deployment guide and
+validation limits.
+
 ## Offline values
 
 Offline values are disabled by default. To evaluate the feature:
