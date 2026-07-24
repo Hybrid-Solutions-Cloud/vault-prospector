@@ -482,3 +482,23 @@ the repository and must not be committed.
 - Remaining evidence: hosted macOS bundle CI on the exact PR head, enabled signed physical-device
   framework matrices, encrypted one-record mapping exchange, Android association/signature
   validation, accessibility, independent review, and store acceptance.
+
+## .NET 10 LTS desktop migration (local, unreleased) — 2026-07-24
+
+- Branch `feature/dotnet10-lts` starts from merged main
+  `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`.
+- Implementation commit `03a5af014af0e26a49fca7462a02677ba825fb04` retargets the complete desktop
+  source/test graph and lock files to .NET 10, pins SDK `10.0.302` in the repository plus CI/release
+  workflows, and updates current build documentation.
+- Direct requested/resolved NuGet versions are unchanged across all 19 regenerated lock files.
+  Removed transitive entries are framework assemblies supplied by .NET 10.
+- Locked Release verification passed vulnerable-package inspection, format, zero-warning/error
+  build, and 343/343 desktop/shared tests.
+- Shared consumers passed 44/44 mobile tests, Android arm64 Release AOT/linking/App Bundle
+  production with zero warnings/errors, and the Windows-hosted iOS app/credential-extension
+  reference build.
+- Disposable self-contained/MSI/ZIP/Chocolatey/WinGet version `0.1.0-ci.910` passed startup,
+  rollback-safe MSI schedule, shortcut/icon, browser-host/policy, and manifest validation. It was
+  not published.
+- Remaining: exact-head hosted CI, macOS iOS build, clean-machine installed lifecycle, trusted
+  signing, and exact immutable public-candidate repetition.

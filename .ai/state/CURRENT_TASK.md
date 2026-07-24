@@ -8,7 +8,8 @@ fail-closed autofill feasibility source are merged. Their live-service/device, i
 signed-artifact, representative-user, assistive-technology, and store gates remain open and must
 not be overstated.
 
-Current local slice: `feature/dotnet10-lts` migrates the complete desktop solution, tests, locked
+Current local slice: implementation commit `03a5af014af0e26a49fca7462a02677ba825fb04` on
+`feature/dotnet10-lts` migrates the complete desktop solution, tests, locked
 dependency graphs, CI/release automation, and self-contained packaging from .NET 9 to pinned .NET
 10.0.302 LTS. The locked 343-test Release gate passes with zero warnings/errors; the self-contained
 app remains running after startup; MSI rollback scheduling, shortcut/icon, browser-host/policy, and

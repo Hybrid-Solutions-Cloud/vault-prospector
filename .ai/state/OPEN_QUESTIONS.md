@@ -7,3 +7,5 @@
 - Who will supply the independent security review, browser-store/enterprise distribution approval,
   representative usability/assistive-technology sessions, trusted signing setup, and live service
   test environments required by the remaining release gates?
+- Who can resolve the Hybrid Solutions Cloud GitHub Actions payment/spending-limit condition so
+  required exact-head CI can execute?
