@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="VaultProspector.Mobile.Core/VaultProspector.Mobile.Core.csproj" />
+  <Project Path="VaultProspector.Mobile.Tests/VaultProspector.Mobile.Tests.csproj" />
+</Solution>

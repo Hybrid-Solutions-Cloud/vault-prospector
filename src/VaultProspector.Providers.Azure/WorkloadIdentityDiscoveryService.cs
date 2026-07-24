@@ -21,7 +21,7 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
     private readonly AzureAuthorizationEvidenceEvaluator _authorizationEvaluator;
 
     public WorkloadIdentityDiscoveryService(
-        MsalIdentityProvider identityProvider,
+        IAzureCredentialProvider identityProvider,
         HttpClient graphClient,
         HttpClient authorizationClient)
         : this(
