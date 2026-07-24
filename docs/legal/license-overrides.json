@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "overrides": [
+    {
+      "ecosystem": "nuget",
+      "id": "AvaloniaUI.DiagnosticsSupport",
+      "version": "2.2.3",
+      "license": "NOASSERTION",
+      "licenseSource": "manual-review-required",
+      "projectUrl": "https://www.nuget.org/packages/AvaloniaUI.DiagnosticsSupport/2.2.3",
+      "distribution": "development-only",
+      "reviewStatus": "approval-required",
+      "reason": "The package metadata does not declare a license. The project excludes its assets outside Debug builds; legal review must confirm the developer-use terms before GA."
+    }
+  ]
+}
