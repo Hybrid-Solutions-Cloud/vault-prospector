@@ -3,11 +3,18 @@
 Fully implement the canonical backlog in `pmo/backlog.md` in dependency order and within the
 security/release gates defined by `pmo/plan.md`, the project charter, and `.ai/state/GOAL.md`.
 
-Phases 11–13 browser integration, CyberArk Privilege Cloud, and native mobile application source
-are implemented and merged. Their live-service/device, independent-review, signed-artifact,
-representative-user, assistive-technology, and store gates remain open and must not be overstated.
+Phases 11–13 browser integration, CyberArk Privilege Cloud, native mobile applications, and
+fail-closed autofill feasibility source are merged. Their live-service/device, independent-review,
+signed-artifact, representative-user, assistive-technology, and store gates remain open and must
+not be overstated.
 
-Merge the native mobile autofill feasibility prototypes, then execute the remaining external Phase
-8–15 validation, signing, distribution, usability, reliability, and stability gates. Do not
-substitute source, simulator, or roadmap evidence for physical-device, live-service,
-independent-review, signed-release, or store acceptance.
+Current local slice: `feature/dotnet10-lts` migrates the complete desktop solution, tests, locked
+dependency graphs, CI/release automation, and self-contained packaging from .NET 9 to pinned .NET
+10.0.302 LTS. The locked 343-test Release gate passes with zero warnings/errors; the self-contained
+app remains running after startup; MSI rollback scheduling, shortcut/icon, browser-host/policy, and
+WinGet manifest checks pass.
+
+Next: commit and publish the migration with evidence, capture exact-head hosted state, and continue
+the remaining Phase 8–15 validation/signing/distribution/usability/reliability gates. Do not
+substitute source or local package evidence for clean-machine installed lifecycle, trusted signing,
+physical-device/live-service evidence, independent review, or store acceptance.

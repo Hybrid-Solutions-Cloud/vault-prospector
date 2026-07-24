@@ -44,7 +44,7 @@ Tenant consent and optional custom-registration requirements are explained in [A
 Prerequisites:
 
 - PowerShell 7+
-- .NET SDK 9.0.315 or a compatible 9.0 patch selected by `global.json`
+- .NET SDK 10.0.302 or a compatible 10.0 patch selected by `global.json`
 - Windows for Windows Hello integration and the final release package
 
 ```powershell

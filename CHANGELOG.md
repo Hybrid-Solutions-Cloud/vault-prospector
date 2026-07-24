@@ -38,6 +38,11 @@ All notable changes to Vault Prospector are documented here. The project follows
   credentials, bounded metadata sync, fresh-verified reveal/copy, fail-closed local revocation,
   explicit removal, and value-free audit.
 
+### Changed
+
+- Migrate the complete Windows desktop solution, tests, locked dependency graphs, self-contained
+  packaging, and protected CI/release automation from .NET 9 to .NET 10 LTS.
+
 ### Security
 
 - Retry authenticated rotation-journal replacement only for bounded transient Windows I/O/access
