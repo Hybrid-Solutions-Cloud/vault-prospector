@@ -69,9 +69,9 @@ exit criteria.
 | 7.4 | Schema upgrade validation | In progress locally | Phases 3 and 7 |
 | 7.5 | Authenticode signing | Blocked externally | Phase 14 |
 | 7.6 | Complete workspace resource assignment | Implemented locally, unreleased | Phase 7 validation |
-| 8.1 | Apple platform security validation | Implemented locally; live/independent validation open | Phase 13 |
-| 8.2 | iPhone/iOS application and App Store release | Implemented locally; signing/store gates open | Phase 13 |
-| 8.3 | Android application and Google Play release | Implemented locally; signing/store gates open | Phase 13 |
+| 8.1 | Apple platform security validation | Implemented and merged; live/independent validation open | Phase 13 |
+| 8.2 | iPhone/iOS application and App Store release | Implemented and merged; signing/store gates open | Phase 13 |
+| 8.3 | Android application and Google Play release | Implemented and merged; signing/store gates open | Phase 13 |
 | 8.4 | Mobile autofill feasibility | In progress; fail-closed policy tested, native/live prototypes open | Phase 13 |
 | 9.1 | Secure first-run wizard | Implemented locally, validation open | Phase 3 |
 | 9.2 | Mandatory local encryption verification | Implemented; independent review open | Phases 3 and 14 |
@@ -504,11 +504,11 @@ Acceptance criteria:
 - Apple-specific platform security protections are implemented.
 - Security review validates Keychain and LocalAuthentication compliance.
 
-Implementation status: Implemented locally; live and independent validation remains open.
+Implementation status: Implemented and merged; live and independent validation remains open.
 The iOS host uses a device-only, access-controlled Keychain key, LocalAuthentication, encrypted
 local storage, backup exclusion, local-only expiring pasteboard content, lifecycle locking,
 background covering, and active-capture lockout. Windows reference-pack compilation and automated
-session-policy tests pass; macOS CI, physical-device enrollment/passcode/migration/reinstall
+session-policy tests and macOS simulator CI pass; physical-device enrollment/passcode/migration/reinstall
 matrices, accessibility, and independent review remain mandatory.
 
 ### Story: iPhone/iOS application and App Store release (coming soon)
@@ -519,7 +519,7 @@ Acceptance criteria:
 - iOS application passes TestFlight and App Store reviews.
 - Separate threat model and privacy reviews are approved.
 
-Implementation status: Implemented locally; signing and store gates remain open. The iOS
+Implementation status: Implemented and merged; signing and store gates remain open. The iOS
 application provides native unlock, MSAL identity connection, synchronization, encrypted metadata
 search, bounded reveal, and bounded clipboard copy. It includes a privacy manifest and unsigned
 simulator CI path. Production Entra callback registration, signed archives, TestFlight,
@@ -533,10 +533,10 @@ Acceptance criteria:
 - Android application passes Google Play review.
 - Separate threat model and data-safety reviews are approved.
 
-Implementation status: Implemented locally; signing and store gates remain open. The Android
+Implementation status: Implemented and merged; signing and store gates remain open. The Android
 application provides the same mobile workflow with Android Keystore, BiometricPrompt,
-`FLAG_SECURE`, sensitive clipboard labeling, and explicit backup/data-transfer exclusions. A local
-Release App Bundle build and native compilation pass. Exact-commit CI, protected upload signing,
+`FLAG_SECURE`, sensitive clipboard labeling, and explicit backup/data-transfer exclusions. Local
+and exact-PR-head Release App Bundle builds pass. Protected upload signing,
 closed testing, physical-device validation, data-safety review, and Google Play acceptance remain
 open.
 

@@ -79,7 +79,7 @@ Mobile readiness is independent from the Windows Preview and GA decisions.
 
 | ID | Gate | Status | Evidence required |
 | --- | --- | --- | --- |
-| M-01 | Shared workflow and native security hosts | In progress | Source, locked restore, tests, Android package, and iOS simulator jobs pass on the exact merged commit. Current local evidence is recorded in [Phase 13 mobile evidence](../release-evidence/mobile-phase-13-2026-07-24.md). |
+| M-01 | Shared workflow and native security hosts | Passed | PR #13 merged as `ead0a29`; exact merge CI `30077519402` and Mobile CI `30077519354` passed source, locked restore, 343 desktop/shared tests, 19 mobile tests, Android packaging, and the unsigned iOS simulator build. See [Phase 13 mobile evidence](../release-evidence/mobile-phase-13-2026-07-24.md). |
 | M-02 | Microsoft Entra mobile authentication | In progress | The production registration preserves the desktop loopback and now includes the exact custom mobile callback. Governed multi-account, tenant, guest, MFA, Conditional Access, cancellation, token-expiry, removal, and signing-bound Android broker matrix remains. |
 | M-03 | Android device security and accessibility | Not started | Physical-device Keystore/BiometricPrompt invalidation, lifecycle, backup/transfer/reinstall, screenshot, clipboard, TalkBack, scaling, navigation, and recovery evidence. |
 | M-04 | iOS device security and accessibility | Not started | Physical-device Keychain/LocalAuthentication invalidation, protected-data lifecycle, backup/migration/reinstall, capture, pasteboard, VoiceOver, Dynamic Type, navigation, and recovery evidence. |
