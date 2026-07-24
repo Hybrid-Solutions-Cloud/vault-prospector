@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Data.Sqlite;
 using VaultProspector.Application;
 
@@ -23,7 +25,7 @@ public interface ILocalEncryptionRotationFaultInjector
     void Reached(LocalEncryptionRotationCheckpoint checkpoint);
 }
 
-public sealed class LocalEncryptionRotationEngine(
+public sealed partial class LocalEncryptionRotationEngine(
     string dataDirectory,
     string databasePath,
     string protectedValueDirectory,
@@ -88,6 +90,7 @@ public sealed class LocalEncryptionRotationEngine(
             await WriteAuthenticatedJsonAsync(
                 JournalPath(),
                 journal,
+                LocalEncryptionRotationJsonContext.Default.RotationJournal,
                 journalKey,
                 cancellationToken);
             journalPublished = true;
@@ -298,8 +301,9 @@ public sealed class LocalEncryptionRotationEngine(
             cancellationToken);
         try
         {
-            var journal = await ReadAuthenticatedJsonAsync<RotationJournal>(
+            var journal = await ReadAuthenticatedJsonAsync(
                 journalPath,
+                LocalEncryptionRotationJsonContext.Default.RotationJournal,
                 journalKey,
                 cancellationToken);
             if (journal.Version != JournalVersion ||
@@ -421,6 +425,7 @@ public sealed class LocalEncryptionRotationEngine(
             await WriteAuthenticatedJsonAsync(
                 Path.Combine(temporaryPath, ManifestFileName),
                 manifest,
+                LocalEncryptionRotationJsonContext.Default.ArchiveManifest,
                 journalKey,
                 cancellationToken);
             await MoveDirectoryWithTransientRetryAsync(
@@ -443,8 +448,9 @@ public sealed class LocalEncryptionRotationEngine(
         CancellationToken cancellationToken)
     {
         var manifestPath = Path.Combine(archivePath, ManifestFileName);
-        var manifest = await ReadAuthenticatedJsonAsync<ArchiveManifest>(
+        var manifest = await ReadAuthenticatedJsonAsync(
             manifestPath,
+            LocalEncryptionRotationJsonContext.Default.ArchiveManifest,
             journalKey,
             cancellationToken);
         if (manifest.Version != JournalVersion ||
@@ -516,16 +522,20 @@ public sealed class LocalEncryptionRotationEngine(
         await WriteAuthenticatedJsonAsync(
             JournalPath(),
             journal,
+            LocalEncryptionRotationJsonContext.Default.RotationJournal,
             journalKey,
             cancellationToken);
 
     private static async Task WriteAuthenticatedJsonAsync<T>(
         string path,
         T payload,
+        JsonTypeInfo<T> payloadTypeInfo,
         byte[] key,
         CancellationToken cancellationToken)
     {
-        var payloadBytes = JsonSerializer.SerializeToUtf8Bytes(payload);
+        var payloadBytes = JsonSerializer.SerializeToUtf8Bytes(
+            payload,
+            payloadTypeInfo);
         var mac = HMACSHA256.HashData(key, payloadBytes);
         var wrapper = new AuthenticatedDocument(
             Convert.ToBase64String(payloadBytes),
@@ -537,7 +547,9 @@ public sealed class LocalEncryptionRotationEngine(
                 Path.GetDirectoryName(path) ?? ".");
             await File.WriteAllTextAsync(
                 temporaryPath,
-                JsonSerializer.Serialize(wrapper),
+                JsonSerializer.Serialize(
+                    wrapper,
+                    LocalEncryptionRotationJsonContext.Default.AuthenticatedDocument),
                 cancellationToken);
             await MoveFileWithTransientRetryAsync(
                 temporaryPath,
@@ -605,6 +617,7 @@ public sealed class LocalEncryptionRotationEngine(
 
     private static async Task<T> ReadAuthenticatedJsonAsync<T>(
         string path,
+        JsonTypeInfo<T> payloadTypeInfo,
         byte[] key,
         CancellationToken cancellationToken)
     {
@@ -623,8 +636,9 @@ public sealed class LocalEncryptionRotationEngine(
                 throw new LocalDataIntegrityException(
                     "An authenticated local rotation record exceeds the safe size limit.");
             }
-            wrapper = await JsonSerializer.DeserializeAsync<AuthenticatedDocument>(
+            wrapper = await JsonSerializer.DeserializeAsync(
                 stream,
+                LocalEncryptionRotationJsonContext.Default.AuthenticatedDocument,
                 cancellationToken: cancellationToken);
         }
         catch (JsonException exception)
@@ -664,7 +678,9 @@ public sealed class LocalEncryptionRotationEngine(
                 throw new LocalDataIntegrityException(
                     "An authenticated local rotation record failed integrity validation.");
             }
-            return JsonSerializer.Deserialize<T>(payloadBytes)
+            return JsonSerializer.Deserialize(
+                payloadBytes,
+                payloadTypeInfo)
                 ?? throw new LocalDataIntegrityException(
                     "An authenticated local rotation record has no payload.");
         }
@@ -922,6 +938,12 @@ public sealed class LocalEncryptionRotationEngine(
     private sealed record AuthenticatedDocument(
         string Payload,
         string Mac);
+
+    [JsonSerializable(typeof(RotationJournal))]
+    [JsonSerializable(typeof(ArchiveManifest))]
+    [JsonSerializable(typeof(AuthenticatedDocument))]
+    private sealed partial class LocalEncryptionRotationJsonContext :
+        JsonSerializerContext;
 
     private sealed record ArchiveSourceFile(
         string FullPath,

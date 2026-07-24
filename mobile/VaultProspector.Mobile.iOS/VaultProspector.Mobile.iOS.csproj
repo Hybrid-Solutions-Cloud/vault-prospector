@@ -9,6 +9,7 @@
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
     <RuntimeIdentifiers>ios-arm64;iossimulator-arm64</RuntimeIdentifiers>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
   </PropertyGroup>
 
   <ItemGroup>

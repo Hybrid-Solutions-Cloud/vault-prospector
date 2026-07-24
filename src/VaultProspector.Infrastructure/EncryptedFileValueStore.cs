@@ -1,12 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using VaultProspector.Application;
 using VaultProspector.Domain;
 
 namespace VaultProspector.Infrastructure;
 
-public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvider keyMaterial, IClock clock) : IProtectedValueStore
+public sealed partial class EncryptedFileValueStore(string directory, IKeyMaterialProvider keyMaterial, IClock clock) : IProtectedValueStore
 {
     private const int CurrentKeyVersion = 2;
     private const int MaximumEnvelopeBytes = 16 * 1024 * 1024;
@@ -43,7 +44,12 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
         var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
         try
         {
-            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(envelope), cancellationToken);
+            await File.WriteAllTextAsync(
+                temporaryPath,
+                JsonSerializer.Serialize(
+                    envelope,
+                    EncryptedFileJsonContext.Default.Envelope),
+                cancellationToken);
             File.Move(temporaryPath, path, true);
         }
         finally
@@ -283,8 +289,9 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
             if (stream.Length > MaximumEnvelopeBytes)
                 throw new CryptographicException(
                     "The protected-value envelope exceeds the safe size limit.");
-            var envelope = await JsonSerializer.DeserializeAsync<Envelope>(
+            var envelope = await JsonSerializer.DeserializeAsync(
                 stream,
+                EncryptedFileJsonContext.Default.Envelope,
                 cancellationToken: cancellationToken);
             if (envelope?.Descriptor is null ||
                 string.IsNullOrWhiteSpace(envelope.Nonce) ||
@@ -392,7 +399,9 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
             {
                 await File.WriteAllTextAsync(
                     temporaryPath,
-                    JsonSerializer.Serialize(envelope),
+                    JsonSerializer.Serialize(
+                        envelope,
+                        EncryptedFileJsonContext.Default.Envelope),
                     cancellationToken);
                 File.Move(temporaryPath, path, true);
             }
@@ -414,7 +423,18 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
     private string PathFor(Guid itemId) => Path.Combine(directory, $"{itemId:D}.vpcache");
     private static string KeyPurpose(int keyVersion) => $"offline-values-v{keyVersion}";
     private static byte[] AssociatedData(int keyVersion, Guid requestedVaultItemId, CachedSecretDescriptor descriptor) =>
-        JsonSerializer.SerializeToUtf8Bytes(new AuthenticatedMetadata(keyVersion, requestedVaultItemId, descriptor));
+        JsonSerializer.SerializeToUtf8Bytes(
+            new AuthenticatedMetadata(
+                keyVersion,
+                requestedVaultItemId,
+                descriptor),
+            EncryptedFileJsonContext.Default.AuthenticatedMetadata);
+
+    [JsonSerializable(typeof(Envelope))]
+    [JsonSerializable(typeof(AuthenticatedMetadata))]
+    private sealed partial class EncryptedFileJsonContext :
+        JsonSerializerContext;
+
     private void EnsureAvailable()
     {
         if (!keyMaterial.IsAvailable) throw new PlatformNotSupportedException("Platform-protected key storage is required for offline values.");
