@@ -16,6 +16,8 @@ Vault Prospector is a local-first Windows desktop application for discovering an
 - Optional AES-GCM encrypted offline values, disabled by default and protected with Windows DPAPI.
 - Version-aware indexing, workspaces, favorites, access recency, cancelable synchronization, partial-sync diagnostics, and per-vault error isolation.
 - Redacted local diagnostics with no tokens, secret values, usernames, vault names, or object names.
+- Unreleased machine-managed enterprise policy for allowed tenants, providers, and identity types,
+  clipboard/offline-cache restrictions, packaged ADMX/ADML templates, and fail-closed enforcement.
 - Unreleased, fail-closed browser-fill source with explicit origin/field mappings, protected machine
   policy, one-time desktop confirmation, and fresh Windows verification.
 - Unreleased CyberArk Privilege Cloud source with separate profiles, safes, accounts, versions,
@@ -44,7 +46,7 @@ Tenant consent and optional custom-registration requirements are explained in [A
 Prerequisites:
 
 - PowerShell 7+
-- .NET SDK 9.0.315 or a compatible 9.0 patch selected by `global.json`
+- .NET SDK 10.0.302 or a compatible 10.0 patch selected by `global.json`
 - Windows for Windows Hello integration and the final release package
 
 ```powershell
@@ -71,6 +73,7 @@ No local application can protect a deliberately revealed value from malware alre
 
 - [User guide](docs/user-guide.md)
 - [Authentication setup](docs/authentication.md)
+- [Machine-managed enterprise policy](docs/enterprise-policy.md)
 - [Architecture](docs/architecture/architecture-overview.md)
 - [Security requirements](docs/security/security-requirements.md)
 - [Threat model](docs/security/threat-model.md)
@@ -78,6 +81,7 @@ No local application can protect a deliberately revealed value from malware alre
 - [Browser integration and administrator policy](docs/browser-integration.md)
 - [CyberArk Privilege Cloud integration](docs/cyberark-integration.md)
 - [Mobile applications](docs/mobile-applications.md)
+- [CI build environments](docs/ci-build-environments.md)
 - [Preview feedback and GA promotion](docs/product/preview-feedback.md)
 - [Release and artifact verification](docs/release.md)
 - [Release operations and incident runbook](docs/release-operations-runbook.md)

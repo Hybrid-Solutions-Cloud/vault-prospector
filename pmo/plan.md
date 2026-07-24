@@ -190,8 +190,9 @@ exact-release evidence remain open.
 **Priority:** P1
 
 **Status:** Certificate and federated service-principal plus detected-host managed-identity
-profiles, validate-before-persist rotation, local revocation, and fail-closed use are implemented
-locally with automated validation; release, independent review, and live Azure evidence remain open
+profiles, validate-before-persist rotation, local revocation, fail-closed use, and machine-managed
+provider/identity-type/tenant boundaries are implemented locally with automated validation;
+release, independent review, and live Azure/administrator evidence remain open
 
 **Backlog coverage:** Human and workload identity choices
 
@@ -203,6 +204,8 @@ locally with automated validation; release, independent review, and live Azure e
 - Add managed-identity profiles only when the running environment exposes a usable managed identity
   endpoint; an ordinary laptop must never imply that a listed identity can be used locally.
 - Give each profile separate storage, rotation, revocation, audit, display, and token acquisition.
+- Apply machine-managed provider, identity-type, and tenant allow-lists before governed network
+  operations while preserving local disable, revoke, purge, and remove recovery paths.
 - Never inherit Azure CLI, Azure PowerShell, IDE, or terminal credential context.
 
 ### Exit criteria
@@ -255,8 +258,9 @@ and zero build warnings/errors; see
 
 **Priority:** P1
 
-**Status:** Implemented locally for explicit subscription/vault scope and observed permission
-display; unreleased, live Azure and independent validation remain open
+**Status:** Implemented locally for explicit subscription/vault scope, observed permission display,
+and machine-managed tenant filtering before and after discovery; unreleased, live Azure,
+administrator-deployment, and independent validation remain open
 
 **Backlog coverage:** Epic 3; discover vaults by selected access path; read-only policy UI
 
@@ -278,6 +282,15 @@ secret/key/certificate metadata-list outcomes, and makes clear that value-read a
 not probed during synchronization and writes are disabled by policy. Schema v4 adds a
 backward-compatible vault-selection column. Live Azure permission matrices and independent
 redaction/security validation remain release gates.
+
+Local implementation note (2026-07-24): the application now reads a versioned machine policy from
+`HKLM\SOFTWARE\Policies\Hybrid Solutions Cloud\Vault Prospector`. It constrains Azure tenants,
+providers, identity types, clipboard use, and offline-value retention in application services,
+passes tenant constraints into Azure discovery before enumeration, filters returned/persisted
+metadata again, and keeps cleanup operations available. Invalid enabled policy fails closed. The
+package includes ADMX/ADML templates and a deterministic read-only readiness check. Governed
+Group Policy/Intune deployment, live allowed/denied provider matrices, independent review, and
+exact signed-candidate validation remain open.
 
 ### Exit criteria
 
@@ -519,6 +532,9 @@ external platform/store gates open
 
 ### Scope
 
+- Enforce startup/reopen, encrypted metadata sync, search, cancellation, memory, storage, and
+  large-estate targets in controlled automation, then repeat them on representative devices and
+  the exact packaged candidate.
 - Complete Azure Artifact Signing Public Trust setup and timestamped Authenticode verification.
 - Submit immutable packages to WinGet and Chocolatey; verify catalog installation and update.
 - Execute the independent security-review plan and close all critical/high findings.
@@ -526,6 +542,20 @@ external platform/store gates open
   and supported-Windows matrices against exact public artifacts.
 - Maintain SBOM, checksums, Sigstore bundles, provenance, release notes, rollback, and vulnerability
   response for every release.
+
+Toolchain progress note (2026-07-24): the desktop solution, tests, lock files, CI, release workflow,
+self-contained application, MSI, ZIP, WinGet manifests, and Chocolatey package are migrated locally
+from .NET 9 to .NET 10 LTS. The locked 343-test Release gate, self-contained startup, rollback-safe
+MSI inspection, shortcut/icon and browser-host/policy inspection, and WinGet validation pass.
+Exact-head hosted CI, clean-machine installed lifecycle, trusted signing, and public-candidate
+repetition remain open.
+
+Progress note (2026-07-24): G-09 source controls now generate a deterministic 225-record integrated
+NuGet/npm inventory and third-party notice, fail CI on lock-file or disclosure drift, document
+package/store declarations, and embed the repository license, privacy statement, and notice in
+Windows ZIP/MSI payloads. G-09 remains in progress: exact signed-candidate SBOM/file
+reconciliation, the diagnostics-package license disposition, a public privacy URL, Apple/Google
+declaration review, and named human approval are external decision gates.
 
 ### Exit criteria
 
@@ -538,14 +568,22 @@ external platform/store gates open
 
 **Priority:** GA
 
-**Status:** In progress; operational thresholds and stability evidence remain open
+**Status:** In progress; operational automation and lifecycle policy are implemented locally,
+while hosted history, backup ownership, exercises, evaluator thresholds, and stability evidence
+remain open
 
 **Backlog coverage:** Epic 15
 
 ### Scope
 
 - Operate the voluntary, privacy-safe feedback and private vulnerability channels.
+- Maintain the legal/privacy inventory, packaged disclosures, public privacy statement, and
+  package/store declarations against each exact candidate.
 - Triage every report and maintain sanitized weekly rollups.
+- Operate weekly dependency, vulnerability, runtime-lifecycle, public-release, and support-channel
+  monitoring with retained machine-readable evidence.
+- Maintain named support/security ownership, immutable supersedence and end-of-support policy,
+  credential/signing rotation controls, and an exercised incident/withdrawal/recovery runbook.
 - Meet the defined evaluator, task-attempt, Windows-build, install-path, completion-rate, upgrade,
   and response-time thresholds.
 - Complete the final blocker-free stability window on the exact GA candidate.
@@ -557,6 +595,13 @@ external platform/store gates open
 - Production documentation, support, security, privacy, installation, recovery, and operations
   guidance agree with the exact artifact.
 - The product owner approves GA with recorded evidence and no unresolved release blocker.
+
+Progress note (2026-07-24): a machine-readable operational-readiness contract, fail-closed
+PowerShell validator, weekly Dependabot coverage, scheduled vulnerability/runtime/public-endpoint
+monitor, and support/EOS policy are implemented. The integrated contract now passes all 35 checks
+with both desktop and mobile pinned to .NET 10 LTS and its recorded 2028-11-14 support date. The
+earlier local baseline also passed all three public endpoints. G-08 remains In progress pending a
+backup operator, retained hosted runs, the complete exercise, and Authenticode lifecycle approval.
 
 ## Backlog-to-plan traceability
 

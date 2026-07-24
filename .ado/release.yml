@@ -1,0 +1,229 @@
+name: release-$(Date:yyyyMMdd).$(Rev:r)
+
+trigger:
+  branches:
+    exclude:
+      - '*'
+  tags:
+    include:
+      - v*
+
+pr: none
+
+variables:
+  - group: vp-prd-secrets
+  - name: DOTNET_SKIP_FIRST_TIME_EXPERIENCE
+    value: '1'
+  - name: DOTNET_NOLOGO
+    value: '1'
+
+jobs:
+  - job: Release
+    displayName: Build, sign, and publish Preview
+    pool:
+      vmImage: windows-2025
+    steps:
+      - checkout: self
+        clean: true
+        fetchDepth: 0
+
+      - task: UseDotNet@2
+        displayName: Use .NET SDK 10.0.302
+        inputs:
+          packageType: sdk
+          version: 10.0.302
+
+      - pwsh: |
+          if ($env:BUILD_SOURCEBRANCH -notmatch '^refs/tags/v(.+)$') {
+            throw "Release builds require a v-prefixed tag; received '$env:BUILD_SOURCEBRANCH'."
+          }
+          $version = $Matches[1]
+          if ($version -notmatch '^\d+\.\d+\.\d+-preview\.\d+$') {
+            throw 'Stable and GA releases remain blocked until Azure Artifact Signing is configured.'
+          }
+          Write-Host "##vso[task.setvariable variable=RELEASE_VERSION]$version"
+        displayName: Resolve release version and enforce unsigned Preview boundary
+
+      - pwsh: ./scripts/Build.ps1 -Configuration Release
+        displayName: Build and test
+
+      - pwsh: |
+          choco install winget-cli --yes --no-progress --limit-output
+          if ($LASTEXITCODE -notin @(0, 2)) {
+            throw "WinGet installation failed with exit code $LASTEXITCODE."
+          }
+          $wingetPackage = Get-ChildItem `
+            -LiteralPath 'C:\Program Files\WindowsApps' `
+            -Directory `
+            -Filter 'Microsoft.DesktopAppInstaller_*_x64__8wekyb3d8bbwe' |
+            Sort-Object Name -Descending |
+            Select-Object -First 1
+          if (-not $wingetPackage) {
+            throw 'The WinGet package directory was not found after installation.'
+          }
+          # The hosted service identity can read the installed AppX package, but Windows
+          # denies direct execution from WindowsApps. A normal copy inherits executable
+          # ACLs from the agent's temporary directory.
+          $portableWinGet = Join-Path $env:AGENT_TEMPDIRECTORY 'winget-portable'
+          New-Item -ItemType Directory -Path $portableWinGet -Force | Out-Null
+          Get-ChildItem -LiteralPath $wingetPackage.FullName -Force |
+            Copy-Item -Destination $portableWinGet -Recurse -Force
+          $winget = Join-Path $portableWinGet 'winget.exe'
+          & $winget --version
+          if ($LASTEXITCODE -ne 0) {
+            throw "The portable WinGet client failed with exit code $LASTEXITCODE."
+          }
+
+          ./scripts/Package.ps1 -Version $env:RELEASE_VERSION -SkipArchive
+
+          $binaries = @(
+            Get-ChildItem artifacts/publish-win-x64 -Recurse -File |
+              Where-Object {
+                $_.Name -like 'VaultProspector*.exe' -or
+                $_.Name -like 'VaultProspector*.dll'
+              }
+          )
+          if ($binaries.Count -eq 0) {
+            throw 'No application binaries were selected for unsigned-boundary verification.'
+          }
+          foreach ($binary in $binaries) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $binary.FullName
+            if ($signature.Status -ne 'NotSigned') {
+              throw "Unsigned Preview expected '$($binary.Name)' to be unsigned."
+            }
+          }
+
+          $archive = "artifacts/VaultProspector-$env:RELEASE_VERSION-win-x64.zip"
+          Compress-Archive `
+            -Path artifacts/publish-win-x64/* `
+            -DestinationPath $archive `
+            -CompressionLevel Optimal
+          $archiveHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).
+            Hash.
+            ToLowerInvariant()
+          Set-Content `
+            -LiteralPath "$archive.sha256" `
+            -Value "$archiveHash  $(Split-Path -Leaf $archive)" `
+            -Encoding utf8NoBOM
+
+          ./scripts/PackageInstaller.ps1 -Version $env:RELEASE_VERSION -SkipPublish
+          $installer = "artifacts/VaultProspector-$env:RELEASE_VERSION-win-x64.msi"
+          ./scripts/Test-InstallerUpgradeSchedule.ps1 -InstallerPath $installer
+          ./scripts/Test-InstallerShortcutIcon.ps1 -InstallerPath $installer
+          npm test --prefix browser-extension
+          npm run build --prefix browser-extension
+          ./scripts/Test-BrowserHostInstaller.ps1 `
+            -InstallerPath $installer `
+            -PublishDirectory artifacts/publish-win-x64
+
+          $installerSignature = Get-AuthenticodeSignature -LiteralPath $installer
+          if ($installerSignature.Status -ne 'NotSigned') {
+            throw 'Unsigned Preview expected the MSI to be unsigned.'
+          }
+          $installerHash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).
+            Hash.
+            ToLowerInvariant()
+          Set-Content `
+            -LiteralPath "$installer.sha256" `
+            -Value "$installerHash  $(Split-Path -Leaf $installer)" `
+            -Encoding utf8NoBOM
+
+          ./scripts/PackageDistribution.ps1 -Version $env:RELEASE_VERSION
+          & $winget validate `
+            --manifest "./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/$env:RELEASE_VERSION"
+          if ($LASTEXITCODE -ne 0) {
+            throw "WinGet validation failed with exit code $LASTEXITCODE."
+          }
+        displayName: Build and validate unsigned Preview packages
+
+      - pwsh: |
+          choco install syft --version 1.45.1 --yes --no-progress --limit-output
+          if ($LASTEXITCODE -notin @(0, 2)) {
+            throw "Syft installation failed with exit code $LASTEXITCODE."
+          }
+          syft `
+            'dir:artifacts/publish-win-x64' `
+            --output "spdx-json=artifacts/VaultProspector-$env:RELEASE_VERSION-win-x64.spdx.json"
+          if ($LASTEXITCODE -ne 0) {
+            throw "SBOM generation failed with exit code $LASTEXITCODE."
+          }
+        displayName: Generate SPDX SBOM
+
+      - pwsh: |
+          $uri = 'https://github.com/sigstore/cosign/releases/download/v3.0.6/cosign-windows-amd64.exe'
+          $path = Join-Path $env:AGENT_TOOLSDIRECTORY 'cosign.exe'
+          Invoke-WebRequest -Uri $uri -OutFile $path
+          $actual = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+          $expected = '9b85a88ebff2d9dd30ff4984a6f61f2cedc232dd87d81fa7f2ff3c0ed96c241c'
+          if ($actual -ne $expected) {
+            throw 'The downloaded Cosign binary did not match the pinned SHA-256.'
+          }
+          Write-Host "##vso[task.setvariable variable=COSIGN_PATH]$path"
+        displayName: Install pinned Cosign 3.0.6
+
+      - task: AzureCLI@2
+        displayName: Sign and verify release packages with HCS Key Vault
+        inputs:
+          azureSubscription: HCS Platform Azure
+          scriptType: pscore
+          scriptLocation: inlineScript
+          addSpnToEnvironment: true
+          inlineScript: |
+            $env:AZURE_CLIENT_ID = $env:servicePrincipalId
+            $env:AZURE_CLIENT_SECRET = $env:servicePrincipalKey
+            $env:AZURE_TENANT_ID = $env:tenantId
+            $key = 'azurekms://kv-hcs-vault-01.vault.azure.net/hcs-vault-prospector-release-signing-key'
+            $packages = @(
+              Get-ChildItem artifacts -File |
+                Where-Object Extension -in '.msi', '.zip', '.nupkg'
+            )
+            if ($packages.Count -eq 0) {
+              throw 'No release packages were found for signing.'
+            }
+            foreach ($package in $packages) {
+              $bundle = "$($package.FullName).sigstore.json"
+              & $env:COSIGN_PATH sign-blob `
+                --yes `
+                --key $key `
+                --bundle $bundle `
+                $package.FullName
+              if ($LASTEXITCODE -ne 0) {
+                throw "Cosign signing failed for '$($package.Name)'."
+              }
+              & $env:COSIGN_PATH verify-blob `
+                --key release/vault-prospector-release-signing.pub `
+                --bundle $bundle `
+                $package.FullName
+              if ($LASTEXITCODE -ne 0) {
+                throw "Cosign verification failed for '$($package.Name)'."
+              }
+            }
+
+      - pwsh: |
+          ./scripts/Set-AdoGitHubAppToken.ps1 `
+            -AppId $env:GITHUB_APP_ID `
+            -PrivateKeyPem $env:GITHUB_APP_PRIVATE_KEY `
+            -Organization Hybrid-Solutions-Cloud
+        displayName: Mint short-lived GitHub App installation token
+        env:
+          GITHUB_APP_ID: $(hcs-platform-github-app-id)
+          GITHUB_APP_PRIVATE_KEY: $(hcs-platform-github-app-private-key)
+
+      - pwsh: |
+          ./scripts/PublishDistribution.ps1 -Version $env:RELEASE_VERSION
+        displayName: Publish immutable public release
+        env:
+          GH_TOKEN: $(GH_TOKEN)
+
+      - pwsh: |
+          ./scripts/SubmitPackageManagers.ps1 `
+            -Version $env:RELEASE_VERSION `
+            -SkipWinGet
+        displayName: Submit Chocolatey package
+        env:
+          CHOCOLATEY_API_KEY: $(hcs-vault-prospector-chocolatey-publisher-api-key)
+
+      - publish: artifacts
+        artifact: release-$(RELEASE_VERSION)
+        displayName: Retain release evidence
+        condition: always()

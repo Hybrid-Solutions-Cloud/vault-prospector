@@ -142,6 +142,15 @@ Local CyberArk audit records operation, result, profile/account identifier, safe
 and a fixed safe message. They do not store the credential, tokens, business reason, or account
 value. CyberArk remains authoritative for server-side access and audit records.
 
+## Machine-managed enterprise policy
+
+The unreleased Windows application can read policy that an administrator places under HKLM.
+Allowed-tenant entries are Microsoft Entra tenant GUIDs; provider/identity choices and
+clipboard/offline-cache limits are also configuration data. Vault Prospector does not create,
+change, delete, upload, or copy these values into diagnostic events. The Settings summary reports
+only counts and bounded state, not configured tenant identifiers. See
+[Machine-managed enterprise policy](enterprise-policy.md).
+
 ## Mobile applications
 
 The unreleased Android and iOS applications store encrypted metadata and app-owned identity state

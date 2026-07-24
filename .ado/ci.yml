@@ -1,0 +1,278 @@
+name: $(Date:yyyyMMdd).$(Rev:r)
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - '*'
+
+variables:
+  CI_CANDIDATE_VERSION: 0.1.0-ci.$(Build.BuildId)
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+  DOTNET_NOLOGO: '1'
+
+stages:
+  - stage: Validate
+    displayName: Validate source and packages
+    jobs:
+      - job: Windows
+        displayName: Windows build, test, and package
+        pool:
+          vmImage: windows-2025
+        steps:
+          - checkout: self
+            clean: true
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            displayName: Use .NET SDK 10.0.302
+            inputs:
+              packageType: sdk
+              version: 10.0.302
+
+          - pwsh: dotnet restore VaultProspector.sln --locked-mode
+            displayName: Restore locked dependencies
+
+          - pwsh: dotnet format VaultProspector.sln --verify-no-changes --no-restore
+            displayName: Verify formatting
+
+          - pwsh: dotnet build VaultProspector.sln --configuration Release --no-restore
+            displayName: Build
+
+          - pwsh: >-
+              dotnet test VaultProspector.sln
+              --configuration Release
+              --no-build
+              --logger trx
+              --collect "XPlat Code Coverage"
+              --results-directory TestResults
+            displayName: Test
+
+          - pwsh: ./scripts/Test-PerformanceScale.ps1 -OutputPath ./TestResults/performance-scale.json -NoBuild
+            displayName: Verify performance and scale baseline
+
+          - pwsh: |
+              node --version
+              npm test --prefix browser-extension
+              npm run build --prefix browser-extension
+            displayName: Verify browser extension source
+
+          - pwsh: |
+              $parseErrors = @()
+              Get-ChildItem scripts, tests -Recurse -Filter *.ps1 | ForEach-Object {
+                $tokens = $null
+                $errors = $null
+                [System.Management.Automation.Language.Parser]::ParseFile(
+                  $_.FullName,
+                  [ref]$tokens,
+                  [ref]$errors
+                ) | Out-Null
+                if ($errors.Count -gt 0) {
+                  $parseErrors += $errors
+                }
+              }
+              if ($parseErrors.Count -gt 0) {
+                $parseErrors | Format-List
+                throw "$($parseErrors.Count) PowerShell parser error(s) found."
+              }
+            displayName: Verify PowerShell syntax
+
+          - pwsh: |
+              choco install winget-cli --yes --no-progress --limit-output
+              if ($LASTEXITCODE -notin @(0, 2)) {
+                throw "WinGet installation failed with exit code $LASTEXITCODE."
+              }
+              $wingetPackage = Get-ChildItem `
+                -LiteralPath 'C:\Program Files\WindowsApps' `
+                -Directory `
+                -Filter 'Microsoft.DesktopAppInstaller_*_x64__8wekyb3d8bbwe' |
+                Sort-Object Name -Descending |
+                Select-Object -First 1
+              if (-not $wingetPackage) {
+                throw 'The WinGet package directory was not found after installation.'
+              }
+              # The hosted service identity can read the installed AppX package, but Windows
+              # denies direct execution from WindowsApps. A normal copy inherits executable
+              # ACLs from the agent's temporary directory.
+              $portableWinGet = Join-Path $env:AGENT_TEMPDIRECTORY 'winget-portable'
+              New-Item -ItemType Directory -Path $portableWinGet -Force | Out-Null
+              Get-ChildItem -LiteralPath $wingetPackage.FullName -Force |
+                Copy-Item -Destination $portableWinGet -Recurse -Force
+              $winget = Join-Path $portableWinGet 'winget.exe'
+              & $winget --version
+              if ($LASTEXITCODE -ne 0) {
+                throw "The portable WinGet client failed with exit code $LASTEXITCODE."
+              }
+
+              ./scripts/PackageInstaller.ps1 -Version $env:CI_CANDIDATE_VERSION
+              ./scripts/Test-InstallerUpgradeSchedule.ps1 `
+                -InstallerPath "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi"
+              ./scripts/Test-InstallerShortcutIcon.ps1 `
+                -InstallerPath "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi"
+              ./scripts/Test-BrowserHostInstaller.ps1 `
+                -InstallerPath "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi" `
+                -PublishDirectory "./artifacts/publish-win-x64"
+              ./scripts/PackageDistribution.ps1 -Version $env:CI_CANDIDATE_VERSION
+              & $winget validate `
+                --manifest "./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/$env:CI_CANDIDATE_VERSION"
+
+              $installer = Get-Item `
+                "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi"
+              $provenance = [ordered]@{
+                schemaVersion = 1
+                candidateVersion = $env:CI_CANDIDATE_VERSION
+                sourceCommit = $env:BUILD_SOURCEVERSION
+                sourceRef = $env:BUILD_SOURCEBRANCH
+                pipelineBuildId = $env:BUILD_BUILDID
+                pipelineBuildNumber = $env:BUILD_BUILDNUMBER
+                repository = $env:BUILD_REPOSITORY_NAME
+                createdAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
+                installer = [ordered]@{
+                  name = $installer.Name
+                  length = $installer.Length
+                  sha256 = (
+                    Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256
+                  ).Hash
+                }
+              }
+              $provenance |
+                ConvertTo-Json -Depth 4 |
+                Set-Content ./artifacts/ci-candidate.json -Encoding utf8NoBOM
+            displayName: Build Windows installer and package manifests
+
+          - pwsh: ./scripts/Test-VulnerablePackages.ps1
+            displayName: Check vulnerable dependencies
+
+          - pwsh: ./scripts/Test-OperationalReadiness.ps1 -OutputPath TestResults/operational-readiness.json
+            displayName: Validate operational-readiness contract
+
+          - pwsh: >-
+              ./scripts/Test-LegalPrivacyReadiness.ps1
+              -OutputPath TestResults/legal-privacy.json
+              -PublishDirectory artifacts/publish-win-x64
+            displayName: Validate legal and privacy inventory
+
+          - pwsh: >-
+              ./scripts/Test-EnterprisePolicyReadiness.ps1
+              -OutputPath TestResults/enterprise-policy.json
+              -PublishDirectory artifacts/publish-win-x64
+            displayName: Validate enterprise policy package
+
+          - task: PublishTestResults@2
+            displayName: Publish Windows test results
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: TestResults/**/*.trx
+              failTaskOnFailedTests: true
+
+          - publish: TestResults
+            artifact: windows-test-results
+            displayName: Publish Windows evidence
+            condition: always()
+
+          - publish: artifacts
+            artifact: windows-candidate
+            displayName: Publish commit-addressed Windows candidate
+            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+      - job: SecretScan
+        displayName: Secret scan
+        pool:
+          vmImage: ubuntu-24.04
+        steps:
+          - checkout: self
+            clean: true
+            fetchDepth: 0
+
+          - pwsh: |
+              go install github.com/zricethezav/gitleaks/v8@v8.30.0
+              $gitleaks = Join-Path (go env GOPATH) 'bin/gitleaks'
+              & $gitleaks git --redact --no-banner
+              if ($LASTEXITCODE -ne 0) {
+                throw "Gitleaks failed with exit code $LASTEXITCODE."
+              }
+            displayName: Scan Git history for secrets
+
+      - job: Android
+        displayName: Managed mobile tests and Android package
+        pool:
+          vmImage: ubuntu-24.04
+        steps:
+          - checkout: self
+            clean: true
+
+          - task: UseDotNet@2
+            displayName: Use .NET SDK 10.0.302
+            inputs:
+              packageType: sdk
+              version: 10.0.302
+
+          - task: JavaToolInstaller@0
+            displayName: Use Microsoft OpenJDK 21
+            inputs:
+              versionSpec: '21'
+              jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
+
+          - pwsh: ./scripts/Build-Mobile.ps1 -Platform Managed
+            displayName: Test shared mobile implementation
+
+          - pwsh: |
+              $sdkManager = Get-ChildItem `
+                -Path $env:ANDROID_HOME `
+                -Filter sdkmanager `
+                -File `
+                -Recurse |
+                Select-Object -First 1
+              if (-not $sdkManager) {
+                throw 'sdkmanager was not found in ANDROID_HOME.'
+              }
+              & $sdkManager.FullName 'platforms;android-36' 'build-tools;36.0.0'
+              if ($LASTEXITCODE -ne 0) {
+                throw "Android SDK installation failed with exit code $LASTEXITCODE."
+              }
+            displayName: Install pinned Android SDK
+
+          - pwsh: dotnet workload install android --skip-manifest-update
+            workingDirectory: mobile
+            displayName: Install pinned Android workload set
+
+          - pwsh: ./scripts/Build-Mobile.ps1 -Platform Android
+            displayName: Build Android App Bundle
+
+      - job: iOS
+        displayName: iOS simulator build
+        pool:
+          vmImage: macOS-15
+        steps:
+          - checkout: self
+            clean: true
+
+          - task: UseDotNet@2
+            displayName: Use .NET SDK 10.0.302
+            inputs:
+              packageType: sdk
+              version: 10.0.302
+
+          - pwsh: |
+              $xcode = Get-Item /Applications/Xcode_26.0.1.app -ErrorAction SilentlyContinue
+              if (-not $xcode) {
+                Get-ChildItem /Applications -Directory -Filter 'Xcode*.app' |
+                  Select-Object -ExpandProperty Name
+                throw 'Xcode 26.0.1 was not found on the hosted macOS agent.'
+              }
+              sudo xcode-select --switch "$($xcode.FullName)/Contents/Developer"
+              xcodebuild -version
+            displayName: Select workload-compatible Xcode
+
+          - pwsh: dotnet workload install ios --skip-manifest-update
+            workingDirectory: mobile
+            displayName: Install pinned iOS workload set
+
+          - pwsh: ./scripts/Build-Mobile.ps1 -Platform iOS
+            displayName: Build unsigned iOS simulator application

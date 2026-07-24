@@ -12,9 +12,10 @@ public sealed class IdentityService
     private readonly IMetadataRepository _repository;
     private readonly IDiagnosticSink _diagnostics;
     private readonly IProtectedValueStore? _protectedValueStore;
+    private readonly IEnterprisePolicy _enterprisePolicy;
 
     public IdentityService(IIdentityProvider provider, IMetadataRepository repository)
-        : this(provider, repository, new NullDiagnosticSink(), null)
+        : this(provider, repository, new NullDiagnosticSink(), null, null)
     {
     }
 
@@ -22,21 +23,28 @@ public sealed class IdentityService
         IIdentityProvider provider,
         IMetadataRepository repository,
         IDiagnosticSink diagnostics,
-        IProtectedValueStore? protectedValueStore = null)
+        IProtectedValueStore? protectedValueStore = null,
+        IEnterprisePolicy? enterprisePolicy = null)
     {
         _provider = provider;
         _repository = repository;
         _diagnostics = diagnostics;
         _protectedValueStore = protectedValueStore;
+        _enterprisePolicy =
+            enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance;
     }
 
     public async Task<ConnectedIdentity> AddAsync(string clientId, string displayName, CancellationToken cancellationToken)
     {
         if (!Guid.TryParse(clientId?.Trim(), out var parsedClientId))
             throw new ArgumentException("A valid Microsoft Entra public-client application ID is required.", nameof(clientId));
+        var policy = _enterprisePolicy.GetSnapshot();
+        policy.EnsureProviderAllowed(EnterpriseProvider.AzureKeyVault);
+        policy.EnsureIdentityTypeAllowed(IdentityType.InteractiveUser);
         var identity = await _provider.SignInAsync(parsedClientId.ToString("D"), displayName.Trim(), cancellationToken);
         try
         {
+            policy.EnsureIdentityAllowed(identity);
             await _repository.UpsertIdentityAsync(identity, cancellationToken);
             Audit("identity_connected", identity, "ready");
             return identity;
@@ -64,8 +72,12 @@ public sealed class IdentityService
         if (type == IdentityType.InteractiveUser)
             throw new ArgumentException("Interactive users must use AddAsync.", nameof(type));
 
+        var policy = _enterprisePolicy.GetSnapshot();
+        policy.EnsureProviderAllowed(EnterpriseProvider.AzureKeyVault);
+        policy.EnsureIdentityTypeAllowed(type);
         var normalizedClientId = NormalizeOptionalGuid(clientId, nameof(clientId));
         var normalizedTenantId = NormalizeOptionalGuid(tenantId, nameof(tenantId));
+        policy.EnsureTenantAllowed(normalizedTenantId);
         var normalizedCredential = credentialData?.Trim() ?? string.Empty;
         if (type == IdentityType.ManagedIdentity)
         {
@@ -100,6 +112,7 @@ public sealed class IdentityService
         );
 
         var validated = await _provider.ReauthenticateAsync(identity, cancellationToken);
+        policy.EnsureIdentityAllowed(validated);
         await _repository.UpsertIdentityAsync(validated, cancellationToken);
         Audit("workload_identity_connected", validated, "ready");
         return validated;
@@ -201,7 +214,9 @@ public sealed class IdentityService
     {
         var identity = await _repository.GetIdentityAsync(identityId, cancellationToken);
         if (identity is null) return;
+        _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(identity);
         var validated = await _provider.ReauthenticateAsync(identity, cancellationToken);
+        _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(validated);
         var enabled = validated with { IsEnabled = true, AuthenticationState = AuthenticationState.Ready };
         await _repository.UpsertIdentityAsync(enabled, cancellationToken);
         Audit("identity_enabled", enabled, "ready");
@@ -211,7 +226,9 @@ public sealed class IdentityService
     {
         var identity = await _repository.GetIdentityAsync(identityId, cancellationToken);
         if (identity is null) return;
+        _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(identity);
         var refreshed = await _provider.ReauthenticateAsync(identity, cancellationToken);
+        _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(refreshed);
         var updated = refreshed with { IsEnabled = true, AuthenticationState = AuthenticationState.Ready };
         await _repository.UpsertIdentityAsync(updated, cancellationToken);
         Audit("identity_reauthenticated", updated, "ready");
@@ -226,8 +243,10 @@ public sealed class IdentityService
         if (identity.Type != IdentityType.InteractiveUser)
             throw new InvalidOperationException(
                 "Microsoft Graph directory discovery requires an explicit interactive administrator identity.");
+        _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(identity);
 
         var authorized = await _provider.AuthorizeDirectoryReadAsync(identity, cancellationToken);
+        _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(authorized);
         var updated = authorized with
         {
             IsEnabled = true,
@@ -248,6 +267,7 @@ public sealed class IdentityService
             throw new WorkloadIdentityConfigurationException(
                 "Only certificate and federated service-principal credentials can be rotated here.",
                 nameof(identityId));
+        _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(identity);
 
         var candidate = identity with
         {
@@ -258,6 +278,7 @@ public sealed class IdentityService
         try
         {
             var validated = await _provider.ReauthenticateAsync(candidate, cancellationToken);
+            _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(validated);
             var updated = validated with
             {
                 IsEnabled = true,
@@ -410,13 +431,23 @@ public sealed class IdentityService
     }
 }
 
-public sealed class SynchronizationService(IVaultProvider provider, IMetadataRepository repository, IClock clock, IDiagnosticSink diagnostics)
+public sealed class SynchronizationService(
+    IVaultProvider provider,
+    IMetadataRepository repository,
+    IClock clock,
+    IDiagnosticSink diagnostics,
+    IEnterprisePolicy? enterprisePolicy = null)
 {
     public async Task<SyncRun> SynchronizeAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
     {
         identity = await repository.GetIdentityAsync(identity.Id, cancellationToken)
             ?? throw new KeyNotFoundException("The selected identity no longer exists.");
         EnsureOnlineIdentityIsUsable(identity);
+        var policy = (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance)
+            .GetSnapshot();
+        policy.EnsureIdentityAllowed(identity);
+        var constraints = new VaultDiscoveryConstraints(
+            policy.AllowedTenantIds);
         var started = clock.UtcNow;
         try
         {
@@ -436,7 +467,11 @@ public sealed class SynchronizationService(IVaultProvider provider, IMetadataRep
                 identity,
                 excludedSubscriptions,
                 excludedVaultResourceIds,
+                constraints,
                 cancellationToken);
+            snapshot = ApplyTenantConstraints(
+                snapshot,
+                constraints);
             var retainedExcludedPaths = knownVaults
                 .Where(summary =>
                     !summary.Access.IsSelected ||
@@ -450,12 +485,18 @@ public sealed class SynchronizationService(IVaultProvider provider, IMetadataRep
                 {
                     Vaults = snapshot.Vaults
                         .Concat(retainedExcludedPaths
-                            .Where(summary => discoveredVaultIds.Add(summary.Vault.Id))
+                            .Where(summary =>
+                                constraints.IsTenantAllowed(
+                                    summary.Vault.TenantId) &&
+                                discoveredVaultIds.Add(summary.Vault.Id))
                             .Select(summary => summary.Vault))
                         .ToArray(),
                     AccessPaths = snapshot.AccessPaths
                         .Concat(retainedExcludedPaths
-                            .Where(summary => discoveredAccessIds.Add(summary.Access.Id))
+                            .Where(summary =>
+                                constraints.IsTenantAllowed(
+                                    summary.Vault.TenantId) &&
+                                discoveredAccessIds.Add(summary.Access.Id))
                             .Select(summary => summary.Access))
                         .ToArray(),
                 };
@@ -498,14 +539,82 @@ public sealed class SynchronizationService(IVaultProvider provider, IMetadataRep
         if (!identity.IsEnabled || identity.AuthenticationState != AuthenticationState.Ready)
             throw new InvalidOperationException("The selected identity is disabled, revoked, or requires authentication.");
     }
+
+    private static DiscoverySnapshot ApplyTenantConstraints(
+        DiscoverySnapshot snapshot,
+        VaultDiscoveryConstraints constraints)
+    {
+        if (!constraints.RestrictsTenants)
+            return snapshot;
+
+        var tenants = snapshot.Tenants
+            .Where(tenant =>
+                constraints.IsTenantAllowed(tenant.TenantId))
+            .ToArray();
+        var tenantAccessIds = tenants
+            .Select(tenant => tenant.Id)
+            .ToHashSet();
+        var subscriptions = snapshot.Subscriptions
+            .Where(subscription =>
+                tenantAccessIds.Contains(
+                    subscription.TenantAccessId))
+            .ToArray();
+        var vaults = snapshot.Vaults
+            .Where(vault =>
+                constraints.IsTenantAllowed(vault.TenantId))
+            .ToArray();
+        var vaultIds = vaults
+            .Select(vault => vault.Id)
+            .ToHashSet();
+        var accessPaths = snapshot.AccessPaths
+            .Where(access =>
+                constraints.IsTenantAllowed(access.TenantId) &&
+                vaultIds.Contains(access.VaultId))
+            .ToArray();
+        var items = snapshot.Items
+            .Where(item => vaultIds.Contains(item.VaultId))
+            .ToArray();
+
+        return snapshot with
+        {
+            Tenants = tenants,
+            Subscriptions = subscriptions,
+            Vaults = vaults,
+            AccessPaths = accessPaths,
+            Items = items,
+        };
+    }
 }
 
-public sealed class SearchService(IMetadataRepository repository, IClock clock)
+public sealed class SearchService(
+    IMetadataRepository repository,
+    IClock clock,
+    IEnterprisePolicy? enterprisePolicy = null)
 {
-    public Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest request, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<SearchResult>> SearchAsync(
+        SearchRequest request,
+        CancellationToken cancellationToken)
     {
         if (request.Limit is < 1 or > 1000) throw new ArgumentOutOfRangeException(nameof(request), "Search limit must be between 1 and 1000.");
-        return repository.SearchAsync(request, clock.UtcNow, cancellationToken);
+        var policy = (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance)
+            .GetSnapshot();
+        if (!policy.AllowedProviders.Contains(
+                EnterpriseProvider.AzureKeyVault))
+        {
+            return [];
+        }
+
+        var results = await repository.SearchAsync(
+            request,
+            clock.UtcNow,
+            cancellationToken);
+        return policy.RestrictsTenants
+            ? results
+                .Where(result =>
+                    policy.AllowedTenantIds.Contains(
+                        result.Vault.TenantId))
+                .ToArray()
+            : results;
     }
 }
 
@@ -515,12 +624,14 @@ public sealed class SecretAccessService(
     IProtectedValueStore cache,
     IClipboardService clipboard,
     IUserVerificationService verification,
-    IClock clock)
+    IClock clock,
+    IEnterprisePolicy? enterprisePolicy = null)
 {
     public async Task<SensitiveValue> RetrieveAsync(Guid itemId, CancellationToken cancellationToken)
     {
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be retrieved. Key material and certificate private keys are never exported.");
+        EnsureSourceAllowed(source);
         EnsureOnlineIdentityIsUsable(source.Identity);
         if (!verification.IsAvailable || await verification.VerifyAsync("Reveal an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified) throw new UnauthorizedAccessException("Local verification was not completed.");
         var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
@@ -549,6 +660,7 @@ public sealed class SecretAccessService(
             ?? throw new KeyNotFoundException("The mapped vault item or identity access path no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret)
             throw new InvalidOperationException("Only secret values can be filled.");
+        EnsureSourceAllowed(source);
         EnsureOnlineIdentityIsUsable(source.Identity);
         if (!verification.IsAvailable ||
             await verification.VerifyAsync(verificationReason, cancellationToken) !=
@@ -577,9 +689,13 @@ public sealed class SecretAccessService(
 
     public async Task RetrieveAndCopyAsync(Guid itemId, TimeSpan clearAfter, CachePolicy policy, CancellationToken cancellationToken)
     {
+        var enterprise = EnterprisePolicy();
+        enterprise.EnsureClipboardAllowed();
+        policy = enterprise.Constrain(policy);
         if (!policy.AllowClipboard) throw new InvalidOperationException("Clipboard use is disabled by policy.");
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be copied.");
+        EnsureSourceAllowed(source, enterprise);
         EnsureOnlineIdentityIsUsable(source.Identity);
         if (!verification.IsAvailable || await verification.VerifyAsync("Copy an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified)
             throw new UnauthorizedAccessException("Local verification was not completed.");
@@ -592,9 +708,13 @@ public sealed class SecretAccessService(
 
     public async Task<CachedSecretDescriptor> RetrieveAndCacheAsync(Guid itemId, Guid? workspaceId, TimeSpan lifetime, CachePolicy policy, CancellationToken cancellationToken)
     {
+        var enterprise = EnterprisePolicy();
+        enterprise.EnsureOfflineCacheAllowed();
+        policy = enterprise.Constrain(policy);
         var expiresAt = policy.GetExpiration(clock.UtcNow, lifetime);
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be cached.");
+        EnsureSourceAllowed(source, enterprise);
         EnsureOnlineIdentityIsUsable(source.Identity);
         if (!verification.IsAvailable || await verification.VerifyAsync("Retrieve and cache an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified)
             throw new UnauthorizedAccessException("Local verification was not completed.");
@@ -607,9 +727,12 @@ public sealed class SecretAccessService(
 
     public async Task<SensitiveValue> RetrieveCachedAsync(Guid itemId, CancellationToken cancellationToken)
     {
+        var enterprise = EnterprisePolicy();
+        enterprise.EnsureOfflineCacheAllowed();
         var source = await repository.ResolveItemAsync(itemId, cancellationToken)
             ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only cached secret values can be opened.");
+        EnsureSourceAllowed(source, enterprise);
         if (!verification.IsAvailable || await verification.VerifyAsync("Open an offline secret", cancellationToken) != UserVerificationResult.Verified)
             throw new UnauthorizedAccessException("Local verification was not completed.");
 
@@ -632,6 +755,19 @@ public sealed class SecretAccessService(
     {
         if (!identity.IsEnabled || identity.AuthenticationState != AuthenticationState.Ready)
             throw new InvalidOperationException("The selected identity is disabled, revoked, or requires authentication.");
+    }
+
+    private EnterprisePolicySnapshot EnterprisePolicy() =>
+        (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance)
+            .GetSnapshot();
+
+    private void EnsureSourceAllowed(
+        (VaultItem Item, VaultResource Vault, ConnectedIdentity Identity) source,
+        EnterprisePolicySnapshot? policy = null)
+    {
+        policy ??= EnterprisePolicy();
+        policy.EnsureIdentityAllowed(source.Identity);
+        policy.EnsureTenantAllowed(source.Vault.TenantId);
     }
 }
 

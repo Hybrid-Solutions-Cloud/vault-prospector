@@ -41,13 +41,16 @@ public partial class App : Avalonia.Application
             var valueStore = new EncryptedFileValueStore(VaultProspectorPaths.CacheDirectory, keyProvider, clock);
             var clipboard = new AvaloniaClipboardService();
             IUserVerificationService verification = new WindowsHelloVerificationService();
+            IEnterprisePolicy enterprisePolicy =
+                new WindowsRegistryEnterprisePolicy();
             var secretAccessService = new SecretAccessService(
                 azureProvider,
                 repository,
                 valueStore,
                 clipboard,
                 verification,
-                clock);
+                clock,
+                enterprisePolicy);
             var browserFillService = new BrowserFillService(
                 repository,
                 secretAccessService,
@@ -103,16 +106,23 @@ public partial class App : Avalonia.Application
                 repository,
                 verification,
                 clipboard,
-                clock);
+                clock,
+                enterprisePolicy);
             var viewModel = new MainViewModel(
                 repository,
                 new IdentityService(
                     identityProvider,
                     repository,
                     diagnostics,
-                    valueStore),
-                new SynchronizationService(azureProvider, repository, clock, diagnostics),
-                new SearchService(repository, clock),
+                    valueStore,
+                    enterprisePolicy),
+                new SynchronizationService(
+                    azureProvider,
+                    repository,
+                    clock,
+                    diagnostics,
+                    enterprisePolicy),
+                new SearchService(repository, clock, enterprisePolicy),
                 secretAccessService,
                 new WorkspaceService(repository),
                 valueStore,
@@ -123,7 +133,8 @@ public partial class App : Avalonia.Application
                 new WorkloadIdentityDiscoveryService(
                     identityProvider,
                     graphHttpClient,
-                    authorizationHttpClient),
+                    authorizationHttpClient,
+                    enterprisePolicy),
                 new LocalEncryptionRotationEngine(
                     VaultProspectorPaths.DataDirectory,
                     VaultProspectorPaths.DatabasePath,
@@ -132,7 +143,8 @@ public partial class App : Avalonia.Application
                     clock),
                 localRecoveryArchiveService,
                 browserFillService,
-                cyberArkService);
+                cyberArkService,
+                enterprisePolicy);
             var window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()
@@ -396,6 +408,7 @@ public partial class App : Avalonia.Application
                     browserBrokerServer.DisposeAsync().AsTask().GetAwaiter().GetResult();
                     browserBrokerServer = null;
                 }
+                repository.Dispose();
                 DisposeTray();
             };
             desktop.MainWindow = window;

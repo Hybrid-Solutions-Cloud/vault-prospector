@@ -67,6 +67,23 @@ Invoke-DotNet -Arguments @(
 
 Get-ChildItem -LiteralPath $publishDirectory -Recurse -File -Filter '*.pdb' | Remove-Item -Force
 
+& (Join-Path $repoRoot 'scripts/Update-ThirdPartyNotices.ps1') -Check
+if ($LASTEXITCODE -ne 0) {
+    throw "Third-party notice validation failed with exit code $LASTEXITCODE."
+}
+
+Copy-Item -LiteralPath (Join-Path $repoRoot 'LICENSE') -Destination (Join-Path $publishDirectory 'LICENSE.txt')
+Copy-Item -LiteralPath (Join-Path $repoRoot 'THIRD-PARTY-NOTICES.md') -Destination $publishDirectory
+Copy-Item -LiteralPath (Join-Path $repoRoot 'docs/privacy.md') -Destination (Join-Path $publishDirectory 'PRIVACY.md')
+
+$policyDirectory = Join-Path $publishDirectory 'PolicyDefinitions'
+$policyLanguageDirectory = Join-Path $policyDirectory 'en-US'
+New-Item -ItemType Directory -Path $policyLanguageDirectory -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $repoRoot 'policy/VaultProspector.admx') `
+    -Destination (Join-Path $policyDirectory 'VaultProspector.admx') -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot 'policy/en-US/VaultProspector.adml') `
+    -Destination (Join-Path $policyLanguageDirectory 'VaultProspector.adml') -Force
+
 if (-not $SkipArchive) {
     if (Test-Path -LiteralPath $archivePath) {
         Remove-Item -LiteralPath $archivePath -Force

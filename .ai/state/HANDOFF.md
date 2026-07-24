@@ -482,3 +482,203 @@ the repository and must not be committed.
 - Remaining evidence: hosted macOS bundle CI on the exact PR head, enabled signed physical-device
   framework matrices, encrypted one-record mapping exchange, Android association/signature
   validation, accessibility, independent review, and store acceptance.
+
+## Phase 13 native autofill merge evidence — 2026-07-24
+
+- PR `#15` merged exact head `bf34e178b8c5c531718a505c507d0752a5bc3d1c` as
+  `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`.
+- Exact PR-head CI run `30080022795` passed build-test with 343 desktop/shared tests and
+  secret-scan. Mobile CI run `30080022802` passed 44 managed tests, Android Release packaging, and
+  the unsigned iOS application plus embedded credential-provider extension on macOS 26/Xcode
+  26.0.1.
+- Exact merge-commit CI run `30080923681` and Mobile CI run `30080923682` failed before any step
+  started. Every job annotation reports that recent organization payments failed or the spending
+  limit must be increased. These runs are infrastructure failures and provide no code result.
+- Rerun both workflows on the exact merge commit after the Hybrid-Solutions-Cloud GitHub Actions
+  billing/spending condition is corrected. Do not describe the passing PR-head jobs as
+  merge-commit evidence.
+- HCS bootstrap resolved the default `hcs` standards by type. HCS drift validation still returns
+  `Path not found` for this checkout, so no drift pass is claimed.
+
+## Phase 14 G-05 performance and scale — 2026-07-24
+
+- PR `#15` is merged as `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`. Its exact-head
+  checks passed, but merge-commit workflows `30080923681` and `30080923682` could not start because
+  of the organization Actions payment/spending limit. Evidence correction PR `#16` is open and its
+  checks are affected by the same condition.
+- Commit `04688ff3a386a120ef9d975fe91a65a4000c1953` adds a controlled performance
+  gate over the production synchronization service, encrypted SQLCipher repository, and search
+  service. CI is configured to publish its JSON report with the other test results.
+- The supported controlled profile is 10 identities, 20 tenants, 200 subscriptions, 200 vaults,
+  50,000 metadata objects, and 60 measured searches.
+- The first run exposed metadata persistence beyond three minutes and search at 3,532 ms p95 /
+  6,047 ms maximum. Bounded 50-row parameterized upserts, one-time SQLCipher effective-key
+  derivation, and deterministic ranked access-path selection corrected the production paths.
+- Exact-source local results pass: initialization 329 ms, 50,000-object sync 6,595 ms, repository
+  reopen 1,318 ms, search p95 262 ms, search maximum 275 ms, cancellation 4 ms, private memory
+  41.4 MiB, and encrypted database 24.6 MiB.
+- Connection pooling remains disabled. The effective SQLCipher key is stored in a mutable buffer
+  and zeroed on repository disposal; a regression proves legacy passphrase databases remain
+  readable. The full locked Release gate passes 345/345 tests with zero warnings/errors and no
+  known vulnerable dependencies.
+- G-05 remains In progress pending clean-machine packaged startup, representative supported and
+  low-resource devices, live throttled/partial/cancel/resume provider sync, populated UI/AT
+  responsiveness, and exact signed-candidate repetition.
+
+## G-08 operational readiness (local, unreleased) — 2026-07-24
+
+- Branch `feature/operational-readiness` starts from merged main commit
+  `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`.
+- Implementation commit `3410f77f71a374eca684b6d97f3936a8693ee1d3` adds the machine-readable
+  readiness contract, fail-closed validator, weekly Dependabot coverage, scheduled
+  vulnerability/runtime/public-endpoint monitor, and support/EOS policy.
+- Exact implementation-head live validation passed 35/35 contract checks and returned HTTP 200
+  for the current Preview release page, exact MSI checksum, and feedback channel.
+- An injected `2026-11-11` observation correctly failed with `RUNTIME_END_OF_SUPPORT`.
+- The locked Release gate passed restore, structured vulnerability inspection, format, zero
+  warnings/errors, and 343/343 desktop/shared tests. Initial overlapping file-lock failures were
+  traced to and cleared with the exact stale child process tree left by a command-wrapper timeout;
+  unchanged source then passed.
+- The official .NET support policy places desktop .NET 9 end of support at 2026-11-10. The monitor
+  emits the intended 120-day warning; migrate before any support promise extends past that date.
+- G-08 remains In progress. Open proof: named backup operator, successful retained hosted monitor
+  runs, complete incident/withdrawal/communication/recovery exercise, approved Authenticode key
+  lifecycle, and exact signed-public-candidate review.
+- PRs `#16` (Phase 13 evidence) and `#17` (G-05 performance) remain open. GitHub-hosted jobs are
+  rejected before the first step because the organization reports a payment/spending-limit
+  problem; do not describe those startup rejections as code failures or merge without required
+  passing checks.
+- PR `#18` is open for G-08. Initial head `9aef1f31ad6b44a66bcdd4e7d18813d7c30f48e9`
+  received CI run `30084503284`; both jobs had zero steps and the same payment/spending-limit
+  startup rejection. The PR is mergeable by Git but must remain unmerged until required exact-head
+  checks can execute and pass.
+
+## .NET 10 LTS desktop migration (local, unreleased) — 2026-07-24
+
+- Branch `feature/dotnet10-lts` starts from merged main
+  `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`.
+- Implementation commit `03a5af014af0e26a49fca7462a02677ba825fb04` retargets the complete desktop
+  source/test graph and lock files to .NET 10, pins SDK `10.0.302` in the repository plus CI/release
+  workflows, and updates current build documentation.
+- Direct requested/resolved NuGet versions are unchanged across all 19 regenerated lock files.
+  Removed transitive entries are framework assemblies supplied by .NET 10.
+- Locked Release verification passed vulnerable-package inspection, format, zero-warning/error
+  build, and 343/343 desktop/shared tests.
+- Shared consumers passed 44/44 mobile tests, Android arm64 Release AOT/linking/App Bundle
+  production with zero warnings/errors, and the Windows-hosted iOS app/credential-extension
+  reference build.
+- Disposable self-contained/MSI/ZIP/Chocolatey/WinGet version `0.1.0-ci.910` passed startup,
+  rollback-safe MSI schedule, shortcut/icon, browser-host/policy, and manifest validation. It was
+  not published.
+- Remaining: exact-head hosted CI, macOS iOS build, clean-machine installed lifecycle, trusted
+  signing, and exact immutable public-candidate repetition.
+- PR `#19` is open. Initial head `15e72f8eefa7ca5792b7519d16007a9449f8a6d0` received CI run
+  `30085663231` and Mobile CI run `30085663253`; all five jobs had zero steps and the organization
+  payment/spending-limit startup rejection. The PR is mergeable by Git but must remain unmerged
+  until required exact-head checks execute and pass.
+
+## G-09 legal and privacy source readiness — 2026-07-24
+
+- Implementation commit `96300e9` generates a deterministic 236-record NuGet/npm component
+  inventory and `THIRD-PARTY-NOTICES.md`, enforced by a CI drift/contract check.
+- Windows packaging now fails on notice drift and embeds `LICENSE.txt`, `PRIVACY.md`, and
+  `THIRD-PARTY-NOTICES.md`. Disposable MSI/ZIP `0.1.0-ci.920` contain all three.
+- Local evidence passes: 25/25 source checks, 29/29 packaged checks, locked Release build with zero
+  warnings/errors, and 343/343 desktop/shared tests.
+- `AvaloniaUI.DiagnosticsSupport 2.2.3` is Release-excluded but has no declared NuGet license; it
+  remains an explicit approval-required finding rather than an invented license.
+- G-09 remains In progress. Exact signed-candidate SBOM/file and upstream-obligation review, an
+  approved public privacy URL, Apple/Google declaration reconciliation, and named legal/privacy
+  approval remain mandatory.
+- GitHub Actions exact-head validation is externally blocked because organization jobs are
+  rejected before execution by the account spending limit.
+
+## G-06 machine-managed enterprise policy (PR #21, unmerged) — 2026-07-24
+
+- Active worktree: `D:\tmp\vault-prospector-enterprise-policy`; branch:
+  `feature/enterprise-policy`; implementation commit:
+  `5d20399ce37370213fdf280a2b9ff97918fbf1ef`.
+- Added versioned read-only HKLM policy plus packaged ADMX/ADML for allowed tenant GUIDs, providers,
+  Azure identity types, clipboard disablement, offline-value disablement, and maximum offline-value
+  lifetime. Invalid/unreadable enabled configuration fails closed; `Enabled=0` remains unmanaged
+  without requiring the enabled-only `PolicyVersion` value.
+- Application services enforce policy before governed sign-in/validation/network/value paths.
+  Azure receives tenant constraints before enumeration and returned/local metadata is filtered
+  again. Disable/revoke/purge/remove cleanup remains available.
+- Settings displays a safe live status and managed controls cannot weaken the effective boundary.
+  Workload candidate assessment enforces the target identity type before ARM access.
+- Exact implementation-commit `scripts/Build.ps1` passed locked restore, package vulnerability
+  scan, format, zero-warning/error Release build, and 368/368 tests.
+- Source readiness passed 42/42; exact publish readiness passed 44/44. Local HKLM observation was
+  readable with no policy key and made no registry changes. Full-history gitleaks scanned 123
+  commits with no leaks.
+- Disposable exact-source `0.1.0-ci.930` ZIP SHA-256:
+  `CD033441AE37B5579DE96C3C0C396C55BD22256AF5517C8F4229EACE7F0B3834`; MSI SHA-256:
+  `9177A473B88DFEDAD5EB0E6C0725A717557DC2F1B2149F0EDA1EB174D931671D`.
+  MSI File-table inspection found both policy templates. Browser-host, shortcut/icon, and
+  rollback-safe-upgrade guards passed.
+- Evidence: `docs/release-evidence/enterprise-policy-2026-07-24.md`.
+- G-06 remains in progress. Governed Group Policy/Intune deployment, live Azure/CyberArk
+  allowed/denied matrices, diagnostics review, independent review, and exact trusted-signed
+  candidate validation are still required.
+- PR `#21` is open. Initial exact head
+  `930dc361de8999b4320900af5e50f1c88a2e2c4d` started CI run `30088899332` and Mobile CI run
+  `30088899350`. All five jobs completed as failures with zero steps and the same GitHub annotation
+  that recent account payments failed or the spending limit must be increased. Evidence comment:
+  `https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/21#issuecomment-5069245820`.
+  This is an external infrastructure block, not a code-test result. Leave the PR unmerged until
+  exact-head required checks execute and pass.
+
+## Readiness integration candidate — 2026-07-24
+
+- Branch `integration/readiness-candidate` combines PRs `#16`–`#21` on merged main
+  `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`.
+- Integration commit `1185747307c6f0ca6b916abfbfc29cb16b125d4b` fixes the performance-probe
+  .NET target/lock mismatch, updates the operational contract to .NET 10 LTS through 2028-11-14,
+  regenerates the exact 225-record legal inventory, validates packaged legal files in CI, and
+  prevents parallel TRX overwrite.
+- Exact local evidence passes: locked restore/format, 0-warning/error Release build, 370/370
+  desktop/shared tests, 44/44 managed mobile tests, Android arm64 Release production, Windows iOS
+  reference compilation, six browser tests/build, vulnerability scan, and 141-commit gitleaks.
+- Readiness checks pass: performance 8/8 at 50,000 objects, operations 35/35 with live endpoints,
+  legal/privacy source 25/25 and package 29/29, enterprise policy source 42/42 and package 44/44.
+- Disposable `0.1.0-ci.940` MSI SHA-256 is
+  `1E67B6267CA7A69EC6A529A185A9364512D968714F3AC323B1002F538D6C97AB`; ZIP SHA-256 is
+  `16B7168D6EC0E5D7E54DCC2D3B447F731B133CB067C626A28B50F90D96F77EFC`. Package smoke,
+  rollback schedule, shortcut/icon, browser host, MSI legal/policy payload, Chocolatey, and WinGet
+  validation pass.
+- Evidence: `docs/release-evidence/readiness-integration-candidate-2026-07-24.md`.
+- This remains local/disposable evidence. Hosted checks, trusted signing, clean-machine installed
+  lifecycle, live services/devices, independent and human approvals, stores, exercises, and
+  stability windows remain mandatory.
+- PR `#22` is open. Initial evidence head
+  `4427f48b8a8d90594f74bba5b8dde509cbc11dd9` started CI run `30099139189` and Mobile CI run
+  `30099139278`. All five jobs had zero steps and the organization payment/spending-limit
+  startup rejection. This is not a code result; leave the PR unmerged until required exact-head
+  jobs execute and pass.
+
+## HCS Azure DevOps delivery migration — 2026-07-24
+
+- HCS MCP confirmed the solution must use Azure DevOps for CI/CD rather than mixed GitHub Actions
+  and ADO workflows.
+- Private ADO project `Vault Prospector` now contains CI definition `5`, scheduled operational
+  readiness definition `6`, and release definition `7`.
+- GitHub App connection `Hybrid-Solutions-Cloud GitHub`, Azure connection `HCS Platform Azure`,
+  and Key Vault-linked variable group `vp-prd-secrets` are authorized to their required pipelines.
+- Platform governance registration PR `#7` merged as
+  `fd1cb41f5d6118d6b4013537282263802b49e472`.
+- Release package key `hcs-vault-prospector-release-signing-key` exists in `kv-hcs-vault-01`;
+  a real Cosign sign/verify smoke test passed against the committed public key.
+- GitHub Actions workflow definitions were removed. The private source repository remains private;
+  the existing public `vault-prospector-releases` repository is binary distribution only.
+- Hosted validation corrected two environment-specific defects without weakening gates:
+  WinGet is copied from the verified AppX install into agent temp before manifest validation, and
+  both iOS projects now lock `iossimulator-x64` assets for Intel macOS agents.
+- Exact PR validation ADO build `281` passed Windows, secret scan, native iOS, and Android jobs against
+  PR merge commit `c39270f62537f34c1094213b76a20a93e74e1598`. Windows passed all 370 tests and
+  package/readiness checks; mobile passed 44 tests, Android Release packaging, and native iOS
+  application/extension compilation on pinned Xcode 26.0.1.
+- ADO work item `AB#5095` owns the migration and Preview delivery.
+- Next: validate the evidence-only head, merge PR `#22`, validate the exact `main` merge commit,
+  run the immutable Preview release pipeline, verify public artifacts and package submissions,
+  then remove the temporary HCS Windows fallback.

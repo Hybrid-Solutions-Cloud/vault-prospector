@@ -29,6 +29,35 @@ public sealed class CyberArkServiceTests
     }
 
     [Fact]
+    public async Task EnterpriseProviderPolicyDeniesBeforeCyberArkValidation()
+    {
+        var repository = new CyberArkRepository();
+        var provider = new FakeProvider();
+        var credentialStore = new FakeCredentialStore();
+        var service = Service(
+            provider,
+            credentialStore,
+            repository,
+            new FakeVerification(UserVerificationResult.Verified),
+            new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowedProviders:
+                        [EnterpriseProvider.AzureKeyVault])));
+        using var credential = new SensitiveValue("synthetic");
+
+        await Assert.ThrowsAsync<EnterprisePolicyDeniedException>(
+            () => service.ConnectAsync(
+                Profile(),
+                credential,
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.ValidationCount);
+        Assert.Null(credentialStore.Value);
+        Assert.Null(repository.Profile);
+    }
+
+    [Fact]
     public async Task FailedReplacementPreservesPriorCredentialAndProfile()
     {
         var prior = Profile() with
@@ -126,6 +155,33 @@ public sealed class CyberArkServiceTests
     }
 
     [Fact]
+    public async Task EnterpriseClipboardPolicyDeniesBeforeCyberArkRetrieval()
+    {
+        var repository = new CyberArkRepository { Profile = ReadyProfile() };
+        var provider = new FakeProvider();
+        var service = Service(
+            provider,
+            new FakeCredentialStore { Value = "synthetic" },
+            repository,
+            new FakeVerification(UserVerificationResult.Verified),
+            new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowClipboard: false)));
+
+        await Assert.ThrowsAsync<EnterprisePolicyDeniedException>(
+            () => service.CopyAsync(
+                Account(),
+                null,
+                "approved test",
+                TimeSpan.FromSeconds(30),
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.RetrievalCount);
+        Assert.Empty(repository.Audit);
+    }
+
+    [Fact]
     public async Task RetrievalDisposesReturnedValueWhenSuccessAuditCannotBeWritten()
     {
         var repository = new CyberArkRepository
@@ -184,14 +240,16 @@ public sealed class CyberArkServiceTests
         ICyberArkProvider provider,
         ICyberArkCredentialStore credentialStore,
         IMetadataRepository repository,
-        IUserVerificationService verification) =>
+        IUserVerificationService verification,
+        IEnterprisePolicy? enterprisePolicy = null) =>
         new(
             provider,
             credentialStore,
             repository,
             verification,
             new FakeClipboard(),
-            new FixedClock());
+            new FixedClock(),
+            enterprisePolicy);
 
     private static CyberArkProfile Profile() =>
         new(
@@ -334,6 +392,13 @@ public sealed class CyberArkServiceTests
                 "2026-07-24T12:00:00Z",
                 System.Globalization.CultureInfo.InvariantCulture);
         public DateTimeOffset UtcNow => Now;
+    }
+
+    private sealed class FixedEnterprisePolicy(
+        EnterprisePolicySnapshot snapshot)
+        : IEnterprisePolicy
+    {
+        public EnterprisePolicySnapshot GetSnapshot() => snapshot;
     }
 
     private sealed class CyberArkRepository : IMetadataRepository

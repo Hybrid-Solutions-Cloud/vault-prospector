@@ -9,7 +9,8 @@ provided only for the latest published Preview version. Older Preview builds may
 a replacement is available.
 
 No version is supported for production use until the repository's GA readiness gates are complete.
-See the [release-readiness matrix](docs/product/release-readiness.md).
+See the [support lifecycle](docs/support-lifecycle.md) and
+[release-readiness matrix](docs/product/release-readiness.md).
 
 ## Reporting a vulnerability
 
@@ -51,9 +52,13 @@ The project distinguishes between:
 - In-memory decrypted values.
 - Clipboard contents.
 - Exported or shared content.
+- Machine-managed provider, tenant, identity-type, clipboard, and offline-cache policy.
 - Browser extension, native-host, desktop-broker, machine-policy, and page-origin boundaries.
 
 Each boundary must be documented and tested before a production release.
+
+The unreleased [machine-managed enterprise policy](docs/enterprise-policy.md) is read from HKLM,
+never written by the application, and fails closed when an enabled policy is invalid or unreadable.
 
 ## Prohibited behavior
 
@@ -65,6 +70,7 @@ The application must never:
 - Include secret values in crash reports.
 - Include secret values in logs.
 - Silently weaken encryption when a platform capability is unavailable.
+- Bypass or weaken an applicable machine-managed enterprise policy from user settings.
 - Offer a vault value to a browser without exact machine policy, local mapping, page-context,
   extension/host identity, visible confirmation, and fresh local-verification checks.
 

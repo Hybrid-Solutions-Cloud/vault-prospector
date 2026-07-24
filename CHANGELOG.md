@@ -6,6 +6,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Added
 
+- Add an operational-readiness contract and validator, weekly dependency update coverage, scheduled
+  vulnerability/runtime/public-endpoint monitoring, and a published support/end-of-support policy.
 - Add fail-closed local unlock/recovery, schema-v4 migration, and an internal crash-recoverable
   SQLCipher/offline-value key-rotation engine.
 - Add a guided first-run path that opens directly on identity setup after local unlock, separates
@@ -37,6 +39,24 @@ All notable changes to Vault Prospector are documented here. The project follows
   accounts, versions, direct safe-member evidence, SQLCipher schema v6 metadata, DPAPI-isolated
   credentials, bounded metadata sync, fresh-verified reveal/copy, fail-closed local revocation,
   explicit removal, and value-free audit.
+- Add unreleased iOS and Android applications with a shared fail-closed search/retrieval workflow,
+  platform-native protected storage and verification hosts, lifecycle/clipboard/capture controls,
+  locked builds, and package-disabled native autofill feasibility extensions.
+- Add a CI-enforced 50,000-object performance probe covering encrypted initialization/reopen,
+  metadata sync, search, cancellation, memory, and storage targets.
+- Add a deterministic NuGet/npm component inventory and generated third-party notice, legal/privacy
+  CI drift checks, package/store metadata and open-review records, and product license, privacy,
+  and notice files in Windows distributable payloads.
+- Add unreleased versioned HKLM enterprise policy with packaged ADMX/ADML templates, allowed
+  tenant/provider/identity-type controls, clipboard and offline-cache restrictions, service-layer
+  enforcement, safe Settings status, and deterministic fail-closed package validation.
+
+### Changed
+
+- Batch encrypted metadata upserts, derive SQLCipher's compatible effective key once per repository
+  lifetime without connection pooling, and select preferred search access paths deterministically.
+- Migrate the complete Windows desktop solution, tests, locked dependency graphs, self-contained
+  packaging, and protected CI/release automation from .NET 9 to .NET 10 LTS.
 
 ### Security
 

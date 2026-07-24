@@ -1,13 +1,21 @@
 # Current task
 
-Fully implement the canonical backlog in `pmo/backlog.md` in dependency order and within the
-security/release gates defined by `pmo/plan.md`, the project charter, and `.ai/state/GOAL.md`.
+Complete delivery of the readiness integration candidate in accordance with `pmo/backlog.md`,
+`pmo/plan.md`, the project charter, and `.ai/state/GOAL.md`.
 
-Phases 11–13 browser integration, CyberArk Privilege Cloud, and native mobile application source
-are implemented and merged. Their live-service/device, independent-review, signed-artifact,
-representative-user, assistive-technology, and store gates remain open and must not be overstated.
+PR `#22` now uses HCS Azure DevOps as the sole CI/CD system. Exact PR validation build `281` passed all
+four jobs: Windows build/package and 370 tests, full-history secret scan, native iOS simulator
+application plus credential-provider extension, and 44 managed mobile tests plus Android Release
+App Bundle.
 
-Merge the native mobile autofill feasibility prototypes, then execute the remaining external Phase
-8–15 validation, signing, distribution, usability, reliability, and stability gates. Do not
-substitute source, simulator, or roadmap evidence for physical-device, live-service,
-independent-review, signed-release, or store acceptance.
+Next:
+
+1. validate this evidence-only head in ADO and merge PR `#22`;
+2. require ADO CI to pass on the exact `main` merge commit;
+3. publish and verify the next immutable Preview through the Key Vault-backed ADO release pipeline;
+4. synchronize public release documentation and package-manager status; and
+5. remove the temporary HCS Windows fallback infrastructure.
+
+Do not overstate the remaining clean-machine installed lifecycle, live Azure/CyberArk,
+physical-device, independent security/legal, representative usability/accessibility, store
+acceptance, operational exercise, or stability-window gates.

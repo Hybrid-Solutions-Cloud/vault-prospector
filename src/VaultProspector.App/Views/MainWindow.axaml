@@ -493,14 +493,17 @@
               <TextBlock Text="Selected workspace cache policy" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,14,0,0" />
               <CheckBox Content="Allow encrypted offline cache for this workspace"
                         IsChecked="{Binding WorkspaceCacheEnabled}"
+                        IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}"
                         AutomationProperties.Name="Allow encrypted offline cache for selected workspace" />
               <TextBlock Text="Maximum cache lifetime (hours)" />
               <NumericUpDown Value="{Binding WorkspaceMaximumCacheHours}"
                              Minimum="1"
                              Maximum="168"
+                             IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}"
                              AutomationProperties.Name="Selected workspace maximum cache lifetime in hours" />
               <CheckBox Content="Allow clipboard copy for this workspace"
                         IsChecked="{Binding WorkspaceAllowClipboard}"
+                        IsEnabled="{Binding IsEnterpriseClipboardAllowed}"
                         AutomationProperties.Name="Allow clipboard copy for selected workspace" />
               <CheckBox Content="Require Windows verification (mandatory)"
                         IsChecked="True"
@@ -887,10 +890,29 @@
         <ScrollViewer Margin="4,14"><Border Classes="card" MaxWidth="700" HorizontalAlignment="Left">
           <StackPanel Spacing="12">
             <TextBlock Text="Security settings" FontSize="{StaticResource VaultFontSize22}" FontWeight="SemiBold" />
-            <CheckBox Content="Enable encrypted offline value cache" IsChecked="{Binding OfflineCacheEnabled}" />
+            <Border Background="#10243A"
+                    BorderBrush="#4B84B8"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10"
+                    AutomationProperties.Name="Machine-managed enterprise policy status">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Machine-managed enterprise policy"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding EnterprisePolicyStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <TextBlock Text="Administrators configure this read-only policy under HKLM. Invalid or unreadable policy fails closed for governed providers, identities, clipboard, and offline values."
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
+              </StackPanel>
+            </Border>
+            <CheckBox Content="Enable encrypted offline value cache"
+                      IsChecked="{Binding OfflineCacheEnabled}"
+                      IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}" />
             <TextBlock Text="Offline values are disabled by default, encrypted separately, and require Windows Hello." TextWrapping="Wrap" Opacity="0.75" />
-            <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" AutomationProperties.Name="Maximum offline cache lifetime in hours" />
-            <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" AutomationProperties.Name="Clipboard clear delay in seconds" />
+            <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}" AutomationProperties.Name="Maximum offline cache lifetime in hours" />
+            <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" IsEnabled="{Binding IsEnterpriseClipboardAllowed}" AutomationProperties.Name="Clipboard clear delay in seconds" />
             <TextBlock Text="When the main window closes" FontWeight="SemiBold" />
             <ComboBox ItemsSource="{Binding CloseBehaviors}"
                       SelectedItem="{Binding SelectedCloseBehavior}"

@@ -100,6 +100,85 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task EnterprisePolicyDeniesAzureProviderBeforeInteractiveSignIn()
+    {
+        var provider = new FakeIdentityProvider();
+        var service = new IdentityService(
+            provider,
+            new FakeRepository(Identity()),
+            new FakeDiagnostics(),
+            enterprisePolicy: new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowedProviders:
+                        [EnterpriseProvider.CyberArkPrivilegeCloud])));
+
+        var error = await Assert.ThrowsAsync<EnterprisePolicyDeniedException>(
+            () => service.AddAsync(
+                "11111111-1111-1111-1111-111111111111",
+                "Test",
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal("AllowedProviders", error.PolicyName);
+        Assert.Equal(0, provider.SignInCalls);
+    }
+
+    [Fact]
+    public async Task EnterpriseTenantPolicyRollsBackInteractiveTokenCache()
+    {
+        var provider = new FakeIdentityProvider();
+        var repository = new FakeRepository(Identity());
+        var service = new IdentityService(
+            provider,
+            repository,
+            new FakeDiagnostics(),
+            enterprisePolicy: new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowedTenantIds:
+                        ["22222222-2222-2222-2222-222222222222"])));
+
+        var error = await Assert.ThrowsAsync<EnterprisePolicyDeniedException>(
+            () => service.AddAsync(
+                "11111111-1111-1111-1111-111111111111",
+                "Test",
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal("AllowedTenantIds", error.PolicyName);
+        Assert.Equal(1, provider.SignInCalls);
+        Assert.Equal(1, provider.RemoveCalls);
+        Assert.Null(repository.UpsertedIdentity);
+    }
+
+    [Fact]
+    public async Task EnterpriseTenantPolicyDeniesWorkloadBeforeCredentialValidation()
+    {
+        var provider = new FakeIdentityProvider();
+        var repository = new FakeRepository(Identity());
+        var service = new IdentityService(
+            provider,
+            repository,
+            new FakeDiagnostics(),
+            enterprisePolicy: new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowedTenantIds:
+                        ["33333333-3333-3333-3333-333333333333"])));
+
+        await Assert.ThrowsAsync<EnterprisePolicyDeniedException>(
+            () => service.AddWorkloadIdentityAsync(
+                "11111111-1111-1111-1111-111111111111",
+                "22222222-2222-2222-2222-222222222222",
+                "Automation",
+                IdentityType.ServicePrincipal,
+                "AA11BB22CC33DD44EE55FF660011223344556677",
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.ReauthenticateCalls);
+        Assert.Null(repository.UpsertedIdentity);
+    }
+
+    [Fact]
     public async Task ServicePrincipalProfileCanonicalizesIdentifiersAndCertificateThumbprint()
     {
         var repository = new FakeRepository(Identity());
@@ -902,6 +981,285 @@ public sealed class ApplicationServiceTests
         Assert.Equal(vaultId, repository.AddedLink.ResourceId);
     }
 
+    [Fact]
+    public async Task EnterprisePolicyDeniesSynchronizationBeforeProviderRequest()
+    {
+        var identity = Identity() with
+        {
+            HomeTenantId =
+                "11111111-1111-1111-1111-111111111111",
+        };
+        var provider = new FakeProvider();
+        var repository = new FakeRepository(identity);
+        var service = new SynchronizationService(
+            provider,
+            repository,
+            new FixedClock(),
+            new FakeDiagnostics(),
+            new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowedTenantIds:
+                        ["22222222-2222-2222-2222-222222222222"])));
+
+        await Assert.ThrowsAsync<EnterprisePolicyDeniedException>(
+            () => service.SynchronizeAsync(
+                identity,
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.DiscoveryCalls);
+    }
+
+    [Fact]
+    public async Task EnterpriseTenantPolicyConstrainsProviderAndPersistedSnapshot()
+    {
+        const string allowedTenantId =
+            "11111111-1111-1111-1111-111111111111";
+        const string deniedTenantId =
+            "22222222-2222-2222-2222-222222222222";
+        var identity = Identity() with { HomeTenantId = allowedTenantId };
+        var allowedTenant = new TenantAccess(
+            Guid.NewGuid(),
+            identity.Id,
+            allowedTenantId,
+            "Allowed",
+            "Home",
+            DateTimeOffset.UtcNow,
+            "Available");
+        var deniedTenant = allowedTenant with
+        {
+            Id = Guid.NewGuid(),
+            TenantId = deniedTenantId,
+            DisplayName = "Denied",
+        };
+        var allowedVault = Vault() with
+        {
+            Id = Guid.NewGuid(),
+            TenantId = allowedTenantId,
+        };
+        var deniedVault = Vault() with
+        {
+            Id = Guid.NewGuid(),
+            TenantId = deniedTenantId,
+        };
+        var provider = new FakeProvider
+        {
+            Snapshot = new DiscoverySnapshot(
+                [allowedTenant, deniedTenant],
+                [
+                    new(
+                        Guid.NewGuid(),
+                        allowedTenant.Id,
+                        "allowed-subscription",
+                        "Allowed",
+                        "Enabled",
+                        true,
+                        DateTimeOffset.UtcNow),
+                    new(
+                        Guid.NewGuid(),
+                        deniedTenant.Id,
+                        "denied-subscription",
+                        "Denied",
+                        "Enabled",
+                        true,
+                        DateTimeOffset.UtcNow),
+                ],
+                [allowedVault, deniedVault],
+                [
+                    new(
+                        Guid.NewGuid(),
+                        allowedVault.Id,
+                        identity.Id,
+                        allowedTenantId,
+                        "Allowed",
+                        DateTimeOffset.UtcNow,
+                        null,
+                        0),
+                    new(
+                        Guid.NewGuid(),
+                        deniedVault.Id,
+                        identity.Id,
+                        deniedTenantId,
+                        "Allowed",
+                        DateTimeOffset.UtcNow,
+                        null,
+                        0),
+                ],
+                [
+                    Item(VaultObjectType.Secret) with
+                    {
+                        Id = Guid.NewGuid(),
+                        VaultId = allowedVault.Id,
+                    },
+                    Item(VaultObjectType.Secret) with
+                    {
+                        Id = Guid.NewGuid(),
+                        VaultId = deniedVault.Id,
+                    },
+                ],
+                []),
+        };
+        var repository = new FakeRepository(identity);
+        var service = new SynchronizationService(
+            provider,
+            repository,
+            new FixedClock(),
+            new FakeDiagnostics(),
+            new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowedTenantIds: [allowedTenantId])));
+
+        var run = await service.SynchronizeAsync(
+            identity,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(SyncStatus.Completed, run.Status);
+        Assert.Equal(
+            [allowedTenantId],
+            provider.Constraints?.AllowedTenantIds);
+        var applied = Assert.IsType<DiscoverySnapshot>(
+            repository.AppliedSnapshot);
+        Assert.Equal(allowedTenantId, Assert.Single(applied.Tenants).TenantId);
+        Assert.Equal(
+            "allowed-subscription",
+            Assert.Single(applied.Subscriptions).SubscriptionId);
+        Assert.Equal(allowedVault.Id, Assert.Single(applied.Vaults).Id);
+        Assert.Equal(
+            allowedVault.Id,
+            Assert.Single(applied.AccessPaths).VaultId);
+        Assert.Equal(allowedVault.Id, Assert.Single(applied.Items).VaultId);
+    }
+
+    [Fact]
+    public async Task EnterpriseClipboardPolicyDeniesBeforeVerificationOrRetrieval()
+    {
+        var identity = Identity();
+        var provider = new FakeProvider();
+        var repository = new FakeRepository(identity)
+        {
+            Resolved = (Item(VaultObjectType.Secret), Vault(), identity),
+        };
+        var verification = new CountingVerify();
+        var clipboard = new FakeClipboard();
+        var service = new SecretAccessService(
+            provider,
+            repository,
+            new FakeValueStore(),
+            clipboard,
+            verification,
+            new FixedClock(),
+            new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowClipboard: false)));
+
+        await Assert.ThrowsAsync<EnterprisePolicyDeniedException>(
+            () => service.RetrieveAndCopyAsync(
+                repository.Resolved.Value.Item.Id,
+                TimeSpan.FromSeconds(30),
+                new CachePolicy(
+                    false,
+                    TimeSpan.FromHours(8),
+                    true,
+                    true),
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, verification.Calls);
+        Assert.Equal(0, provider.RetrieveCalls);
+        Assert.Equal(0, clipboard.CopyCalls);
+    }
+
+    [Fact]
+    public async Task EnterpriseOfflineCachePolicyCapsRequestedLifetime()
+    {
+        var identity = Identity();
+        var provider = new FakeProvider();
+        var repository = new FakeRepository(identity)
+        {
+            Resolved = (Item(VaultObjectType.Secret), Vault(), identity),
+        };
+        var service = new SecretAccessService(
+            provider,
+            repository,
+            new FakeValueStore(),
+            new FakeClipboard(),
+            new AlwaysVerify(),
+            new FixedClock(),
+            new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    maximumOfflineCacheLifetime:
+                        TimeSpan.FromMinutes(30))));
+
+        var result = await service.RetrieveAndCacheAsync(
+            repository.Resolved.Value.Item.Id,
+            null,
+            TimeSpan.FromHours(4),
+            new CachePolicy(
+                true,
+                TimeSpan.FromHours(8),
+                true,
+                true),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            new FixedClock().UtcNow.AddMinutes(30),
+            result.ExpiresAt);
+    }
+
+    [Fact]
+    public async Task EnterpriseTenantPolicyFiltersEncryptedLocalSearch()
+    {
+        var identity = Identity();
+        var allowedVault = Vault() with
+        {
+            TenantId =
+                "11111111-1111-1111-1111-111111111111",
+        };
+        var deniedVault = Vault() with
+        {
+            TenantId =
+                "22222222-2222-2222-2222-222222222222",
+        };
+        var repository = new FakeRepository(identity)
+        {
+            SearchResults =
+            [
+                new(
+                    Item(VaultObjectType.Secret),
+                    allowedVault,
+                    "Allowed",
+                    "Allowed",
+                    false,
+                    null,
+                    false),
+                new(
+                    Item(VaultObjectType.Secret),
+                    deniedVault,
+                    "Denied",
+                    "Denied",
+                    false,
+                    null,
+                    false),
+            ],
+        };
+        var service = new SearchService(
+            repository,
+            new FixedClock(),
+            new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowedTenantIds:
+                        ["11111111-1111-1111-1111-111111111111"])));
+
+        var results = await service.SearchAsync(
+            new SearchRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(allowedVault.Id, Assert.Single(results).Vault.Id);
+    }
+
     private static ConnectedIdentity Identity() => new(Guid.NewGuid(), "11111111-1111-1111-1111-111111111111", "account", "user@example.invalid", "Test", "tenant", AuthenticationState.Ready, DateTimeOffset.UtcNow);
     private static VaultResource Vault() => new(Guid.NewGuid(), "/subscriptions/redacted/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/test", "test", "tenant", "subscription", "rg", "eastus", new Dictionary<string, string>(), new Uri("https://test.vault.azure.net/"), DateTimeOffset.UtcNow);
     private static VaultItem Item(VaultObjectType type) { var vault = Vault(); return new(Guid.NewGuid(), vault.Id, "item", type, true, new Dictionary<string, string>(), null, null, null, null, "version", "fingerprint", DateTimeOffset.UtcNow); }
@@ -917,6 +1275,7 @@ public sealed class ApplicationServiceTests
         public SensitiveValue? LastRetrievedValue { get; private set; }
         public IReadOnlyList<string> ExcludedSubscriptions { get; private set; } = [];
         public IReadOnlyList<string> ExcludedVaultResourceIds { get; private set; } = [];
+        public VaultDiscoveryConstraints? Constraints { get; private set; }
         public Task<DiscoverySnapshot> DiscoverAsync(
             ConnectedIdentity identity,
             IReadOnlyList<string> excludedSubscriptions,
@@ -930,6 +1289,20 @@ public sealed class ApplicationServiceTests
             ExcludedSubscriptions = excludedSubscriptions.ToArray();
             ExcludedVaultResourceIds = excludedVaultResourceIds.ToArray();
             return Task.FromResult(Snapshot);
+        }
+        public Task<DiscoverySnapshot> DiscoverAsync(
+            ConnectedIdentity identity,
+            IReadOnlyList<string> excludedSubscriptions,
+            IReadOnlyList<string> excludedVaultResourceIds,
+            VaultDiscoveryConstraints constraints,
+            CancellationToken cancellationToken)
+        {
+            Constraints = constraints;
+            return DiscoverAsync(
+                identity,
+                excludedSubscriptions,
+                excludedVaultResourceIds,
+                cancellationToken);
         }
         public Task<SensitiveValue> RetrieveSecretAsync(ConnectedIdentity identity, VaultResource vault, VaultItem item, CancellationToken cancellationToken)
         {
@@ -952,6 +1325,7 @@ public sealed class ApplicationServiceTests
         public IReadOnlyList<SubscriptionAccess> Subscriptions { get; init; } = [];
         public IReadOnlyList<VaultAccessSummary> VaultAccessSummaries { get; init; } = [];
         public IReadOnlyList<Guid> VaultIds { get; init; } = [];
+        public IReadOnlyList<SearchResult> SearchResults { get; init; } = [];
         public Guid? RequestedSubscriptionIdentityId { get; private set; }
         public Task InitializeAsync(CancellationToken c) => Task.CompletedTask;
         public Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(CancellationToken c) => Task.FromResult<IReadOnlyList<ConnectedIdentity>>([identity]);
@@ -976,7 +1350,7 @@ public sealed class ApplicationServiceTests
             Task.FromResult(VaultIds);
         public Task SetVaultSelectedAsync(Guid vaultAccessId, bool isSelected, CancellationToken c) => Task.CompletedTask;
         public Task ApplyDiscoveryAsync(Guid id, DiscoverySnapshot snapshot, SyncRun run, CancellationToken c) { AppliedSnapshot = snapshot; return Task.CompletedTask; }
-        public Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest r, DateTimeOffset n, CancellationToken c) => Task.FromResult<IReadOnlyList<SearchResult>>([]);
+        public Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest r, DateTimeOffset n, CancellationToken c) => Task.FromResult(SearchResults);
         public Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemAsync(Guid id, CancellationToken c) => Task.FromResult(Resolved);
         public Task RecordAccessAsync(Guid id, DateTimeOffset at, CancellationToken c)
         {
@@ -1050,6 +1424,12 @@ public sealed class ApplicationServiceTests
             Exception exception,
             IReadOnlyDictionary<string, object?> fields) =>
             ErrorEvents.Add(eventName);
+    }
+    private sealed class FixedEnterprisePolicy(
+        EnterprisePolicySnapshot snapshot)
+        : IEnterprisePolicy
+    {
+        public EnterprisePolicySnapshot GetSnapshot() => snapshot;
     }
     private sealed class FakeResetter : ILocalDataResetter
     {

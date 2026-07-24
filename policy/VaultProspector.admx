@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitions xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions"
+                   revision="1.0"
+                   schemaVersion="1.0">
+  <policyNamespaces>
+    <target prefix="hcsvp" namespace="HybridSolutionsCloud.Policies.VaultProspector" />
+    <using prefix="windows" namespace="Microsoft.Policies.Windows" />
+  </policyNamespaces>
+  <resources minRequiredRevision="1.0" />
+  <categories>
+    <category name="VaultProspector" displayName="$(string.Category_VaultProspector)" />
+  </categories>
+  <policies>
+    <policy name="EnterpriseAccessPolicy"
+            class="Machine"
+            displayName="$(string.Policy_EnterpriseAccess)"
+            explainText="$(string.Policy_EnterpriseAccess_Help)"
+            presentation="$(presentation.Policy_EnterpriseAccess)"
+            key="SOFTWARE\Policies\Hybrid Solutions Cloud\Vault Prospector"
+            valueName="Enabled">
+      <parentCategory ref="VaultProspector" />
+      <supportedOn ref="windows:SUPPORTED_Windows_10_0" />
+      <enabledValue>
+        <decimal value="1" />
+      </enabledValue>
+      <disabledValue>
+        <decimal value="0" />
+      </disabledValue>
+      <enabledList>
+        <item key="SOFTWARE\Policies\Hybrid Solutions Cloud\Vault Prospector"
+              valueName="PolicyVersion">
+          <value>
+            <decimal value="1" />
+          </value>
+        </item>
+      </enabledList>
+      <elements>
+        <multiText id="AllowedTenantIds"
+                   valueName="AllowedTenantIds"
+                   required="false" />
+        <multiText id="AllowedProviders"
+                   valueName="AllowedProviders"
+                   required="false" />
+        <multiText id="AllowedIdentityTypes"
+                   valueName="AllowedIdentityTypes"
+                   required="false" />
+        <boolean id="DisableClipboard"
+                 valueName="DisableClipboard">
+          <trueValue>
+            <decimal value="1" />
+          </trueValue>
+          <falseValue>
+            <decimal value="0" />
+          </falseValue>
+        </boolean>
+        <boolean id="DisableOfflineCache"
+                 valueName="DisableOfflineCache">
+          <trueValue>
+            <decimal value="1" />
+          </trueValue>
+          <falseValue>
+            <decimal value="0" />
+          </falseValue>
+        </boolean>
+        <decimal id="MaximumOfflineCacheMinutes"
+                 valueName="MaximumOfflineCacheMinutes"
+                 minValue="1"
+                 maxValue="10080" />
+      </elements>
+    </policy>
+  </policies>
+</policyDefinitions>

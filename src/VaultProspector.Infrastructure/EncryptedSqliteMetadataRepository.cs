@@ -1,5 +1,7 @@
+using System.Buffers.Text;
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using VaultProspector.Application;
@@ -7,10 +9,28 @@ using VaultProspector.Domain;
 
 namespace VaultProspector.Infrastructure;
 
-public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyMaterialProvider keyMaterial) : IMetadataRepository
+public sealed class EncryptedSqliteMetadataRepository(
+    string databasePath,
+    IKeyMaterialProvider keyMaterial) : IMetadataRepository, IDisposable
 {
     private const int CurrentSchemaVersion = 6;
+    private const int SqlCipherKeyLength = 32;
+    private const int SqlCipherSaltLength = 16;
+    private const int SqlCipherKdfIterations = 256_000;
     private string? _connectionString;
+    private byte[]? _sqlCipherRawKey;
+
+    public void Dispose()
+    {
+        if (_sqlCipherRawKey is not null)
+        {
+            CryptographicOperations.ZeroMemory(_sqlCipherRawKey);
+            _sqlCipherRawKey = null;
+        }
+
+        _connectionString = null;
+        GC.SuppressFinalize(this);
+    }
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -23,19 +43,28 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         var key = databaseExists
             ? await keyMaterial.GetExistingKeyAsync("metadata-database", cancellationToken)
             : await keyMaterial.GetOrCreateKeyAsync("metadata-database", cancellationToken);
+        byte[]? salt = null;
         try
         {
+            salt = databaseExists
+                ? await ReadSqlCipherSaltAsync(databasePath, cancellationToken)
+                : RandomNumberGenerator.GetBytes(SqlCipherSaltLength);
+            var rawKey = CreateSqlCipherRawKey(key, salt);
+            if (_sqlCipherRawKey is not null)
+                CryptographicOperations.ZeroMemory(_sqlCipherRawKey);
+            _sqlCipherRawKey = rawKey;
             _connectionString = new SqliteConnectionStringBuilder
             {
                 DataSource = databasePath,
                 Mode = SqliteOpenMode.ReadWriteCreate,
-                Password = Convert.ToBase64String(key),
                 Pooling = false,
             }.ToString();
         }
         finally
         {
             CryptographicOperations.ZeroMemory(key);
+            if (salt is not null)
+                CryptographicOperations.ZeroMemory(salt);
         }
 
         var validated = await OpenValidatedAsync(cancellationToken);
@@ -306,7 +335,7 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         foreach (var x in snapshot.Subscriptions) await UpsertSubscriptionAsync(connection, transaction, x, cancellationToken);
         foreach (var x in snapshot.Vaults) await UpsertVaultAsync(connection, transaction, x, cancellationToken);
         foreach (var x in snapshot.AccessPaths) await UpsertAccessAsync(connection, transaction, x, cancellationToken);
-        foreach (var x in snapshot.Items) await UpsertItemAsync(connection, transaction, x, cancellationToken);
+        await UpsertItemsAsync(connection, transaction, snapshot.Items, cancellationToken);
         await ExecuteAsync(connection, transaction, "INSERT INTO sync_runs(id,scope,started_at,completed_at,status,vault_count,item_count,error_count) VALUES($id,$scope,$started,$completed,$status,$vaults,$items,$errors)", cancellationToken,
             ("$id", run.Id.ToString("D")), ("$scope", run.Scope), ("$started", Format(run.StartedAt)),
             ("$completed", run.CompletedAt is null ? DBNull.Value : Format(run.CompletedAt.Value)), ("$status", (int)run.Status),
@@ -1067,10 +1096,116 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
 
     private async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
     {
-        if (_connectionString is null) throw new InvalidOperationException("Repository has not been initialized.");
+        if (_connectionString is null || _sqlCipherRawKey is null)
+            throw new InvalidOperationException("Repository has not been initialized.");
         var connection = new SqliteConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
-        return connection;
+        try
+        {
+            await connection.OpenAsync(cancellationToken);
+            var result = SQLitePCL.raw.sqlite3_key(
+                connection.Handle,
+                _sqlCipherRawKey);
+            if (result != SQLitePCL.raw.SQLITE_OK)
+                throw new SqliteException("Encrypted local metadata could not be keyed.", result);
+            return connection;
+        }
+        catch
+        {
+            await connection.DisposeAsync();
+            throw;
+        }
+    }
+
+    private static async Task<byte[]> ReadSqlCipherSaltAsync(
+        string path,
+        CancellationToken cancellationToken)
+    {
+        var salt = new byte[SqlCipherSaltLength];
+        try
+        {
+            await using var stream = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read);
+            await stream.ReadExactlyAsync(salt, cancellationToken);
+            return salt;
+        }
+        catch
+        {
+            CryptographicOperations.ZeroMemory(salt);
+            throw;
+        }
+    }
+
+    private static byte[] CreateSqlCipherRawKey(
+        ReadOnlySpan<byte> protectedKey,
+        ReadOnlySpan<byte> salt)
+    {
+        if (protectedKey.Length != SqlCipherKeyLength)
+            throw new LocalDataIntegrityException(
+                "The protected metadata key has an invalid length.");
+        if (salt.Length != SqlCipherSaltLength)
+            throw new LocalDataIntegrityException(
+                "The encrypted metadata salt has an invalid length.");
+
+        // Microsoft.Data.Sqlite historically supplied the random 32-byte key as a Base64
+        // password. Derive SQLCipher v4's effective key once, then use SQLCipher's raw-key form
+        // for each short-lived connection. This preserves the existing on-disk format without
+        // retaining an immutable password string or repeating the 256,000-round KDF per query.
+        var passphrase = new byte[Base64.GetMaxEncodedToUtf8Length(
+            protectedKey.Length)];
+        Span<byte> derivedKey = stackalloc byte[SqlCipherKeyLength];
+        try
+        {
+            var status = Base64.EncodeToUtf8(
+                protectedKey,
+                passphrase,
+                out var consumed,
+                out var written);
+            if (status != System.Buffers.OperationStatus.Done ||
+                consumed != protectedKey.Length)
+            {
+                throw new LocalDataIntegrityException(
+                    "The protected metadata key could not be prepared.");
+            }
+
+            Rfc2898DeriveBytes.Pbkdf2(
+                passphrase.AsSpan(0, written),
+                salt,
+                derivedKey,
+                SqlCipherKdfIterations,
+                HashAlgorithmName.SHA512);
+
+            var rawKey = new byte[
+                2 + ((SqlCipherKeyLength + SqlCipherSaltLength) * 2) + 1];
+            rawKey[0] = (byte)'x';
+            rawKey[1] = (byte)'\'';
+            WriteHex(derivedKey, rawKey.AsSpan(2));
+            WriteHex(
+                salt,
+                rawKey.AsSpan(2 + (SqlCipherKeyLength * 2)));
+            rawKey[^1] = (byte)'\'';
+            return rawKey;
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passphrase);
+            CryptographicOperations.ZeroMemory(derivedKey);
+        }
+    }
+
+    private static void WriteHex(
+        ReadOnlySpan<byte> source,
+        Span<byte> destination)
+    {
+        const string hex = "0123456789abcdef";
+        for (var index = 0; index < source.Length; index++)
+        {
+            destination[index * 2] = (byte)hex[source[index] >> 4];
+            destination[(index * 2) + 1] =
+                (byte)hex[source[index] & 0x0f];
+        }
     }
 
     private async Task<(SqliteConnection Connection, int SchemaVersion)> OpenValidatedAsync(CancellationToken cancellationToken)
@@ -1199,7 +1334,138 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
     private static Task UpsertSubscriptionAsync(SqliteConnection c, SqliteTransaction t, SubscriptionAccess x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO subscriptions(id,tenant_access_id,subscription_id,display_name,state,is_selected,last_discovered) VALUES($id,$tenant,$subscription,$name,$state,$selected,$last) ON CONFLICT(id) DO UPDATE SET display_name=excluded.display_name,state=excluded.state,last_discovered=excluded.last_discovered", ct, ("$id", x.Id.ToString("D")), ("$tenant", x.TenantAccessId.ToString("D")), ("$subscription", x.SubscriptionId), ("$name", x.DisplayName), ("$state", x.State), ("$selected", x.IsSelected ? 1 : 0), ("$last", Format(x.LastDiscoveredAt)));
     private static Task UpsertVaultAsync(SqliteConnection c, SqliteTransaction t, VaultResource x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO vaults(id,resource_id,name,tenant_id,subscription_id,resource_group,location,tags,vault_uri,last_indexed) VALUES($id,$resource,$name,$tenant,$subscription,$group,$location,$tags,$uri,$last) ON CONFLICT(id) DO UPDATE SET name=excluded.name,tags=excluded.tags,vault_uri=excluded.vault_uri,last_indexed=excluded.last_indexed", ct, ("$id", x.Id.ToString("D")), ("$resource", x.ProviderResourceId), ("$name", x.Name), ("$tenant", x.TenantId), ("$subscription", x.SubscriptionId), ("$group", x.ResourceGroup), ("$location", x.Location), ("$tags", JsonSerializer.Serialize(x.Tags, InfrastructureJsonContext.Default.DictionaryStringString)), ("$uri", x.VaultUri.ToString()), ("$last", Format(x.LastIndexedAt)));
     private static Task UpsertAccessAsync(SqliteConnection c, SqliteTransaction t, VaultAccess x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO vault_access(id,vault_id,identity_id,tenant_id,status,last_validated,failure_category,preferred_rank,is_selected) VALUES($id,$vault,$identity,$tenant,$status,$last,$failure,$rank,$selected) ON CONFLICT(id) DO UPDATE SET status=excluded.status,last_validated=excluded.last_validated,failure_category=excluded.failure_category,preferred_rank=excluded.preferred_rank", ct, ("$id", x.Id.ToString("D")), ("$vault", x.VaultId.ToString("D")), ("$identity", x.ConnectedIdentityId.ToString("D")), ("$tenant", x.TenantId), ("$status", x.AccessStatus), ("$last", Format(x.LastValidatedAt)), ("$failure", x.LastFailureCategory ?? (object)DBNull.Value), ("$rank", x.PreferredRank), ("$selected", x.IsSelected ? 1 : 0));
-    private static Task UpsertItemAsync(SqliteConnection c, SqliteTransaction t, VaultItem x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO items(id,vault_id,name,object_type,enabled,tags,content_type,created_at,updated_at,expires_at,provider_version,fingerprint,last_indexed,is_deleted) VALUES($id,$vault,$name,$type,$enabled,$tags,$content,$created,$updated,$expires,$version,$fingerprint,$last,$deleted) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled,tags=excluded.tags,content_type=excluded.content_type,updated_at=excluded.updated_at,expires_at=excluded.expires_at,provider_version=excluded.provider_version,fingerprint=excluded.fingerprint,last_indexed=excluded.last_indexed,is_deleted=excluded.is_deleted", ct, ("$id", x.Id.ToString("D")), ("$vault", x.VaultId.ToString("D")), ("$name", x.ProviderObjectName), ("$type", (int)x.ObjectType), ("$enabled", x.Enabled ? 1 : 0), ("$tags", JsonSerializer.Serialize(x.Tags, InfrastructureJsonContext.Default.DictionaryStringString)), ("$content", x.ContentType ?? (object)DBNull.Value), ("$created", x.CreatedAt is null ? DBNull.Value : Format(x.CreatedAt.Value)), ("$updated", x.UpdatedAt is null ? DBNull.Value : Format(x.UpdatedAt.Value)), ("$expires", x.ExpiresAt is null ? DBNull.Value : Format(x.ExpiresAt.Value)), ("$version", x.ProviderVersion), ("$fingerprint", x.MetadataFingerprint), ("$last", Format(x.LastIndexedAt)), ("$deleted", x.IsDeletedOrUnavailable ? 1 : 0));
+    private static async Task UpsertItemsAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        IReadOnlyList<VaultItem> items,
+        CancellationToken cancellationToken)
+    {
+        if (items.Count == 0)
+            return;
+
+        const int batchSize = 50;
+        var fullBatchCount = Math.Min(batchSize, items.Count);
+        await using var fullBatch = CreateItemBatchCommand(
+            connection,
+            transaction,
+            fullBatchCount);
+        await fullBatch.PrepareAsync(cancellationToken);
+
+        for (var offset = 0; offset < items.Count; offset += batchSize)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var count = Math.Min(batchSize, items.Count - offset);
+            if (count == fullBatchCount)
+            {
+                BindItemBatch(fullBatch, items, offset, count);
+                await fullBatch.ExecuteNonQueryAsync(cancellationToken);
+                continue;
+            }
+
+            await using var finalBatch = CreateItemBatchCommand(
+                connection,
+                transaction,
+                count);
+            BindItemBatch(finalBatch, items, offset, count);
+            await finalBatch.ExecuteNonQueryAsync(cancellationToken);
+        }
+    }
+
+    private static SqliteCommand CreateItemBatchCommand(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        int rowCount)
+    {
+        var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        var sql = new StringBuilder(
+            """
+            INSERT INTO items(
+                id,vault_id,name,object_type,enabled,tags,content_type,created_at,updated_at,
+                expires_at,provider_version,fingerprint,last_indexed,is_deleted)
+            VALUES
+            """);
+        for (var row = 0; row < rowCount; row++)
+        {
+            if (row > 0)
+                sql.Append(',');
+            sql.Append(
+                CultureInfo.InvariantCulture,
+                $"""
+                 ($id{row},$vault{row},$name{row},$type{row},$enabled{row},$tags{row},
+                 $content{row},$created{row},$updated{row},$expires{row},$version{row},
+                 $fingerprint{row},$last{row},$deleted{row})
+                 """);
+            command.Parameters.Add($"$id{row}", SqliteType.Text);
+            command.Parameters.Add($"$vault{row}", SqliteType.Text);
+            command.Parameters.Add($"$name{row}", SqliteType.Text);
+            command.Parameters.Add($"$type{row}", SqliteType.Integer);
+            command.Parameters.Add($"$enabled{row}", SqliteType.Integer);
+            command.Parameters.Add($"$tags{row}", SqliteType.Text);
+            command.Parameters.Add($"$content{row}", SqliteType.Text);
+            command.Parameters.Add($"$created{row}", SqliteType.Text);
+            command.Parameters.Add($"$updated{row}", SqliteType.Text);
+            command.Parameters.Add($"$expires{row}", SqliteType.Text);
+            command.Parameters.Add($"$version{row}", SqliteType.Text);
+            command.Parameters.Add($"$fingerprint{row}", SqliteType.Text);
+            command.Parameters.Add($"$last{row}", SqliteType.Text);
+            command.Parameters.Add($"$deleted{row}", SqliteType.Integer);
+        }
+
+        sql.Append(
+            """
+            ON CONFLICT(id) DO UPDATE SET
+                enabled=excluded.enabled,
+                tags=excluded.tags,
+                content_type=excluded.content_type,
+                updated_at=excluded.updated_at,
+                expires_at=excluded.expires_at,
+                provider_version=excluded.provider_version,
+                fingerprint=excluded.fingerprint,
+                last_indexed=excluded.last_indexed,
+                is_deleted=excluded.is_deleted
+            """);
+        command.CommandText = sql.ToString();
+        return command;
+    }
+
+    private static void BindItemBatch(
+        SqliteCommand command,
+        IReadOnlyList<VaultItem> items,
+        int offset,
+        int count)
+    {
+        const int parametersPerRow = 14;
+        for (var row = 0; row < count; row++)
+        {
+            var item = items[offset + row];
+            var parameter = row * parametersPerRow;
+            command.Parameters[parameter++].Value = item.Id.ToString("D");
+            command.Parameters[parameter++].Value = item.VaultId.ToString("D");
+            command.Parameters[parameter++].Value = item.ProviderObjectName;
+            command.Parameters[parameter++].Value = (int)item.ObjectType;
+            command.Parameters[parameter++].Value = item.Enabled ? 1 : 0;
+            command.Parameters[parameter++].Value = JsonSerializer.Serialize(
+                item.Tags,
+                InfrastructureJsonContext.Default.DictionaryStringString);
+            command.Parameters[parameter++].Value =
+                item.ContentType ?? (object)DBNull.Value;
+            command.Parameters[parameter++].Value = item.CreatedAt is null
+                ? DBNull.Value
+                : Format(item.CreatedAt.Value);
+            command.Parameters[parameter++].Value = item.UpdatedAt is null
+                ? DBNull.Value
+                : Format(item.UpdatedAt.Value);
+            command.Parameters[parameter++].Value = item.ExpiresAt is null
+                ? DBNull.Value
+                : Format(item.ExpiresAt.Value);
+            command.Parameters[parameter++].Value = item.ProviderVersion;
+            command.Parameters[parameter++].Value = item.MetadataFingerprint;
+            command.Parameters[parameter++].Value = Format(item.LastIndexedAt);
+            command.Parameters[parameter].Value =
+                item.IsDeletedOrUnavailable ? 1 : 0;
+        }
+    }
 
     private static void AddNullable(SqliteCommand command, string name, object? value) => command.Parameters.AddWithValue(name, value ?? DBNull.Value);
     private static async Task<bool> HasClientIdColumnAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
@@ -1314,19 +1580,38 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         FROM cyberark_profiles
         """;
     private const string SearchSql = """
+        WITH ranked_access AS (
+            SELECT
+                va.vault_id,
+                va.identity_id,
+                va.status,
+                ident.display_name,
+                ROW_NUMBER() OVER (
+                    PARTITION BY va.vault_id
+                    ORDER BY va.preferred_rank,va.id
+                ) AS access_rank
+            FROM vault_access va
+            JOIN identities ident ON ident.id=va.identity_id
+            WHERE va.status!='Removed'
+              AND ident.is_enabled=1
+              AND ($identity IS NULL OR ident.id=$identity)
+        )
         SELECT i.id,i.vault_id,i.name,i.object_type,i.enabled,i.tags,i.content_type,i.created_at,i.updated_at,i.expires_at,i.provider_version,i.fingerprint,i.last_indexed,i.is_deleted,
                v.resource_id,v.name,v.tenant_id,v.subscription_id,v.resource_group,v.location,v.tags,v.vault_uri,v.last_indexed,
-               ident.display_name,COALESCE(t.display_name,v.tenant_id),EXISTS(SELECT 1 FROM favorites f WHERE f.item_id=i.id),a.last_accessed,
-               CASE WHEN julianday($now)-julianday(i.last_indexed)>1 THEN 1 ELSE 0 END,va.status
-        FROM items i JOIN vaults v ON v.id=i.vault_id JOIN vault_access va ON va.vault_id=v.id AND va.status!='Removed' JOIN identities ident ON ident.id=va.identity_id
-        LEFT JOIN tenants t ON t.identity_id=ident.id AND t.tenant_id=v.tenant_id LEFT JOIN access_history a ON a.item_id=i.id
-        WHERE i.is_deleted=0 AND ident.is_enabled=1 AND ($text='' OR i.name LIKE '%'||$text||'%' ESCAPE '\' OR i.tags LIKE '%'||$text||'%' ESCAPE '\')
-          AND ($identity IS NULL OR ident.id=$identity) AND ($tenant IS NULL OR v.tenant_id LIKE '%'||$tenant||'%' ESCAPE '\') AND ($subscription IS NULL OR v.subscription_id LIKE '%'||$subscription||'%' ESCAPE '\')
+               ra.display_name,COALESCE(t.display_name,v.tenant_id),EXISTS(SELECT 1 FROM favorites f WHERE f.item_id=i.id),a.last_accessed,
+               CASE WHEN julianday($now)-julianday(i.last_indexed)>1 THEN 1 ELSE 0 END,ra.status
+        FROM items i
+        JOIN vaults v ON v.id=i.vault_id
+        JOIN ranked_access ra ON ra.vault_id=v.id AND ra.access_rank=1
+        LEFT JOIN tenants t ON t.identity_id=ra.identity_id AND t.tenant_id=v.tenant_id
+        LEFT JOIN access_history a ON a.item_id=i.id
+        WHERE i.is_deleted=0 AND ($text='' OR i.name LIKE '%'||$text||'%' ESCAPE '\' OR i.tags LIKE '%'||$text||'%' ESCAPE '\')
+          AND ($tenant IS NULL OR v.tenant_id LIKE '%'||$tenant||'%' ESCAPE '\') AND ($subscription IS NULL OR v.subscription_id LIKE '%'||$subscription||'%' ESCAPE '\')
           AND ($vault IS NULL OR v.id=$vault) AND ($vault_name IS NULL OR v.name LIKE '%'||$vault_name||'%' ESCAPE '\') AND ($type IS NULL OR i.object_type=$type) AND ($enabled IS NULL OR i.enabled=$enabled)
           AND ($favorites=0 OR EXISTS(SELECT 1 FROM favorites f WHERE f.item_id=i.id)) AND ($expired=0 OR (i.expires_at IS NOT NULL AND i.expires_at<$now))
           AND ($stale=0 OR julianday($now)-julianday(i.last_indexed)>1)
-          AND ($workspace IS NULL OR EXISTS(SELECT 1 FROM workspace_links wl WHERE wl.workspace_id=$workspace AND ((wl.resource_type=0 AND wl.resource_id=ident.id) OR (wl.resource_type=1 AND wl.resource_id=v.tenant_id) OR (wl.resource_type=2 AND wl.resource_id=v.subscription_id) OR (wl.resource_type=3 AND wl.resource_id=v.id))))
-        GROUP BY i.id ORDER BY CASE WHEN $recent_first=1 AND a.last_accessed IS NULL THEN 1 ELSE 0 END,CASE WHEN $recent_first=1 THEN a.last_accessed END DESC,i.name COLLATE NOCASE,v.name COLLATE NOCASE,i.provider_version DESC LIMIT $limit
+          AND ($workspace IS NULL OR EXISTS(SELECT 1 FROM workspace_links wl WHERE wl.workspace_id=$workspace AND ((wl.resource_type=0 AND wl.resource_id=ra.identity_id) OR (wl.resource_type=1 AND wl.resource_id=v.tenant_id) OR (wl.resource_type=2 AND wl.resource_id=v.subscription_id) OR (wl.resource_type=3 AND wl.resource_id=v.id))))
+        ORDER BY CASE WHEN $recent_first=1 AND a.last_accessed IS NULL THEN 1 ELSE 0 END,CASE WHEN $recent_first=1 THEN a.last_accessed END DESC,i.name COLLATE NOCASE,v.name COLLATE NOCASE,i.provider_version DESC LIMIT $limit
         """;
     private const string ResolveSql = """
         SELECT i.id,i.vault_id,i.name,i.object_type,i.enabled,i.tags,i.content_type,i.created_at,i.updated_at,i.expires_at,i.provider_version,i.fingerprint,i.last_indexed,i.is_deleted,

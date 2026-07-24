@@ -1,0 +1,5377 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": [
+    "src/**/packages.lock.json",
+    "tests/**/packages.lock.json",
+    "mobile/**/packages.lock.json",
+    "installer/packages.lock.json",
+    "docs/design/vault-prospector-ui-concepts/package-lock.json"
+  ],
+  "truthBoundary": "Package metadata inventory; not legal approval. Exact release SBOM and counsel review remain required.",
+  "packages": [
+    {
+      "ecosystem": "npm",
+      "id": "@emnapi/core",
+      "version": "1.11.1",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@emnapi/core/-/core-1.11.1.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@emnapi/core/v/1.11.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@emnapi/runtime",
+      "version": "1.11.1",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.11.1.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@emnapi/runtime/v/1.11.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@emnapi/wasi-threads",
+      "version": "1.2.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.2.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@emnapi/wasi-threads/v/1.2.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@napi-rs/wasm-runtime",
+      "version": "1.1.6",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.6.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@napi-rs/wasm-runtime/v/1.1.6",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxc-project/types",
+      "version": "0.139.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxc-project/types/-/types-0.139.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxc-project/types/v/0.139.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-android-arm-eabi",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-android-arm-eabi/-/binding-android-arm-eabi-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-android-arm-eabi/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-android-arm64",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-android-arm64/-/binding-android-arm64-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-android-arm64/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-darwin-arm64",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-darwin-arm64/-/binding-darwin-arm64-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-darwin-arm64/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-darwin-x64",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-darwin-x64/-/binding-darwin-x64-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-darwin-x64/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-freebsd-x64",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-freebsd-x64/-/binding-freebsd-x64-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-freebsd-x64/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-arm-gnueabihf",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm-gnueabihf/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-arm-musleabihf",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm-musleabihf/-/binding-linux-arm-musleabihf-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm-musleabihf/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-arm64-gnu",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm64-gnu/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-arm64-musl",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm64-musl/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-ppc64-gnu",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-ppc64-gnu/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-riscv64-gnu",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-riscv64-gnu/-/binding-linux-riscv64-gnu-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-riscv64-gnu/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-riscv64-musl",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-riscv64-musl/-/binding-linux-riscv64-musl-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-riscv64-musl/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-s390x-gnu",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-s390x-gnu/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-x64-gnu",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-x64-gnu/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-linux-x64-musl",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-x64-musl/-/binding-linux-x64-musl-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-x64-musl/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-openharmony-arm64",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-openharmony-arm64/-/binding-openharmony-arm64-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-openharmony-arm64/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-win32-arm64-msvc",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-win32-arm64-msvc/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-win32-ia32-msvc",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-win32-ia32-msvc/-/binding-win32-ia32-msvc-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-win32-ia32-msvc/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@oxlint/binding-win32-x64-msvc",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-win32-x64-msvc/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-android-arm64",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-android-arm64/-/binding-android-arm64-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-android-arm64/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-darwin-arm64",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-darwin-arm64/-/binding-darwin-arm64-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-darwin-arm64/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-darwin-x64",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-darwin-x64/-/binding-darwin-x64-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-darwin-x64/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-freebsd-x64",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-freebsd-x64/-/binding-freebsd-x64-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-freebsd-x64/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-linux-arm-gnueabihf",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-linux-arm-gnueabihf/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-linux-arm64-gnu",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-linux-arm64-gnu/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-linux-arm64-musl",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-linux-arm64-musl/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-linux-ppc64-gnu",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-linux-ppc64-gnu/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-linux-s390x-gnu",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-linux-s390x-gnu/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-linux-x64-gnu",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-linux-x64-gnu/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-linux-x64-musl",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-linux-x64-musl/-/binding-linux-x64-musl-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-linux-x64-musl/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-openharmony-arm64",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-openharmony-arm64/-/binding-openharmony-arm64-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-openharmony-arm64/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-wasm32-wasi",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-wasm32-wasi/-/binding-wasm32-wasi-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-wasm32-wasi/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-win32-arm64-msvc",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-win32-arm64-msvc/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/binding-win32-x64-msvc",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/binding-win32-x64-msvc/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@rolldown/pluginutils",
+      "version": "1.0.1",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.1.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@rolldown/pluginutils/v/1.0.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@tybys/wasm-util",
+      "version": "0.10.3",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.3.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@tybys/wasm-util/v/0.10.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@types/node",
+      "version": "24.13.3",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@types/node/-/node-24.13.3.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@types/node/v/24.13.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@types/react",
+      "version": "19.2.17",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@types/react/-/react-19.2.17.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@types/react/v/19.2.17",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@types/react-dom",
+      "version": "19.2.3",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@types/react-dom/-/react-dom-19.2.3.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@types/react-dom/v/19.2.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@vitejs/plugin-react",
+      "version": "6.0.4",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-6.0.4.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@vitejs/plugin-react/v/6.0.4",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "csstype",
+      "version": "3.2.3",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz",
+      "packageUrl": "https://www.npmjs.com/package/csstype/v/3.2.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "detect-libc",
+      "version": "2.1.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/detect-libc/v/2.1.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "fdir",
+      "version": "6.5.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/fdir/v/6.5.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "fsevents",
+      "version": "2.3.3",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+      "packageUrl": "https://www.npmjs.com/package/fsevents/v/2.3.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss/-/lightningcss-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-android-arm64",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-android-arm64/-/lightningcss-android-arm64-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-android-arm64/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-darwin-arm64",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-darwin-arm64/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-darwin-x64",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-darwin-x64/-/lightningcss-darwin-x64-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-darwin-x64/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-freebsd-x64",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-freebsd-x64/-/lightningcss-freebsd-x64-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-freebsd-x64/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-linux-arm-gnueabihf",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-linux-arm-gnueabihf/-/lightningcss-linux-arm-gnueabihf-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-linux-arm-gnueabihf/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-linux-arm64-gnu",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-linux-arm64-gnu/-/lightningcss-linux-arm64-gnu-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-linux-arm64-gnu/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-linux-arm64-musl",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-linux-arm64-musl/-/lightningcss-linux-arm64-musl-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-linux-arm64-musl/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-linux-x64-gnu",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-linux-x64-gnu/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-linux-x64-musl",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-linux-x64-musl/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-win32-arm64-msvc",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-win32-arm64-msvc/-/lightningcss-win32-arm64-msvc-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-win32-arm64-msvc/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "lightningcss-win32-x64-msvc",
+      "version": "1.33.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MPL-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.33.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/lightningcss-win32-x64-msvc/v/1.33.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "nanoid",
+      "version": "3.3.16",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.16.tgz",
+      "packageUrl": "https://www.npmjs.com/package/nanoid/v/3.3.16",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "oxlint",
+      "version": "1.75.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/oxlint/-/oxlint-1.75.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/oxlint/v/1.75.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "picocolors",
+      "version": "1.1.1",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "ISC",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
+      "packageUrl": "https://www.npmjs.com/package/picocolors/v/1.1.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "picomatch",
+      "version": "4.0.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/picomatch/v/4.0.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "postcss",
+      "version": "8.5.22",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/postcss/-/postcss-8.5.22.tgz",
+      "packageUrl": "https://www.npmjs.com/package/postcss/v/8.5.22",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "react",
+      "version": "19.2.8",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "production"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/react/-/react-19.2.8.tgz",
+      "packageUrl": "https://www.npmjs.com/package/react/v/19.2.8",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "react-dom",
+      "version": "19.2.8",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "production"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/react-dom/-/react-dom-19.2.8.tgz",
+      "packageUrl": "https://www.npmjs.com/package/react-dom/v/19.2.8",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "rolldown",
+      "version": "1.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/rolldown/-/rolldown-1.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/rolldown/v/1.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "scheduler",
+      "version": "0.27.0",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "production"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/scheduler/-/scheduler-0.27.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/scheduler/v/0.27.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "source-map-js",
+      "version": "1.2.1",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "BSD-3-Clause",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
+      "packageUrl": "https://www.npmjs.com/package/source-map-js/v/1.2.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "tinyglobby",
+      "version": "0.2.17",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz",
+      "packageUrl": "https://www.npmjs.com/package/tinyglobby/v/0.2.17",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "tslib",
+      "version": "2.8.1",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "0BSD",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+      "packageUrl": "https://www.npmjs.com/package/tslib/v/2.8.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "typescript",
+      "version": "6.0.3",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz",
+      "packageUrl": "https://www.npmjs.com/package/typescript/v/6.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "undici-types",
+      "version": "7.18.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/undici-types/-/undici-types-7.18.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/undici-types/v/7.18.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "vite",
+      "version": "8.1.5",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/vite/-/vite-8.1.5.tgz",
+      "packageUrl": "https://www.npmjs.com/package/vite/v/8.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "centraltransitive",
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.Android",
+      "version": "12.1.0",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.Android/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.Angle.Windows.Natives",
+      "version": "2.1.27548.20260419",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "file:LICENSE",
+      "licenseSource": "nuspec-file",
+      "projectUrl": "https://github.com/AvaloniaUI/angle/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.Angle.Windows.Natives/2.1.27548.20260419",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.BuildServices",
+      "version": "11.3.2",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia.BuildServices",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.BuildServices/11.3.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.Desktop",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.Desktop/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.Fonts.Inter",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "centraltransitive",
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.Fonts.Inter/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.FreeDesktop",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.FreeDesktop/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.FreeDesktop.AtSpi",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.FreeDesktop.AtSpi/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.HarfBuzz",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.HarfBuzz/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.iOS",
+      "version": "12.1.0",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.iOS/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.Native",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.Native/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.Remote.Protocol",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.Remote.Protocol/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.Skia",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.Skia/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.Themes.Fluent",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "centraltransitive",
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.Themes.Fluent/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.Win32",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.Win32/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Avalonia.X11",
+      "version": "12.1.0",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AvaloniaUI/Avalonia/",
+      "packageUrl": "https://www.nuget.org/packages/Avalonia.X11/12.1.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "AvaloniaUI.DiagnosticsSupport",
+      "version": "2.2.3",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "NOASSERTION",
+      "licenseSource": "manual-review-required",
+      "projectUrl": "https://www.nuget.org/packages/AvaloniaUI.DiagnosticsSupport/2.2.3",
+      "packageUrl": "https://www.nuget.org/packages/AvaloniaUI.DiagnosticsSupport/2.2.3",
+      "distribution": "development-only",
+      "reviewStatus": "approval-required",
+      "reviewReason": "The package metadata does not declare a license. The project excludes its assets outside Debug builds; legal review must confirm the developer-use terms before GA."
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Azure.Core",
+      "version": "1.57.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Azure/azure-sdk-for-net",
+      "packageUrl": "https://www.nuget.org/packages/Azure.Core/1.57.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Azure.Identity",
+      "version": "1.21.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Azure/azure-sdk-for-net",
+      "packageUrl": "https://www.nuget.org/packages/Azure.Identity/1.21.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Azure.ResourceManager",
+      "version": "1.14.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Azure/azure-sdk-for-net",
+      "packageUrl": "https://www.nuget.org/packages/Azure.ResourceManager/1.14.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Azure.ResourceManager.ManagedServiceIdentities",
+      "version": "1.4.1",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Azure/azure-sdk-for-net",
+      "packageUrl": "https://www.nuget.org/packages/Azure.ResourceManager.ManagedServiceIdentities/1.4.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Azure.Security.KeyVault.Certificates",
+      "version": "4.9.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Azure/azure-sdk-for-net",
+      "packageUrl": "https://www.nuget.org/packages/Azure.Security.KeyVault.Certificates/4.9.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Azure.Security.KeyVault.Keys",
+      "version": "4.10.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Azure/azure-sdk-for-net",
+      "packageUrl": "https://www.nuget.org/packages/Azure.Security.KeyVault.Keys/4.10.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Azure.Security.KeyVault.Secrets",
+      "version": "4.11.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Azure/azure-sdk-for-net",
+      "packageUrl": "https://www.nuget.org/packages/Azure.Security.KeyVault.Secrets/4.11.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "CommunityToolkit.Mvvm",
+      "version": "8.4.2",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "centraltransitive",
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/CommunityToolkit/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/CommunityToolkit.Mvvm/8.4.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "coverlet.collector",
+      "version": "10.0.1",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "direct"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/coverlet-coverage/coverlet.git",
+      "packageUrl": "https://www.nuget.org/packages/coverlet.collector/10.0.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "HarfBuzzSharp",
+      "version": "8.3.1.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/HarfBuzzSharp/8.3.1.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "HarfBuzzSharp.NativeAssets.Android",
+      "version": "8.3.1.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/HarfBuzzSharp.NativeAssets.Android/8.3.1.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "HarfBuzzSharp.NativeAssets.iOS",
+      "version": "8.3.1.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/HarfBuzzSharp.NativeAssets.iOS/8.3.1.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "HarfBuzzSharp.NativeAssets.Linux",
+      "version": "8.3.1.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/HarfBuzzSharp.NativeAssets.Linux/8.3.1.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "HarfBuzzSharp.NativeAssets.WebAssembly",
+      "version": "8.3.1.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/HarfBuzzSharp.NativeAssets.WebAssembly/8.3.1.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "HarfBuzzSharp.NativeAssets.Win32",
+      "version": "8.3.1.3",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/HarfBuzzSharp.NativeAssets.Win32/8.3.1.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "MicroCom.Runtime",
+      "version": "0.11.6",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/kekekeks/MicroCom",
+      "packageUrl": "https://www.nuget.org/packages/MicroCom.Runtime/0.11.6",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.ApplicationInsights",
+      "version": "2.23.0",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Microsoft/ApplicationInsights-dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.ApplicationInsights/2.23.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Bcl.AsyncInterfaces",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Bcl.AsyncInterfaces/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Bcl.AsyncInterfaces",
+      "version": "6.0.0",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/runtime",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Bcl.AsyncInterfaces/6.0.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.CodeCoverage",
+      "version": "18.8.1",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/microsoft/vstest",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.CodeCoverage/18.8.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Data.Sqlite.Core",
+      "version": "10.0.10",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Infrastructure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Data.Sqlite.Core/10.0.10",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Extensions.Configuration.Abstractions",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Extensions.Configuration.Abstractions/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Extensions.Diagnostics.Abstractions",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Extensions.Diagnostics.Abstractions/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Extensions.FileProviders.Abstractions",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Extensions.FileProviders.Abstractions/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Extensions.Hosting.Abstractions",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Extensions.Hosting.Abstractions/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Extensions.Logging.Abstractions",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Extensions.Logging.Abstractions/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Extensions.Options",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Extensions.Options/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Extensions.Primitives",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Extensions.Primitives/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Identity.Client",
+      "version": "4.86.1",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "centraltransitive",
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AzureAD/microsoft-authentication-library-for-dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Identity.Client/4.86.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Identity.Client.Extensions.Msal",
+      "version": "4.86.1",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AzureAD/microsoft-authentication-library-for-dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Identity.Client.Extensions.Msal/4.86.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.IdentityModel.Abstractions",
+      "version": "8.14.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.IdentityModel.Abstractions/8.14.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.IO.RecyclableMemoryStream",
+      "version": "3.0.1",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Microsoft/Microsoft.IO.RecyclableMemoryStream",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.IO.RecyclableMemoryStream/3.0.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.NET.ILLink.Tasks",
+      "version": "10.0.10",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS.CredentialProvider/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.NET.ILLink.Tasks/10.0.10",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.NET.Test.Sdk",
+      "version": "18.8.1",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "direct"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/microsoft/vstest",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.NET.Test.Sdk/18.8.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Testing.Extensions.Telemetry",
+      "version": "1.9.1",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/microsoft/testfx",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.9.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Testing.Extensions.TrxReport.Abstractions",
+      "version": "1.9.1",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/microsoft/testfx",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.9.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Testing.Platform",
+      "version": "1.9.1",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/microsoft/testfx",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Testing.Platform/1.9.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Testing.Platform.MSBuild",
+      "version": "1.9.1",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/microsoft/testfx",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.9.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.TestPlatform.ObjectModel",
+      "version": "18.8.1",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/microsoft/vstest",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.TestPlatform.ObjectModel/18.8.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.TestPlatform.TestHost",
+      "version": "18.8.1",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/microsoft/vstest",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.TestPlatform.TestHost/18.8.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Win32.Registry",
+      "version": "5.0.0",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "git://github.com/dotnet/runtime",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Win32.Registry/5.0.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Win32.SystemEvents",
+      "version": "10.0.10",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.BrowserHost/packages.lock.json",
+        "src/VaultProspector.Platform/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Win32.SystemEvents/10.0.10",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SkiaSharp",
+      "version": "3.119.4",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/SkiaSharp/3.119.4",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SkiaSharp.NativeAssets.Android",
+      "version": "3.119.4",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/SkiaSharp.NativeAssets.Android/3.119.4",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SkiaSharp.NativeAssets.Linux",
+      "version": "3.119.4",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux/3.119.4",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SkiaSharp.NativeAssets.macOS",
+      "version": "3.119.4",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/SkiaSharp.NativeAssets.macOS/3.119.4",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SkiaSharp.NativeAssets.WebAssembly",
+      "version": "3.119.4",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/SkiaSharp.NativeAssets.WebAssembly/3.119.4",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SkiaSharp.NativeAssets.Win32",
+      "version": "3.119.4",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "packageUrl": "https://www.nuget.org/packages/SkiaSharp.NativeAssets.Win32/3.119.4",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SQLitePCLRaw.bundle_e_sqlcipher",
+      "version": "2.1.11",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Infrastructure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/ericsink/SQLitePCL.raw",
+      "packageUrl": "https://www.nuget.org/packages/SQLitePCLRaw.bundle_e_sqlcipher/2.1.11",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SQLitePCLRaw.core",
+      "version": "2.1.11",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Infrastructure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/ericsink/SQLitePCL.raw",
+      "packageUrl": "https://www.nuget.org/packages/SQLitePCLRaw.core/2.1.11",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SQLitePCLRaw.lib.e_sqlcipher",
+      "version": "2.1.11",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Infrastructure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/ericsink/SQLitePCL.raw",
+      "packageUrl": "https://www.nuget.org/packages/SQLitePCLRaw.lib.e_sqlcipher/2.1.11",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SQLitePCLRaw.lib.e_sqlcipher.android",
+      "version": "2.1.11",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/ericsink/SQLitePCL.raw",
+      "packageUrl": "https://www.nuget.org/packages/SQLitePCLRaw.lib.e_sqlcipher.android/2.1.11",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SQLitePCLRaw.lib.e_sqlcipher.ios",
+      "version": "2.1.11",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/ericsink/SQLitePCL.raw",
+      "packageUrl": "https://www.nuget.org/packages/SQLitePCLRaw.lib.e_sqlcipher.ios/2.1.11",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SQLitePCLRaw.provider.e_sqlcipher",
+      "version": "2.1.11",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Infrastructure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/ericsink/SQLitePCL.raw",
+      "packageUrl": "https://www.nuget.org/packages/SQLitePCLRaw.provider.e_sqlcipher/2.1.11",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "SQLitePCLRaw.provider.internal",
+      "version": "2.1.11",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/ericsink/SQLitePCL.raw",
+      "packageUrl": "https://www.nuget.org/packages/SQLitePCLRaw.provider.internal/2.1.11",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "System.ClientModel",
+      "version": "1.13.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/Azure/azure-sdk-for-net",
+      "packageUrl": "https://www.nuget.org/packages/System.ClientModel/1.13.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "System.Memory.Data",
+      "version": "10.0.3",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/System.Memory.Data/10.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "System.Runtime.InteropServices.NFloat.Internal",
+      "version": "6.0.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/runtime",
+      "packageUrl": "https://www.nuget.org/packages/System.Runtime.InteropServices.NFloat.Internal/6.0.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "System.Security.Cryptography.ProtectedData",
+      "version": "10.0.10",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.BrowserHost/packages.lock.json",
+        "src/VaultProspector.Platform/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/dotnet/dotnet",
+      "packageUrl": "https://www.nuget.org/packages/System.Security.Cryptography.ProtectedData/10.0.10",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "System.Security.Cryptography.ProtectedData",
+      "version": "4.5.0",
+      "scopes": [
+        "development",
+        "production-desktop",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT",
+      "licenseSource": "nuspec-url",
+      "projectUrl": "https://dot.net/",
+      "packageUrl": "https://www.nuget.org/packages/System.Security.Cryptography.ProtectedData/4.5.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Tmds.DBus.Protocol",
+      "version": "0.94.1",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/tmds/Tmds.DBus.git",
+      "packageUrl": "https://www.nuget.org/packages/Tmds.DBus.Protocol/0.94.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Activity",
+      "version": "1.12.4.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Activity/1.12.4.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Annotation",
+      "version": "1.9.1.7",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Annotation/1.9.1.7",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Annotation.Experimental",
+      "version": "1.5.1.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Annotation.Experimental/1.5.1.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Annotation.Jvm",
+      "version": "1.9.1.7",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Annotation.Jvm/1.9.1.7",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.AppCompat",
+      "version": "1.7.1.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.AppCompat/1.7.1.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.AppCompat.AppCompatResources",
+      "version": "1.7.1.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.AppCompat.AppCompatResources/1.7.1.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Arch.Core.Common",
+      "version": "2.2.0.20",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Arch.Core.Common/2.2.0.20",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Arch.Core.Runtime",
+      "version": "2.2.0.20",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Arch.Core.Runtime/2.2.0.20",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Collection",
+      "version": "1.5.0.5",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Collection/1.5.0.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Collection.Jvm",
+      "version": "1.5.0.5",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Collection.Jvm/1.5.0.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Compose.Runtime.Annotation",
+      "version": "1.10.4.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Compose.Runtime.Annotation/1.10.4.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Compose.Runtime.Annotation.Android",
+      "version": "1.10.4.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Compose.Runtime.Annotation.Android/1.10.4.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Concurrent.Futures",
+      "version": "1.3.0.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Concurrent.Futures/1.3.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Core",
+      "version": "1.17.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Core/1.17.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Core.Core.Ktx",
+      "version": "1.17.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Core.Core.Ktx/1.17.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Core.SplashScreen",
+      "version": "1.2.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "direct"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Core.SplashScreen/1.2.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Core.ViewTree",
+      "version": "1.0.0.5",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Core.ViewTree/1.0.0.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.CursorAdapter",
+      "version": "1.0.0.36",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.CursorAdapter/1.0.0.36",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.CustomView",
+      "version": "1.2.0.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.CustomView/1.2.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.DrawerLayout",
+      "version": "1.2.0.20",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.DrawerLayout/1.2.0.20",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Emoji2",
+      "version": "1.6.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Emoji2/1.6.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Emoji2.ViewsHelper",
+      "version": "1.6.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Emoji2.ViewsHelper/1.6.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Fragment",
+      "version": "1.8.9.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Fragment/1.8.9.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Interpolator",
+      "version": "1.0.0.36",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Interpolator/1.0.0.36",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.Common",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.Common/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.Common.Jvm",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.Common.Jvm/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.LiveData.Core",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.LiveData.Core/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.Process",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.Process/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.Runtime",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.Runtime/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.Runtime.Android",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.Runtime.Android/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.ViewModel",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.ViewModel/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.ViewModel.Android",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.ViewModel.Android/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.ViewModelSavedState",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.ViewModelSavedState/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Lifecycle.ViewModelSavedState.Android",
+      "version": "2.10.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Lifecycle.ViewModelSavedState.Android/2.10.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Loader",
+      "version": "1.1.0.36",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Loader/1.1.0.36",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.NavigationEvent",
+      "version": "1.0.2.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.NavigationEvent/1.0.2.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.NavigationEvent.Android",
+      "version": "1.0.2.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.NavigationEvent.Android/1.0.2.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.ProfileInstaller.ProfileInstaller",
+      "version": "1.4.1.7",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.ProfileInstaller.ProfileInstaller/1.4.1.7",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.ResourceInspection.Annotation",
+      "version": "1.0.1.24",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.ResourceInspection.Annotation/1.0.1.24",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.SavedState",
+      "version": "1.4.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.SavedState/1.4.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.SavedState.SavedState.Android",
+      "version": "1.4.0.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.SavedState.SavedState.Android/1.4.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Startup.StartupRuntime",
+      "version": "1.2.0.7",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Startup.StartupRuntime/1.2.0.7",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Tracing.Tracing",
+      "version": "1.3.0.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Tracing.Tracing/1.3.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Tracing.Tracing.Android",
+      "version": "1.3.0.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Tracing.Tracing.Android/1.3.0.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.VectorDrawable",
+      "version": "1.2.0.10",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.VectorDrawable/1.2.0.10",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.VectorDrawable.Animated",
+      "version": "1.2.0.10",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.VectorDrawable.Animated/1.2.0.10",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.VersionedParcelable",
+      "version": "1.2.1.5",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.VersionedParcelable/1.2.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.ViewPager",
+      "version": "1.1.0.6",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.ViewPager/1.1.0.6",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Window",
+      "version": "1.5.1.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Window/1.5.1.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Window.WindowCore",
+      "version": "1.5.1.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Window.WindowCore/1.5.1.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.AndroidX.Window.WindowCore.Jvm",
+      "version": "1.5.1.2",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.AndroidX.Window.WindowCore.Jvm/1.5.1.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.Google.Guava.ListenableFuture",
+      "version": "1.0.0.31",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.Google.Guava.ListenableFuture/1.0.0.31",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.Jetbrains.Annotations",
+      "version": "26.1.0.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.Jetbrains.Annotations/26.1.0.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.JSpecify",
+      "version": "1.0.0.6",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.JSpecify/1.0.0.6",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.Kotlin.StdLib",
+      "version": "2.3.10.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.Kotlin.StdLib/2.3.10.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.KotlinX.Coroutines.Android",
+      "version": "1.10.2.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.KotlinX.Coroutines.Android/1.10.2.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.KotlinX.Coroutines.Core",
+      "version": "1.10.2.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.KotlinX.Coroutines.Core/1.10.2.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.KotlinX.Coroutines.Core.Jvm",
+      "version": "1.10.2.3",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.KotlinX.Coroutines.Core.Jvm/1.10.2.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.KotlinX.Serialization.Core",
+      "version": "1.10.0.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.KotlinX.Serialization.Core/1.10.0.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Xamarin.KotlinX.Serialization.Core.Jvm",
+      "version": "1.10.0.1",
+      "scopes": [
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json"
+      ],
+      "license": "MIT AND Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xamarin/AndroidX.git",
+      "packageUrl": "https://www.nuget.org/packages/Xamarin.KotlinX.Serialization.Core.Jvm/1.10.0.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.analyzers",
+      "version": "1.27.0",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/xunit.analyzers",
+      "packageUrl": "https://www.nuget.org/packages/xunit.analyzers/1.27.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.runner.visualstudio",
+      "version": "3.1.5",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "direct"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/visualstudio.xunit",
+      "packageUrl": "https://www.nuget.org/packages/xunit.runner.visualstudio/3.1.5",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.v3",
+      "version": "3.2.2",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "direct"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/xunit",
+      "packageUrl": "https://www.nuget.org/packages/xunit.v3/3.2.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.v3.assert",
+      "version": "3.2.2",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/xunit",
+      "packageUrl": "https://www.nuget.org/packages/xunit.v3.assert/3.2.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.v3.common",
+      "version": "3.2.2",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/xunit",
+      "packageUrl": "https://www.nuget.org/packages/xunit.v3.common/3.2.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.v3.core.mtp-v1",
+      "version": "3.2.2",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/xunit",
+      "packageUrl": "https://www.nuget.org/packages/xunit.v3.core.mtp-v1/3.2.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.v3.extensibility.core",
+      "version": "3.2.2",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/xunit",
+      "packageUrl": "https://www.nuget.org/packages/xunit.v3.extensibility.core/3.2.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.v3.mtp-v1",
+      "version": "3.2.2",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/xunit",
+      "packageUrl": "https://www.nuget.org/packages/xunit.v3.mtp-v1/3.2.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.v3.runner.common",
+      "version": "3.2.2",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/xunit",
+      "packageUrl": "https://www.nuget.org/packages/xunit.v3.runner.common/3.2.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "xunit.v3.runner.inproc.console",
+      "version": "3.2.2",
+      "scopes": [
+        "development"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Application.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
+        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
+        "tests/VaultProspector.Domain.Tests/packages.lock.json",
+        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
+        "tests/VaultProspector.Platform.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
+        "tests/VaultProspector.Security.Tests/packages.lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/xunit/xunit",
+      "packageUrl": "https://www.nuget.org/packages/xunit.v3.runner.inproc.console/3.2.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    }
+  ]
+}

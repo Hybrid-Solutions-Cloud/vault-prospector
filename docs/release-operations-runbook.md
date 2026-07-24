@@ -4,11 +4,14 @@
 
 **Frequency:** Every release, package update, credential rotation, or incident
 
-**Last updated:** 2026-07-17
+**Last updated:** 2026-07-24
 
 **Last exercised:** Exact public `0.1.1-preview.1` MSI completed the full 27-gate lifecycle and all
 13 public assets passed credential-free byte comparison on 2026-07-17; package-service failure
-handling was exercised during earlier Chocolatey HTTP 504 responses
+handling was exercised during earlier Chocolatey HTTP 504 responses. On 2026-07-24 the local
+operational-readiness validator passed 35 source-policy checks and all three current public
+release/support endpoints returned HTTP 200. This is not a substitute for the complete incident,
+withdrawal, communication, and recovery exercise.
 
 ## Purpose
 
@@ -49,6 +52,38 @@ Before each Preview refresh and the GA decision:
 4. rerun the supported-version upgrade matrix after any installer or storage change; and
 5. update G-01 without claiming Passed until every numerical and stability threshold is evidenced.
 
+## Operational monitoring and maintenance
+
+The canonical support states, supersedence rules, response targets, and end-of-support process are
+defined in [Support and product lifecycle](support-lifecycle.md). The machine-readable contract is
+`ops/operational-readiness.json`.
+
+- Dependabot checks desktop/mobile NuGet and browser/design npm dependencies each Monday.
+  Dependency pull requests are reviewed normally and are never auto-merged.
+- The **Vault Prospector Operational Readiness** ADO pipeline runs weekly and on manual request. It checks lifecycle and
+  ownership agreement, runtime end-of-support dates, direct/transitive desktop NuGet
+  vulnerabilities, and the current release, checksum, and feedback endpoints.
+- The normal ADO CI pipeline runs the same contract validator without network checks, preventing a
+  policy or automation change from silently drifting away from the manifest.
+- The JSON report is retained for 90 days. A failed or missing scheduled run must be dispositioned
+  by the support owner before another release.
+- Review the credential/signing inventory every 30 days and exercise this complete runbook at least
+  every 90 days and against the exact GA candidate.
+
+Run the same check locally:
+
+```powershell
+pwsh ./scripts/Test-OperationalReadiness.ps1 -CheckPublicEndpoints
+```
+
+The validator warns 120 days before a recorded runtime end-of-support date and fails after it.
+Desktop and mobile now use .NET 10 LTS, whose recorded end-of-support date is 2028-11-14. The
+machine-readable contract requires both pinned SDKs to remain on major version 10 and will fail if
+either runtime pin or lifecycle record drifts.
+
+A named backup support/security operator is still required before G-08 can pass. Until one is
+assigned, the primary owner must not characterize this automation as a complete on-call function.
+
 ## Release prerequisites
 
 - [ ] Every required gate in the [release-readiness matrix](product/release-readiness.md) is Passed
@@ -57,7 +92,8 @@ Before each Preview refresh and the GA decision:
 - [ ] Version, release notes, evidence template, installer metadata, and package manifests agree.
 - [ ] The candidate has no unresolved critical/high security defect.
 - [ ] A clean supported Windows system is available for independent verification.
-- [ ] HCS MCP can mint the Hybrid Solutions Cloud GitHub App token.
+- [ ] The `vp-prd-secrets` Key Vault-linked variable group is healthy and authorized for the
+  protected release pipeline.
 - [ ] WinGetCreate is authenticated as `kristopherjturner` for WinGet submission.
 - [ ] `CHOCOLATEY_API_KEY` is available from `kv-hcs-vault-01` for Chocolatey submission.
 - [ ] Rollback triggers, last verified version, approver, and support owner are recorded before tagging.
@@ -101,8 +137,9 @@ git tag -a "v$version" -m "Vault Prospector $version"
 git push origin "v$version"
 ```
 
-Expected result: the protected GitHub release workflow builds/tests again and publishes source-repo
-artifacts, hashes, SPDX SBOM, and Sigstore bundles.
+Expected result: the protected Azure DevOps release pipeline builds/tests again, signs packages
+with the HCS Key Vault Cosign key, publishes the immutable public release, retains hashes and SPDX
+SBOM evidence, and submits the Chocolatey package.
 
 For an unsigned Preview, the tag must match `vX.Y.Z-preview.N`; the workflow records the unsigned
 classification and verifies that project binaries and MSI are actually `NotSigned`. Stable and GA
@@ -111,16 +148,11 @@ tags remain blocked until Artifact Signing is configured.
 If it fails: do not reuse the tag after any artifact was published. Diagnose the workflow, increment
 the version, and create a new candidate.
 
-### 4. Verify and mirror public artifacts
+### 4. Verify public artifacts
 
-Obtain a fresh HCS GitHub App installation token through the HCS MCP and expose it only as
-`GH_TOKEN` for the current process. Then run:
-
-```powershell
-pwsh ./scripts/PublishDistribution.ps1 -Version $version
-```
-
-Download the public assets anonymously and verify checksums and Sigstore bundles using
+The release pipeline mints a short-lived GitHub App installation token and calls
+`PublishDistribution.ps1`; maintainers do not supply or persist a personal PAT.
+Download the public assets anonymously and verify checksums and Cosign bundles using
 [Release and artifact verification](release.md). Record file sizes and hashes in a new
 `docs/release-evidence/<version>.md` file.
 

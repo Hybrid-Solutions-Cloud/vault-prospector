@@ -16,12 +16,26 @@ namespace VaultProspector.Providers.Azure;
 
 public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider) : IVaultProvider
 {
+    public Task<DiscoverySnapshot> DiscoverAsync(
+        ConnectedIdentity identity,
+        IReadOnlyList<string> excludedSubscriptions,
+        IReadOnlyList<string> excludedVaultResourceIds,
+        CancellationToken cancellationToken) =>
+        DiscoverAsync(
+            identity,
+            excludedSubscriptions,
+            excludedVaultResourceIds,
+            VaultDiscoveryConstraints.Unrestricted,
+            cancellationToken);
+
     public async Task<DiscoverySnapshot> DiscoverAsync(
         ConnectedIdentity identity,
         IReadOnlyList<string> excludedSubscriptions,
         IReadOnlyList<string> excludedVaultResourceIds,
+        VaultDiscoveryConstraints constraints,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(constraints);
         var credential = await identityProvider.GetCredentialAsync(identity, cancellationToken);
         var arm = new ArmClient(credential);
         var tenants = new List<TenantAccess>();
@@ -37,6 +51,8 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
             await foreach (var subscription in arm.GetSubscriptions().GetAllAsync(cancellationToken))
             {
                 var tenantId = subscription.Data.TenantId?.ToString() ?? identity.HomeTenantId;
+                if (!constraints.IsTenantAllowed(tenantId))
+                    continue;
                 var tenantAccess = tenants.FirstOrDefault(x => x.TenantId == tenantId);
                 if (tenantAccess is null)
                 {
