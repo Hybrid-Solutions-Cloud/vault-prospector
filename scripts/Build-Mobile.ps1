@@ -90,7 +90,17 @@ try {
 
     if ($Platform -in @('All', 'iOS')) {
         $iosRuntimeIdentifier = if ($IsMacOS) {
-            'iossimulator-arm64'
+            switch ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture) {
+                ([System.Runtime.InteropServices.Architecture]::Arm64) {
+                    'iossimulator-arm64'
+                }
+                ([System.Runtime.InteropServices.Architecture]::X64) {
+                    'iossimulator-x64'
+                }
+                default {
+                    throw "Unsupported macOS build architecture '$($_)'."
+                }
+            }
         }
         else {
             'ios-arm64'
