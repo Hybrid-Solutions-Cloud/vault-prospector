@@ -88,6 +88,9 @@ jobs:
       - name: Validate legal and privacy inventory
         shell: pwsh
         run: ./scripts/Test-LegalPrivacyReadiness.ps1 -OutputPath TestResults/legal-privacy.json
+      - name: Validate enterprise policy package
+        shell: pwsh
+        run: ./scripts/Test-EnterprisePolicyReadiness.ps1 -OutputPath TestResults/enterprise-policy.json -PublishDirectory artifacts/publish-win-x64
       - name: Upload commit-addressed Windows candidate
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

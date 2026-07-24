@@ -8,7 +8,8 @@ public sealed class CyberArkService(
     IMetadataRepository repository,
     IUserVerificationService verificationService,
     IClipboardService clipboardService,
-    IClock clock)
+    IClock clock,
+    IEnterprisePolicy? enterprisePolicy = null)
 {
     public async Task<CyberArkProfile> ConnectAsync(
         CyberArkProfile profile,
@@ -17,6 +18,8 @@ public sealed class CyberArkService(
     {
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(credential);
+        Policy().EnsureProviderAllowed(
+            EnterpriseProvider.CyberArkPrivilegeCloud);
         await provider.ValidateAsync(profile, credential, cancellationToken);
 
         var existing = await repository.GetCyberArkProfileAsync(
@@ -87,6 +90,8 @@ public sealed class CyberArkService(
         Guid profileId,
         CancellationToken cancellationToken)
     {
+        Policy().EnsureProviderAllowed(
+            EnterpriseProvider.CyberArkPrivilegeCloud);
         var profile = await RequireEnabledProfileAsync(
             profileId,
             cancellationToken);
@@ -107,8 +112,14 @@ public sealed class CyberArkService(
 
     public Task<IReadOnlyList<CyberArkSafe>> GetSafesAsync(
         Guid profileId,
-        CancellationToken cancellationToken) =>
-        repository.GetCyberArkSafesAsync(profileId, cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        Policy().EnsureProviderAllowed(
+            EnterpriseProvider.CyberArkPrivilegeCloud);
+        return repository.GetCyberArkSafesAsync(
+            profileId,
+            cancellationToken);
+    }
 
     public Task<IReadOnlyList<CyberArkAccount>> SearchAccountsAsync(
         Guid profileId,
@@ -116,6 +127,8 @@ public sealed class CyberArkService(
         int limit,
         CancellationToken cancellationToken)
     {
+        Policy().EnsureProviderAllowed(
+            EnterpriseProvider.CyberArkPrivilegeCloud);
         ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(limit, 500);
         return repository.SearchCyberArkAccountsAsync(
@@ -130,6 +143,8 @@ public sealed class CyberArkService(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(account);
+        Policy().EnsureProviderAllowed(
+            EnterpriseProvider.CyberArkPrivilegeCloud);
         return repository.GetCyberArkVersionsAsync(
             account.ProfileId,
             account.AccountId,
@@ -139,11 +154,15 @@ public sealed class CyberArkService(
     public Task<CyberArkSafePermissionEvidence?> GetPermissionAsync(
         Guid profileId,
         string safeId,
-        CancellationToken cancellationToken) =>
-        repository.GetCyberArkPermissionAsync(
+        CancellationToken cancellationToken)
+    {
+        Policy().EnsureProviderAllowed(
+            EnterpriseProvider.CyberArkPrivilegeCloud);
+        return repository.GetCyberArkPermissionAsync(
             profileId,
             safeId,
             cancellationToken);
+    }
 
     public async Task<SensitiveValue> RetrieveAsync(
         CyberArkAccount account,
@@ -153,6 +172,8 @@ public sealed class CyberArkService(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(account);
+        Policy().EnsureProviderAllowed(
+            EnterpriseProvider.CyberArkPrivilegeCloud);
         if (string.IsNullOrWhiteSpace(reason))
             throw new CyberArkConfigurationException(
                 "A non-sensitive business reason is required for CyberArk retrieval.",
@@ -248,6 +269,7 @@ public sealed class CyberArkService(
         TimeSpan clearAfter,
         CancellationToken cancellationToken)
     {
+        Policy().EnsureClipboardAllowed();
         using var value = await RetrieveAsync(
             account,
             versionId,
@@ -265,6 +287,11 @@ public sealed class CyberArkService(
         bool enabled,
         CancellationToken cancellationToken)
     {
+        if (enabled)
+        {
+            Policy().EnsureProviderAllowed(
+                EnterpriseProvider.CyberArkPrivilegeCloud);
+        }
         var profile = await repository.GetCyberArkProfileAsync(
             profileId,
             cancellationToken)
@@ -377,4 +404,8 @@ public sealed class CyberArkService(
                 safeMessage,
                 clock.UtcNow),
             cancellationToken);
+
+    private EnterprisePolicySnapshot Policy() =>
+        (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance)
+            .GetSnapshot();
 }

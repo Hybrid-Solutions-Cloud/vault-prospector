@@ -111,7 +111,37 @@ public interface IVaultProvider
         IReadOnlyList<string> excludedSubscriptions,
         IReadOnlyList<string> excludedVaultResourceIds,
         CancellationToken cancellationToken);
+
+    Task<DiscoverySnapshot> DiscoverAsync(
+        ConnectedIdentity identity,
+        IReadOnlyList<string> excludedSubscriptions,
+        IReadOnlyList<string> excludedVaultResourceIds,
+        VaultDiscoveryConstraints constraints,
+        CancellationToken cancellationToken) =>
+        DiscoverAsync(
+            identity,
+            excludedSubscriptions,
+            excludedVaultResourceIds,
+            cancellationToken);
+
     Task<SensitiveValue> RetrieveSecretAsync(ConnectedIdentity identity, VaultResource vault, VaultItem item, CancellationToken cancellationToken);
+}
+
+public sealed class VaultDiscoveryConstraints(
+    IEnumerable<string>? allowedTenantIds = null)
+{
+    private readonly HashSet<string> _allowedTenantIds = new(
+        allowedTenantIds ?? [],
+        StringComparer.OrdinalIgnoreCase);
+
+    public static VaultDiscoveryConstraints Unrestricted { get; } = new();
+
+    public IReadOnlySet<string> AllowedTenantIds => _allowedTenantIds;
+    public bool RestrictsTenants => _allowedTenantIds.Count > 0;
+
+    public bool IsTenantAllowed(string tenantId) =>
+        !RestrictsTenants ||
+        _allowedTenantIds.Contains(tenantId);
 }
 
 public interface ICyberArkProvider
