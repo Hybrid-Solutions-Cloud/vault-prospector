@@ -110,7 +110,8 @@ try {
                 'VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj',
                 '--configuration',
                 $Configuration,
-                '--no-restore'
+                '--no-restore',
+                '-p:EnableCodeSigning=false'
             ) + $iosProperties)
         }
         else {

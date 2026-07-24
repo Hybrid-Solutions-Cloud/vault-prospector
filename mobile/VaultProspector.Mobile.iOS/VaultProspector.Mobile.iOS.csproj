@@ -10,7 +10,6 @@
     <RuntimeIdentifiers>ios-arm64;iossimulator-arm64</RuntimeIdentifiers>
     <RuntimeIdentifier Condition="'$(MobileRuntimeIdentifier)' != ''">$(MobileRuntimeIdentifier)</RuntimeIdentifier>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
-    <CodesignConfigureDependsOn>$(CodesignConfigureDependsOn);DisableCodesignInSimulator</CodesignConfigureDependsOn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,11 +29,4 @@
     <BundleResource Include="PrivacyInfo.xcprivacy"
                     LogicalName="PrivacyInfo.xcprivacy" />
   </ItemGroup>
-
-  <Target Name="DisableCodesignInSimulator"
-          Condition="'$(SdkIsSimulator)' == 'true'">
-    <PropertyGroup>
-      <EnableCodeSigning>false</EnableCodeSigning>
-    </PropertyGroup>
-  </Target>
 </Project>
