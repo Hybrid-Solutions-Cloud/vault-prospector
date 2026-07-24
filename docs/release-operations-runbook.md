@@ -77,8 +77,9 @@ pwsh ./scripts/Test-OperationalReadiness.ps1 -CheckPublicEndpoints
 ```
 
 The validator warns 120 days before a recorded runtime end-of-support date and fails after it.
-Desktop .NET 9 currently reaches end of support on 2026-11-10, so migration to a supported runtime
-must complete before Vault Prospector claims support beyond that date.
+Desktop and mobile now use .NET 10 LTS, whose recorded end-of-support date is 2028-11-14. The
+machine-readable contract requires both pinned SDKs to remain on major version 10 and will fail if
+either runtime pin or lifecycle record drifts.
 
 A named backup support/security operator is still required before G-08 can pass. Until one is
 assigned, the primary owner must not characterize this automation as a complete on-call function.

@@ -3063,36 +3063,6 @@
     },
     {
       "ecosystem": "nuget",
-      "id": "Microsoft.NETCore.Platforms",
-      "version": "5.0.0",
-      "scopes": [
-        "development"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Application.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
-        "tests/VaultProspector.Domain.Tests/packages.lock.json",
-        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
-        "tests/VaultProspector.Platform.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
-        "tests/VaultProspector.Security.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "git://github.com/dotnet/runtime",
-      "packageUrl": "https://www.nuget.org/packages/Microsoft.NETCore.Platforms/5.0.0",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
       "id": "Microsoft.Testing.Extensions.Telemetry",
       "version": "1.9.1",
       "scopes": [
@@ -3703,140 +3673,6 @@
     },
     {
       "ecosystem": "nuget",
-      "id": "System.Collections.Immutable",
-      "version": "8.0.0",
-      "scopes": [
-        "development"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Application.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
-        "tests/VaultProspector.Domain.Tests/packages.lock.json",
-        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
-        "tests/VaultProspector.Platform.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
-        "tests/VaultProspector.Security.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "https://github.com/dotnet/runtime",
-      "packageUrl": "https://www.nuget.org/packages/System.Collections.Immutable/8.0.0",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
-      "id": "System.Diagnostics.DiagnosticSource",
-      "version": "10.0.3",
-      "scopes": [
-        "development",
-        "production-desktop"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "src/VaultProspector.App/packages.lock.json",
-        "src/VaultProspector.Providers.Azure/packages.lock.json",
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "https://github.com/dotnet/dotnet",
-      "packageUrl": "https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource/10.0.3",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
-      "id": "System.Diagnostics.DiagnosticSource",
-      "version": "5.0.0",
-      "scopes": [
-        "development"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "tests/VaultProspector.Application.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
-        "tests/VaultProspector.Domain.Tests/packages.lock.json",
-        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
-        "tests/VaultProspector.Platform.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
-        "tests/VaultProspector.Security.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "git://github.com/dotnet/runtime",
-      "packageUrl": "https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource/5.0.0",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
-      "id": "System.IO.Pipelines",
-      "version": "10.0.3",
-      "scopes": [
-        "development",
-        "production-desktop"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "src/VaultProspector.App/packages.lock.json",
-        "src/VaultProspector.Providers.Azure/packages.lock.json",
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "https://github.com/dotnet/dotnet",
-      "packageUrl": "https://www.nuget.org/packages/System.IO.Pipelines/10.0.3",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
-      "id": "System.Memory",
-      "version": "4.5.3",
-      "scopes": [
-        "development",
-        "production-desktop"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "src/VaultProspector.App/packages.lock.json",
-        "src/VaultProspector.Infrastructure/packages.lock.json",
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
-        "tests/VaultProspector.Security.Tests/packages.lock.json"
-      ],
-      "license": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT",
-      "licenseSource": "nuspec-url",
-      "projectUrl": "https://dot.net/",
-      "packageUrl": "https://www.nuget.org/packages/System.Memory/4.5.3",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
       "id": "System.Memory.Data",
       "version": "10.0.3",
       "scopes": [
@@ -3868,36 +3704,6 @@
     },
     {
       "ecosystem": "nuget",
-      "id": "System.Reflection.Metadata",
-      "version": "8.0.0",
-      "scopes": [
-        "development"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Application.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
-        "tests/VaultProspector.Domain.Tests/packages.lock.json",
-        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
-        "tests/VaultProspector.Platform.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
-        "tests/VaultProspector.Security.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "https://github.com/dotnet/runtime",
-      "packageUrl": "https://www.nuget.org/packages/System.Reflection.Metadata/8.0.0",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
       "id": "System.Runtime.InteropServices.NFloat.Internal",
       "version": "6.0.1",
       "scopes": [
@@ -3913,36 +3719,6 @@
       "licenseSource": "nuspec-expression",
       "projectUrl": "https://github.com/dotnet/runtime",
       "packageUrl": "https://www.nuget.org/packages/System.Runtime.InteropServices.NFloat.Internal/6.0.1",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
-      "id": "System.Security.AccessControl",
-      "version": "5.0.0",
-      "scopes": [
-        "development"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Application.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
-        "tests/VaultProspector.Domain.Tests/packages.lock.json",
-        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
-        "tests/VaultProspector.Platform.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
-        "tests/VaultProspector.Security.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "git://github.com/dotnet/runtime",
-      "packageUrl": "https://www.nuget.org/packages/System.Security.AccessControl/5.0.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -4000,86 +3776,6 @@
       "licenseSource": "nuspec-url",
       "projectUrl": "https://dot.net/",
       "packageUrl": "https://www.nuget.org/packages/System.Security.Cryptography.ProtectedData/4.5.0",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
-      "id": "System.Security.Principal.Windows",
-      "version": "5.0.0",
-      "scopes": [
-        "development"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Application.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserHost.Tests/packages.lock.json",
-        "tests/VaultProspector.BrowserProtocol.Tests/packages.lock.json",
-        "tests/VaultProspector.Domain.Tests/packages.lock.json",
-        "tests/VaultProspector.Infrastructure.Tests/packages.lock.json",
-        "tests/VaultProspector.Platform.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.CyberArk.Tests/packages.lock.json",
-        "tests/VaultProspector.Security.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "git://github.com/dotnet/runtime",
-      "packageUrl": "https://www.nuget.org/packages/System.Security.Principal.Windows/5.0.0",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
-      "id": "System.Text.Encodings.Web",
-      "version": "10.0.3",
-      "scopes": [
-        "development",
-        "production-desktop"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "src/VaultProspector.App/packages.lock.json",
-        "src/VaultProspector.Providers.Azure/packages.lock.json",
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "https://github.com/dotnet/dotnet",
-      "packageUrl": "https://www.nuget.org/packages/System.Text.Encodings.Web/10.0.3",
-      "distribution": "potential-candidate",
-      "reviewStatus": "metadata-recorded",
-      "reviewReason": ""
-    },
-    {
-      "ecosystem": "nuget",
-      "id": "System.Text.Json",
-      "version": "10.0.3",
-      "scopes": [
-        "development",
-        "production-desktop"
-      ],
-      "dependencyTypes": [
-        "transitive"
-      ],
-      "sourceFiles": [
-        "src/VaultProspector.App/packages.lock.json",
-        "src/VaultProspector.Providers.Azure/packages.lock.json",
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
-      ],
-      "license": "MIT",
-      "licenseSource": "nuspec-expression",
-      "projectUrl": "https://github.com/dotnet/dotnet",
-      "packageUrl": "https://www.nuget.org/packages/System.Text.Json/10.0.3",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""

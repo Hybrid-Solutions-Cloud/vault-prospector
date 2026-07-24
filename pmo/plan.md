@@ -550,7 +550,7 @@ MSI inspection, shortcut/icon and browser-host/policy inspection, and WinGet val
 Exact-head hosted CI, clean-machine installed lifecycle, trusted signing, and public-candidate
 repetition remain open.
 
-Progress note (2026-07-24): G-09 source controls now generate a deterministic 236-record
+Progress note (2026-07-24): G-09 source controls now generate a deterministic 225-record integrated
 NuGet/npm inventory and third-party notice, fail CI on lock-file or disclosure drift, document
 package/store declarations, and embed the repository license, privacy statement, and notice in
 Windows ZIP/MSI payloads. G-09 remains in progress: exact signed-candidate SBOM/file
@@ -598,10 +598,10 @@ remain open
 
 Progress note (2026-07-24): a machine-readable operational-readiness contract, fail-closed
 PowerShell validator, weekly Dependabot coverage, scheduled vulnerability/runtime/public-endpoint
-monitor, and support/EOS policy are implemented. A local live check passed all 35 contract checks
-and three public endpoints, with an actionable warning for the 2026-11-10 desktop .NET 9 support
-deadline. G-08 remains In progress pending a backup operator, retained hosted runs, the complete
-exercise, and Authenticode lifecycle approval.
+monitor, and support/EOS policy are implemented. The integrated contract now passes all 35 checks
+with both desktop and mobile pinned to .NET 10 LTS and its recorded 2028-11-14 support date. The
+earlier local baseline also passed all three public endpoints. G-08 remains In progress pending a
+backup operator, retained hosted runs, the complete exercise, and Authenticode lifecycle approval.
 
 ## Backlog-to-plan traceability
 

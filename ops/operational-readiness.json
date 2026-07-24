@@ -75,8 +75,8 @@
     {
       "name": "Desktop .NET",
       "versionFile": "global.json",
-      "expectedMajor": 9,
-      "endOfSupportDate": "2026-11-10",
+      "expectedMajor": 10,
+      "endOfSupportDate": "2028-11-14",
       "policyUrl": "https://dotnet.microsoft.com/platform/support/policy/dotnet-core"
     },
     {

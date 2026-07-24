@@ -28,7 +28,7 @@ jobs:
       - name: Build
         run: dotnet build VaultProspector.sln --configuration Release --no-restore
       - name: Test
-        run: dotnet test VaultProspector.sln --configuration Release --no-build --logger "trx;LogFileName=tests.trx" --collect "XPlat Code Coverage" --results-directory TestResults
+        run: dotnet test VaultProspector.sln --configuration Release --no-build --logger trx --collect "XPlat Code Coverage" --results-directory TestResults
       - name: Verify performance and scale baseline
         shell: pwsh
         run: ./scripts/Test-PerformanceScale.ps1 -OutputPath ./TestResults/performance-scale.json -NoBuild
@@ -87,7 +87,7 @@ jobs:
         run: ./scripts/Test-OperationalReadiness.ps1 -OutputPath TestResults/operational-readiness.json
       - name: Validate legal and privacy inventory
         shell: pwsh
-        run: ./scripts/Test-LegalPrivacyReadiness.ps1 -OutputPath TestResults/legal-privacy.json
+        run: ./scripts/Test-LegalPrivacyReadiness.ps1 -OutputPath TestResults/legal-privacy.json -PublishDirectory artifacts/publish-win-x64
       - name: Validate enterprise policy package
         shell: pwsh
         run: ./scripts/Test-EnterprisePolicyReadiness.ps1 -OutputPath TestResults/enterprise-policy.json -PublishDirectory artifacts/publish-win-x64

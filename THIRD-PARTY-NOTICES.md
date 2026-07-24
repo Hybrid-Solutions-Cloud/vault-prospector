@@ -74,15 +74,10 @@ transitively; the exact release SBOM determines which files are actually distrib
 | nuget | [SQLitePCLRaw.provider.e_sqlcipher](https://www.nuget.org/packages/SQLitePCLRaw.provider.e_sqlcipher/2.1.11) | 2.1.11 | Apache-2.0 | nuspec-expression |
 | nuget | [SQLitePCLRaw.provider.internal](https://www.nuget.org/packages/SQLitePCLRaw.provider.internal/2.1.11) | 2.1.11 | Apache-2.0 | nuspec-expression |
 | nuget | [System.ClientModel](https://www.nuget.org/packages/System.ClientModel/1.13.0) | 1.13.0 | MIT | nuspec-expression |
-| nuget | [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource/10.0.3) | 10.0.3 | MIT | nuspec-expression |
-| nuget | [System.IO.Pipelines](https://www.nuget.org/packages/System.IO.Pipelines/10.0.3) | 10.0.3 | MIT | nuspec-expression |
-| nuget | [System.Memory](https://www.nuget.org/packages/System.Memory/4.5.3) | 4.5.3 | https://github.com/dotnet/corefx/blob/master/LICENSE.TXT | nuspec-url |
 | nuget | [System.Memory.Data](https://www.nuget.org/packages/System.Memory.Data/10.0.3) | 10.0.3 | MIT | nuspec-expression |
 | nuget | [System.Runtime.InteropServices.NFloat.Internal](https://www.nuget.org/packages/System.Runtime.InteropServices.NFloat.Internal/6.0.1) | 6.0.1 | MIT | nuspec-expression |
 | nuget | [System.Security.Cryptography.ProtectedData](https://www.nuget.org/packages/System.Security.Cryptography.ProtectedData/10.0.10) | 10.0.10 | MIT | nuspec-expression |
 | nuget | [System.Security.Cryptography.ProtectedData](https://www.nuget.org/packages/System.Security.Cryptography.ProtectedData/4.5.0) | 4.5.0 | https://github.com/dotnet/corefx/blob/master/LICENSE.TXT | nuspec-url |
-| nuget | [System.Text.Encodings.Web](https://www.nuget.org/packages/System.Text.Encodings.Web/10.0.3) | 10.0.3 | MIT | nuspec-expression |
-| nuget | [System.Text.Json](https://www.nuget.org/packages/System.Text.Json/10.0.3) | 10.0.3 | MIT | nuspec-expression |
 | nuget | [Tmds.DBus.Protocol](https://www.nuget.org/packages/Tmds.DBus.Protocol/0.94.1) | 0.94.1 | MIT | nuspec-expression |
 | nuget | [Xamarin.AndroidX.Activity](https://www.nuget.org/packages/Xamarin.AndroidX.Activity/1.12.4.1) | 1.12.4.1 | MIT AND Apache-2.0 | nuspec-expression |
 | nuget | [Xamarin.AndroidX.Annotation](https://www.nuget.org/packages/Xamarin.AndroidX.Annotation/1.9.1.7) | 1.9.1.7 | MIT AND Apache-2.0 | nuspec-expression |

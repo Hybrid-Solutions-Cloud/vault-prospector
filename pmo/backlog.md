@@ -876,9 +876,10 @@ Acceptance criteria:
   exercised against the exact candidate.
 
 Implementation status (2026-07-24): source policy and automation are implemented locally. The
-validator passed 35 contract checks and three live public endpoints; it warns that desktop .NET 9
-reaches end of support on 2026-11-10. A named backup operator, successful hosted-monitor history,
-complete runbook exercise, Authenticode lifecycle approval, and exact-candidate review remain open.
+integrated validator passes all 35 contract checks with desktop and mobile pinned to .NET 10 LTS
+and its recorded 2028-11-14 support date. A named backup operator, successful hosted-monitor
+history, complete runbook exercise, Authenticode lifecycle approval, and exact-candidate review
+remain open.
 
 ### Story: Legal/privacy release controls and approval
 
