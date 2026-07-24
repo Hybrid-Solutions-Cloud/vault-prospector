@@ -1,6 +1,6 @@
 using AuthenticationServices;
 using Foundation;
-using VaultProspector.Mobile.Core;
+using VaultProspector.Mobile.Autofill;
 
 namespace VaultProspector.Mobile.iOS.CredentialProvider;
 

@@ -467,6 +467,8 @@ the repository and must not be committed.
 - Added a two-stage shared analyzer: native metadata must contain one canonical default-port HTTPS
   DNS origin and unambiguous username/password hints; value release separately requires a secret,
   exact saved mapping, foreground invocation, and fresh verification.
+- Isolated that policy in a dedicated assembly with only domain/browser-origin references so the
+  credential-provider extension cannot inherit Azure, SQLCipher, cache, or application services.
 - Added a real Android `AutofillService` with bounded `AssistStructure` parsing, required manifest
   permission/action/metadata, and no save/import behavior. The component is package-disabled and
   returns no dataset pending Digital Asset Links/package-signature, mapping, verification, device,

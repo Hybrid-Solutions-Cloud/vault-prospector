@@ -1,7 +1,7 @@
 using VaultProspector.BrowserProtocol;
 using VaultProspector.Domain;
 
-namespace VaultProspector.Mobile.Core;
+namespace VaultProspector.Mobile.Autofill;
 
 public sealed record MobileAutofillRequest(
     Uri Origin,

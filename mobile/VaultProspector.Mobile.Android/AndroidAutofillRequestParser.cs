@@ -1,5 +1,5 @@
 using Android.App.Assist;
-using VaultProspector.Mobile.Core;
+using VaultProspector.Mobile.Autofill;
 
 namespace VaultProspector.Mobile.Android;
 

@@ -1,5 +1,6 @@
 using VaultProspector.BrowserProtocol;
 using VaultProspector.Domain;
+using VaultProspector.Mobile.Autofill;
 using VaultProspector.Mobile.Core;
 
 namespace VaultProspector.Mobile.Tests;

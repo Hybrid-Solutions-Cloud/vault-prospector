@@ -47,6 +47,10 @@ queries, fragments, ambiguous hints, duplicate purposes, empty requests, and ove
 `MobileAutofillPolicy` then requires a secret object, exact saved mapping, foreground invocation,
 and fresh verification before any value can be offered.
 
+The policy/analyzer live in a dedicated assembly that references only the domain and canonical
+browser-origin contracts. Native credential-provider targets do not inherit the application,
+Azure provider, encrypted database, value cache, or UI dependency graph.
+
 This is intentionally a two-stage decision:
 
 1. native metadata may be parsed to decide whether a request is eligible for lookup; and

@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="VaultProspector.Mobile.Autofill/VaultProspector.Mobile.Autofill.csproj" />
   <Project Path="VaultProspector.Mobile.Core/VaultProspector.Mobile.Core.csproj" />
   <Project Path="VaultProspector.Mobile/VaultProspector.Mobile.csproj" />
   <Project Path="VaultProspector.Mobile.Android/VaultProspector.Mobile.Android.csproj">

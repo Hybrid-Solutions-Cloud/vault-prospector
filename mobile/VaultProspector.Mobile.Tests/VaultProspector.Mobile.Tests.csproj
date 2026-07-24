@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\VaultProspector.Mobile.Autofill\VaultProspector.Mobile.Autofill.csproj" />
     <ProjectReference Include="..\VaultProspector.Mobile.Core\VaultProspector.Mobile.Core.csproj" />
     <ProjectReference Include="..\VaultProspector.Mobile\VaultProspector.Mobile.csproj" />
   </ItemGroup>
