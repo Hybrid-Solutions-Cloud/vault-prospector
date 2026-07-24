@@ -503,11 +503,7 @@ Acceptance criteria:
 - Apple-specific platform security protections are implemented.
 - Security review validates Keychain and LocalAuthentication compliance.
 
-Implementation status: Implemented locally with a dedicated Privilege Cloud provider, Identity
-service-user authentication flow, DPAPI-isolated credentials, SQLCipher schema v6 metadata,
-provider-specific safes/accounts/permissions/versions/audit, explicit verified reveal/copy UI, and
-automated contract, redaction, persistence, security, and accessibility coverage. Governed live
-tenant evidence, independent security review, and exact signed-artifact validation remain open.
+Implementation status: On hold. No Apple security implementation or validation evidence exists yet.
 
 ### Story: iPhone/iOS application and App Store release (coming soon)
 
