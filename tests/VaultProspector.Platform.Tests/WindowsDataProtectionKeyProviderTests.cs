@@ -74,6 +74,87 @@ public sealed class WindowsDataProtectionKeyProviderTests : IDisposable
         Assert.False(Directory.Exists(_directory));
     }
 
+    [Fact]
+    public async Task StagedReplacementIsPublishedAndCompletedAtomically()
+    {
+        var provider = new WindowsDataProtectionKeyProvider(_directory);
+        var original = await provider.GetOrCreateKeyAsync(
+            "metadata-database",
+            TestContext.Current.CancellationToken);
+        var rotationId = Guid.NewGuid();
+        using var staged = await provider.StageReplacementAsync(
+            "metadata-database",
+            rotationId,
+            TestContext.Current.CancellationToken);
+        var replacement = staged.ExportKey();
+        try
+        {
+            Assert.Equal(
+                original,
+                await provider.GetExistingKeyAsync(
+                    "metadata-database",
+                    TestContext.Current.CancellationToken));
+
+            await provider.PublishReplacementAsync(
+                staged,
+                TestContext.Current.CancellationToken);
+
+            Assert.Equal(
+                replacement,
+                await provider.GetExistingKeyAsync(
+                    "metadata-database",
+                    TestContext.Current.CancellationToken));
+            Assert.Single(Directory.GetFiles(_directory, "*.previous"));
+
+            await provider.CompleteReplacementAsync(
+                "metadata-database",
+                rotationId,
+                TestContext.Current.CancellationToken);
+
+            Assert.Empty(Directory.GetFiles(_directory, "*.previous"));
+            Assert.Empty(Directory.GetFiles(_directory, "*.next"));
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(original);
+            CryptographicOperations.ZeroMemory(replacement);
+        }
+    }
+
+    [Fact]
+    public async Task AbortingStagedReplacementPreservesPublishedKey()
+    {
+        var provider = new WindowsDataProtectionKeyProvider(_directory);
+        var original = await provider.GetOrCreateKeyAsync(
+            "metadata-database",
+            TestContext.Current.CancellationToken);
+        var rotationId = Guid.NewGuid();
+        using (var staged = await provider.StageReplacementAsync(
+            "metadata-database",
+            rotationId,
+            TestContext.Current.CancellationToken))
+        {
+            await provider.AbortReplacementAsync(
+                "metadata-database",
+                rotationId,
+                TestContext.Current.CancellationToken);
+        }
+
+        var current = await provider.GetExistingKeyAsync(
+            "metadata-database",
+            TestContext.Current.CancellationToken);
+        try
+        {
+            Assert.Equal(original, current);
+            Assert.Empty(Directory.GetFiles(_directory, "*.next"));
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(original);
+            CryptographicOperations.ZeroMemory(current);
+        }
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("metadata/database")]

@@ -16,6 +16,7 @@
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <Icon Id="VaultProspector.ico" SourceFile="..\src\VaultProspector.App\Assets\vault-prospector.ico" />
+    <Icon Id="VaultProspector.exe" SourceFile="$(PublishDirectory)\VaultProspector.App.exe" />
     <Property Id="ARPPRODUCTICON" Value="VaultProspector.ico" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases" />
     <Property Id="ARPCONTACT" Value="Hybrid Solutions Cloud" />
@@ -35,7 +36,7 @@
           Directory="ApplicationProgramsFolder"
           Name="Vault Prospector"
           Description="Search Azure Key Vault metadata securely"
-          Icon="VaultProspector.ico"
+          Icon="VaultProspector.exe"
           IconIndex="0"
           WorkingDirectory="INSTALLFOLDER"
           Advertise="yes" />

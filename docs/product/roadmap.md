@@ -10,12 +10,12 @@ The next work is ordered by security dependency rather than visual novelty. Secu
 
 | Horizon | Initiative | Status | Dependency or trade-off |
 | --- | --- | --- | --- |
-| Now | Security hardening and secure first-run setup | In progress | Product-registration onboarding and actionable safe errors are implemented; runtime usability, Windows Hello recovery, tenant-policy, and independent security evidence remain. |
-| Now | Encrypted local-data recovery and migration | In progress | Missing/wrong keys, corruption, incomplete/future schemas, and the internal v1-to-v2 migration fail closed under tests; rotation, supported backup, device replacement, reinstall, and independent evidence remain under G-03. |
+| Now | Security hardening and secure first-run setup | In progress | A verified local unlock now leads directly to a guided identity setup that separates Windows protection, Microsoft authentication, and metadata-only sync; runtime usability, Windows Hello recovery, tenant-policy, exact-release, and independent security evidence remain. |
+| Now | Encrypted local-data recovery and migration | In progress | Missing/wrong keys, corruption, incomplete/future schemas, v1-to-v4 migration, and internal all-or-rollback key rotation fail closed under tests. Canonical recovery archives are inventoried and can be explicitly deleted only after typed confirmation and fresh Windows verification. Rotation user exposure, live power-loss/reinstall validation, and independent evidence remain under G-03; device/profile replacement intentionally resynchronizes. |
 | Now | Preview feedback and reliability cycle | In progress | Governed public intake, an explicit submission notice, privacy boundaries, triage cadence, and measurable G-01 thresholds are defined; collection, upgrade coverage, blocker closure, and stability windows still require evidence. |
-| Now | Desktop UI and password-manager interface research | Planned | Research and prototype before committing to navigation or interaction changes. |
-| Next | Taskbar background operation and metadata synchronization | Planned | Requires a locked background state, explicit close behavior, and Conditional Access-safe token handling. |
-| Next | Identity-source expansion and read-only/write-mode policy | Planned | Human and workload identities need distinct setup, authorization, and audit boundaries. Write operations remain gated behind security review. |
+| Now | Desktop UI and password-manager interface research | In progress | Comparative research and four interactive concepts are complete; participant evidence, selection, production implementation, and assistive-technology validation remain. |
+| Next | Taskbar background operation and metadata synchronization | In progress locally | Lock-on-hide notification-area lifecycle, session/suspend/resume boundary locking, and opt-in metadata-only synchronization are implemented; installed Windows lifecycle and policy evidence remain. |
+| Next | Identity-source expansion and read-only/write-mode policy | In progress locally | Workload profiles, discovery, dry-run provisioning plans, and permission-aware read-only discovery are implemented locally. Governed mutations remain gated behind independent security review. |
 | Next | CyberArk provider integration | Planned | Requires a provider-specific threat model and contracts that preserve source boundaries. |
 | Later | Browser extension, browser-vault interoperability, and autofill research | Research | Must prove origin binding, user presence, least disclosure, and safe native messaging before implementation. |
 | Parallel | iPhone/iOS and Android/Google Play applications | Coming soon | Mobile delivery continues, but does not bypass the same security and store-review gates. |
@@ -101,6 +101,8 @@ These applications are coming soon after the Windows distribution path. No Apple
 - Secure first-run wizard for local unlock and Azure connection setup.
 - Windows account/WAM sign-in feasibility with Windows Hello, MFA, Conditional Access, and FIDO support delegated to the platform and identity provider.
 - Explicit human and workload identity profiles with token caches isolated from Azure CLI, Azure PowerShell, developer tools, and other terminal sessions.
+- Exact-scope read-only workload authorization evidence that preserves inherited grants, deny and
+  condition uncertainty, and the distinction between static evidence and runtime access.
 - Read-only access mode by default, with separately governed and visibly elevated write capabilities.
 - Security review, attack testing, and encryption-at-rest verification before expanding write or unattended access.
 - Configuration policy.

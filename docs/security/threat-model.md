@@ -59,6 +59,30 @@ Mitigations:
 - Roll back a newly authenticated account if encrypted identity metadata cannot be persisted.
 - Document limitations against same-user malware and local administrators.
 
+### Workload credential confusion or stale revocation
+
+Threat:
+
+A workload profile inherits human/developer credentials, persists a projected token, rotates to an
+unusable credential, or remains usable through stale in-memory state after revocation.
+
+Mitigations:
+
+- Use distinct credential implementations for managed identity, certificate, federation, and human
+  interactive profiles.
+- Never include Azure CLI, Azure PowerShell, IDE, terminal, or default developer credentials in a
+  credential chain.
+- Store certificate thumbprints or canonical token-file paths, never private keys, token content,
+  or client secrets.
+- Acquire an ARM token before first persistence or replacement-credential publication.
+- Persist local revocation before removing provider state and re-read persisted profile state before
+  every synchronization.
+- Block online value retrieval for non-ready or disabled identities.
+- Purge discovered-vault offline copies on local revocation and direct users to revoke externally
+  owned credentials at their issuer.
+- Allow non-destructive identity-scoped purge across active and retained removed-access mappings.
+- Emit only allowlisted, redacted lifecycle fields.
+
 ### Offline cache extraction
 
 Threat:
@@ -71,6 +95,8 @@ Mitigations:
 - Encrypt every cached payload.
 - Authenticate expiry, fingerprint, item, vault, and workspace metadata before using it for release
   or scoped-purge decisions.
+- Reject oversized protected-value envelopes and authenticated rotation records before JSON
+  parsing.
 - Protect the data-encryption key with platform-backed secure storage.
 - Require local user verification before key release where supported.
 - Bind protected keys to the device where practical.
@@ -107,6 +133,26 @@ Mitigations:
 - Apply platform protections to app-switcher snapshots where available.
 - Warn users when platform screen-capture prevention is incomplete.
 
+### Stale foreground authorization across Windows lifecycle changes
+
+Threat:
+
+A revealed value or unlocked foreground session remains available after Windows is locked,
+disconnected, suspended, resumed, logged on, logged off, or moved between console and remote
+sessions.
+
+Mitigations:
+
+- Subscribe to Windows session-switch and power-mode events in the interactive desktop process.
+- Treat every session transition plus suspend and resume as a security boundary.
+- Immediately cancel active work, invalidate delayed sensitive presentation, mask any revealed
+  value, close the in-app close prompt, and require foreground unlock again.
+- Marshal operating-system event handling to the UI thread and detach the static Windows handlers
+  during application shutdown.
+- Do not treat ordinary battery or AC status changes as foreground-authorization boundaries.
+- Validate the production event path on an installed candidate in an isolated interactive Windows
+  environment before claiming the lifecycle gate.
+
 ### Authorization confusion
 
 Threat:
@@ -121,6 +167,37 @@ Mitigations:
 - Allow users to set preferred identities.
 - Record non-sensitive retrieval context locally.
 - Fail closed and dispose a decrypted value if retrieval-context persistence fails.
+
+### Directory discovery overreach or token forwarding
+
+Threat:
+
+Workload discovery silently requests broad directory rights, uses a workload or terminal identity,
+forwards a Graph bearer token to an untrusted page link, or implies that visibility proves
+permission to use or manage a principal.
+
+Mitigations:
+
+- Require an enabled, ready interactive identity selected in Vault Prospector.
+- Request delegated `Application.Read.All` only through a separate explicit user action; request no
+  Graph write permission.
+- Bind the interactive result to the selected MSAL home-account identifier.
+- Acquire Graph tokens only from the app-owned MSAL cache and for the selected tenant.
+- Accept pagination only from HTTPS `graph.microsoft.com`, disable automatic redirects, and enforce
+  page/item limits.
+- Require explicit selection of a discovered candidate and exact Key Vault before assessment.
+- Use Azure caller permissions for the selected administrator and applicable role assignments,
+  role definitions, deny assignments, and conditions for the candidate.
+- Constrain every ARM request and next link to HTTPS `management.azure.com`, disable automatic
+  redirects, and enforce page/item/role-definition limits.
+- Apply scope inheritance, action exclusions, direct deny/exclusion semantics, and child-scope
+  behavior. Treat conditional expressions, unreadable deny evidence, and possible group-deny
+  membership as unproven rather than allowed.
+- Detect Key Vault access-policy mode and refuse to reinterpret it as Azure RBAC.
+- Label static RBAC evidence separately from runtime data-plane access; never acquire a candidate
+  credential or retrieve a value during assessment.
+- Keep every provisioning plan non-mutating and expose no execution command before the independent
+  review gate.
 
 ### Stale offline values
 

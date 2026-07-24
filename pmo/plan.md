@@ -41,12 +41,14 @@ Status terms used in PMO reporting:
   subscription and Key Vault discovery, secret/key/certificate metadata indexing, search, explicit
   value retrieval, verified copy, encrypted optional offline access, workspaces, and read-only Azure
   behavior.
-- Current installer defect: the advertised Start-menu shortcut does not explicitly reference the
-  embedded icon, so Windows Search can display a blank document. The executable icon itself is
-  correct.
-- Major missing product work: workload identities, identity provisioning/RBAC, permission-aware
-  discovery UI, governed writes, desktop redesign, tray operation, browser integration, CyberArk,
-  and mobile applications.
+- Current installer follow-up: the Start-menu shortcut icon correction is implemented locally but
+  remains unreleased.
+- Major local in-flight work: workload profiles, read-only identity discovery/provisioning
+  previews, permission-aware discovery, workspace/reconciliation completion, recovery-archive
+  retention, notification-area operation, and four desktop concepts. Each still requires its
+  phase-specific live, independent, usability, accessibility, and release evidence.
+- Major unimplemented product work: governed Azure mutations, the selected production desktop
+  redesign, browser integration, CyberArk, and mobile applications.
 - Major GA work: signing, independent security review, complete live identity/accessibility test
   matrices, public package catalogs, feedback thresholds, and stability evidence.
 
@@ -95,7 +97,7 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P0
 
-**Status:** In progress, not committed or released
+**Status:** Implemented on `main`; public Preview refresh and exact-artifact validation remain open
 
 ### Scope
 
@@ -116,7 +118,7 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P1
 
-**Status:** Implemented
+**Status:** Implemented on `main`; CI repair is local and uncommitted, and public release remains open
 
 **Backlog coverage:** Epic 2; remaining human-identity portions of Epic 9
 
@@ -140,6 +142,11 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P1
 
+**Status:** In progress locally; the guided first-run unlock/identity workflow, recovery,
+schema-v4 behavior, and an internal crash-recoverable all-or-rollback key-rotation engine plus
+verified recovery-archive retention UX are implemented and automated tests pass, but rotation is
+not user-exposed, released, live-validated, or independently reviewed
+
 **Backlog coverage:** Secure first-run wizard; mandatory encryption; schema upgrade validation
 
 ### Scope
@@ -150,6 +157,23 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 - Keep offline values opt-in but always AES-GCM encrypted when retained.
 - Implement and test forward-only migrations for every supported published schema.
 - Define key rotation, backup, reinstall, device replacement, and unrecoverable-key behavior.
+
+ADR-0011 defines and the internal engine implements a verified matched-state archive,
+HMAC-authenticated journal/manifest, SQLCipher rekey, all-envelope re-encryption, staged
+DPAPI-protected key publication, post-rotation validation, and startup rollback at every injected
+crash boundary. Same-account recovery, reinstall retention, resynchronization on device/profile
+replacement, and preserve/archive/reset behavior for unrecoverable keys are documented. User
+exposure, live Windows power-loss testing, and independent review remain GA gates. Settings now
+inventories only canonical app-generated recovery archives and permits one permanent deletion only
+after exact `DELETE ARCHIVE` confirmation, fresh Windows verification, path/reparse validation, and
+an active-rotation-journal check; automatic retention remains intentionally disabled.
+
+First-run implementation note (2026-07-23): local Windows verification and protected repository
+initialization complete before setup becomes available. An empty profile opens directly on the
+Identities tab, explicitly distinguishes local unlock from Microsoft Entra authentication and
+metadata-only synchronization, and labels the connection action for the selected authentication
+method. Live Windows Hello, Entra policy, keyboard, screen-reader, independent-review, and
+exact-release evidence remain open.
 
 ### Exit criteria
 
@@ -162,6 +186,10 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 ## Phase 4 — Human and workload connection profiles
 
 **Priority:** P1
+
+**Status:** Certificate and federated service-principal plus detected-host managed-identity
+profiles, validate-before-persist rotation, local revocation, and fail-closed use are implemented
+locally with automated validation; release, independent review, and live Azure evidence remain open
 
 **Backlog coverage:** Human and workload identity choices
 
@@ -186,6 +214,10 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P1
 
+**Status:** Explicit-account identity discovery, fail-closed effective authorization evidence, and
+user-reachable deterministic non-mutating plans are implemented locally; governed execution,
+release, independent review, and live evidence remain open
+
 **Backlog coverage:** Discover and provision workload identities
 
 ### Scope
@@ -199,6 +231,16 @@ is executed in the dependency order below; a phase may be split into multiple Pr
   guidance before any creation or assignment.
 - Keep initial/default setup non-mutating.
 
+Local implementation note (2026-07-23): an explicit candidate-plus-Key-Vault assessment now reads
+the administrator's exact-resource caller permissions and the candidate's applicable
+inherited/transitive role assignments, role definitions, exclusions, deny assignments, and
+conditions. ARM redirects are disabled, pagination is trusted-host constrained and bounded, and
+no mutation or data-plane request occurs. Conditional expressions, access-policy vaults,
+unreadable deny sets, and potentially applicable group denies remain visibly unproven.
+The exact locked local Release gate passes 218/218 tests with no known vulnerable NuGet packages
+and zero build warnings/errors; see
+`docs/release-evidence/workload-authorization-evidence-2026-07-23.md`.
+
 ### Exit criteria
 
 - No identity or Azure role is created implicitly.
@@ -210,6 +252,9 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 ## Phase 6 — Permission-aware Azure and Key Vault discovery
 
 **Priority:** P1
+
+**Status:** Implemented locally for explicit subscription/vault scope and observed permission
+display; unreleased, live Azure and independent validation remain open
 
 **Backlog coverage:** Epic 3; discover vaults by selected access path; read-only policy UI
 
@@ -223,6 +268,15 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 - Retrieve metadata only during discovery; never retrieve values implicitly.
 - Show the identity and tenant responsible for every result and error.
 
+Local implementation note (2026-07-23): the identity screen now lists discovered subscriptions and
+vault access paths, persists explicit include/exclude choices, applies both scopes before provider
+metadata enumeration, and retains excluded scope records so users can reverse the choice. Each
+vault displays its identity/tenant/subscription route, management-plane visibility, observed
+secret/key/certificate metadata-list outcomes, and makes clear that value-read authorization is
+not probed during synchronization and writes are disabled by policy. Schema v4 adds a
+backward-compatible vault-selection column. Live Azure permission matrices and independent
+redaction/security validation remain release gates.
+
 ### Exit criteria
 
 - Users can search or discover all vaults visible to the selected access path.
@@ -232,6 +286,9 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 ## Phase 7 — Index, reconciliation, workspace, and migration completion
 
 **Priority:** P1
+
+**Status:** Implemented locally for reconciliation, complete workspace assignment, per-workspace
+policy, and schema v4 migration; unreleased and final lifecycle validation remains open
 
 **Backlog coverage:** Reconcile removed objects; complete workspace assignment; remaining schema work
 
@@ -243,6 +300,14 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 - Preserve favorites, recent activity, and audit references through sync and migrations.
 - Complete supported database/cache schema migration, rollback, and recovery behavior.
 
+Local implementation note (2026-07-23): complete discovery tombstones missing access paths and
+items while partial discovery preserves prior results; explicit excluded scopes remain reversible.
+Workspaces now accept identity, tenant, subscription, and vault links and expose an editable
+encrypted-cache lifetime/enablement and clipboard policy while Windows verification remains
+mandatory. Workspace deletion transactionally removes links, and schema v1–v4/future/corrupt
+recovery paths have automated coverage. Upgrade/downgrade/reinstall and independent cache-boundary
+validation remain release evidence gates.
+
 ### Exit criteria
 
 - Removed and inaccessible objects have explicit, testable states.
@@ -252,6 +317,9 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 ## Phase 8 — Governed write operations
 
 **Priority:** P1, high risk
+
+**Status:** Design gate in progress; proposed ADR and threat model complete, mutation code remains
+disabled pending required review
 
 **Backlog coverage:** Explicit write mode for secrets, keys, and certificates
 
@@ -275,6 +343,10 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** P2
 
+**Status:** In progress; comparative research, task analysis, four interactive concepts, and the
+representative-user protocol are complete; participant evidence and production selection remain
+open
+
 **Backlog coverage:** Epic 12
 
 ### Scope
@@ -287,6 +359,15 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 - Test prototypes with representative Windows users and assistive technologies.
 - Select and implement the design while keeping identity/source/security state visible.
 
+Progress note (2026-07-23): official password-manager, Windows design/accessibility, WCAG, and Key
+Vault patterns were synthesized in `docs/design/desktop-ui-research-2026-07-23.md`. The local React
+prototype delivers Source-first, Search-first, Guided tasks, and Operations console concepts, each
+covering setup, search, reveal, and settings. All 16 combinations build and run without browser
+console errors, and the prototype reflows without horizontal document overflow at 390 pixels. The
+recorded initial hypothesis favors Source-first, but it is not a selection decision: the
+eight-participant protocol and assistive-technology matrix remain mandatory before production
+redesign.
+
 ### Exit criteria
 
 - The redesign is based on recorded research, 4 delivered mockup versions, and usability evidence, not cosmetic preference.
@@ -296,6 +377,10 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 ## Phase 10 — Notification-area and background operation
 
 **Priority:** P2
+
+**Status:** Implemented locally for explicit close behavior, notification-area lifecycle, immediate
+foreground lock, and opt-in metadata-only sync; unreleased and live lifecycle validation remains
+open
 
 **Backlog coverage:** Epic 11
 
@@ -307,6 +392,18 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 - Permit metadata-only background synchronization under battery, network, policy, MFA, and
   Conditional Access constraints.
 - Require foreground verification for reveal, copy, or offline caching.
+
+Local implementation note (2026-07-23): Settings persists Ask, Exit, or Lock-to-notification-area
+close behavior. Ask presents explicit in-app choices. Backgrounding cancels active work, advances a
+sensitive-presentation generation, hides the window and taskbar entry, masks values, and returns to
+the locked screen. The tray menu reports Locked, Syncing, Action required, Azure interaction
+required, Offline, or Ready and provides Show/Exit. Opt-in 15-minute background work calls only the
+metadata synchronization service while hidden and network-available; cancellation checks prevent a
+provider result from reaching clipboard/cache/presentation after background lock. A disposable
+Windows system-event monitor now locks and invalidates sensitive presentation on every session
+transition and on both suspend and resume; ordinary power-status changes do not create disruptive
+locks. Live installed sleep/resume, session-transition, battery, network, token-expiry, tray, and
+assistive-technology behavior remain required evidence.
 
 ### Exit criteria
 
@@ -386,6 +483,8 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 **Priority:** GA
 
+**Status:** In progress; trusted signing and independent/live validation gates remain open
+
 ### Scope
 
 - Complete Azure Artifact Signing Public Trust setup and timestamped Authenticode verification.
@@ -406,6 +505,8 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 ## Phase 15 — Preview reliability and GA promotion
 
 **Priority:** GA
+
+**Status:** In progress; operational thresholds and stability evidence remain open
 
 **Backlog coverage:** Epic 15
 
@@ -477,3 +578,14 @@ Every status request must return all of the following:
 - Azure mutations, identity creation, RBAC assignment, external publication, and store submission
   retain explicit approval and audit requirements.
 - Completed work is never marked Delivered until the exact public artifact is verified.
+
+## Cross-phase implementation review — 2026-07-23
+
+The accumulated Phase 3–10 worktree received a security, correctness, performance, and
+maintainability review. Findings in identity revocation/purge, persisted authentication errors,
+remote/local JSON bounds, Graph pagination trust, tray state, and Windows rotation recovery were
+remediated with regression coverage. The exact locked local Release gate passes 254/254 tests with
+zero warnings/errors and no known vulnerable direct or transitive NuGet packages. Internal review
+does not satisfy the independent security, live Azure/Windows, accessibility, usability, or exact
+packaged-candidate gates. Evidence:
+`docs/release-evidence/cross-phase-security-correctness-review-2026-07-23.md`.

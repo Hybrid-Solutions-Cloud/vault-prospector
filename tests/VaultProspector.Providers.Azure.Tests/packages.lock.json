@@ -66,6 +66,15 @@
           "Azure.Core": "1.51.1"
         }
       },
+      "Azure.ResourceManager.ManagedServiceIdentities": {
+        "type": "Transitive",
+        "resolved": "1.4.1",
+        "contentHash": "30KYfjDm/CEggIohteqXUPQsKQOTg/m+n+mx04qeluYbb/YphNKSPJTcUurcXJpCMDNrM/fealapr07sJhbngA==",
+        "dependencies": {
+          "Azure.Core": "1.54.0",
+          "Azure.ResourceManager": "1.14.0"
+        }
+      },
       "Azure.Security.KeyVault.Certificates": {
         "type": "Transitive",
         "resolved": "4.9.0",
@@ -415,6 +424,7 @@
         "dependencies": {
           "Azure.Identity": "[1.21.0, )",
           "Azure.ResourceManager": "[1.14.0, )",
+          "Azure.ResourceManager.ManagedServiceIdentities": "[1.4.1, )",
           "Azure.Security.KeyVault.Certificates": "[4.9.0, )",
           "Azure.Security.KeyVault.Keys": "[4.10.0, )",
           "Azure.Security.KeyVault.Secrets": "[4.11.0, )",

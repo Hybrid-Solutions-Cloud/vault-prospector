@@ -4,6 +4,45 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+### Added
+
+- Add fail-closed local unlock/recovery, schema-v4 migration, and an internal crash-recoverable
+  SQLCipher/offline-value key-rotation engine.
+- Add a guided first-run path that opens directly on identity setup after local unlock, separates
+  Windows verification from Microsoft authentication and metadata sync, and uses
+  authentication-specific connection actions.
+- Add a Settings inventory for app-generated recovery archives and explicit per-archive permanent
+  deletion requiring `DELETE ARCHIVE`, fresh Windows verification, containment checks, and no
+  pending rotation recovery.
+- Add certificate, federated, and detected-host managed-identity connection profiles with isolated
+  credentials, validate-before-persist replacement, local revocation, and cache purge.
+- Add explicit-account managed-identity and consented Microsoft Graph service-principal discovery,
+  permission distinctions, and non-mutating provisioning previews.
+- Add an exact-scope, read-only workload authorization assessment covering caller permissions,
+  inherited/transitive role grants, exclusions, deny assignments, and conditions without
+  impersonating the candidate or retrieving Key Vault data.
+- Add per-identity subscription/vault discovery scope, complete workspace resource assignment,
+  workspace cache/clipboard policy, and reconciliation of removed provider objects.
+- Add explicit notification-area close behavior, immediate lock-on-hide, safe tray status, and
+  opt-in metadata-only background synchronization.
+- Add fail-safe foreground locking for every Windows session transition and for suspend/resume,
+  including active-operation cancellation and sensitive-presentation invalidation.
+- Add explicit identity-scoped offline-value purge, including historical removed access paths.
+- Add comparative desktop UI research and four interactive setup/search/reveal/settings concepts;
+  production selection remains gated on representative-user and assistive-technology evidence.
+
+### Security
+
+- Retry authenticated rotation-journal replacement only for bounded transient Windows I/O/access
+  failures; persistent filesystem or ACL failures continue to stop fail-closed.
+- Complete revocation cleanup after the profile is durably revoked, even when provider credential
+  removal fails, and report any residual offline-value purge failure.
+- Replace persisted authentication exception text with a fixed safe interaction-required message.
+- Bound Microsoft Graph, ARM, local envelope, rotation-record, and settings JSON before parsing;
+  require default-port HTTPS Microsoft Graph pagination.
+- Retry transient Windows directory swaps during rotation recovery without allowing cancellation
+  to strand the canonical data path after the active state has moved.
+
 ## [0.1.1-preview.1] - 2026-07-17
 
 ### Added

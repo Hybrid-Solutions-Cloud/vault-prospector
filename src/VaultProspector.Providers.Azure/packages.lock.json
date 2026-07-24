@@ -20,6 +20,16 @@
           "Azure.Core": "1.51.1"
         }
       },
+      "Azure.ResourceManager.ManagedServiceIdentities": {
+        "type": "Direct",
+        "requested": "[1.4.1, )",
+        "resolved": "1.4.1",
+        "contentHash": "30KYfjDm/CEggIohteqXUPQsKQOTg/m+n+mx04qeluYbb/YphNKSPJTcUurcXJpCMDNrM/fealapr07sJhbngA==",
+        "dependencies": {
+          "Azure.Core": "1.54.0",
+          "Azure.ResourceManager": "1.14.0"
+        }
+      },
       "Azure.Security.KeyVault.Certificates": {
         "type": "Direct",
         "requested": "[4.9.0, )",

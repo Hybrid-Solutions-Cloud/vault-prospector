@@ -179,6 +179,15 @@
           "Azure.Core": "1.51.1"
         }
       },
+      "Azure.ResourceManager.ManagedServiceIdentities": {
+        "type": "Transitive",
+        "resolved": "1.4.1",
+        "contentHash": "30KYfjDm/CEggIohteqXUPQsKQOTg/m+n+mx04qeluYbb/YphNKSPJTcUurcXJpCMDNrM/fealapr07sJhbngA==",
+        "dependencies": {
+          "Azure.Core": "1.54.0",
+          "Azure.ResourceManager": "1.14.0"
+        }
+      },
       "Azure.Security.KeyVault.Certificates": {
         "type": "Transitive",
         "resolved": "4.9.0",
@@ -338,6 +347,11 @@
         "resolved": "3.0.1",
         "contentHash": "s/s20YTVY9r9TPfTrN5g8zPF1YhwxyqO6PxUkrYTGI2B+OGPe9AdajWZrLhFqXIvqIW23fnUE4+ztrUWNU1+9g=="
       },
+      "Microsoft.Win32.SystemEvents": {
+        "type": "Transitive",
+        "resolved": "10.0.10",
+        "contentHash": "IY0lTfC2uVwTizjtGgQ03ViwyXGQ9lMDblzB889/HyguAZJ2J8pRrjPown8h2eJe8WFc8nh+BUEsEPkshzizYQ=="
+      },
       "SkiaSharp": {
         "type": "Transitive",
         "resolved": "3.119.4",
@@ -475,6 +489,7 @@
       "vaultprospector.platform": {
         "type": "Project",
         "dependencies": {
+          "Microsoft.Win32.SystemEvents": "[10.0.10, )",
           "System.Security.Cryptography.ProtectedData": "[10.0.10, )",
           "VaultProspector.Application": "[0.1.0, )"
         }
@@ -484,6 +499,7 @@
         "dependencies": {
           "Azure.Identity": "[1.21.0, )",
           "Azure.ResourceManager": "[1.14.0, )",
+          "Azure.ResourceManager.ManagedServiceIdentities": "[1.4.1, )",
           "Azure.Security.KeyVault.Certificates": "[4.9.0, )",
           "Azure.Security.KeyVault.Keys": "[4.10.0, )",
           "Azure.Security.KeyVault.Secrets": "[4.11.0, )",

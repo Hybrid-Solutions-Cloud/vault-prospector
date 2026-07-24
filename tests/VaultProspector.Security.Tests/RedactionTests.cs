@@ -14,6 +14,7 @@ public sealed class RedactionTests
             sink.Information("test", new Dictionary<string, object?>
             {
                 ["identity_id"] = "known-identity",
+                ["identity_type"] = "FederatedServicePrincipal",
                 ["item_count"] = 4,
                 ["secret_value"] = "super-secret",
                 ["username"] = "user@example.invalid",
@@ -23,6 +24,7 @@ public sealed class RedactionTests
 
             var log = File.ReadAllText(path);
             Assert.Contains("item_count", log, StringComparison.Ordinal);
+            Assert.Contains("FederatedServicePrincipal", log, StringComparison.Ordinal);
             Assert.DoesNotContain("known-identity", log, StringComparison.Ordinal);
             Assert.DoesNotContain("super-secret", log, StringComparison.Ordinal);
             Assert.DoesNotContain("user@example.invalid", log, StringComparison.Ordinal);

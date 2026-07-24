@@ -9,7 +9,7 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
 {
     private static readonly HashSet<string> AllowedFields = new(StringComparer.Ordinal)
     {
-        "identity_id", "vault_count", "item_count", "error_count", "duration_ms", "status",
+        "identity_id", "identity_type", "vault_count", "item_count", "error_count", "duration_ms", "status",
     };
     private readonly object _gate = new();
 

@@ -4,23 +4,46 @@ namespace VaultProspector.Application;
 
 public sealed class SystemClock : IClock { public DateTimeOffset UtcNow => DateTimeOffset.UtcNow; }
 
-public sealed class IdentityService(IIdentityProvider provider, IMetadataRepository repository)
+public sealed class IdentityService
 {
+    private readonly IIdentityProvider _provider;
+    private readonly IMetadataRepository _repository;
+    private readonly IDiagnosticSink _diagnostics;
+    private readonly IProtectedValueStore? _protectedValueStore;
+
+    public IdentityService(IIdentityProvider provider, IMetadataRepository repository)
+        : this(provider, repository, new NullDiagnosticSink(), null)
+    {
+    }
+
+    public IdentityService(
+        IIdentityProvider provider,
+        IMetadataRepository repository,
+        IDiagnosticSink diagnostics,
+        IProtectedValueStore? protectedValueStore = null)
+    {
+        _provider = provider;
+        _repository = repository;
+        _diagnostics = diagnostics;
+        _protectedValueStore = protectedValueStore;
+    }
+
     public async Task<ConnectedIdentity> AddAsync(string clientId, string displayName, CancellationToken cancellationToken)
     {
         if (!Guid.TryParse(clientId?.Trim(), out var parsedClientId))
             throw new ArgumentException("A valid Microsoft Entra public-client application ID is required.", nameof(clientId));
-        var identity = await provider.SignInAsync(parsedClientId.ToString("D"), displayName.Trim(), cancellationToken);
+        var identity = await _provider.SignInAsync(parsedClientId.ToString("D"), displayName.Trim(), cancellationToken);
         try
         {
-            await repository.UpsertIdentityAsync(identity, cancellationToken);
+            await _repository.UpsertIdentityAsync(identity, cancellationToken);
+            Audit("identity_connected", identity, "ready");
             return identity;
         }
         catch (Exception persistenceException)
         {
             try
             {
-                await provider.RemoveAsync(identity, CancellationToken.None);
+                await _provider.RemoveAsync(identity, CancellationToken.None);
             }
             catch (Exception cleanupException)
             {
@@ -34,37 +57,354 @@ public sealed class IdentityService(IIdentityProvider provider, IMetadataReposit
         }
     }
 
+    public async Task<ConnectedIdentity> AddWorkloadIdentityAsync(string clientId, string tenantId, string displayName, IdentityType type, string credentialData, CancellationToken cancellationToken)
+    {
+        if (type == IdentityType.InteractiveUser)
+            throw new ArgumentException("Interactive users must use AddAsync.", nameof(type));
+
+        var normalizedClientId = NormalizeOptionalGuid(clientId, nameof(clientId));
+        var normalizedTenantId = NormalizeOptionalGuid(tenantId, nameof(tenantId));
+        var normalizedCredential = credentialData?.Trim() ?? string.Empty;
+        if (type == IdentityType.ManagedIdentity)
+        {
+            if (!string.IsNullOrEmpty(normalizedCredential))
+                throw new WorkloadIdentityConfigurationException("Managed identities do not accept certificate or secret data.", nameof(credentialData));
+        }
+        else if (type is IdentityType.ServicePrincipal or IdentityType.FederatedServicePrincipal)
+        {
+            if (string.IsNullOrEmpty(normalizedClientId))
+                throw new WorkloadIdentityConfigurationException("A service-principal client ID is required.", nameof(clientId));
+            if (string.IsNullOrEmpty(normalizedTenantId))
+                throw new WorkloadIdentityConfigurationException("A service-principal tenant ID is required.", nameof(tenantId));
+            normalizedCredential = NormalizeWorkloadCredential(type, normalizedCredential);
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported identity type.");
+        }
+
+        var identity = new ConnectedIdentity(
+            Guid.NewGuid(),
+            normalizedClientId,
+            Guid.NewGuid().ToString("D"),
+            string.Empty,
+            string.IsNullOrWhiteSpace(displayName) ? type.ToString() : displayName.Trim(),
+            normalizedTenantId,
+            AuthenticationState.Ready,
+            DateTimeOffset.UtcNow,
+            true,
+            type,
+            normalizedCredential
+        );
+
+        var validated = await _provider.ReauthenticateAsync(identity, cancellationToken);
+        await _repository.UpsertIdentityAsync(validated, cancellationToken);
+        Audit("workload_identity_connected", validated, "ready");
+        return validated;
+    }
+
+    private static string NormalizeOptionalGuid(string? value, string parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+        if (!Guid.TryParse(value, out var parsed))
+            throw new WorkloadIdentityConfigurationException("The identifier must be a GUID.", parameterName);
+        return parsed.ToString("D");
+    }
+
+    private static string NormalizeCertificateThumbprint(string value)
+    {
+        var normalized = value.Replace(" ", string.Empty, StringComparison.Ordinal).ToUpperInvariant();
+        if (normalized.Length is not (40 or 64) || normalized.Any(character => !Uri.IsHexDigit(character)))
+            throw new WorkloadIdentityConfigurationException("A 40- or 64-character hexadecimal certificate thumbprint is required.", nameof(value));
+        return normalized;
+    }
+
+    private static string NormalizeFederatedTokenFilePath(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new WorkloadIdentityConfigurationException(
+                "A federated token file path is required.",
+                nameof(value));
+
+        string fullPath;
+        try
+        {
+            fullPath = Path.GetFullPath(value.Trim());
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            throw new WorkloadIdentityConfigurationException(
+                "The federated token file path is invalid.",
+                nameof(value));
+        }
+
+        if (!File.Exists(fullPath))
+            throw new WorkloadIdentityConfigurationException(
+                "The federated token file does not exist.",
+                nameof(value));
+
+        try
+        {
+            using var tokenFile = new FileStream(
+                fullPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            if (tokenFile.Length == 0)
+                throw new WorkloadIdentityConfigurationException(
+                    "The federated token file is empty.",
+                    nameof(value));
+        }
+        catch (WorkloadIdentityConfigurationException)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            throw new WorkloadIdentityConfigurationException(
+                "The federated token file is not readable.",
+                nameof(value));
+        }
+
+        return fullPath;
+    }
+
+    private static string NormalizeWorkloadCredential(IdentityType type, string value) =>
+        type switch
+        {
+            IdentityType.ServicePrincipal => NormalizeCertificateThumbprint(value),
+            IdentityType.FederatedServicePrincipal => NormalizeFederatedTokenFilePath(value),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "The identity type has no rotatable credential."),
+        };
+
     public async Task RemoveAsync(Guid identityId, CancellationToken cancellationToken)
     {
-        var identity = await repository.GetIdentityAsync(identityId, cancellationToken);
+        var identity = await _repository.GetIdentityAsync(identityId, cancellationToken);
         if (identity is null) return;
-        await provider.RemoveAsync(identity, cancellationToken);
-        await repository.RemoveIdentityAsync(identityId, cancellationToken);
+        await _provider.RemoveAsync(identity, cancellationToken);
+        await _repository.RemoveIdentityAsync(identityId, cancellationToken);
+        Audit("identity_removed", identity, "removed");
     }
 
     public async Task DisableAsync(Guid identityId, CancellationToken cancellationToken)
     {
-        var identity = await repository.GetIdentityAsync(identityId, cancellationToken);
+        var identity = await _repository.GetIdentityAsync(identityId, cancellationToken);
         if (identity is null) return;
         var disabled = identity with { IsEnabled = false, AuthenticationState = AuthenticationState.Disabled };
-        await repository.UpsertIdentityAsync(disabled, cancellationToken);
+        await _repository.UpsertIdentityAsync(disabled, cancellationToken);
+        Audit("identity_disabled", disabled, "disabled");
     }
 
     public async Task EnableAsync(Guid identityId, CancellationToken cancellationToken)
     {
-        var identity = await repository.GetIdentityAsync(identityId, cancellationToken);
+        var identity = await _repository.GetIdentityAsync(identityId, cancellationToken);
         if (identity is null) return;
-        var enabled = identity with { IsEnabled = true, AuthenticationState = AuthenticationState.Ready };
-        await repository.UpsertIdentityAsync(enabled, cancellationToken);
+        var validated = await _provider.ReauthenticateAsync(identity, cancellationToken);
+        var enabled = validated with { IsEnabled = true, AuthenticationState = AuthenticationState.Ready };
+        await _repository.UpsertIdentityAsync(enabled, cancellationToken);
+        Audit("identity_enabled", enabled, "ready");
     }
 
     public async Task ReauthenticateAsync(Guid identityId, CancellationToken cancellationToken)
     {
-        var identity = await repository.GetIdentityAsync(identityId, cancellationToken);
+        var identity = await _repository.GetIdentityAsync(identityId, cancellationToken);
         if (identity is null) return;
-        var refreshed = await provider.ReauthenticateAsync(identity, cancellationToken);
+        var refreshed = await _provider.ReauthenticateAsync(identity, cancellationToken);
         var updated = refreshed with { IsEnabled = true, AuthenticationState = AuthenticationState.Ready };
-        await repository.UpsertIdentityAsync(updated, cancellationToken);
+        await _repository.UpsertIdentityAsync(updated, cancellationToken);
+        Audit("identity_reauthenticated", updated, "ready");
+    }
+
+    public async Task AuthorizeDirectoryReadAsync(
+        Guid identityId,
+        CancellationToken cancellationToken)
+    {
+        var identity = await _repository.GetIdentityAsync(identityId, cancellationToken)
+            ?? throw new KeyNotFoundException("The selected identity no longer exists.");
+        if (identity.Type != IdentityType.InteractiveUser)
+            throw new InvalidOperationException(
+                "Microsoft Graph directory discovery requires an explicit interactive administrator identity.");
+
+        var authorized = await _provider.AuthorizeDirectoryReadAsync(identity, cancellationToken);
+        var updated = authorized with
+        {
+            IsEnabled = true,
+            AuthenticationState = AuthenticationState.Ready,
+        };
+        await _repository.UpsertIdentityAsync(updated, cancellationToken);
+        Audit("directory_read_authorized", updated, "ready");
+    }
+
+    public async Task RotateWorkloadCredentialAsync(
+        Guid identityId,
+        string replacementCredentialData,
+        CancellationToken cancellationToken)
+    {
+        var identity = await _repository.GetIdentityAsync(identityId, cancellationToken)
+            ?? throw new KeyNotFoundException("The selected identity no longer exists.");
+        if (identity.Type is not (IdentityType.ServicePrincipal or IdentityType.FederatedServicePrincipal))
+            throw new WorkloadIdentityConfigurationException(
+                "Only certificate and federated service-principal credentials can be rotated here.",
+                nameof(identityId));
+
+        var candidate = identity with
+        {
+            CredentialData = NormalizeWorkloadCredential(identity.Type, replacementCredentialData),
+            AuthenticationState = AuthenticationState.Unknown,
+        };
+
+        try
+        {
+            var validated = await _provider.ReauthenticateAsync(candidate, cancellationToken);
+            var updated = validated with
+            {
+                IsEnabled = true,
+                AuthenticationState = AuthenticationState.Ready,
+            };
+            await _repository.UpsertIdentityAsync(updated, cancellationToken);
+            Audit("workload_credential_rotated", updated, "ready");
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _diagnostics.WriteError(
+                "workload_credential_rotation_failed",
+                exception,
+                AuditFields(identity, "failed"));
+            throw;
+        }
+    }
+
+    public async Task<LocalIdentityRevocationResult> RevokeLocalAccessAsync(
+        Guid identityId,
+        CancellationToken cancellationToken)
+    {
+        var identity = await _repository.GetIdentityAsync(identityId, cancellationToken);
+        if (identity is null)
+            return new LocalIdentityRevocationResult(true, 0);
+        var associatedVaultIds = await _repository.GetVaultIdsForIdentityAsync(
+            identityId,
+            cancellationToken);
+
+        var revoked = identity with
+        {
+            IsEnabled = false,
+            AuthenticationState = AuthenticationState.Revoked,
+            CredentialData = string.Empty,
+        };
+        await _repository.UpsertIdentityAsync(revoked, cancellationToken);
+        var providerCredentialRemoved = true;
+        try
+        {
+            await _provider.RemoveAsync(identity, CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            providerCredentialRemoved = false;
+            _diagnostics.WriteError(
+                "identity_provider_credential_removal_failed",
+                exception,
+                AuditFields(revoked, "revoked"));
+        }
+
+        var purgeFailures = new List<Exception>();
+        var purgedVaultCount = 0;
+        if (_protectedValueStore is null && associatedVaultIds.Count > 0)
+        {
+            purgeFailures.Add(
+                new InvalidOperationException(
+                    "The protected-value store is unavailable for identity revocation."));
+        }
+        else if (_protectedValueStore is not null)
+        {
+            foreach (var vaultId in associatedVaultIds.Distinct())
+            {
+                try
+                {
+                    await _protectedValueStore.PurgeVaultAsync(
+                        vaultId,
+                        CancellationToken.None);
+                    purgedVaultCount++;
+                }
+                catch (Exception exception)
+                {
+                    purgeFailures.Add(exception);
+                    _diagnostics.WriteError(
+                        "identity_offline_value_purge_failed",
+                        exception,
+                        AuditFields(revoked, "revoked"));
+                }
+            }
+        }
+
+        Audit("identity_access_revoked", revoked, "revoked");
+        if (purgeFailures.Count > 0)
+        {
+            throw new LocalRevocationCleanupException(
+                purgeFailures.Count,
+                purgeFailures.Count == 1
+                    ? purgeFailures[0]
+                    : new AggregateException(purgeFailures));
+        }
+
+        return new LocalIdentityRevocationResult(
+            providerCredentialRemoved,
+            purgedVaultCount);
+    }
+
+    public async Task<int> PurgeOfflineValuesAsync(
+        Guid identityId,
+        CancellationToken cancellationToken)
+    {
+        var identity = await _repository.GetIdentityAsync(
+            identityId,
+            cancellationToken);
+        if (identity is null)
+            return 0;
+        if (_protectedValueStore is null)
+        {
+            throw new PlatformNotSupportedException(
+                "The protected-value store is unavailable.");
+        }
+
+        var vaultIds = await _repository.GetVaultIdsForIdentityAsync(
+            identityId,
+            cancellationToken);
+        var purgedVaultCount = 0;
+        foreach (var vaultId in vaultIds.Distinct())
+        {
+            await _protectedValueStore.PurgeVaultAsync(
+                vaultId,
+                cancellationToken);
+            purgedVaultCount++;
+        }
+
+        Audit("identity_offline_values_purged", identity, "purged");
+        return purgedVaultCount;
+    }
+
+    private void Audit(string eventName, ConnectedIdentity identity, string status) =>
+        _diagnostics.Information(eventName, AuditFields(identity, status));
+
+    private static Dictionary<string, object?> AuditFields(ConnectedIdentity identity, string status) =>
+        new()
+        {
+            ["identity_id"] = identity.Id,
+            ["identity_type"] = identity.Type.ToString(),
+            ["status"] = status,
+        };
+
+    private sealed class NullDiagnosticSink : IDiagnosticSink
+    {
+        public void Information(string eventName, IReadOnlyDictionary<string, object?> fields)
+        {
+        }
+
+        public void WriteError(
+            string eventName,
+            Exception exception,
+            IReadOnlyDictionary<string, object?> fields)
+        {
+        }
     }
 }
 
@@ -72,10 +412,52 @@ public sealed class SynchronizationService(IVaultProvider provider, IMetadataRep
 {
     public async Task<SyncRun> SynchronizeAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
     {
+        identity = await repository.GetIdentityAsync(identity.Id, cancellationToken)
+            ?? throw new KeyNotFoundException("The selected identity no longer exists.");
+        EnsureOnlineIdentityIsUsable(identity);
         var started = clock.UtcNow;
         try
         {
-            var snapshot = await provider.DiscoverAsync(identity, cancellationToken);
+            var knownSubscriptions = await repository.GetSubscriptionsAsync(identity.Id, cancellationToken);
+            var excludedSubscriptions = knownSubscriptions
+                .Where(subscription => !subscription.IsSelected)
+                .Select(subscription => subscription.SubscriptionId)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            var knownVaults = await repository.GetVaultAccessSummariesAsync(identity.Id, cancellationToken);
+            var excludedVaultResourceIds = knownVaults
+                .Where(summary => !summary.Access.IsSelected)
+                .Select(summary => summary.Vault.ProviderResourceId)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            var snapshot = await provider.DiscoverAsync(
+                identity,
+                excludedSubscriptions,
+                excludedVaultResourceIds,
+                cancellationToken);
+            var retainedExcludedPaths = knownVaults
+                .Where(summary =>
+                    !summary.Access.IsSelected ||
+                    excludedSubscriptions.Contains(summary.Vault.SubscriptionId, StringComparer.OrdinalIgnoreCase))
+                .ToArray();
+            if (retainedExcludedPaths.Length > 0)
+            {
+                var discoveredVaultIds = snapshot.Vaults.Select(vault => vault.Id).ToHashSet();
+                var discoveredAccessIds = snapshot.AccessPaths.Select(access => access.Id).ToHashSet();
+                snapshot = snapshot with
+                {
+                    Vaults = snapshot.Vaults
+                        .Concat(retainedExcludedPaths
+                            .Where(summary => discoveredVaultIds.Add(summary.Vault.Id))
+                            .Select(summary => summary.Vault))
+                        .ToArray(),
+                    AccessPaths = snapshot.AccessPaths
+                        .Concat(retainedExcludedPaths
+                            .Where(summary => discoveredAccessIds.Add(summary.Access.Id))
+                            .Select(summary => summary.Access))
+                        .ToArray(),
+                };
+            }
             var status = snapshot.Errors.Count == 0 ? SyncStatus.Completed : SyncStatus.CompletedWithErrors;
             var run = new SyncRun(Guid.NewGuid(), identity.DisplayName, started, clock.UtcNow, status, snapshot.Vaults.Count, snapshot.Items.Count, snapshot.Errors.Select(x => x.SafeMessage).ToArray());
             await repository.ApplyDiscoveryAsync(identity.Id, snapshot, run, cancellationToken);
@@ -91,13 +473,28 @@ public sealed class SynchronizationService(IVaultProvider provider, IMetadataRep
             diagnostics.WriteError("sync_auth_failed", ex, new Dictionary<string, object?> { ["identity_id"] = identity.Id });
             var required = identity with { AuthenticationState = AuthenticationState.InteractionRequired };
             await repository.UpsertIdentityAsync(required, cancellationToken);
-            return new SyncRun(Guid.NewGuid(), identity.DisplayName, started, clock.UtcNow, SyncStatus.Failed, 0, 0, [ex.Message], "Authentication required");
+            return new SyncRun(
+                Guid.NewGuid(),
+                identity.DisplayName,
+                started,
+                clock.UtcNow,
+                SyncStatus.Failed,
+                0,
+                0,
+                ["Interactive Microsoft Entra authentication is required."],
+                "Authentication required");
         }
         catch (Exception ex)
         {
             diagnostics.WriteError("sync_failed", ex, new Dictionary<string, object?> { ["identity_id"] = identity.Id });
             throw;
         }
+    }
+
+    private static void EnsureOnlineIdentityIsUsable(ConnectedIdentity identity)
+    {
+        if (!identity.IsEnabled || identity.AuthenticationState != AuthenticationState.Ready)
+            throw new InvalidOperationException("The selected identity is disabled, revoked, or requires authentication.");
     }
 }
 
@@ -122,10 +519,12 @@ public sealed class SecretAccessService(
     {
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be retrieved. Key material and certificate private keys are never exported.");
-        if (!verification.IsAvailable || !await verification.VerifyAsync("Reveal an Azure Key Vault secret", cancellationToken)) throw new UnauthorizedAccessException("Local verification was not completed.");
+        EnsureOnlineIdentityIsUsable(source.Identity);
+        if (!verification.IsAvailable || await verification.VerifyAsync("Reveal an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified) throw new UnauthorizedAccessException("Local verification was not completed.");
         var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
             return value;
         }
@@ -141,10 +540,12 @@ public sealed class SecretAccessService(
         if (!policy.AllowClipboard) throw new InvalidOperationException("Clipboard use is disabled by policy.");
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be copied.");
-        if (!verification.IsAvailable || !await verification.VerifyAsync("Copy an Azure Key Vault secret", cancellationToken))
+        EnsureOnlineIdentityIsUsable(source.Identity);
+        if (!verification.IsAvailable || await verification.VerifyAsync("Copy an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified)
             throw new UnauthorizedAccessException("Local verification was not completed.");
 
         using var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         await clipboard.CopyWithAutoClearAsync(value, clearAfter, cancellationToken);
         await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
     }
@@ -154,10 +555,12 @@ public sealed class SecretAccessService(
         var expiresAt = policy.GetExpiration(clock.UtcNow, lifetime);
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be cached.");
-        if (!verification.IsAvailable || !await verification.VerifyAsync("Retrieve and cache an Azure Key Vault secret", cancellationToken))
+        EnsureOnlineIdentityIsUsable(source.Identity);
+        if (!verification.IsAvailable || await verification.VerifyAsync("Retrieve and cache an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified)
             throw new UnauthorizedAccessException("Local verification was not completed.");
 
         using var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
         return await cache.StoreAsync(itemId, source.Vault.Id, workspaceId, value, source.Item.MetadataFingerprint, expiresAt, cancellationToken);
     }
@@ -167,13 +570,14 @@ public sealed class SecretAccessService(
         var source = await repository.ResolveItemAsync(itemId, cancellationToken)
             ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only cached secret values can be opened.");
-        if (!verification.IsAvailable || !await verification.VerifyAsync("Open an offline secret", cancellationToken))
+        if (!verification.IsAvailable || await verification.VerifyAsync("Open an offline secret", cancellationToken) != UserVerificationResult.Verified)
             throw new UnauthorizedAccessException("Local verification was not completed.");
 
         var value = await cache.RetrieveAsync(itemId, clock.UtcNow, source.Item.MetadataFingerprint, cancellationToken)
             ?? throw new KeyNotFoundException("No unexpired offline copy exists for the selected secret.");
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
             return value;
         }
@@ -182,6 +586,12 @@ public sealed class SecretAccessService(
             value.Dispose();
             throw;
         }
+    }
+
+    private static void EnsureOnlineIdentityIsUsable(ConnectedIdentity identity)
+    {
+        if (!identity.IsEnabled || identity.AuthenticationState != AuthenticationState.Ready)
+            throw new InvalidOperationException("The selected identity is disabled, revoked, or requires authentication.");
     }
 }
 
@@ -205,4 +615,113 @@ public sealed class WorkspaceService(IMetadataRepository repository)
 
     public Task RemoveResourceAsync(Guid workspaceId, ResourceLinkType resourceType, string resourceId, CancellationToken cancellationToken) =>
         repository.RemoveWorkspaceLinkAsync(workspaceId, resourceType, resourceId, cancellationToken);
+}
+
+public sealed class LocalDataRecoveryService(
+    IUserVerificationService verification,
+    ILocalDataResetter resetter)
+{
+    public const string ConfirmationPhrase = "RESET";
+
+    public async Task<LocalDataArchive> ArchiveAndResetAsync(
+        string confirmation,
+        CancellationToken cancellationToken)
+    {
+        if (!string.Equals(confirmation.Trim(), ConfirmationPhrase, StringComparison.Ordinal))
+            throw new LocalDataResetConfirmationException();
+        if (!verification.IsAvailable)
+            throw new PlatformNotSupportedException("Windows verification is unavailable.");
+
+        var result = await verification.VerifyAsync(
+            "Archive current Vault Prospector data and start fresh",
+            cancellationToken);
+        if (result != UserVerificationResult.Verified)
+            throw new UnauthorizedAccessException("Local verification was not completed.");
+
+        return await resetter.ArchiveForResetAsync(cancellationToken);
+    }
+}
+
+public sealed class LocalRecoveryArchiveService(
+    IUserVerificationService verification,
+    ILocalRecoveryArchiveStore archiveStore,
+    IDiagnosticSink diagnostics)
+{
+    public const string ConfirmationPhrase = "DELETE ARCHIVE";
+
+    public Task<IReadOnlyList<LocalRecoveryArchive>> ListAsync(
+        CancellationToken cancellationToken) =>
+        archiveStore.ListAsync(cancellationToken);
+
+    public async Task DeleteAsync(
+        string archiveId,
+        string confirmation,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(archiveId);
+        if (!string.Equals(
+                confirmation.Trim(),
+                ConfirmationPhrase,
+                StringComparison.Ordinal))
+        {
+            throw new LocalRecoveryArchiveConfirmationException();
+        }
+
+        if (!verification.IsAvailable)
+            throw new PlatformNotSupportedException(
+                "Windows verification is unavailable.");
+
+        var result = await verification.VerifyAsync(
+            "Permanently delete the selected Vault Prospector recovery archive",
+            cancellationToken);
+        if (result != UserVerificationResult.Verified)
+            throw new LocalRecoveryArchiveVerificationException();
+
+        diagnostics.Information(
+            "local_recovery_archive_delete_authorized",
+            new Dictionary<string, object?>
+            {
+                ["status"] = "authorized",
+            });
+
+        try
+        {
+            await archiveStore.DeleteAsync(
+                archiveId,
+                cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            try
+            {
+                diagnostics.WriteError(
+                    "local_recovery_archive_delete_failed",
+                    exception,
+                    new Dictionary<string, object?>
+                    {
+                        ["status"] = "failed",
+                    });
+            }
+            catch
+            {
+                // Preserve the deletion failure as the actionable exception.
+            }
+
+            throw;
+        }
+
+        try
+        {
+            diagnostics.Information(
+                "local_recovery_archive_deleted",
+                new Dictionary<string, object?>
+                {
+                    ["status"] = "deleted",
+                });
+        }
+        catch
+        {
+            // Authorization was durably logged before the irreversible action.
+        }
+    }
 }

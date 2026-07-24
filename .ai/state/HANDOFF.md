@@ -1,5 +1,218 @@
 # Session handoff
 
+## Goal and recovery update — 2026-07-23
+
+- Durable repository goal: `.ai/state/GOAL.md`.
+- Canonical objective: fully implement every backlog item in dependency order, complete production
+  workflows and automated/live validation, synchronize all documentation and release evidence, and
+  reach a verified GA artifact.
+- `main` and `origin/main` point to `20da2be` (`feat: complete Phase 2 - Interactive Identity
+  Lifecycle`). Its GitHub CI run failed at formatting before tests.
+- The worktree contains uncommitted Phase 3–7 work covering local unlock/recovery, workload identity
+  profiles, schema v3, subscription exclusion plumbing, object reconciliation, and an installer-icon
+  follow-up.
+- Recovery work on 2026-07-23 restored clean formatting and a Release build with zero warnings or
+  errors. All 111 existing automated tests pass locally. New Phase 3–7 behavior still requires
+  dedicated regression, security, UI, migration, and live tests before any delivery claim.
+- `pmo/backlog.md` and `pmo/plan.md` were corrected so implemented/released capabilities are not reset
+  to Not started and unfinished local work is not labeled Delivered.
+- HCS governance MCP reports no registered repo named `vault-prospector` and cannot resolve this
+  local path. Continue using HCS standards/tools when applicable, but do not claim drift validation
+  until registry/path resolution is fixed.
+
+### Immediate next actions
+
+1. Complete Phase 3 key-rotation design/implementation and live Windows unlock/recovery validation.
+2. Complete Phase 4 workload-profile validation, availability detection, credential isolation,
+   negative tests, and live Azure evidence before exposing it as supported.
+3. Keep each later phase behind the plan's security, authorization, testing, and release gates.
+
+### Phase 3 progress — 2026-07-23
+
+- First run now completes local verification before opening directly on Identities. The guided
+  sequence separates Windows local unlock, Microsoft-controlled authentication, and metadata-only
+  synchronization; the connection action names the selected authentication method.
+- Focused application tests pass 71/71. The synchronized locked Release gate passes dependency
+  vulnerability inspection, formatting, a zero-warning/error build, and all 236/236 tests.
+- Replaced the direct database/key deletion prototype with typed `RESET` confirmation, fresh Windows
+  verification, complete local-state archival, and mandatory restart.
+- Windows verification now distinguishes verified, canceled, unavailable, not configured,
+  disabled-by-policy, and failed outcomes; every non-verified outcome remains locked.
+- Accepted ADR `docs/adr/0009-preserve-and-archive-failed-local-state.md`; cross-device
+  backup/restore is explicitly unsupported, while same-account failed state remains preserved.
+- Added application, platform, UI, schema, persistence, cancellation, and reconciliation
+  regressions. Release build passes with zero warnings/errors and all 126 tests pass locally.
+- Implemented an internal, non-user-exposed all-or-rollback local encryption rotation engine:
+  verified matched-state archive, HMAC-authenticated journal/manifest, SQLCipher rekey, offline
+  envelope re-encryption, staged DPAPI key publication, validation, and startup rollback.
+- Failure injection covers all nine published checkpoints plus a crash inside key publication.
+  Tampered journals/archives fail closed. Filtered rotation tests pass 13/13; Platform tests pass
+  21/21. Evidence: `docs/release-evidence/local-encryption-rotation-2026-07-23.md`.
+- Settings now inventories canonical reset, pre-rotation, and failed-rotation archives and permits
+  exact selected-archive deletion only after `DELETE ARCHIVE`, fresh Windows verification,
+  containment/reparse checks, and confirmation that no rotation journal is active. Focused
+  application/platform/UI coverage passes 14/14, including failure to write the pre-delete audit.
+- A captured rotation rerun found transient Windows denial during atomic journal replacement.
+  Bounded cancellation-aware retry now covers only transient I/O/access failures; permanent
+  failures remain fail-closed. The fresh filtered crash-boundary suite passes 13/13 in 1m12s.
+- The exact post-remediation `scripts/Build.ps1 -Configuration Release` gate passes locked restore,
+  direct/transitive vulnerability inspection, formatting, zero-warning/error Release build, and
+  all 210/210 tests with coverage artifacts for all seven projects.
+- Still open: independent review, live Windows forced-termination/power-loss/reinstall evidence,
+  and only then a verified user-presence rotation command.
+
+### Phase 4 progress — 2026-07-23
+
+- Interactive Entra remains the default; managed identity is omitted unless an Azure host endpoint
+  or IMDS is detected.
+- Managed-identity and certificate service-principal profiles validate ARM token acquisition before
+  encrypted persistence. Client secrets are rejected.
+- Service-principal tenant/client IDs and certificate thumbprints are canonicalized; certificates
+  must be currently valid and expose a private key.
+- Workload removal never opens or mutates human MSAL caches; workload reauthentication uses
+  application ARM scope rather than interactive delegated scope.
+- Automated contract, negative, persistence, endpoint-detection, UI, and token-cache isolation
+  coverage passes. Release build has zero warnings/errors and all 136 tests pass locally.
+- Federated service-principal profiles now store only a canonical readable projected-token path and
+  use `WorkloadIdentityCredential`; token content never enters app persistence or human MSAL caches.
+- Certificate and federated replacements validate ARM token acquisition before persistence.
+  Explicit local revocation fails closed, removes credential references, purges discovered-vault
+  offline copies, and requires external issuer revocation for compromised credentials.
+- Synchronization now re-reads persisted identity state and all online value operations reject
+  disabled/revoked/non-ready identities. Fixed identity lifecycle events use centralized redaction.
+- ADR-0012 records credential ownership, isolation, rotation, and revocation decisions.
+- Release build passes with zero warnings/errors. Targeted Phase 4 suites pass: Application 39,
+  Azure provider 13, App 60, Infrastructure 36. Full-suite verification remains to be rerun.
+- Still open: live managed-identity/certificate/federated tenant and issuer-revocation evidence,
+  plus independent security/redaction review.
+
+### Phase 5 progress — 2026-07-23
+
+- Replaced the stub that ignored `subscriptionId` and returned `null` for dry runs.
+- Managed-identity discovery binds to the exact requested subscription and selected ready
+  interactive identity. Service-principal discovery now uses a separate explicit delegated
+  `Application.Read.All` consent action and the app-owned MSAL account.
+- Microsoft Graph discovery accepts only HTTPS `graph.microsoft.com` pages, disables redirects,
+  enforces page/item bounds, binds returned interactive auth to the selected home account, and has
+  positive/negative pagination tests.
+- The new Administration tab distinguishes confirmed visibility from unproven attach/use,
+  management, Key Vault, and role-assignment rights.
+- Deterministic managed-identity and service-principal previews validate tenant/subscription GUIDs,
+  resource names, exact Key Vault and role-definition resource types/same-subscription scope, and
+  declare `PerformsMutations=false`. No execution command exists.
+- Removed the unused Azure Authorization package introduced by the stub and regenerated locked
+  dependency graphs.
+- Locked restore, formatting, Release build with zero warnings/errors, and all 141 tests pass.
+- Added explicit candidate-plus-Key-Vault authorization assessment. The selected administrator's
+  exact-resource caller permissions are separate from the candidate's inherited/transitive role
+  grants, action exclusions, deny assignments, child-scope behavior, and conditions.
+- HTTPS ARM endpoints and next links are host constrained and bounded. Conditions, access-policy
+  vaults, unreadable deny sets, and possible group-deny applicability fail closed as unproven.
+  No candidate credential, data-plane value, role write, or other Azure mutation is used.
+- ADR-0013 records the static-evidence/runtime distinction. Focused provider and app tests cover
+  inherited allow, deny precedence, conditional grants, unavailable deny visibility, untrusted
+  pagination, access-policy mode, and the user-reachable selection workflow.
+- The exact `scripts/Build.ps1 -Configuration Release` gate passes locked restore, direct/transitive
+  NuGet vulnerability inspection, formatting, a zero-warning/error Release build, and 218/218
+  tests with coverage for all seven projects. Evidence:
+  `docs/release-evidence/workload-authorization-evidence-2026-07-23.md`.
+- Still open: Phase 8 independent review, fresh write authorization,
+  confirmed/encrypted-audit execution, rollback, and live Azure tests.
+
+### Phase 6 progress — 2026-07-23
+
+- Added per-identity subscription and per-access-path vault inclusion controls to the identity UI.
+  Choices persist in encrypted metadata and are applied before provider metadata enumeration.
+- Excluded vault/access records are retained so users can reverse the choice; complete
+  synchronization tombstones excluded indexed objects without deleting history.
+- Vault access paths now show identity, tenant, subscription, management visibility, observed
+  secret/key/certificate metadata-list outcomes, explicit value-read non-probing, and
+  policy-disabled writes.
+- Schema v4 adds backward-compatible vault selection, with v3 migration coverage. Workload identity
+  hydration from search resolution was corrected for schema-v3 fields.
+- Formatting and all 148 automated tests pass locally after this slice.
+- Still open: live Azure permission matrices, independent redaction/security review, and release
+  evidence.
+
+### Phase 7 progress — 2026-07-23
+
+- Workspaces now support user-reachable identity, tenant, subscription, and vault assignment.
+- The selected workspace has editable encrypted-cache enablement/lifetime and clipboard policy;
+  Windows verification remains mandatory and cannot be disabled.
+- Copy/cache commands enforce the selected workspace override. Workspace deletion transactionally
+  removes links after the application purges workspace-scoped offline values.
+- Complete discovery tombstones missing/excluded objects; partial failures preserve prior state.
+  Scope records remain available for reversal.
+- Automated workspace resource-type, policy, search-scope, deletion, and schema migration coverage
+  is present. Live upgrade/downgrade/reinstall and independent cache-boundary validation remain
+  open release evidence.
+
+### Phase 8 gate — 2026-07-23
+
+- Added proposed ADR-0010 and `docs/security/governed-write-threat-model.md`.
+- Removed the unused generic `IsWriteModeEnabled` property because the charter forbids an
+  unrestricted write toggle.
+- Azure mutation code remains absent/read-only while the required threat-model and independent
+  security review gate is open. The proposed operation set and policy/authorization/verification/
+  preview/concurrency/audit/recovery boundaries are documented.
+
+### Phase 9 progress — 2026-07-23
+
+- Added official-source comparative research, explicit limitations, task-flow synthesis, and an
+  eight-participant usability/accessibility study protocol under `docs/design/`.
+- Delivered one interactive React prototype with four switchable concepts: Source-first,
+  Search-first, Guided tasks, and Operations console. Each contains Setup, Search, Secret reveal,
+  and Settings, for 16 inspected combinations.
+- Native `npm run build` passes; headless Chrome exercised all combinations with zero console
+  errors, and a 390-pixel viewport had no horizontal document overflow. Four reference screenshots
+  are checked in.
+- Initial hypothesis favors Source-first, but no final selection claim is made. Representative
+  Windows users, Narrator/NVDA/keyboard/High Contrast evidence, selection, and production
+  implementation remain open.
+
+### Phase 10 progress — 2026-07-23
+
+- Added persisted Ask, Exit, and Lock-to-notification-area close behavior plus an explicit close
+  choice overlay.
+- Notification-area menu provides Show/Exit and reports Locked, Syncing, Action required, Azure
+  interaction required, Offline, or Ready.
+- Backgrounding cancels active work, advances the sensitive-presentation epoch, masks values,
+  locks foreground access, and hides both window and taskbar entry.
+- Opt-in 15-minute background work invokes only metadata synchronization while hidden and
+  network-available. Post-provider cancellation checks prevent clipboard/cache/presentation
+  release after background cancellation.
+- A disposable production Windows monitor locks on every session switch and on suspend/resume,
+  marshals the lock to the UI thread, and detaches its static handlers during shutdown. The lock
+  cancels active work, invalidates sensitive presentation, closes any close prompt, masks the
+  preview, and requires foreground unlock again. Ordinary power-status changes do not lock.
+- The exact Release gate passes locked restore, dependency-vulnerability inspection, formatting,
+  zero-warning/error build, and all 231 tests. Live installed tray, sleep/resume, Windows session
+  transitions, battery/network transitions, token expiry, and accessibility evidence remain open.
+
+### Cross-phase code-review closure — 2026-07-23
+
+- Completed a security, correctness, performance, and maintainability review of the accumulated
+  Phase 3–10 worktree.
+- Revocation now persists revoked state before cleanup, attempts provider removal and every
+  historical associated vault purge independently, and reports residual failures without restoring
+  access.
+- Added non-destructive identity-scoped offline-value purge to the production Identities UI.
+- Persisted sync errors no longer copy authentication exception messages.
+- Added response/file bounds for Graph, ARM, settings, protected-value, and authenticated rotation
+  JSON; Graph next links require HTTPS on the default `graph.microsoft.com` port.
+- Tray status preserves locked and operational context.
+- The first exact gate run exposed a transient Windows directory-move denial during injected
+  `OfflineKeyPublished` crash recovery. Bounded transient retry plus non-cancelable post-move
+  promotion/rollback fixed that recovery boundary; all nine injected crash checkpoints then passed.
+- Final exact `scripts/Build.ps1 -Configuration Release` passes locked restore, direct/transitive
+  vulnerability inspection, formatting, zero-warning/error Release build, and **254/254** tests:
+  Domain 4, Application 53, Infrastructure 50, Platform 37, Azure provider 27, App 82, Security 1.
+- Evidence:
+  `docs/release-evidence/cross-phase-security-correctness-review-2026-07-23.md`.
+- Internal review does not approve the independent security gate. Live Azure/Windows,
+  representative-user/accessibility, exact packaged-candidate, and external governance drift
+  evidence remain open.
+
 ## Current state
 
 - Branch: `main`; direct pushes are the operator-approved workflow.

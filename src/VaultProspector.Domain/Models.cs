@@ -4,6 +4,13 @@ public enum AuthenticationState { Unknown, Ready, InteractionRequired, Disabled,
 public enum VaultObjectType { Secret, Key, Certificate }
 public enum SyncStatus { Running, Completed, CompletedWithErrors, Cancelled, Failed }
 public enum ResourceLinkType { Identity, Tenant, Subscription, Vault }
+public enum IdentityType
+{
+    InteractiveUser = 0,
+    ManagedIdentity = 1,
+    ServicePrincipal = 2,
+    FederatedServicePrincipal = 3,
+}
 
 public sealed record ConnectedIdentity(
     Guid Id,
@@ -14,7 +21,9 @@ public sealed record ConnectedIdentity(
     string HomeTenantId,
     AuthenticationState AuthenticationState,
     DateTimeOffset LastInteractiveAuthentication,
-    bool IsEnabled = true);
+    bool IsEnabled = true,
+    IdentityType Type = IdentityType.InteractiveUser,
+    string CredentialData = "");
 
 public sealed record TenantAccess(
     Guid Id,
@@ -54,7 +63,14 @@ public sealed record VaultAccess(
     string AccessStatus,
     DateTimeOffset LastValidatedAt,
     string? LastFailureCategory,
-    int PreferredRank);
+    int PreferredRank,
+    bool IsSelected = true);
+
+public sealed record VaultAccessSummary(
+    VaultResource Vault,
+    VaultAccess Access,
+    string IdentityDisplayName,
+    string TenantDisplayName);
 
 public sealed record VaultItem(
     Guid Id,
@@ -145,7 +161,8 @@ public sealed record SearchResult(
     string TenantDisplayName,
     bool IsFavorite,
     DateTimeOffset? LastAccessedAt,
-    bool IsStale);
+    bool IsStale,
+    string AccessStatus = "Permission assessment unavailable");
 
 public sealed record ProviderError(string Scope, string Category, string SafeMessage);
 

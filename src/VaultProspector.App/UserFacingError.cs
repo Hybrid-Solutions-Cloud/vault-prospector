@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Azure;
@@ -45,10 +46,62 @@ public static class UserFacingErrorMapper
             "Azure is throttling requests",
             "Azure temporarily limited this operation.",
             "Wait a few minutes, then synchronize or retrieve the value again."),
+        HttpRequestException { StatusCode: HttpStatusCode.Unauthorized } => new(
+            "Microsoft Graph authorization expired",
+            "Directory discovery could not use the selected interactive identity.",
+            "Choose Authorize Microsoft Graph directory read and complete the Microsoft Entra prompt again."),
+        HttpRequestException { StatusCode: HttpStatusCode.Forbidden } => new(
+            "Microsoft Graph directory read is not permitted",
+            "The selected identity or app registration lacks the delegated Application.Read.All permission or required directory role.",
+            "Ask a Microsoft Entra administrator to approve the least-privileged directory-read permission, then authorize again."),
         UnauthorizedAccessException => new(
             "Windows verification was not completed",
             "Vault Prospector did not reveal, copy, or cache the secret.",
             "Set up Windows Hello or complete the verification prompt and retry."),
+        LocalDataResetConfirmationException => new(
+            "Reset confirmation did not match",
+            "Vault Prospector preserved all local data and did not begin recovery.",
+            "Type RESET exactly, then complete fresh Windows verification."),
+        LocalRecoveryArchiveConfirmationException => new(
+            "Archive deletion confirmation did not match",
+            "Vault Prospector retained the selected recovery archive.",
+            "Select the intended archive and type DELETE ARCHIVE exactly."),
+        LocalRecoveryArchiveVerificationException => new(
+            "Archive deletion was not verified",
+            "Vault Prospector retained the selected recovery archive.",
+            "Retry only when you are ready to complete fresh Windows verification."),
+        LocalRecoveryArchiveValidationException => new(
+            "Recovery archive was preserved",
+            "Vault Prospector could not validate the selected archive as a safe deletion target.",
+            "Refresh the archive list. If the warning remains, preserve the folder and use the support guidance."),
+        WorkloadIdentityConfigurationException => new(
+            "Workload identity settings need attention",
+            "The managed-identity or service-principal profile is incomplete or invalid.",
+            "Use managed identity only on a detected Azure host. For a service principal, enter GUID tenant and client IDs plus either a valid certificate thumbprint or a readable federated token file path; client secrets are not accepted."),
+        WorkloadCredentialUnavailableException => new(
+            "Workload credential is unavailable",
+            "Vault Prospector could not use the configured managed identity, certificate, or federated credential.",
+            "Confirm the Azure host identity, install a currently valid certificate with an accessible private key, or restore the configured federated token file and issuer trust."),
+        LocalRevocationCleanupException => new(
+            "Local access was revoked; offline cleanup needs attention",
+            "Vault Prospector disabled the identity and removed its stored credential reference, but could not purge every associated offline vault cache.",
+            "Open Settings and choose Purge all offline values before using the device unattended. Revoke the external credential at its issuer if it may be compromised."),
+        WorkloadAuthorizationEvidenceException { StatusCode: 401 } => new(
+            "Azure authorization session expired",
+            "Azure could not use the selected administrator to read authorization evidence.",
+            "Reauthenticate the selected interactive identity, then run the assessment again."),
+        WorkloadAuthorizationEvidenceException { StatusCode: 403 } => new(
+            "Azure authorization evidence is not permitted",
+            "The selected administrator cannot read all role-assignment or resource evidence required for this assessment.",
+            "Grant the minimum Azure read permissions at the exact identity and Key Vault scopes. Confirmed deny analysis additionally requires Microsoft.Authorization/denyAssignments/read."),
+        WorkloadAuthorizationEvidenceException => new(
+            "Azure authorization evidence is unavailable",
+            "Azure did not return the role-assignment or resource evidence required for this assessment.",
+            "Verify the exact Key Vault resource ID and Azure availability, then retry without changing any roles."),
+        ArgumentException argumentException when IsWorkloadAdministrationParameter(argumentException.ParamName) => new(
+            "Workload administration scope needs attention",
+            "The subscription, resource name, Key Vault scope, or role definition is incomplete or invalid.",
+            "Use GUID tenant/subscription identifiers and exact matching Key Vault and Microsoft.Authorization role-definition resource IDs. Vault and role must be supplied together."),
         ArgumentException => new(
             "Connection settings need attention",
             "The custom Microsoft Entra application ID is missing or invalid.",
@@ -64,7 +117,7 @@ public static class UserFacingErrorMapper
         ProtectedKeyUnavailableException => new(
             "Protected local data key is unavailable",
             "Vault Prospector stopped without replacing the missing Windows-protected key or changing encrypted local data.",
-            "Restore the matching Vault Prospector data and key backup under the same Windows account. If no matched backup exists, remove the local VaultProspector data folder and reconnect to Azure."),
+            "Close and reopen Vault Prospector to use protected local-data recovery. Restore a matching data-and-key set under the same Windows account, or use the verified archive-and-reset action when starting fresh is deliberate."),
         IncompatibleLocalDataVersionException => new(
             "A newer Vault Prospector version is required",
             "This installation is older than the encrypted local-data format and refused to modify it.",
@@ -72,11 +125,11 @@ public static class UserFacingErrorMapper
         LocalDataIntegrityException => new(
             "Encrypted local metadata failed validation",
             "Vault Prospector preserved the encrypted database and stopped without rebuilding or using it.",
-            "Keep the local data for support or restore a matched data-and-key backup. If recovery is not needed, remove the local VaultProspector data folder and reconnect to Azure."),
+            "Close and reopen Vault Prospector to preserve the current state for support, restore a matched data-and-key set, or use the verified archive-and-reset action when starting fresh is deliberate."),
         AuthenticationTagMismatchException or CryptographicException => new(
             "Protected local data failed integrity verification",
             "Vault Prospector refused to use modified, corrupted, or incompatible protected data.",
-            "Purge the affected offline copy. If startup fails, close the app and remove its local data before reconnecting."),
+            "Purge the affected offline copy. If startup fails, close and reopen Vault Prospector and use its protected recovery workflow; never delete the database or key files separately."),
         JsonException => new(
             "Local settings could not be read",
             "Vault Prospector stopped before using a damaged or incompatible settings file.",
@@ -90,4 +143,12 @@ public static class UserFacingErrorMapper
             "Vault Prospector stopped the operation without displaying sensitive error details.",
             "Retry once. If it continues, review the local redacted diagnostic log and support guidance."),
     };
+
+    private static bool IsWorkloadAdministrationParameter(string? parameterName) =>
+        parameterName is "tenantId"
+            or "subscriptionId"
+            or "resourceGroupName"
+            or "identityName"
+            or "keyVaultResourceId"
+            or "keyVaultRoleDefinitionId";
 }

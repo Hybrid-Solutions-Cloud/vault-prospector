@@ -32,7 +32,71 @@
       </Grid>
     </Border>
 
-    <TabControl x:Name="MainTabs" Grid.Row="2" Margin="18">
+    <Border Grid.Row="2" Margin="18" Classes="card" IsVisible="{Binding IsLocalDataBlocked}" MaxWidth="680" HorizontalAlignment="Center" VerticalAlignment="Center">
+      <StackPanel Spacing="16">
+        <TextBlock Text="{Binding LocalDataFailureTitle}" FontSize="{StaticResource VaultFontSize24}" FontWeight="Bold" Foreground="#FCA5A5" />
+        <TextBlock Text="{Binding LocalDataRecoveryGuidance}" TextWrapping="Wrap" />
+        <StackPanel IsVisible="{Binding CanResetLocalData}" Spacing="10">
+          <TextBlock Text="This operation archives the database, Windows-protected keys, offline values, identity cache, settings, and logs together. It does not delete or silently replace the failed state." TextWrapping="Wrap" Opacity="0.8" />
+          <TextBlock Text="Type RESET to confirm that you want to archive this local state and start fresh." TextWrapping="Wrap" FontWeight="SemiBold" />
+          <TextBox Text="{Binding ResetConfirmation}" PlaceholderText="RESET" AutomationProperties.Name="Local data reset confirmation" />
+          <Button Classes="primary"
+                  Background="#DC2626"
+                  Content="Verify and archive local data"
+                  Command="{Binding ArchiveAndResetLocalDataCommand}"
+                  AutomationProperties.Name="Verify and archive local Vault Prospector data"
+                  HorizontalAlignment="Left" />
+        </StackPanel>
+        <StackPanel IsVisible="{Binding IsRecoveryComplete}" Spacing="8">
+          <TextBlock Text="Encrypted local state was archived. Close and reopen Vault Prospector to create fresh state, then reconnect Azure identities." TextWrapping="Wrap" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding RecoveryArchivePath, StringFormat='Recovery archive: {0}'}" TextWrapping="Wrap" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="2" Margin="18" Classes="card" IsVisible="{Binding !IsUnlocked}" MaxWidth="500" HorizontalAlignment="Center" VerticalAlignment="Center">
+      <StackPanel Spacing="16">
+        <TextBlock Text="Application Locked" FontSize="{StaticResource VaultFontSize24}" FontWeight="Bold" />
+        <TextBlock Text="{Binding UnlockMessage}" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding UnlockRecovery}" TextWrapping="Wrap" Opacity="0.8" />
+        <Button Classes="primary" Content="Unlock Vault Prospector" Command="{Binding InitializeCommand}" HorizontalAlignment="Left" />
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="2"
+            ZIndex="20"
+            IsVisible="{Binding IsCloseChoiceVisible}"
+            Background="#E80B1713"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            AutomationProperties.Name="Choose what Vault Prospector does when the window closes">
+      <Border Classes="card"
+              MaxWidth="560"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Margin="20">
+        <StackPanel Spacing="14">
+          <TextBlock Text="Close Vault Prospector" FontSize="{StaticResource VaultFontSize24}" FontWeight="Bold" />
+          <TextBlock Text="Choose explicitly. Continuing in the notification area immediately hides any revealed value and locks foreground access. Exiting clears an unchanged app-owned clipboard value and stops background work." TextWrapping="Wrap" />
+          <Button Classes="primary"
+                  Content="Lock and continue in notification area"
+                  Command="{Binding ContinueInBackgroundCommand}"
+                  AutomationProperties.Name="Lock Vault Prospector and continue metadata-only work in notification area" />
+          <Button Content="Exit Vault Prospector"
+                  Command="{Binding RequestExitCommand}"
+                  AutomationProperties.Name="Exit Vault Prospector and clear temporary sensitive state" />
+          <Button Content="Cancel"
+                  Command="{Binding CancelCloseCommand}"
+                  AutomationProperties.Name="Cancel closing Vault Prospector" />
+        </StackPanel>
+      </Border>
+    </Border>
+
+    <TabControl x:Name="MainTabs"
+                Grid.Row="2"
+                Margin="18"
+                IsVisible="{Binding IsApplicationReady}"
+                SelectedIndex="{Binding SelectedMainTabIndex}">
       <TabItem Header="Search">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Grid RowDefinitions="Auto,*,Auto" Margin="4,14,4,4">
@@ -93,6 +157,7 @@
                 <TextBlock Text="{Binding SelectedResult.Vault}" Opacity="0.75" AutomationProperties.Name="Selected object vault" />
                 <TextBlock Text="{Binding SelectedResult.Identity}" Opacity="0.75" AutomationProperties.Name="Selected object identity" />
                 <TextBlock Text="{Binding SelectedResult.Tenant}" Opacity="0.75" TextWrapping="Wrap" AutomationProperties.Name="Selected object tenant" />
+                <TextBlock Text="{Binding SelectedResult.AccessStatus}" Opacity="0.75" TextWrapping="Wrap" AutomationProperties.Name="Selected object effective permission assessment" />
                 <Border Background="#101D2B23" CornerRadius="6" Padding="12" Margin="0,8">
                   <TextBlock Text="{Binding SecretPreview}" FontFamily="Consolas" TextWrapping="Wrap" AutomationProperties.Name="Masked secret value" />
                 </Border>
@@ -127,6 +192,7 @@
                     <StackPanel Margin="6">
                       <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
                       <TextBlock Text="{Binding UsernameHint}" Opacity="0.7" />
+                      <TextBlock Text="{Binding Type, StringFormat='Type: {0}'}" Opacity="0.75" />
                       <TextBlock Text="{Binding AuthenticationState, StringFormat='State: {0}'}" Opacity="0.75" />
                     </StackPanel>
                   </DataTemplate>
@@ -138,7 +204,105 @@
                 <Button Content="Reauthenticate" Command="{Binding ReauthenticateIdentityCommand}" Margin="0,0,8,8" />
                 <Button Content="Disable" Command="{Binding DisableIdentityCommand}" Margin="0,0,8,8" />
                 <Button Content="Enable" Command="{Binding EnableIdentityCommand}" Margin="0,0,8,8" />
+                <Button Content="Purge identity offline values" Command="{Binding PurgeSelectedIdentityCacheCommand}" Margin="0,0,8,8" />
+                <Button Content="Revoke local access" Command="{Binding RevokeIdentityAccessCommand}" Margin="0,0,8,8" />
                 <Button Content="Remove identity" Command="{Binding RemoveIdentityCommand}" Margin="0,0,8,8" />
+              </WrapPanel>
+              <Border IsVisible="{Binding SelectedIdentitySupportsCredentialRotation}"
+                      BorderBrush="#344B43"
+                      BorderThickness="1"
+                      CornerRadius="6"
+                      Padding="10">
+                <StackPanel Spacing="7">
+                  <TextBlock Text="Rotate workload credential" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding CredentialRotationLabel}" />
+                  <TextBox Text="{Binding ReplacementCredentialData}"
+                           AutomationProperties.Name="Replacement workload credential" />
+                  <TextBlock Text="The replacement is validated with Azure before the encrypted profile is changed. The previous profile remains active if validation fails." TextWrapping="Wrap" Opacity="0.75" />
+                  <Button Content="Validate and rotate"
+                          Command="{Binding RotateSelectedCredentialCommand}"
+                          HorizontalAlignment="Left" />
+                </StackPanel>
+              </Border>
+              <TextBlock Text="Revoking local access disables this profile, removes app-owned human tokens or stored workload credential references, and purges offline copies for its discovered vaults. Revoke a compromised certificate or federation trust at its external issuer too." TextWrapping="Wrap" Opacity="0.75" />
+              <TextBlock Text="Tenant access paths" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,8,0,0" />
+              <ListBox ItemsSource="{Binding Tenants}"
+                       SelectedItem="{Binding SelectedTenant}"
+                       MinHeight="90"
+                       AutomationProperties.Name="Discovered tenant access paths">
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <StackPanel Margin="6">
+                      <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding TenantId}" Opacity="0.7" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <TextBlock Text="Subscription scope" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,8,0,0" />
+              <TextBlock Text="Choose which discovered subscriptions future synchronization may scan. Excluding a subscription does not delete its existing local metadata until a complete synchronization reconciles the scope." TextWrapping="Wrap" Opacity="0.75" />
+              <ListBox ItemsSource="{Binding Subscriptions}"
+                       SelectedItem="{Binding SelectedSubscription}"
+                       MinHeight="150"
+                       AutomationProperties.Name="Discovered subscription inclusion list">
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <Grid ColumnDefinitions="*,Auto" Margin="6">
+                      <StackPanel>
+                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding SubscriptionId}" Opacity="0.7" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding InclusionState}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <WrapPanel>
+                <Button Content="Include selected subscription"
+                        Command="{Binding IncludeSubscriptionCommand}"
+                        AutomationProperties.Name="Include selected subscription in synchronization"
+                        Margin="0,0,8,8" />
+                <Button Content="Exclude selected subscription"
+                        Command="{Binding ExcludeSubscriptionCommand}"
+                        AutomationProperties.Name="Exclude selected subscription from synchronization"
+                        Margin="0,0,8,8" />
+                <Button Content="Refresh subscriptions"
+                        Command="{Binding RefreshSubscriptionsCommand}"
+                        AutomationProperties.Name="Refresh discovered subscriptions"
+                        Margin="0,0,8,8" />
+              </WrapPanel>
+              <TextBlock Text="Vault access paths" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,8,0,0" />
+              <TextBlock Text="Observed permissions are reported separately from visibility. Value-read permission is never probed during metadata sync, and writes remain disabled by application policy." TextWrapping="Wrap" Opacity="0.75" />
+              <ListBox ItemsSource="{Binding VaultAccessPaths}"
+                       SelectedItem="{Binding SelectedVaultAccess}"
+                       AutomationProperties.Name="Vault permission and identity access paths">
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <Border BorderBrush="#344B43" BorderThickness="1" CornerRadius="5" Padding="8" Margin="0,0,0,6">
+                      <StackPanel Spacing="3">
+                        <Grid ColumnDefinitions="*,Auto">
+                          <TextBlock Text="{Binding Vault}" FontWeight="SemiBold" />
+                          <TextBlock Grid.Column="1" Text="{Binding InclusionState}" FontWeight="SemiBold" />
+                        </Grid>
+                        <TextBlock Text="{Binding Identity, StringFormat='Identity: {0}'}" />
+                        <TextBlock Text="{Binding Tenant, StringFormat='Tenant: {0}'}" Opacity="0.75" />
+                        <TextBlock Text="{Binding Subscription, StringFormat='Subscription: {0}'}" Opacity="0.75" />
+                        <TextBlock Text="{Binding PermissionSummary}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding FailureCategory, StringFormat='Observed failures: {0}'}" TextWrapping="Wrap" Opacity="0.75" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <WrapPanel>
+                <Button Content="Include selected vault"
+                        Command="{Binding IncludeVaultCommand}"
+                        AutomationProperties.Name="Include selected vault in synchronization"
+                        Margin="0,0,8,8" />
+                <Button Content="Exclude selected vault"
+                        Command="{Binding ExcludeVaultCommand}"
+                        AutomationProperties.Name="Exclude selected vault from synchronization"
+                        Margin="0,0,8,8" />
               </WrapPanel>
             </StackPanel>
           </Border>
@@ -146,29 +310,163 @@
             <StackPanel Spacing="10">
               <Border IsVisible="{Binding IsFirstRun}" Background="#123F36" BorderBrush="#2D8A76" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,6">
                 <StackPanel Spacing="5">
-                  <TextBlock Text="Welcome — connect your first identity" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Foreground="White" />
-                  <TextBlock Text="1. Keep the recommended product registration unless your organization requires its own." TextWrapping="Wrap" Foreground="White" />
-                  <TextBlock Text="2. Add an optional label so the account is easy to recognize." TextWrapping="Wrap" Foreground="White" />
-                  <TextBlock Text="3. Continue to Microsoft sign-in and complete any MFA or Conditional Access prompts." TextWrapping="Wrap" Foreground="White" />
+                  <TextBlock Text="Set up Vault Prospector" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Foreground="White" />
+                  <TextBlock Text="1. Local unlock is complete. Windows verified you so Vault Prospector can open its encrypted local data. This is separate from Azure sign-in." TextWrapping="Wrap" Foreground="White" />
+                  <TextBlock Text="2. Connect Microsoft Entra. Microsoft handles your password, passkey, MFA, and Conditional Access in the system browser; Vault Prospector never receives them." TextWrapping="Wrap" Foreground="White" />
+                  <TextBlock Text="3. Review the discovered scope, then choose Sync. Sync indexes metadata only; values stay in Key Vault until you explicitly request one and verify again." TextWrapping="Wrap" Foreground="White" />
                 </StackPanel>
               </Border>
               <TextBlock Text="Connect Microsoft Entra identity" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
-              <TextBlock Text="Vault Prospector uses interactive browser sign-in. It never asks for or stores your password." TextWrapping="Wrap" />
-              <TextBlock Text="Sign-in registration" FontWeight="SemiBold" />
-              <TextBlock Text="Recommended — Vault Prospector product registration (no client secret)" TextWrapping="Wrap" />
-              <CheckBox Content="Use my organization's own public-client registration" IsChecked="{Binding UseCustomClientId}" />
-              <StackPanel IsVisible="{Binding UseCustomClientId}" Spacing="5">
-                <TextBlock Text="Custom Application (client) ID" />
-                <TextBox Text="{Binding ClientId}" PlaceholderText="00000000-0000-0000-0000-000000000000" AutomationProperties.Name="Custom Microsoft Entra application client ID" />
-                <TextBlock Text="The custom registration must allow multi-tenant public-client flows, http://localhost, Azure Resource Manager, and Azure Key Vault delegated access." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
+
+              <TextBlock Text="Identity Type" FontWeight="SemiBold" />
+              <ComboBox SelectedItem="{Binding SelectedIdentityType}"
+                        ItemsSource="{Binding IdentityTypes}"
+                        HorizontalAlignment="Stretch"
+                        AutomationProperties.Name="Identity type" />
+              <TextBlock Text="{Binding ManagedIdentityAvailabilityText}"
+                         TextWrapping="Wrap"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         Opacity="0.7" />
+
+              <StackPanel IsVisible="{Binding IsInteractiveUser}" Spacing="10">
+                <TextBlock Text="Vault Prospector uses interactive browser sign-in. It never asks for or stores your password." TextWrapping="Wrap" />
+                <TextBlock Text="Sign-in registration" FontWeight="SemiBold" />
+                <TextBlock Text="Recommended — Vault Prospector product registration (no client secret)" TextWrapping="Wrap" />
+                <CheckBox Content="Use my organization's own public-client registration" IsChecked="{Binding UseCustomClientId}" />
+                <StackPanel IsVisible="{Binding UseCustomClientId}" Spacing="5">
+                  <TextBlock Text="Custom Application (client) ID" />
+                  <TextBox Text="{Binding ClientId}" PlaceholderText="00000000-0000-0000-0000-000000000000" AutomationProperties.Name="Custom Microsoft Entra application client ID" />
+                  <TextBlock Text="The custom registration must allow multi-tenant public-client flows, http://localhost, Azure Resource Manager, and Azure Key Vault delegated access." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
+                </StackPanel>
               </StackPanel>
+
+              <StackPanel IsVisible="{Binding IsWorkloadIdentity}" Spacing="10">
+                <TextBlock Text="Tenant ID" />
+                <TextBox Text="{Binding TenantId}" PlaceholderText="00000000-0000-0000-0000-000000000000" AutomationProperties.Name="Tenant ID" />
+                <TextBlock Text="Client ID" />
+                <TextBox Text="{Binding ClientId}" PlaceholderText="Optional for system-assigned Managed Identity" AutomationProperties.Name="Client ID" />
+              </StackPanel>
+
+              <StackPanel IsVisible="{Binding IsServicePrincipal}" Spacing="10">
+                <TextBlock Text="Certificate Thumbprint" />
+                <TextBox Text="{Binding CredentialData}" PlaceholderText="Thumbprint of certificate in Personal store" AutomationProperties.Name="Certificate Thumbprint" />
+                <TextBlock Text="The certificate must have an accessible private key and be currently valid. Client secrets are not accepted or stored." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
+              </StackPanel>
+
+              <StackPanel IsVisible="{Binding IsFederatedServicePrincipal}" Spacing="10">
+                <TextBlock Text="Federated Token File" />
+                <TextBox Text="{Binding CredentialData}" PlaceholderText="Absolute path to the projected OIDC token file" AutomationProperties.Name="Federated token file path" />
+                <TextBlock Text="Vault Prospector stores only the encrypted file path. The external workload issuer rotates the token file; client secrets and human token caches are never used." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
+              </StackPanel>
+
               <TextBlock Text="Friendly label" />
               <TextBox Text="{Binding IdentityLabel}" PlaceholderText="Customer, employer, lab…" AutomationProperties.Name="Friendly identity label" />
-              <TextBlock Text="Microsoft Entra controls the sign-in, consent, MFA, and Conditional Access experience. Vault Prospector receives no password." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
-              <Button Classes="primary" Content="Continue to Microsoft sign-in" Command="{Binding AddIdentityCommand}" HorizontalAlignment="Left" />
+
+              <TextBlock IsVisible="{Binding IsInteractiveUser}" Text="Microsoft Entra controls the sign-in, consent, MFA, and Conditional Access experience. Vault Prospector receives no password." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
+              <Button Classes="primary"
+                      Content="{Binding ConnectIdentityActionText}"
+                      Command="{Binding AddIdentityCommand}"
+                      AutomationProperties.Name="{Binding ConnectIdentityActionText}"
+                      HorizontalAlignment="Left" />
             </StackPanel>
           </Border>
         </Grid>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="Administration">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <Grid ColumnDefinitions="1*,1*" Margin="4,14" ColumnSpacing="14">
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Discover workload identities" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
+                <TextBlock Text="Select an enabled interactive identity on the Identities tab. Discovery uses only that explicit account; it never inherits Azure CLI, PowerShell, IDE, or terminal context." TextWrapping="Wrap" Opacity="0.75" />
+                <Button Content="Authorize Microsoft Graph directory read"
+                        Command="{Binding AuthorizeDirectoryReadCommand}"
+                        HorizontalAlignment="Left"
+                        AutomationProperties.Name="Authorize service principal directory discovery" />
+                <TextBlock Text="Service-principal listing requests delegated Application.Read.All only after this explicit action. Microsoft Entra may require administrator consent. No Graph write permission is requested." TextWrapping="Wrap" Opacity="0.75" />
+                <TextBlock Text="Exact subscription ID" />
+                <TextBox Text="{Binding AdministrationSubscriptionId}"
+                         PlaceholderText="00000000-0000-0000-0000-000000000000"
+                         AutomationProperties.Name="Workload administration subscription ID" />
+                <TextBlock Text="Exact Key Vault resource ID for permission assessment and optional provisioning preview" />
+                <TextBox Text="{Binding AdministrationVaultResourceId}"
+                         PlaceholderText="/subscriptions/.../providers/Microsoft.KeyVault/vaults/..."
+                         AutomationProperties.Name="Exact Key Vault permission assessment scope" />
+                <WrapPanel>
+                  <Button Content="List managed identities"
+                          Command="{Binding DiscoverManagedIdentitiesCommand}"
+                          Margin="0,0,8,8" />
+                  <Button Content="List service principals"
+                          Command="{Binding DiscoverServicePrincipalsCommand}"
+                          Margin="0,0,8,8" />
+                </WrapPanel>
+                <Button Content="Assess selected identity permissions"
+                        Command="{Binding AssessWorkloadIdentityPermissionsCommand}"
+                        HorizontalAlignment="Left"
+                        AutomationProperties.Name="Assess selected workload identity permissions at exact Key Vault" />
+                <TextBlock Text="Assessment is read-only. It evaluates the selected administrator at exact resources and the workload identity's observable RBAC grants, inheritance, deny assignments, and conditions. Conditional or incomplete evidence never appears as allowed." TextWrapping="Wrap" Opacity="0.75" />
+                <TextBlock Text="Visible workload identities" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" />
+                <ListBox ItemsSource="{Binding WorkloadIdentityCandidates}"
+                         SelectedItem="{Binding SelectedWorkloadIdentityCandidate}"
+                         MinHeight="360"
+                         AutomationProperties.Name="Discovered workload identities and permission assessments">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <Border BorderBrush="#344B43" BorderThickness="1" CornerRadius="5" Padding="8" Margin="0,0,0,6">
+                        <StackPanel Spacing="3">
+                          <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                          <TextBlock Text="{Binding IdentityType}" />
+                          <TextBlock Text="{Binding State, StringFormat='State: {0}'}" />
+                          <TextBlock Text="{Binding ClientId, StringFormat='Client ID: {0}'}" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding PrincipalId, StringFormat='Principal ID: {0}'}" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Scope, StringFormat='Scope: {0}'}" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding PermissionSummary}" TextWrapping="Wrap" Opacity="0.8" />
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Preview workload provisioning" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
+                <Border Background="#3A2510" BorderBrush="#C98A2E" BorderThickness="1" CornerRadius="6" Padding="10">
+                  <TextBlock Text="Preview only. This build cannot create identities, assign roles, attach identities, or change Key Vault. The independent security-review gate is still open." TextWrapping="Wrap" />
+                </Border>
+                <TextBlock Text="Identity name" />
+                <TextBox Text="{Binding AdministrationIdentityName}"
+                         AutomationProperties.Name="Proposed workload identity name" />
+                <TextBlock Text="Resource group (managed identity only)" />
+                <TextBox Text="{Binding AdministrationResourceGroup}"
+                         AutomationProperties.Name="Proposed managed identity resource group" />
+                <TextBlock Text="The optional exact Key Vault scope is entered in the discovery panel." />
+                <TextBlock Text="Optional role definition resource ID" />
+                <TextBox Text="{Binding AdministrationRoleDefinitionId}"
+                         PlaceholderText="/subscriptions/.../providers/Microsoft.Authorization/roleDefinitions/..."
+                         AutomationProperties.Name="Exact Key Vault role definition ID" />
+                <TextBlock Text="Vault and role must be supplied together. A preview names every exact scope and never contains a credential or secret." TextWrapping="Wrap" Opacity="0.75" />
+                <WrapPanel>
+                  <Button Content="Preview managed identity"
+                          Command="{Binding PreviewManagedIdentityCommand}"
+                          Margin="0,0,8,8" />
+                  <Button Content="Preview service principal"
+                          Command="{Binding PreviewServicePrincipalCommand}"
+                          Margin="0,0,8,8" />
+                </WrapPanel>
+                <TextBlock Text="Generated non-mutating plan" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" />
+                <TextBox Text="{Binding AdministrationPlanText}"
+                         IsReadOnly="True"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         MinHeight="300"
+                         AutomationProperties.Name="Non-mutating workload provisioning plan" />
+              </StackPanel>
+            </Border>
+          </Grid>
         </ScrollViewer>
       </TabItem>
 
@@ -181,6 +479,8 @@
               <WrapPanel>
                 <Button Content="Add selected vault" Command="{Binding AddSelectedVaultToWorkspaceCommand}" Margin="0,0,8,8" />
                 <Button Content="Add selected identity" Command="{Binding AddSelectedIdentityToWorkspaceCommand}" Margin="0,0,8,8" />
+                <Button Content="Add selected tenant" Command="{Binding AddSelectedTenantToWorkspaceCommand}" Margin="0,0,8,8" />
+                <Button Content="Add selected subscription" Command="{Binding AddSelectedSubscriptionToWorkspaceCommand}" Margin="0,0,8,8" />
                 <Button Content="Delete workspace" Command="{Binding RemoveWorkspaceCommand}" Margin="0,0,8,8" />
               </WrapPanel>
             </StackPanel>
@@ -190,6 +490,26 @@
               <TextBlock Text="Group identities, tenants, subscriptions, and vaults without duplicating indexed data." TextWrapping="Wrap" />
               <TextBox Text="{Binding WorkspaceName}" PlaceholderText="Workspace name" AutomationProperties.Name="New workspace name" />
               <Button Classes="primary" Content="Create" Command="{Binding CreateWorkspaceCommand}" HorizontalAlignment="Left" />
+              <TextBlock Text="Selected workspace cache policy" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,14,0,0" />
+              <CheckBox Content="Allow encrypted offline cache for this workspace"
+                        IsChecked="{Binding WorkspaceCacheEnabled}"
+                        AutomationProperties.Name="Allow encrypted offline cache for selected workspace" />
+              <TextBlock Text="Maximum cache lifetime (hours)" />
+              <NumericUpDown Value="{Binding WorkspaceMaximumCacheHours}"
+                             Minimum="1"
+                             Maximum="168"
+                             AutomationProperties.Name="Selected workspace maximum cache lifetime in hours" />
+              <CheckBox Content="Allow clipboard copy for this workspace"
+                        IsChecked="{Binding WorkspaceAllowClipboard}"
+                        AutomationProperties.Name="Allow clipboard copy for selected workspace" />
+              <CheckBox Content="Require Windows verification (mandatory)"
+                        IsChecked="True"
+                        IsEnabled="False"
+                        AutomationProperties.Name="Windows verification is mandatory for selected workspace" />
+              <Button Content="Save selected workspace policy"
+                      Command="{Binding SaveWorkspacePolicyCommand}"
+                      AutomationProperties.Name="Save selected workspace cache policy"
+                      HorizontalAlignment="Left" />
             </StackPanel>
           </Border>
         </Grid>
@@ -204,7 +524,48 @@
             <TextBlock Text="Offline values are disabled by default, encrypted separately, and require Windows Hello." TextWrapping="Wrap" Opacity="0.75" />
             <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" AutomationProperties.Name="Maximum offline cache lifetime in hours" />
             <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" AutomationProperties.Name="Clipboard clear delay in seconds" />
+            <TextBlock Text="When the main window closes" FontWeight="SemiBold" />
+            <ComboBox ItemsSource="{Binding CloseBehaviors}"
+                      SelectedItem="{Binding SelectedCloseBehavior}"
+                      AutomationProperties.Name="Main window close behavior" />
+            <CheckBox Content="Allow metadata-only background synchronization every 15 minutes"
+                      IsChecked="{Binding BackgroundMetadataSyncEnabled}"
+                      AutomationProperties.Name="Allow metadata-only synchronization while locked in notification area" />
+            <TextBlock Text="Background synchronization is opt-in, never retrieves values, runs only while the window is hidden, network is available, and Windows confirms external power, and stops or reports interaction-required when Azure cannot authenticate silently." TextWrapping="Wrap" Opacity="0.75" />
             <WrapPanel><Button Classes="primary" Content="Save settings" Command="{Binding SaveSettingsCommand}" Margin="0,0,8,8" /><Button Content="Purge selected vault" Command="{Binding PurgeSelectedVaultCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge selected workspace" Command="{Binding PurgeSelectedWorkspaceCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge all offline values" Command="{Binding PurgeAllCachedValuesCommand}" Margin="0,0,8,8" /></WrapPanel>
+            <Separator Margin="0,8" />
+            <TextBlock Text="Recovery archive retention" FontSize="{StaticResource VaultFontSize18}" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding RecoveryArchiveStatus}" TextWrapping="Wrap" Opacity="0.8" AutomationProperties.LiveSetting="Polite" />
+            <ListBox ItemsSource="{Binding RecoveryArchives}"
+                     SelectedItem="{Binding SelectedRecoveryArchive}"
+                     MinHeight="72"
+                     MaxHeight="180"
+                     AutomationProperties.Name="Retained local recovery archives">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:LocalRecoveryArchiveRow">
+                  <StackPanel Margin="4,6" Spacing="2">
+                    <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Id}" FontFamily="Consolas" FontSize="{StaticResource VaultFontSize11}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <Button Content="Refresh recovery archives"
+                    Command="{Binding RefreshRecoveryArchivesCommand}"
+                    HorizontalAlignment="Left"
+                    AutomationProperties.Name="Refresh retained local recovery archives" />
+            <StackPanel Spacing="8">
+              <TextBlock Text="Deleting an archive is permanent. It can remove the only matched-key recovery copy or support evidence. Select one, type DELETE ARCHIVE exactly, and complete fresh Windows verification." TextWrapping="Wrap" Foreground="#FCA5A5" />
+              <TextBox Text="{Binding RecoveryArchiveDeleteConfirmation}"
+                       PlaceholderText="DELETE ARCHIVE"
+                       AutomationProperties.Name="Recovery archive deletion confirmation" />
+              <Button Content="Verify and permanently delete selected archive"
+                      Command="{Binding DeleteSelectedRecoveryArchiveCommand}"
+                      Background="#DC2626"
+                      Foreground="White"
+                      HorizontalAlignment="Left"
+                      AutomationProperties.Name="Verify and permanently delete selected recovery archive" />
+            </StackPanel>
             <TextBlock Text="Telemetry is disabled. Logs contain no tokens, values, usernames, vault names, or object names." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
           </StackPanel>
         </Border></ScrollViewer>

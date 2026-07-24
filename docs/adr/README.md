@@ -20,3 +20,8 @@ Architecture Decision Records document important decisions, their context, alter
 - [ADR-0006: Separate metadata index from protected value store](0006-separate-metadata-index-from-protected-value-store.md)
 - [ADR-0007: Azure Key Vault as the first provider](0007-azure-key-vault-first-provider.md)
 - [ADR-0008: Workspaces as user-defined grouping](0008-workspaces-as-user-defined-grouping.md)
+- [ADR-0009: Preserve and archive failed local state](0009-preserve-and-archive-failed-local-state.md)
+- [ADR-0010: Govern Azure mutations per operation](0010-govern-azure-mutations-per-operation.md)
+- [ADR-0011: Local key rotation and device replacement](0011-local-key-rotation-and-device-replacement.md)
+- [ADR-0012: Isolate and rotate workload credentials](0012-isolate-and-rotate-workload-credentials.md)
+- [ADR-0013: Report effective Azure authorization evidence without simulating access](0013-report-effective-azure-authorization-evidence.md)

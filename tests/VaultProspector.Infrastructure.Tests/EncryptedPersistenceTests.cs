@@ -35,6 +35,8 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         Assert.Single(results);
         Assert.Equal("database-password", results[0].Item.ProviderObjectName);
+        Assert.Equal("Ready", results[0].AccessStatus);
+        Assert.Equal(tenant.Id, Assert.Single(await repository.GetTenantsAsync(identity.Id, TestContext.Current.CancellationToken)).Id);
         Assert.Equal(2, (await repository.SearchAsync(new SearchRequest(TenantId: "nan", SubscriptionId: "script", VaultName: "one"), _clock.UtcNow, TestContext.Current.CancellationToken)).Count);
         await repository.RecordAccessAsync(recentItem.Id, _clock.UtcNow, TestContext.Current.CancellationToken);
         var recentFirst = await repository.SearchAsync(new SearchRequest(RecentlyAccessedFirst: true), _clock.UtcNow, TestContext.Current.CancellationToken);
@@ -42,6 +44,252 @@ public sealed class EncryptedPersistenceTests : IDisposable
         var bytes = await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken);
         Assert.False(Encoding.ASCII.GetString(bytes.AsSpan(0, Math.Min(16, bytes.Length))).StartsWith("SQLite format 3", StringComparison.Ordinal));
         Assert.DoesNotContain("database-password", Encoding.UTF8.GetString(bytes), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task WorkloadIdentityProfileRoundTripsThroughEncryptedMetadata()
+    {
+        var path = Path.Combine(_directory, "workload-profile.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = new ConnectedIdentity(
+            Guid.NewGuid(),
+            "11111111-1111-1111-1111-111111111111",
+            "workload-account",
+            string.Empty,
+            "Automation",
+            "22222222-2222-2222-2222-222222222222",
+            AuthenticationState.Ready,
+            _clock.UtcNow,
+            true,
+            IdentityType.ServicePrincipal,
+            "AA11BB22");
+
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        var restored = await repository.GetIdentityAsync(identity.Id, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(restored);
+        Assert.Equal(IdentityType.ServicePrincipal, restored.Type);
+        Assert.Equal("AA11BB22", restored.CredentialData);
+    }
+
+    [Fact]
+    public async Task FederatedWorkloadProfileRoundTripsWithoutTokenContent()
+    {
+        var path = Path.Combine(_directory, "federated-workload-profile.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var tokenPath = Path.Combine(_directory, "projected-token");
+        var identity = new ConnectedIdentity(
+            Guid.NewGuid(),
+            "11111111-1111-1111-1111-111111111111",
+            "federated-workload",
+            string.Empty,
+            "Federated automation",
+            "22222222-2222-2222-2222-222222222222",
+            AuthenticationState.Ready,
+            _clock.UtcNow,
+            true,
+            IdentityType.FederatedServicePrincipal,
+            tokenPath);
+
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        var restored = await repository.GetIdentityAsync(
+            identity.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.NotNull(restored);
+        Assert.Equal(IdentityType.FederatedServicePrincipal, restored.Type);
+        Assert.Equal(tokenPath, restored.CredentialData);
+    }
+
+    [Fact]
+    public async Task VersionTwoDatabaseMigratesIdentityProfileColumns()
+    {
+        var path = Path.Combine(_directory, "version-two-profile-migration.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = TestIdentity("version-two-account");
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        await ExecuteDatabaseCommandAsync(path, """
+            ALTER TABLE identities DROP COLUMN credential_data;
+            ALTER TABLE identities DROP COLUMN identity_type;
+            PRAGMA user_version=2;
+            """);
+
+        var migrated = new EncryptedSqliteMetadataRepository(path, _keys);
+        await migrated.InitializeAsync(TestContext.Current.CancellationToken);
+        var restored = await migrated.GetIdentityAsync(identity.Id, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(restored);
+        Assert.Equal(IdentityType.InteractiveUser, restored.Type);
+        Assert.Equal(string.Empty, restored.CredentialData);
+        Assert.Equal(4, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+    }
+
+    [Fact]
+    public async Task VersionThreeDatabaseMigratesVaultSelectionWithoutDroppingAccessPaths()
+    {
+        var path = Path.Combine(_directory, "version-three-vault-selection.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = TestIdentity("version-three-account");
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        var tenant = new TenantAccess(Guid.NewGuid(), identity.Id, "tenant", "Tenant", "Home", _clock.UtcNow, "Available");
+        var subscription = new SubscriptionAccess(Guid.NewGuid(), tenant.Id, "subscription", "Subscription", "Enabled", true, _clock.UtcNow);
+        var vault = new VaultResource(Guid.NewGuid(), "/vaults/migration", "migration", "tenant", "subscription", "rg", "eastus", new Dictionary<string, string>(), new Uri("https://migration.vault.azure.net/"), _clock.UtcNow);
+        var access = new VaultAccess(Guid.NewGuid(), vault.Id, identity.Id, "tenant", "Visible", _clock.UtcNow, null, 0);
+        await repository.ApplyDiscoveryAsync(
+            identity.Id,
+            new DiscoverySnapshot([tenant], [subscription], [vault], [access], [], []),
+            new SyncRun(Guid.NewGuid(), "initial", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 1, 0, []),
+            TestContext.Current.CancellationToken);
+        await ExecuteDatabaseCommandAsync(path, """
+            ALTER TABLE vault_access DROP COLUMN is_selected;
+            PRAGMA user_version=3;
+            """);
+
+        var migrated = new EncryptedSqliteMetadataRepository(path, _keys);
+        await migrated.InitializeAsync(TestContext.Current.CancellationToken);
+        var summaries = await migrated.GetVaultAccessSummariesAsync(identity.Id, TestContext.Current.CancellationToken);
+
+        Assert.Single(summaries);
+        Assert.True(summaries[0].Access.IsSelected);
+        Assert.Equal(4, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+    }
+
+    [Fact]
+    public async Task CompleteDiscoveryTombstonesMissingObjectsButPartialFailurePreservesThem()
+    {
+        var path = Path.Combine(_directory, "reconciliation.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = TestIdentity("reconciliation-account");
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        var tenant = new TenantAccess(Guid.NewGuid(), identity.Id, "tenant", "Tenant", "Home", _clock.UtcNow, "Available");
+        var subscription = new SubscriptionAccess(Guid.NewGuid(), tenant.Id, "subscription", "Subscription", "Enabled", true, _clock.UtcNow);
+        var firstVault = new VaultResource(Guid.NewGuid(), "/vaults/first", "first", "tenant", "subscription", "rg", "eastus", new Dictionary<string, string>(), new Uri("https://first.vault.azure.net/"), _clock.UtcNow);
+        var secondVault = new VaultResource(Guid.NewGuid(), "/vaults/second", "second", "tenant", "subscription", "rg", "eastus", new Dictionary<string, string>(), new Uri("https://second.vault.azure.net/"), _clock.UtcNow);
+        var firstAccess = new VaultAccess(Guid.NewGuid(), firstVault.Id, identity.Id, "tenant", "Ready", _clock.UtcNow, null, 0);
+        var secondAccess = new VaultAccess(Guid.NewGuid(), secondVault.Id, identity.Id, "tenant", "Ready", _clock.UtcNow, null, 0);
+        var firstItem = new VaultItem(Guid.NewGuid(), firstVault.Id, "first-item", VaultObjectType.Secret, true, new Dictionary<string, string>(), null, null, null, null, "v1", "first-fingerprint", _clock.UtcNow);
+        var removedItem = new VaultItem(Guid.NewGuid(), firstVault.Id, "removed-item", VaultObjectType.Secret, true, new Dictionary<string, string>(), null, null, null, null, "v1", "removed-fingerprint", _clock.UtcNow);
+        var secondItem = new VaultItem(Guid.NewGuid(), secondVault.Id, "second-item", VaultObjectType.Secret, true, new Dictionary<string, string>(), null, null, null, null, "v1", "second-fingerprint", _clock.UtcNow);
+        await repository.ApplyDiscoveryAsync(
+            identity.Id,
+            new DiscoverySnapshot([tenant], [subscription], [firstVault, secondVault], [firstAccess, secondAccess], [firstItem, removedItem, secondItem], []),
+            new SyncRun(Guid.NewGuid(), "initial", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 2, 3, []),
+            TestContext.Current.CancellationToken);
+
+        await repository.ApplyDiscoveryAsync(
+            identity.Id,
+            new DiscoverySnapshot([tenant], [subscription], [firstVault], [firstAccess], [firstItem], [new ProviderError("subscription", "Unavailable", "One scope was unavailable.")]),
+            new SyncRun(Guid.NewGuid(), "partial", _clock.UtcNow, _clock.UtcNow, SyncStatus.CompletedWithErrors, 1, 1, ["One scope was unavailable."]),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(3, (await repository.SearchAsync(new SearchRequest(), _clock.UtcNow, TestContext.Current.CancellationToken)).Count);
+        Assert.Equal("Ready", await ReadDatabaseScalarAsync<string>(path, $"SELECT status FROM vault_access WHERE id='{secondAccess.Id:D}'"));
+
+        await repository.ApplyDiscoveryAsync(
+            identity.Id,
+            new DiscoverySnapshot([tenant], [subscription], [firstVault], [firstAccess], [firstItem], []),
+            new SyncRun(Guid.NewGuid(), "complete", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 1, 1, []),
+            TestContext.Current.CancellationToken);
+
+        Assert.Single(await repository.SearchAsync(new SearchRequest(), _clock.UtcNow, TestContext.Current.CancellationToken));
+        Assert.Equal("Removed", await ReadDatabaseScalarAsync<string>(path, $"SELECT status FROM vault_access WHERE id='{secondAccess.Id:D}'"));
+        Assert.Equal(1, await ReadDatabaseScalarAsync<int>(path, $"SELECT is_deleted FROM items WHERE id='{removedItem.Id:D}'"));
+        Assert.Equal(0, await ReadDatabaseScalarAsync<int>(path, $"SELECT is_deleted FROM items WHERE id='{secondItem.Id:D}'"));
+        var associatedVaultIds =
+            await repository.GetVaultIdsForIdentityAsync(
+                identity.Id,
+                TestContext.Current.CancellationToken);
+        Assert.Equal(2, associatedVaultIds.Count);
+        Assert.Contains(firstVault.Id, associatedVaultIds);
+        Assert.Contains(secondVault.Id, associatedVaultIds);
+    }
+
+    [Fact]
+    public async Task SubscriptionSelectionPersistsAcrossRediscoveryAndIsScopedToIdentity()
+    {
+        var path = Path.Combine(_directory, "subscription-selection.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var selectedIdentity = TestIdentity("selected-account");
+        var otherIdentity = TestIdentity("other-account");
+        await repository.UpsertIdentityAsync(selectedIdentity, TestContext.Current.CancellationToken);
+        await repository.UpsertIdentityAsync(otherIdentity, TestContext.Current.CancellationToken);
+        var selectedTenant = new TenantAccess(Guid.NewGuid(), selectedIdentity.Id, "selected-tenant", "Selected tenant", "Home", _clock.UtcNow, "Available");
+        var otherTenant = new TenantAccess(Guid.NewGuid(), otherIdentity.Id, "other-tenant", "Other tenant", "Home", _clock.UtcNow, "Available");
+        var selectedSubscription = new SubscriptionAccess(Guid.NewGuid(), selectedTenant.Id, "selected-subscription", "Selected subscription", "Enabled", true, _clock.UtcNow);
+        var otherSubscription = new SubscriptionAccess(Guid.NewGuid(), otherTenant.Id, "other-subscription", "Other subscription", "Enabled", true, _clock.UtcNow);
+
+        await repository.ApplyDiscoveryAsync(
+            selectedIdentity.Id,
+            new DiscoverySnapshot([selectedTenant], [selectedSubscription], [], [], [], []),
+            new SyncRun(Guid.NewGuid(), "selected", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 0, 0, []),
+            TestContext.Current.CancellationToken);
+        await repository.ApplyDiscoveryAsync(
+            otherIdentity.Id,
+            new DiscoverySnapshot([otherTenant], [otherSubscription], [], [], [], []),
+            new SyncRun(Guid.NewGuid(), "other", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 0, 0, []),
+            TestContext.Current.CancellationToken);
+
+        await repository.SetSubscriptionSelectedAsync(selectedSubscription.Id, false, TestContext.Current.CancellationToken);
+        await repository.ApplyDiscoveryAsync(
+            selectedIdentity.Id,
+            new DiscoverySnapshot(
+                [selectedTenant],
+                [selectedSubscription with { DisplayName = "Renamed", IsSelected = true }],
+                [],
+                [],
+                [],
+                []),
+            new SyncRun(Guid.NewGuid(), "rediscovery", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 0, 0, []),
+            TestContext.Current.CancellationToken);
+
+        var selectedSubscriptions = await repository.GetSubscriptionsAsync(selectedIdentity.Id, TestContext.Current.CancellationToken);
+        var otherSubscriptions = await repository.GetSubscriptionsAsync(otherIdentity.Id, TestContext.Current.CancellationToken);
+        Assert.Single(selectedSubscriptions);
+        Assert.Equal("Renamed", selectedSubscriptions[0].DisplayName);
+        Assert.False(selectedSubscriptions[0].IsSelected);
+        Assert.Single(otherSubscriptions);
+        Assert.True(otherSubscriptions[0].IsSelected);
+    }
+
+    [Fact]
+    public async Task VaultSelectionAndPermissionAssessmentPersistAcrossRediscovery()
+    {
+        var repository = new EncryptedSqliteMetadataRepository(
+            Path.Combine(_directory, "vault-selection.db"),
+            _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = TestIdentity("vault-selection-account");
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        var tenant = new TenantAccess(Guid.NewGuid(), identity.Id, "tenant", "Tenant", "Home", _clock.UtcNow, "Available");
+        var subscription = new SubscriptionAccess(Guid.NewGuid(), tenant.Id, "subscription", "Subscription", "Enabled", true, _clock.UtcNow);
+        var vault = new VaultResource(Guid.NewGuid(), "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/one", "one", "tenant", "subscription", "rg", "eastus", new Dictionary<string, string>(), new Uri("https://one.vault.azure.net/"), _clock.UtcNow);
+        var access = new VaultAccess(Guid.NewGuid(), vault.Id, identity.Id, "tenant", "Initial assessment", _clock.UtcNow, "Secrets:Denied", 0);
+        var snapshot = new DiscoverySnapshot([tenant], [subscription], [vault], [access], [], []);
+        await repository.ApplyDiscoveryAsync(
+            identity.Id,
+            snapshot,
+            new SyncRun(Guid.NewGuid(), "initial", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 1, 0, []),
+            TestContext.Current.CancellationToken);
+
+        await repository.SetVaultSelectedAsync(access.Id, false, TestContext.Current.CancellationToken);
+        await repository.ApplyDiscoveryAsync(
+            identity.Id,
+            snapshot with { AccessPaths = [access with { AccessStatus = "Updated assessment", IsSelected = true }] },
+            new SyncRun(Guid.NewGuid(), "rediscovery", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 1, 0, []),
+            TestContext.Current.CancellationToken);
+
+        var summaries = await repository.GetVaultAccessSummariesAsync(identity.Id, TestContext.Current.CancellationToken);
+        Assert.Single(summaries);
+        Assert.False(summaries[0].Access.IsSelected);
+        Assert.Equal("Updated assessment", summaries[0].Access.AccessStatus);
+        Assert.Equal(identity.DisplayName, summaries[0].IdentityDisplayName);
+        Assert.Equal("Tenant", summaries[0].TenantDisplayName);
     }
 
     [Fact]
@@ -84,6 +332,16 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         await repository.RemoveWorkspaceLinkAsync(workspace.Id, ResourceLinkType.Vault, vault.Id.ToString("D"), TestContext.Current.CancellationToken);
         Assert.Empty(await repository.SearchAsync(new SearchRequest(WorkspaceId: workspace.Id), _clock.UtcNow, TestContext.Current.CancellationToken));
+
+        await repository.AddWorkspaceLinkAsync(new WorkspaceResourceLink(Guid.NewGuid(), workspace.Id, ResourceLinkType.Tenant, tenant.TenantId), TestContext.Current.CancellationToken);
+        Assert.Single(await repository.SearchAsync(new SearchRequest(WorkspaceId: workspace.Id), _clock.UtcNow, TestContext.Current.CancellationToken));
+        await repository.RemoveWorkspaceLinkAsync(workspace.Id, ResourceLinkType.Tenant, tenant.TenantId, TestContext.Current.CancellationToken);
+
+        await repository.AddWorkspaceLinkAsync(new WorkspaceResourceLink(Guid.NewGuid(), workspace.Id, ResourceLinkType.Subscription, subscription.SubscriptionId), TestContext.Current.CancellationToken);
+        Assert.Single(await repository.SearchAsync(new SearchRequest(WorkspaceId: workspace.Id), _clock.UtcNow, TestContext.Current.CancellationToken));
+
+        await repository.RemoveWorkspaceAsync(workspace.Id, TestContext.Current.CancellationToken);
+        Assert.Empty(await repository.GetWorkspacesAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -293,6 +551,34 @@ public sealed class EncryptedPersistenceTests : IDisposable
         Assert.False(File.Exists(path));
     }
 
+    [Fact]
+    public async Task OversizedProtectedValueEnvelopeIsRejectedAndDeleted()
+    {
+        var itemId = Guid.NewGuid();
+        var valueDirectory = Path.Combine(
+            _directory,
+            "oversized-values");
+        Directory.CreateDirectory(valueDirectory);
+        var path = Path.Combine(
+            valueDirectory,
+            $"{itemId:D}.vpcache");
+        await using (var stream = File.Create(path))
+            stream.SetLength((16 * 1024 * 1024) + 1);
+        var store = new EncryptedFileValueStore(
+            valueDirectory,
+            _keys,
+            _clock);
+
+        await Assert.ThrowsAsync<CryptographicException>(
+            () => store.RetrieveAsync(
+                itemId,
+                DateTimeOffset.UtcNow,
+                null,
+                TestContext.Current.CancellationToken));
+
+        Assert.False(File.Exists(path));
+    }
+
     [Theory]
     [InlineData("Nonce", "not-base64")]
     [InlineData("Tag", "AA==")]
@@ -460,7 +746,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(99, exception.ObservedVersion);
-        Assert.Equal(2, exception.SupportedVersion);
+        Assert.Equal(4, exception.SupportedVersion);
         Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)));
         Assert.Equal(99, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
@@ -515,7 +801,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name='sync_runs'"));
-        Assert.Equal(2, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(4, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -529,7 +815,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM pragma_table_info('sync_runs') WHERE name='error_count'"));
-        Assert.Equal(2, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(4, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     private ConnectedIdentity TestIdentity(string accountIdentifier) => new(

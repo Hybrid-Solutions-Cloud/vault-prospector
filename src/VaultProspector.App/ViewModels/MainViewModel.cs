@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VaultProspector.Application;
 using VaultProspector.Domain;
+using VaultProspector.Platform;
 
 namespace VaultProspector.App.ViewModels;
 
@@ -15,19 +16,89 @@ public sealed partial class MainViewModel(
     SecretAccessService secretAccessService,
     WorkspaceService workspaceService,
     IProtectedValueStore protectedValueStore,
-    AppSettingsStore settingsStore) : ViewModelBase
+    AppSettingsStore settingsStore,
+    IUserVerificationService verificationService,
+    LocalDataRecoveryService localDataRecoveryService,
+    IManagedIdentityEnvironmentDetector managedIdentityEnvironmentDetector,
+    IWorkloadIdentityAdministrationService? workloadIdentityAdministrationService = null,
+    ILocalEncryptionRotationEngine? localEncryptionRotationEngine = null,
+    LocalRecoveryArchiveService? localRecoveryArchiveService = null) : ViewModelBase
 {
     private CancellationTokenSource? _activeOperation;
+    private bool _isReloadingIdentities;
+    private int _subscriptionLoadVersion;
+    private int _sensitivePresentationEpoch;
 
     public ObservableCollection<ConnectedIdentity> Identities { get; } = [];
+    public ObservableCollection<TenantAccess> Tenants { get; } = [];
+    public ObservableCollection<SubscriptionSelectionRow> Subscriptions { get; } = [];
+    public ObservableCollection<VaultAccessRow> VaultAccessPaths { get; } = [];
+    public ObservableCollection<WorkloadIdentityCandidateRow> WorkloadIdentityCandidates { get; } = [];
     public ObservableCollection<SearchResultRow> Results { get; } = [];
     public ObservableCollection<Workspace> Workspaces { get; } = [];
+    public ObservableCollection<LocalRecoveryArchiveRow> RecoveryArchives { get; } = [];
     public IReadOnlyList<string> ObjectTypes { get; } = ["All", "Secret", "Key", "Certificate"];
+    public IReadOnlyList<CloseBehavior> CloseBehaviors { get; } =
+        [CloseBehavior.Ask, CloseBehavior.Exit, CloseBehavior.LockToNotificationArea];
     public string VersionLabel { get; } = $"Vault Prospector {GetVersion()}";
+
+    [ObservableProperty] private IdentityType _selectedIdentityType = IdentityType.InteractiveUser;
+    [ObservableProperty] private string _credentialData = string.Empty;
+    [ObservableProperty] private string _replacementCredentialData = string.Empty;
+    [ObservableProperty] private string _tenantId = string.Empty;
+    [ObservableProperty] private string _administrationSubscriptionId = string.Empty;
+    [ObservableProperty] private string _administrationResourceGroup = string.Empty;
+    [ObservableProperty] private string _administrationIdentityName = string.Empty;
+    [ObservableProperty] private string _administrationVaultResourceId = string.Empty;
+    [ObservableProperty] private string _administrationRoleDefinitionId = string.Empty;
+    [ObservableProperty]
+    private string _administrationPlanText =
+        "No plan generated. Preview is read-only; Azure mutation remains disabled by application policy.";
+    [ObservableProperty]
+    private string _managedIdentityAvailabilityText =
+        "Managed identity availability is checked after local unlock.";
+    public ObservableCollection<IdentityType> IdentityTypes { get; } =
+        [
+            IdentityType.InteractiveUser,
+            IdentityType.ServicePrincipal,
+            IdentityType.FederatedServicePrincipal,
+        ];
+
+    public bool IsInteractiveUser => SelectedIdentityType == IdentityType.InteractiveUser;
+    public bool IsManagedIdentity => SelectedIdentityType == IdentityType.ManagedIdentity;
+    public bool IsServicePrincipal => SelectedIdentityType == IdentityType.ServicePrincipal;
+    public bool IsFederatedServicePrincipal =>
+        SelectedIdentityType == IdentityType.FederatedServicePrincipal;
+    public bool IsWorkloadIdentity => SelectedIdentityType != IdentityType.InteractiveUser;
+    public bool SelectedIdentitySupportsCredentialRotation =>
+        SelectedIdentity?.Type is IdentityType.ServicePrincipal or IdentityType.FederatedServicePrincipal;
+    public string CredentialRotationLabel =>
+        SelectedIdentity?.Type == IdentityType.FederatedServicePrincipal
+            ? "Replacement federated token file path"
+            : "Replacement certificate thumbprint";
+    public string ConnectIdentityActionText => SelectedIdentityType switch
+    {
+        IdentityType.InteractiveUser => "Continue to Microsoft sign-in",
+        IdentityType.ManagedIdentity => "Verify and connect managed identity",
+        IdentityType.ServicePrincipal => "Verify and connect certificate identity",
+        IdentityType.FederatedServicePrincipal => "Verify and connect federated identity",
+        _ => "Connect identity",
+    };
+
+    partial void OnSelectedIdentityTypeChanged(IdentityType value)
+    {
+        OnPropertyChanged(nameof(IsInteractiveUser));
+        OnPropertyChanged(nameof(IsManagedIdentity));
+        OnPropertyChanged(nameof(IsServicePrincipal));
+        OnPropertyChanged(nameof(IsFederatedServicePrincipal));
+        OnPropertyChanged(nameof(IsWorkloadIdentity));
+        OnPropertyChanged(nameof(ConnectIdentityActionText));
+    }
 
     [ObservableProperty] private string _clientId = string.Empty;
     [ObservableProperty] private bool _useCustomClientId;
     [ObservableProperty] private bool _isFirstRun;
+    [ObservableProperty] private int _selectedMainTabIndex;
     [ObservableProperty] private string _identityLabel = string.Empty;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _tenantFilter = string.Empty;
@@ -44,7 +115,18 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _statusText = "Starting securely…";
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private ConnectedIdentity? _selectedIdentity;
+    [ObservableProperty] private TenantAccess? _selectedTenant;
+    [ObservableProperty] private SubscriptionSelectionRow? _selectedSubscription;
+    [ObservableProperty] private VaultAccessRow? _selectedVaultAccess;
+    [ObservableProperty]
+    private WorkloadIdentityCandidateRow? _selectedWorkloadIdentityCandidate;
     [ObservableProperty] private Workspace? _selectedWorkspace;
+    [ObservableProperty] private bool _workspaceCacheEnabled;
+    [ObservableProperty] private int _workspaceMaximumCacheHours = 8;
+    [ObservableProperty] private bool _workspaceAllowClipboard = true;
+    [ObservableProperty] private CloseBehavior _selectedCloseBehavior = CloseBehavior.Ask;
+    [ObservableProperty] private bool _backgroundMetadataSyncEnabled;
+    [ObservableProperty] private bool _isCloseChoiceVisible;
     [ObservableProperty] private SearchResultRow? _selectedResult;
     [ObservableProperty] private string _secretPreview = "Select a secret to reveal or copy.";
     [ObservableProperty] private string _workspaceName = string.Empty;
@@ -56,6 +138,22 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _errorMessage = string.Empty;
     [ObservableProperty] private string _recoveryText = string.Empty;
     [ObservableProperty] private string _errorAnnouncement = string.Empty;
+    [ObservableProperty] private bool _isUnlocked;
+    [ObservableProperty] private bool _isApplicationReady;
+    [ObservableProperty] private bool _isLocalDataBlocked;
+    [ObservableProperty] private bool _canResetLocalData;
+    [ObservableProperty] private bool _isRecoveryComplete;
+    [ObservableProperty] private string _unlockMessage = "Use Windows Hello to unlock local Vault Prospector data.";
+    [ObservableProperty] private string _unlockRecovery = string.Empty;
+    [ObservableProperty] private string _localDataFailureTitle = string.Empty;
+    [ObservableProperty] private string _localDataRecoveryGuidance = string.Empty;
+    [ObservableProperty] private string _resetConfirmation = string.Empty;
+    [ObservableProperty] private string _recoveryArchivePath = string.Empty;
+    [ObservableProperty] private LocalRecoveryArchiveRow? _selectedRecoveryArchive;
+    [ObservableProperty] private string _recoveryArchiveDeleteConfirmation = string.Empty;
+    [ObservableProperty]
+    private string _recoveryArchiveStatus =
+        "Recovery archives remain local until you explicitly delete them.";
 
     public bool HasSelectedIdentity => SelectedIdentity is not null;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
@@ -65,31 +163,151 @@ public sealed partial class MainViewModel(
     {
         await RunAsync(async cancellationToken =>
         {
+            if (IsRecoveryComplete)
+            {
+                StatusText = "Local data was archived. Close and reopen Vault Prospector to continue.";
+                return;
+            }
+
+            IsApplicationReady = false;
+            if (!IsUnlocked)
+            {
+                if (!verificationService.IsAvailable)
+                {
+                    UnlockMessage = "Vault Prospector remains locked because Windows verification is unavailable.";
+                    UnlockRecovery = "Use a supported Windows 10 or Windows 11 interactive session and configure Windows Hello.";
+                    StatusText = "Application locked — Windows verification unavailable.";
+                    return;
+                }
+
+                StatusText = "Waiting for local verification...";
+                var verificationResult = await verificationService.VerifyAsync("Unlock Vault Prospector", cancellationToken);
+                if (verificationResult != UserVerificationResult.Verified)
+                {
+                    ConfigureUnlockFailure(verificationResult);
+                    return;
+                }
+
+                IsUnlocked = true;
+                UnlockMessage = "Local verification completed.";
+                UnlockRecovery = string.Empty;
+            }
+
+            var recoveredInterruptedRotation = false;
+            if (localEncryptionRotationEngine is not null)
+            {
+                try
+                {
+                    var recovery = await localEncryptionRotationEngine
+                        .RecoverIfNeededAsync(cancellationToken);
+                    recoveredInterruptedRotation = recovery.Recovered;
+                }
+                catch (Exception ex) when (IsProtectedLocalDataFailure(ex))
+                {
+                    ConfigureLocalDataFailure(ex);
+                    return;
+                }
+            }
+
             var settings = await settingsStore.LoadAsync(cancellationToken);
             UseCustomClientId = settings.UseCustomClientId;
             ClientId = settings.UseCustomClientId ? settings.ClientId : string.Empty;
             OfflineCacheEnabled = settings.OfflineCacheEnabled;
             MaximumCacheHours = settings.MaximumCacheHours;
             ClipboardClearSeconds = settings.ClipboardClearSeconds;
-            await repository.InitializeAsync(cancellationToken);
+            SelectedCloseBehavior = settings.CloseBehavior;
+            BackgroundMetadataSyncEnabled = settings.BackgroundMetadataSyncEnabled;
+            await ConfigureManagedIdentityAvailabilityAsync(cancellationToken);
+
+            try
+            {
+                await repository.InitializeAsync(cancellationToken);
+            }
+            catch (Exception ex) when (IsProtectedLocalDataFailure(ex))
+            {
+                ConfigureLocalDataFailure(ex);
+                return;
+            }
+
+            IsLocalDataBlocked = false;
+            CanResetLocalData = false;
             await ReloadIdentitiesAsync(cancellationToken);
             await ReloadWorkspacesAsync(cancellationToken);
             await SearchCoreAsync(cancellationToken);
-            StatusText = "Ready — metadata search works offline.";
+            IsApplicationReady = true;
+            await ReloadRecoveryArchivesCoreAsync(cancellationToken);
+            StatusText = recoveredInterruptedRotation
+                ? "Ready — an interrupted local encryption rotation was rolled back to its verified pre-rotation archive."
+                : IsFirstRun
+                    ? "Local unlock complete — connect your first Microsoft Entra identity to begin."
+                    : "Ready — metadata search works offline.";
         });
     }
+
+    [RelayCommand(CanExecute = nameof(CanArchiveAndResetLocalData))]
+    private Task ArchiveAndResetLocalDataAsync()
+    {
+        return RunAsync(async cancellationToken =>
+        {
+            var archive = await localDataRecoveryService.ArchiveAndResetAsync(ResetConfirmation, cancellationToken);
+            RecoveryArchivePath = archive.HadExistingData
+                ? archive.ArchivePath
+                : "No previous local data was present.";
+            ResetConfirmation = string.Empty;
+            CanResetLocalData = false;
+            IsRecoveryComplete = true;
+            IsApplicationReady = false;
+            StatusText = "Encrypted local state was archived. Close and reopen Vault Prospector to create fresh local state.";
+        });
+    }
+
+    private bool CanArchiveAndResetLocalData() =>
+        IsLocalDataBlocked &&
+        CanResetLocalData &&
+        !IsRecoveryComplete &&
+        string.Equals(ResetConfirmation.Trim(), LocalDataRecoveryService.ConfirmationPhrase, StringComparison.Ordinal);
+
+    partial void OnResetConfirmationChanged(string value) =>
+        ArchiveAndResetLocalDataCommand.NotifyCanExecuteChanged();
+
+    partial void OnCanResetLocalDataChanged(bool value) =>
+        ArchiveAndResetLocalDataCommand.NotifyCanExecuteChanged();
+
+    partial void OnIsRecoveryCompleteChanged(bool value) =>
+        ArchiveAndResetLocalDataCommand.NotifyCanExecuteChanged();
 
     [RelayCommand(CanExecute = nameof(CanStartOperation))]
     private Task AddIdentityAsync() => RunAsync(async cancellationToken =>
     {
-        var clientId = EffectiveClientId();
-        if (!Guid.TryParse(clientId, out var parsedClientId))
-            throw new ArgumentException("A valid Microsoft Entra public-client application ID is required.", nameof(ClientId));
+        var clientId = SelectedIdentityType == IdentityType.InteractiveUser
+            ? EffectiveClientId()
+            : ClientId.Trim();
         await SaveSettingsCoreAsync(cancellationToken);
-        var identity = await identityService.AddAsync(parsedClientId.ToString("D"), IdentityLabel, cancellationToken);
+
+        ConnectedIdentity identity;
+        if (SelectedIdentityType == IdentityType.InteractiveUser)
+        {
+            if (!Guid.TryParse(clientId, out var parsedClientId))
+                throw new ArgumentException("A valid Microsoft Entra public-client application ID is required.", nameof(ClientId));
+            identity = await identityService.AddAsync(parsedClientId.ToString("D"), IdentityLabel, cancellationToken);
+        }
+        else
+        {
+            if (SelectedIdentityType == IdentityType.ManagedIdentity &&
+                !IdentityTypes.Contains(IdentityType.ManagedIdentity))
+            {
+                throw new WorkloadIdentityConfigurationException(
+                    "Managed identity is unavailable on this host.",
+                    nameof(SelectedIdentityType));
+            }
+            identity = await identityService.AddWorkloadIdentityAsync(clientId, TenantId, IdentityLabel, SelectedIdentityType, CredentialData, cancellationToken);
+        }
+
         await ReloadIdentitiesAsync(cancellationToken);
         SelectedIdentity = Identities.First(x => x.Id == identity.Id);
         IdentityLabel = string.Empty;
+        CredentialData = string.Empty;
+        TenantId = string.Empty;
         StatusText = $"Connected {identity.DisplayName}. Select Sync to discover resources.";
     });
 
@@ -100,6 +318,17 @@ public sealed partial class MainViewModel(
         await identityService.RemoveAsync(SelectedIdentity.Id, cancellationToken);
         await ReloadIdentitiesAsync(cancellationToken);
         StatusText = "Identity and its cached tokens were removed.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    private Task PurgeSelectedIdentityCacheAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null) return;
+        var purgedVaultCount = await identityService.PurgeOfflineValuesAsync(
+            SelectedIdentity.Id,
+            cancellationToken);
+        StatusText =
+            $"Offline value storage was cleared for {purgedVaultCount} vault scope(s) associated with {SelectedIdentity.DisplayName}.";
     });
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
@@ -129,14 +358,197 @@ public sealed partial class MainViewModel(
         StatusText = $"Identity {SelectedIdentity.DisplayName} reauthenticated successfully.";
     });
 
+    [RelayCommand(CanExecute = nameof(CanRotateSelectedCredential))]
+    private Task RotateSelectedCredentialAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null) return;
+        var identityId = SelectedIdentity.Id;
+        var identityName = SelectedIdentity.DisplayName;
+        await identityService.RotateWorkloadCredentialAsync(
+            identityId,
+            ReplacementCredentialData,
+            cancellationToken);
+        ReplacementCredentialData = string.Empty;
+        await ReloadIdentitiesAsync(cancellationToken);
+        SelectedIdentity = Identities.First(identity => identity.Id == identityId);
+        StatusText = $"Credential for {identityName} was validated and rotated.";
+    });
+
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    private Task RevokeIdentityAccessAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null) return;
+        var identityId = SelectedIdentity.Id;
+        var identityName = SelectedIdentity.DisplayName;
+        try
+        {
+            var result = await identityService.RevokeLocalAccessAsync(
+                identityId,
+                cancellationToken);
+            ReplacementCredentialData = string.Empty;
+            StatusText = result.ProviderCredentialRemoved
+                ? $"Local access for {identityName} was revoked and {result.PurgedVaultCount} associated offline vault cache(s) were purged. Revoke the external credential at its issuer if it may be compromised."
+                : $"Local access for {identityName} was revoked and {result.PurgedVaultCount} associated offline vault cache(s) were purged. Provider token cleanup could not be confirmed; revoke the external credential at its issuer.";
+        }
+        finally
+        {
+            await ReloadIdentitiesAsync(CancellationToken.None);
+            SelectedIdentity = Identities.FirstOrDefault(identity => identity.Id == identityId);
+        }
+    });
+
+    [RelayCommand(CanExecute = nameof(CanAdministerWorkloadIdentities))]
+    private Task AuthorizeDirectoryReadAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null) return;
+        var identityId = SelectedIdentity.Id;
+        await identityService.AuthorizeDirectoryReadAsync(identityId, cancellationToken);
+        await ReloadIdentitiesAsync(cancellationToken);
+        SelectedIdentity = Identities.First(identity => identity.Id == identityId);
+        StatusText = "Microsoft Graph directory read was explicitly authorized for this identity.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanDiscoverManagedIdentities))]
+    private Task DiscoverManagedIdentitiesAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null || workloadIdentityAdministrationService is null) return;
+        var candidates = await workloadIdentityAdministrationService.ListManagedIdentitiesAsync(
+            SelectedIdentity,
+            AdministrationSubscriptionId,
+            cancellationToken);
+        ReplaceWorkloadCandidates(candidates);
+        StatusText = $"{candidates.Count} user-assigned managed identities are visible in the exact subscription. No Azure resources were changed.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanAdministerWorkloadIdentities))]
+    private Task DiscoverServicePrincipalsAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null || workloadIdentityAdministrationService is null) return;
+        var candidates = await workloadIdentityAdministrationService.ListServicePrincipalsAsync(
+            SelectedIdentity,
+            cancellationToken);
+        ReplaceWorkloadCandidates(candidates);
+        StatusText = $"{candidates.Count} service principals are visible through explicitly consented Microsoft Graph access. No Azure resources were changed.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanAssessWorkloadIdentityPermissions))]
+    private Task AssessWorkloadIdentityPermissionsAsync() => RunAsync(
+        async cancellationToken =>
+        {
+            if (SelectedIdentity is null ||
+                SelectedWorkloadIdentityCandidate is null ||
+                workloadIdentityAdministrationService is null)
+            {
+                return;
+            }
+
+            var selectedRow = SelectedWorkloadIdentityCandidate;
+            var assessed = await workloadIdentityAdministrationService
+                .AssessPermissionsAsync(
+                    SelectedIdentity,
+                    selectedRow.Candidate,
+                    AdministrationVaultResourceId,
+                    cancellationToken);
+            var index = WorkloadIdentityCandidates.IndexOf(selectedRow);
+            var assessedRow = new WorkloadIdentityCandidateRow(assessed);
+            if (index >= 0)
+                WorkloadIdentityCandidates[index] = assessedRow;
+            else
+                WorkloadIdentityCandidates.Add(assessedRow);
+            SelectedWorkloadIdentityCandidate = assessedRow;
+            StatusText =
+                $"Read-only authorization evidence refreshed for {assessed.DisplayName} at the exact Key Vault. No Azure resources or values were changed.";
+        });
+
+    [RelayCommand(CanExecute = nameof(CanPreviewManagedIdentity))]
+    private Task PreviewManagedIdentityAsync() => RunAsync(cancellationToken =>
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (SelectedIdentity is null || workloadIdentityAdministrationService is null)
+            return Task.CompletedTask;
+        var plan = workloadIdentityAdministrationService.BuildManagedIdentityDryRun(
+            SelectedIdentity.HomeTenantId,
+            AdministrationSubscriptionId,
+            AdministrationResourceGroup,
+            AdministrationIdentityName,
+            NullIfWhiteSpace(AdministrationVaultResourceId),
+            NullIfWhiteSpace(AdministrationRoleDefinitionId));
+        AdministrationPlanText = FormatPlan(plan);
+        StatusText = "Managed-identity preview generated. Azure mutation remains disabled.";
+        return Task.CompletedTask;
+    });
+
+    [RelayCommand(CanExecute = nameof(CanPreviewServicePrincipal))]
+    private Task PreviewServicePrincipalAsync() => RunAsync(cancellationToken =>
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (SelectedIdentity is null || workloadIdentityAdministrationService is null)
+            return Task.CompletedTask;
+        var plan = workloadIdentityAdministrationService.BuildServicePrincipalDryRun(
+            SelectedIdentity.HomeTenantId,
+            AdministrationIdentityName,
+            NullIfWhiteSpace(AdministrationVaultResourceId),
+            NullIfWhiteSpace(AdministrationRoleDefinitionId));
+        AdministrationPlanText = FormatPlan(plan);
+        StatusText = "Service-principal preview generated. Azure mutation remains disabled.";
+        return Task.CompletedTask;
+    });
+
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentityOnline))]
     private Task SynchronizeAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedIdentity is null) throw new InvalidOperationException("Select an identity before synchronizing.");
         StatusText = $"Synchronizing {SelectedIdentity.DisplayName}…";
         var run = await synchronizationService.SynchronizeAsync(SelectedIdentity, cancellationToken);
+        await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
         await SearchCoreAsync(cancellationToken);
         StatusText = $"{run.Status}: {run.VaultCount} vaults and {run.ItemCount} objects; {run.NonSensitiveErrors.Count} isolated errors.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    private Task RefreshSubscriptionsAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null) return;
+        await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        StatusText = $"{Subscriptions.Count} discovered subscriptions loaded for {SelectedIdentity.DisplayName}.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanExcludeSubscription))]
+    private Task ExcludeSubscriptionAsync() => SetSelectedSubscriptionStateAsync(false);
+
+    [RelayCommand(CanExecute = nameof(CanIncludeSubscription))]
+    private Task IncludeSubscriptionAsync() => SetSelectedSubscriptionStateAsync(true);
+
+    private Task SetSelectedSubscriptionStateAsync(bool isSelected) => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null || SelectedSubscription is null) return;
+        var subscriptionId = SelectedSubscription.Id;
+        var displayName = SelectedSubscription.DisplayName;
+        await repository.SetSubscriptionSelectedAsync(subscriptionId, isSelected, cancellationToken);
+        await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        SelectedSubscription = Subscriptions.FirstOrDefault(subscription => subscription.Id == subscriptionId);
+        StatusText = isSelected
+            ? $"{displayName} will be included in future synchronization."
+            : $"{displayName} will be excluded from future synchronization. Existing local metadata remains searchable until a complete synchronization reconciles it.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanExcludeVault))]
+    private Task ExcludeVaultAsync() => SetSelectedVaultStateAsync(false);
+
+    [RelayCommand(CanExecute = nameof(CanIncludeVault))]
+    private Task IncludeVaultAsync() => SetSelectedVaultStateAsync(true);
+
+    private Task SetSelectedVaultStateAsync(bool isSelected) => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null || SelectedVaultAccess is null) return;
+        var accessId = SelectedVaultAccess.Id;
+        var vaultName = SelectedVaultAccess.Vault;
+        await repository.SetVaultSelectedAsync(accessId, isSelected, cancellationToken);
+        await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        SelectedVaultAccess = VaultAccessPaths.FirstOrDefault(access => access.Id == accessId);
+        StatusText = isSelected
+            ? $"{vaultName} will be included in future synchronization."
+            : $"{vaultName} will be excluded before future metadata enumeration. Existing local metadata remains searchable until a complete synchronization reconciles it.";
     });
 
     [RelayCommand]
@@ -144,6 +556,68 @@ public sealed partial class MainViewModel(
     {
         _activeOperation?.Cancel();
         StatusText = "Cancelling the active operation…";
+    }
+
+    public event EventHandler? ExitRequested;
+    public event EventHandler? ContinueInBackgroundRequested;
+
+    [RelayCommand]
+    private void RequestExit()
+    {
+        IsCloseChoiceVisible = false;
+        ExitRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void ContinueInBackground()
+    {
+        IsCloseChoiceVisible = false;
+        ContinueInBackgroundRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void CancelClose() => IsCloseChoiceVisible = false;
+
+    public void RequestCloseChoice() => IsCloseChoiceVisible = true;
+
+    public void LockForBackground()
+    {
+        _sensitivePresentationEpoch++;
+        _activeOperation?.Cancel();
+        SecretPreview = "Secret hidden.";
+        IsUnlocked = false;
+        IsApplicationReady = false;
+        StatusText = "Locked in the notification area. Metadata-only background sync may continue if enabled.";
+    }
+
+    public void LockForSystemBoundary()
+    {
+        _sensitivePresentationEpoch++;
+        _activeOperation?.Cancel();
+        IsCloseChoiceVisible = false;
+        SecretPreview = "Secret hidden.";
+        IsUnlocked = false;
+        IsApplicationReady = false;
+        StatusText = "Locked after a Windows session or power transition.";
+    }
+
+    public Task BackgroundSynchronizeOnceAsync()
+    {
+        if (!BackgroundMetadataSyncEnabled ||
+            IsBusy ||
+            SelectedIdentity is not { IsEnabled: true, AuthenticationState: AuthenticationState.Ready })
+            return Task.CompletedTask;
+
+        return RunAsync(async cancellationToken =>
+        {
+            var run = await synchronizationService.SynchronizeAsync(SelectedIdentity, cancellationToken);
+            StatusText = run.Status switch
+            {
+                SyncStatus.Completed => $"Background metadata sync completed: {run.VaultCount} vaults, {run.ItemCount} objects.",
+                SyncStatus.CompletedWithErrors => $"Background metadata sync completed with {run.NonSensitiveErrors.Count} isolated errors.",
+                _ => $"Background metadata sync: {run.Status}.",
+            };
+        });
     }
 
     [RelayCommand(CanExecute = nameof(CanStartOperation))]
@@ -161,17 +635,20 @@ public sealed partial class MainViewModel(
     private Task RevealAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
+        var presentationEpoch = ++_sensitivePresentationEpoch;
         using var value = await secretAccessService.RetrieveAsync(SelectedResult.Id, cancellationToken);
+        if (presentationEpoch != _sensitivePresentationEpoch || !IsApplicationReady)
+            return;
         SecretPreview = value.Reveal();
-        _ = HideSecretLaterAsync(value.Mask());
+        _ = HideSecretLaterAsync(value.Mask(), presentationEpoch);
         StatusText = "Secret revealed for 10 seconds after Windows Hello verification.";
     });
 
-    [RelayCommand(CanExecute = nameof(CanUseSelectedSecret))]
+    [RelayCommand(CanExecute = nameof(CanCopySelectedSecret))]
     private Task CopyAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
-        await secretAccessService.RetrieveAndCopyAsync(SelectedResult.Id, TimeSpan.FromSeconds(Math.Clamp(ClipboardClearSeconds, 5, 300)), CurrentPolicy(), cancellationToken);
+        await secretAccessService.RetrieveAndCopyAsync(SelectedResult.Id, TimeSpan.FromSeconds(Math.Clamp(ClipboardClearSeconds, 5, 300)), EffectivePolicy(), cancellationToken);
         StatusText = $"Copied. Clipboard clears after {Math.Clamp(ClipboardClearSeconds, 5, 300)} seconds if unchanged.";
     });
 
@@ -179,7 +656,7 @@ public sealed partial class MainViewModel(
     private Task CacheSelectedAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
-        await secretAccessService.RetrieveAndCacheAsync(SelectedResult.Id, SelectedWorkspace?.Id, TimeSpan.FromHours(MaximumCacheHours), CurrentPolicy(), cancellationToken);
+        await secretAccessService.RetrieveAndCacheAsync(SelectedResult.Id, SelectedWorkspace?.Id, TimeSpan.FromHours(MaximumCacheHours), EffectivePolicy(), cancellationToken);
         StatusText = $"Encrypted offline copy expires in {MaximumCacheHours} hours.";
     });
 
@@ -187,9 +664,12 @@ public sealed partial class MainViewModel(
     private Task OpenOfflineAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
+        var presentationEpoch = ++_sensitivePresentationEpoch;
         using var value = await secretAccessService.RetrieveCachedAsync(SelectedResult.Id, cancellationToken);
+        if (presentationEpoch != _sensitivePresentationEpoch || !IsApplicationReady)
+            return;
         SecretPreview = value.Reveal();
-        _ = HideSecretLaterAsync(value.Mask());
+        _ = HideSecretLaterAsync(value.Mask(), presentationEpoch);
         StatusText = "Offline secret opened for 10 seconds after Windows Hello verification.";
     });
 
@@ -227,7 +707,7 @@ public sealed partial class MainViewModel(
     [RelayCommand(CanExecute = nameof(CanCreateWorkspace))]
     private Task CreateWorkspaceAsync() => RunAsync(async cancellationToken =>
     {
-        var workspace = new Workspace(Guid.NewGuid(), WorkspaceName.Trim(), string.Empty, Workspaces.Count, CurrentPolicy());
+        var workspace = new Workspace(Guid.NewGuid(), WorkspaceName.Trim(), string.Empty, Workspaces.Count, GlobalPolicy());
         await workspaceService.SaveAsync(workspace, cancellationToken);
         WorkspaceName = string.Empty;
         await ReloadWorkspacesAsync(cancellationToken);
@@ -252,6 +732,41 @@ public sealed partial class MainViewModel(
         StatusText = $"Added the selected identity to {SelectedWorkspace.Name}.";
     });
 
+    [RelayCommand(CanExecute = nameof(CanAddSelectedTenantToWorkspace))]
+    private Task AddSelectedTenantToWorkspaceAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedWorkspace is null || SelectedTenant is null) return;
+        await workspaceService.AddResourceAsync(SelectedWorkspace.Id, ResourceLinkType.Tenant, SelectedTenant.TenantId, cancellationToken);
+        await SearchCoreAsync(cancellationToken);
+        StatusText = $"Added tenant {SelectedTenant.DisplayName} to {SelectedWorkspace.Name}.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanAddSelectedSubscriptionToWorkspace))]
+    private Task AddSelectedSubscriptionToWorkspaceAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedWorkspace is null || SelectedSubscription is null) return;
+        await workspaceService.AddResourceAsync(SelectedWorkspace.Id, ResourceLinkType.Subscription, SelectedSubscription.SubscriptionId, cancellationToken);
+        await SearchCoreAsync(cancellationToken);
+        StatusText = $"Added subscription {SelectedSubscription.DisplayName} to {SelectedWorkspace.Name}.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanUseSelectedWorkspace))]
+    private Task SaveWorkspacePolicyAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedWorkspace is null) return;
+        var updated = SelectedWorkspace with
+        {
+            CachePolicyOverride = new CachePolicy(
+                WorkspaceCacheEnabled,
+                TimeSpan.FromHours(Math.Clamp(WorkspaceMaximumCacheHours, 1, 168)),
+                true,
+                WorkspaceAllowClipboard),
+        };
+        await workspaceService.SaveAsync(updated, cancellationToken);
+        await ReloadWorkspacesAsync(cancellationToken);
+        StatusText = $"Saved secure cache policy for {updated.Name}. Local verification remains mandatory.";
+    });
+
     [RelayCommand(CanExecute = nameof(CanUseSelectedWorkspace))]
     private Task RemoveWorkspaceAsync() => RunAsync(async cancellationToken =>
     {
@@ -269,6 +784,35 @@ public sealed partial class MainViewModel(
     {
         await SaveSettingsCoreAsync(cancellationToken);
         StatusText = "Settings saved locally. No client secret is stored.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanManageRecoveryArchives))]
+    private Task RefreshRecoveryArchivesAsync() => RunAsync(async cancellationToken =>
+    {
+        await ReloadRecoveryArchivesCoreAsync(cancellationToken);
+        StatusText = RecoveryArchives.Count == 0
+            ? "No recovery archives are present."
+            : $"{RecoveryArchives.Count} recovery archive(s) are retained locally.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanDeleteSelectedRecoveryArchive))]
+    private Task DeleteSelectedRecoveryArchiveAsync() => RunAsync(async cancellationToken =>
+    {
+        if (localRecoveryArchiveService is null ||
+            SelectedRecoveryArchive is null)
+        {
+            return;
+        }
+
+        await localRecoveryArchiveService.DeleteAsync(
+            SelectedRecoveryArchive.Id,
+            RecoveryArchiveDeleteConfirmation,
+            cancellationToken);
+        SelectedRecoveryArchive = null;
+        RecoveryArchiveDeleteConfirmation = string.Empty;
+        await ReloadRecoveryArchivesCoreAsync(cancellationToken);
+        StatusText =
+            "The selected recovery archive was permanently deleted after Windows verification.";
     });
 
     private async Task SearchCoreAsync(CancellationToken cancellationToken)
@@ -296,12 +840,85 @@ public sealed partial class MainViewModel(
     private async Task ReloadIdentitiesAsync(CancellationToken cancellationToken)
     {
         var selectedIdentityId = SelectedIdentity?.Id;
-        Identities.Clear();
-        foreach (var identity in await repository.GetIdentitiesAsync(cancellationToken)) Identities.Add(identity);
-        SelectedIdentity = selectedIdentityId is null
-            ? Identities.FirstOrDefault()
-            : Identities.FirstOrDefault(identity => identity.Id == selectedIdentityId) ?? Identities.FirstOrDefault();
-        IsFirstRun = Identities.Count == 0;
+        _isReloadingIdentities = true;
+        try
+        {
+            Identities.Clear();
+            foreach (var identity in await repository.GetIdentitiesAsync(cancellationToken)) Identities.Add(identity);
+            SelectedIdentity = selectedIdentityId is null
+                ? Identities.FirstOrDefault()
+                : Identities.FirstOrDefault(identity => identity.Id == selectedIdentityId) ?? Identities.FirstOrDefault();
+            IsFirstRun = Identities.Count == 0;
+            if (IsFirstRun)
+                SelectedMainTabIndex = 1;
+        }
+        finally
+        {
+            _isReloadingIdentities = false;
+        }
+
+        if (SelectedIdentity is null)
+        {
+            Tenants.Clear();
+            Subscriptions.Clear();
+            VaultAccessPaths.Clear();
+            SelectedTenant = null;
+            SelectedSubscription = null;
+            SelectedVaultAccess = null;
+        }
+        else
+        {
+            await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        }
+    }
+
+    private async Task ReloadSubscriptionsCoreAsync(Guid identityId, CancellationToken cancellationToken)
+    {
+        var tenants = await repository.GetTenantsAsync(identityId, cancellationToken);
+        var subscriptions = await repository.GetSubscriptionsAsync(identityId, cancellationToken);
+        var vaultAccessPaths = await repository.GetVaultAccessSummariesAsync(identityId, cancellationToken);
+        if (SelectedIdentity?.Id != identityId) return;
+
+        var selectedSubscriptionId = SelectedSubscription?.Id;
+        var selectedVaultAccessId = SelectedVaultAccess?.Id;
+        var selectedTenantId = SelectedTenant?.Id;
+        Tenants.Clear();
+        foreach (var tenant in tenants) Tenants.Add(tenant);
+        SelectedTenant = selectedTenantId is null
+            ? Tenants.FirstOrDefault()
+            : Tenants.FirstOrDefault(tenant => tenant.Id == selectedTenantId) ?? Tenants.FirstOrDefault();
+        Subscriptions.Clear();
+        foreach (var subscription in subscriptions)
+            Subscriptions.Add(new SubscriptionSelectionRow(subscription));
+        SelectedSubscription = selectedSubscriptionId is null
+            ? Subscriptions.FirstOrDefault()
+            : Subscriptions.FirstOrDefault(subscription => subscription.Id == selectedSubscriptionId) ??
+              Subscriptions.FirstOrDefault();
+        VaultAccessPaths.Clear();
+        foreach (var accessPath in vaultAccessPaths)
+            VaultAccessPaths.Add(new VaultAccessRow(accessPath));
+        SelectedVaultAccess = selectedVaultAccessId is null
+            ? VaultAccessPaths.FirstOrDefault()
+            : VaultAccessPaths.FirstOrDefault(access => access.Id == selectedVaultAccessId) ??
+              VaultAccessPaths.FirstOrDefault();
+    }
+
+    private async Task ReloadSubscriptionsAfterSelectionAsync(Guid identityId, int loadVersion)
+    {
+        try
+        {
+            await ReloadSubscriptionsCoreAsync(identityId, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            if (loadVersion != _subscriptionLoadVersion || SelectedIdentity?.Id != identityId) return;
+            var error = UserFacingErrorMapper.From(ex);
+            ErrorTitle = error.Title;
+            ErrorMessage = error.Message;
+            RecoveryText = error.Recovery;
+            HasActionableError = true;
+            ErrorAnnouncement = $"{error.Title}. {error.Message} {error.Recovery}";
+        }
     }
 
     private async Task ReloadWorkspacesAsync(CancellationToken cancellationToken)
@@ -313,28 +930,165 @@ public sealed partial class MainViewModel(
 
     private async Task SaveSettingsCoreAsync(CancellationToken cancellationToken)
     {
-        await settingsStore.SaveAsync(new AppSettings(EffectiveClientId(), Math.Clamp(ClipboardClearSeconds, 5, 300), OfflineCacheEnabled, Math.Clamp(MaximumCacheHours, 1, 168), UseCustomClientId), cancellationToken);
+        await settingsStore.SaveAsync(new AppSettings(
+            EffectiveClientId(),
+            Math.Clamp(ClipboardClearSeconds, 5, 300),
+            OfflineCacheEnabled,
+            Math.Clamp(MaximumCacheHours, 1, 168),
+            UseCustomClientId,
+            SelectedCloseBehavior,
+            BackgroundMetadataSyncEnabled), cancellationToken);
+    }
+
+    private async Task ReloadRecoveryArchivesCoreAsync(
+        CancellationToken cancellationToken)
+    {
+        RecoveryArchives.Clear();
+        if (localRecoveryArchiveService is null)
+        {
+            RecoveryArchiveStatus =
+                "Recovery archive management is unavailable in this build.";
+            return;
+        }
+
+        try
+        {
+            foreach (var archive in await localRecoveryArchiveService
+                         .ListAsync(cancellationToken))
+            {
+                RecoveryArchives.Add(
+                    new LocalRecoveryArchiveRow(archive));
+            }
+
+            RecoveryArchiveStatus = RecoveryArchives.Count == 0
+                ? "No recovery archives are present."
+                : "Delete an archive only after deciding that recovery and support evidence are no longer needed.";
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            RecoveryArchiveStatus =
+                "Recovery archives could not be inspected safely. Their contents were not changed.";
+        }
     }
 
     private string EffectiveClientId() => UseCustomClientId ? ClientId.Trim() : ProductIdentity.DefaultClientId;
 
     private bool CanStartOperation() => !IsBusy;
+    private bool CanManageRecoveryArchives() =>
+        localRecoveryArchiveService is not null &&
+        !IsBusy;
+    private bool CanDeleteSelectedRecoveryArchive() =>
+        CanManageRecoveryArchives() &&
+        SelectedRecoveryArchive is not null &&
+        string.Equals(
+            RecoveryArchiveDeleteConfirmation.Trim(),
+            LocalRecoveryArchiveService.ConfirmationPhrase,
+            StringComparison.Ordinal);
     private bool CanUseSelectedIdentity() => SelectedIdentity is not null && !IsBusy;
+    private bool CanUseSelectedIdentityOnline() =>
+        SelectedIdentity is
+        {
+            IsEnabled: true,
+            AuthenticationState: AuthenticationState.Ready,
+        } &&
+        !IsBusy;
+    private bool CanAdministerWorkloadIdentities() =>
+        workloadIdentityAdministrationService is not null &&
+        SelectedIdentity is
+        {
+            Type: IdentityType.InteractiveUser,
+            IsEnabled: true,
+            AuthenticationState: AuthenticationState.Ready,
+        } &&
+        !IsBusy;
+    private bool CanDiscoverManagedIdentities() =>
+        CanAdministerWorkloadIdentities() &&
+        Guid.TryParse(AdministrationSubscriptionId, out _);
+    private bool CanAssessWorkloadIdentityPermissions() =>
+        CanAdministerWorkloadIdentities() &&
+        SelectedWorkloadIdentityCandidate is not null &&
+        !string.IsNullOrWhiteSpace(AdministrationVaultResourceId);
+    private bool CanPreviewManagedIdentity() =>
+        CanDiscoverManagedIdentities() &&
+        !string.IsNullOrWhiteSpace(AdministrationResourceGroup) &&
+        !string.IsNullOrWhiteSpace(AdministrationIdentityName);
+    private bool CanPreviewServicePrincipal() =>
+        CanAdministerWorkloadIdentities() &&
+        !string.IsNullOrWhiteSpace(AdministrationIdentityName);
+    private bool CanRotateSelectedCredential() =>
+        SelectedIdentitySupportsCredentialRotation &&
+        !string.IsNullOrWhiteSpace(ReplacementCredentialData) &&
+        !IsBusy;
     private bool CanUseSelectedResult() => SelectedResult is not null && !IsBusy;
     private bool CanUseSelectedSecret() => SelectedResult?.Result.Item.ObjectType is VaultObjectType.Secret && !IsBusy;
-    private bool CanCacheSelectedSecret() => OfflineCacheEnabled && CanUseSelectedSecret();
+    private bool CanCopySelectedSecret() => EffectivePolicy().AllowClipboard && CanUseSelectedSecret();
+    private bool CanCacheSelectedSecret() => EffectivePolicy().IsEnabled && CanUseSelectedSecret();
     private bool CanUseSelectedWorkspace() => SelectedWorkspace is not null && !IsBusy;
     private bool CanCreateWorkspace() => !string.IsNullOrWhiteSpace(WorkspaceName) && !IsBusy;
     private bool CanAddSelectedVaultToWorkspace() => SelectedWorkspace is not null && SelectedResult is not null && !IsBusy;
     private bool CanAddSelectedIdentityToWorkspace() => SelectedWorkspace is not null && SelectedIdentity is not null && !IsBusy;
+    private bool CanAddSelectedTenantToWorkspace() => SelectedWorkspace is not null && SelectedTenant is not null && !IsBusy;
+    private bool CanAddSelectedSubscriptionToWorkspace() => SelectedWorkspace is not null && SelectedSubscription is not null && !IsBusy;
+    private bool CanExcludeSubscription() => SelectedSubscription is { IsSelected: true } && !IsBusy;
+    private bool CanIncludeSubscription() => SelectedSubscription is { IsSelected: false } && !IsBusy;
+    private bool CanExcludeVault() => SelectedVaultAccess is { IsSelected: true } && !IsBusy;
+    private bool CanIncludeVault() => SelectedVaultAccess is { IsSelected: false } && !IsBusy;
 
     partial void OnSelectedIdentityChanged(ConnectedIdentity? value)
     {
         OnPropertyChanged(nameof(HasSelectedIdentity));
+        OnPropertyChanged(nameof(SelectedIdentitySupportsCredentialRotation));
+        OnPropertyChanged(nameof(CredentialRotationLabel));
         if (value is null) FilterSelectedIdentity = false;
+        ReplacementCredentialData = string.Empty;
         RemoveIdentityCommand.NotifyCanExecuteChanged();
+        PurgeSelectedIdentityCacheCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
+        ReauthenticateIdentityCommand.NotifyCanExecuteChanged();
+        DisableIdentityCommand.NotifyCanExecuteChanged();
+        EnableIdentityCommand.NotifyCanExecuteChanged();
+        RevokeIdentityAccessCommand.NotifyCanExecuteChanged();
+        RotateSelectedCredentialCommand.NotifyCanExecuteChanged();
+        AuthorizeDirectoryReadCommand.NotifyCanExecuteChanged();
+        DiscoverManagedIdentitiesCommand.NotifyCanExecuteChanged();
+        DiscoverServicePrincipalsCommand.NotifyCanExecuteChanged();
+        AssessWorkloadIdentityPermissionsCommand.NotifyCanExecuteChanged();
+        PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
+        PreviewServicePrincipalCommand.NotifyCanExecuteChanged();
+        RefreshSubscriptionsCommand.NotifyCanExecuteChanged();
         AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
+        ReplaceWorkloadCandidates([]);
+        Tenants.Clear();
+        Subscriptions.Clear();
+        VaultAccessPaths.Clear();
+        SelectedTenant = null;
+        SelectedSubscription = null;
+        SelectedVaultAccess = null;
+        var loadVersion = ++_subscriptionLoadVersion;
+        if (!_isReloadingIdentities && IsApplicationReady && value is not null)
+            _ = ReloadSubscriptionsAfterSelectionAsync(value.Id, loadVersion);
+    }
+
+    partial void OnSelectedSubscriptionChanged(SubscriptionSelectionRow? value)
+    {
+        ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
+        IncludeSubscriptionCommand.NotifyCanExecuteChanged();
+        AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedTenantChanged(TenantAccess? value) =>
+        AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
+
+    partial void OnSelectedVaultAccessChanged(VaultAccessRow? value)
+    {
+        ExcludeVaultCommand.NotifyCanExecuteChanged();
+        IncludeVaultCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedResultChanged(SearchResultRow? value)
@@ -356,7 +1110,19 @@ public sealed partial class MainViewModel(
         PurgeSelectedWorkspaceCacheCommand.NotifyCanExecuteChanged();
         AddSelectedVaultToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
         RemoveWorkspaceCommand.NotifyCanExecuteChanged();
+        SaveWorkspacePolicyCommand.NotifyCanExecuteChanged();
+        if (value is not null)
+        {
+            var policy = value.CachePolicyOverride ?? CachePolicy.SecureDefault;
+            WorkspaceCacheEnabled = policy.IsEnabled;
+            WorkspaceMaximumCacheHours = Math.Clamp((int)policy.MaximumLifetime.TotalHours, 1, 168);
+            WorkspaceAllowClipboard = policy.AllowClipboard;
+        }
+        CopyCommand.NotifyCanExecuteChanged();
+        CacheSelectedCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnOfflineCacheEnabledChanged(bool value)
@@ -373,7 +1139,22 @@ public sealed partial class MainViewModel(
     {
         AddIdentityCommand.NotifyCanExecuteChanged();
         RemoveIdentityCommand.NotifyCanExecuteChanged();
+        ReauthenticateIdentityCommand.NotifyCanExecuteChanged();
+        DisableIdentityCommand.NotifyCanExecuteChanged();
+        EnableIdentityCommand.NotifyCanExecuteChanged();
+        RevokeIdentityAccessCommand.NotifyCanExecuteChanged();
+        RotateSelectedCredentialCommand.NotifyCanExecuteChanged();
+        AuthorizeDirectoryReadCommand.NotifyCanExecuteChanged();
+        DiscoverManagedIdentitiesCommand.NotifyCanExecuteChanged();
+        DiscoverServicePrincipalsCommand.NotifyCanExecuteChanged();
+        PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
+        PreviewServicePrincipalCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
+        RefreshSubscriptionsCommand.NotifyCanExecuteChanged();
+        ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
+        IncludeSubscriptionCommand.NotifyCanExecuteChanged();
+        ExcludeVaultCommand.NotifyCanExecuteChanged();
+        IncludeVaultCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
         ToggleFavoriteCommand.NotifyCanExecuteChanged();
         RevealCommand.NotifyCanExecuteChanged();
@@ -387,13 +1168,82 @@ public sealed partial class MainViewModel(
         CreateWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedVaultToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
         RemoveWorkspaceCommand.NotifyCanExecuteChanged();
+        SaveWorkspacePolicyCommand.NotifyCanExecuteChanged();
         SaveSettingsCommand.NotifyCanExecuteChanged();
+        RefreshRecoveryArchivesCommand.NotifyCanExecuteChanged();
+        DeleteSelectedRecoveryArchiveCommand.NotifyCanExecuteChanged();
+        AssessWorkloadIdentityPermissionsCommand.NotifyCanExecuteChanged();
     }
 
-    private CachePolicy CurrentPolicy() => new(OfflineCacheEnabled, TimeSpan.FromHours(Math.Clamp(MaximumCacheHours, 1, 168)), true, true);
+    partial void OnSelectedRecoveryArchiveChanged(
+        LocalRecoveryArchiveRow? value)
+    {
+        RecoveryArchiveDeleteConfirmation = string.Empty;
+        DeleteSelectedRecoveryArchiveCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnRecoveryArchiveDeleteConfirmationChanged(
+        string value) =>
+        DeleteSelectedRecoveryArchiveCommand.NotifyCanExecuteChanged();
+
+    partial void OnReplacementCredentialDataChanged(string value) =>
+        RotateSelectedCredentialCommand.NotifyCanExecuteChanged();
+
+    partial void OnAdministrationSubscriptionIdChanged(string value)
+    {
+        DiscoverManagedIdentitiesCommand.NotifyCanExecuteChanged();
+        PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnAdministrationResourceGroupChanged(string value) =>
+        PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
+
+    partial void OnAdministrationVaultResourceIdChanged(string value) =>
+        AssessWorkloadIdentityPermissionsCommand.NotifyCanExecuteChanged();
+
+    partial void OnSelectedWorkloadIdentityCandidateChanged(
+        WorkloadIdentityCandidateRow? value) =>
+        AssessWorkloadIdentityPermissionsCommand.NotifyCanExecuteChanged();
+
+    partial void OnAdministrationIdentityNameChanged(string value)
+    {
+        PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
+        PreviewServicePrincipalCommand.NotifyCanExecuteChanged();
+    }
+
+    private CachePolicy GlobalPolicy() => new(OfflineCacheEnabled, TimeSpan.FromHours(Math.Clamp(MaximumCacheHours, 1, 168)), true, true);
+    private CachePolicy EffectivePolicy() => SelectedWorkspace?.CachePolicyOverride ?? GlobalPolicy();
 
     private static string? NullIfWhiteSpace(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private void ReplaceWorkloadCandidates(IReadOnlyList<WorkloadIdentityCandidate> candidates)
+    {
+        SelectedWorkloadIdentityCandidate = null;
+        WorkloadIdentityCandidates.Clear();
+        foreach (var candidate in candidates)
+            WorkloadIdentityCandidates.Add(new WorkloadIdentityCandidateRow(candidate));
+    }
+
+    private static string FormatPlan(WorkloadIdentityProvisioningPlan plan)
+    {
+        var location = string.IsNullOrWhiteSpace(plan.SubscriptionId)
+            ? $"Tenant: {plan.TenantId}; subscription/resource group: not applicable unless an exact vault role is included."
+            : $"Tenant: {plan.TenantId}; subscription: {plan.SubscriptionId}; resource group: {plan.ResourceGroup}.";
+        var operations = plan.Operations.Select(
+            (operation, index) =>
+                $"{index + 1}. {operation.Operation} {operation.ResourceType}\nScope: {operation.Scope}\nEffect: {operation.ExpectedEffect}");
+        return string.Join(
+            Environment.NewLine + Environment.NewLine,
+            new[]
+            {
+                $"PREVIEW ONLY — performs mutations: {plan.PerformsMutations}",
+                $"Identity: {plan.IdentityType} / {plan.IdentityName}",
+                location,
+            }.Concat(operations));
+    }
 
     private static string GetVersion()
     {
@@ -401,10 +1251,101 @@ public sealed partial class MainViewModel(
         return string.IsNullOrWhiteSpace(value) ? "development" : value.Split('+', 2)[0];
     }
 
-    private async Task HideSecretLaterAsync(string mask)
+    private async Task HideSecretLaterAsync(string mask, int presentationEpoch)
     {
         await Task.Delay(TimeSpan.FromSeconds(10));
-        SecretPreview = mask;
+        if (presentationEpoch == _sensitivePresentationEpoch)
+            SecretPreview = mask;
+    }
+
+    private void ConfigureUnlockFailure(UserVerificationResult result)
+    {
+        (UnlockMessage, UnlockRecovery, StatusText) = result switch
+        {
+            UserVerificationResult.Canceled => (
+                "Vault Prospector remains locked because verification was canceled.",
+                "Choose Unlock Vault Prospector when you are ready and complete the Windows prompt.",
+                "Application locked — verification canceled."),
+            UserVerificationResult.NotConfigured => (
+                "Vault Prospector remains locked because Windows Hello is not configured.",
+                "Configure Windows Hello for this Windows account, then choose Unlock Vault Prospector.",
+                "Application locked — Windows Hello not configured."),
+            UserVerificationResult.DisabledByPolicy => (
+                "Vault Prospector remains locked because Windows verification is disabled by policy.",
+                "Ask your administrator to enable an approved Windows verification method.",
+                "Application locked — verification disabled by policy."),
+            UserVerificationResult.Unavailable => (
+                "Vault Prospector remains locked because the Windows verification device or service is unavailable.",
+                "Restore the interactive Windows session or verification device, then retry.",
+                "Application locked — verification unavailable."),
+            _ => (
+                "Vault Prospector remains locked because verification did not complete.",
+                "Retry Windows verification. If attempts are exhausted, follow your Windows Hello recovery process.",
+                "Application locked — verification failed."),
+        };
+    }
+
+    private async Task ConfigureManagedIdentityAvailabilityAsync(CancellationToken cancellationToken)
+    {
+        ManagedIdentityEnvironmentStatus status;
+        try
+        {
+            status = await managedIdentityEnvironmentDetector.DetectAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            status = new ManagedIdentityEnvironmentStatus(
+                false,
+                "Managed identity availability could not be verified. Use interactive Microsoft Entra sign-in or a certificate-based service principal.");
+        }
+
+        ManagedIdentityAvailabilityText = status.SafeReason;
+        if (status.IsSupported)
+        {
+            if (!IdentityTypes.Contains(IdentityType.ManagedIdentity))
+                IdentityTypes.Insert(1, IdentityType.ManagedIdentity);
+        }
+        else
+        {
+            IdentityTypes.Remove(IdentityType.ManagedIdentity);
+            if (SelectedIdentityType == IdentityType.ManagedIdentity)
+                SelectedIdentityType = IdentityType.InteractiveUser;
+        }
+    }
+
+    private static bool IsProtectedLocalDataFailure(Exception exception) =>
+        exception is ProtectedKeyUnavailableException
+            or IncompatibleLocalDataVersionException
+            or LocalDataIntegrityException
+            or System.Security.Cryptography.CryptographicException;
+
+    private void ConfigureLocalDataFailure(Exception exception)
+    {
+        IsLocalDataBlocked = true;
+        IsApplicationReady = false;
+        IsRecoveryComplete = false;
+        ResetConfirmation = string.Empty;
+        CanResetLocalData = exception is not IncompatibleLocalDataVersionException;
+
+        (LocalDataFailureTitle, LocalDataRecoveryGuidance, StatusText) = exception switch
+        {
+            IncompatibleLocalDataVersionException => (
+                "Newer Vault Prospector version required",
+                "Install the same or a newer Vault Prospector version than the one that last opened this data. The current installation did not modify it.",
+                "Local data preserved — newer application required."),
+            ProtectedKeyUnavailableException => (
+                "Protected local-data key unavailable",
+                "Restore the matched data and key set under the same Windows account. If no recovery copy exists, type RESET below to archive the current encrypted state and start fresh after a restart.",
+                "Local data preserved — matching protected key required."),
+            _ => (
+                "Encrypted local data failed validation",
+                "Keep the current encrypted state for recovery or support. If you deliberately choose to start fresh, type RESET below; Vault Prospector will archive the entire local state after fresh Windows verification and require a restart.",
+                "Local data preserved — recovery decision required."),
+        };
     }
 
     private async Task RunAsync(Func<CancellationToken, Task> action)
@@ -415,7 +1356,12 @@ public sealed partial class MainViewModel(
         using var operation = new CancellationTokenSource();
         _activeOperation = operation;
         try { await action(operation.Token); }
-        catch (OperationCanceledException) { StatusText = "Operation cancelled."; SecretPreview = "Secret hidden."; }
+        catch (OperationCanceledException)
+        {
+            if (IsUnlocked)
+                StatusText = "Operation cancelled.";
+            SecretPreview = "Secret hidden.";
+        }
         catch (Exception ex)
         {
             var error = UserFacingErrorMapper.From(ex);
@@ -440,6 +1386,41 @@ public sealed partial class MainViewModel(
 
 }
 
+public sealed class LocalRecoveryArchiveRow(
+    LocalRecoveryArchive archive)
+{
+    public LocalRecoveryArchive Archive { get; } = archive;
+    public string Id => Archive.Id;
+    public string Kind => Archive.Kind switch
+    {
+        LocalRecoveryArchiveKind.Reset => "Reset recovery",
+        LocalRecoveryArchiveKind.Rotation => "Pre-rotation recovery",
+        LocalRecoveryArchiveKind.FailedRotation =>
+            "Interrupted rotation evidence",
+        _ => "Recovery",
+    };
+    public string Created =>
+        Archive.CreatedAtUtc
+            .ToLocalTime()
+            .ToString(
+                "g",
+                System.Globalization.CultureInfo.CurrentCulture);
+    public string Size => FormatSize(Archive.SizeBytes);
+    public string Summary =>
+        $"{Kind} · {Created} · {Size}";
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes < 1024)
+            return $"{bytes} B";
+        if (bytes < 1024 * 1024)
+            return $"{bytes / 1024d:0.0} KiB";
+        if (bytes < 1024L * 1024 * 1024)
+            return $"{bytes / (1024d * 1024):0.0} MiB";
+        return $"{bytes / (1024d * 1024 * 1024):0.0} GiB";
+    }
+}
+
 public sealed class SearchResultRow(SearchResult result)
 {
     public SearchResult Result { get; } = result;
@@ -452,6 +1433,63 @@ public sealed class SearchResultRow(SearchResult result)
     public string Tenant => Result.TenantDisplayName;
     public string Subscription => Result.Vault.SubscriptionId;
     public string State => Result.IsStale ? "Stale" : Result.Item.Enabled ? "Current" : "Disabled";
+    public string AccessStatus => Result.AccessStatus;
     public bool IsFavorite => Result.IsFavorite;
     public string FavoriteMarker => IsFavorite ? "★" : "☆";
+}
+
+public sealed class SubscriptionSelectionRow(SubscriptionAccess subscription)
+{
+    public SubscriptionAccess Subscription { get; } = subscription;
+    public Guid Id => Subscription.Id;
+    public string SubscriptionId => Subscription.SubscriptionId;
+    public string DisplayName => Subscription.DisplayName;
+    public string State => Subscription.State;
+    public bool IsSelected => Subscription.IsSelected;
+    public string InclusionState => IsSelected ? "Included" : "Excluded";
+}
+
+public sealed class VaultAccessRow(VaultAccessSummary summary)
+{
+    public VaultAccessSummary Summary { get; } = summary;
+    public Guid Id => Summary.Access.Id;
+    public Guid VaultId => Summary.Vault.Id;
+    public string Vault => Summary.Vault.Name;
+    public string Subscription => Summary.Vault.SubscriptionId;
+    public string Tenant => Summary.TenantDisplayName;
+    public string Identity => Summary.IdentityDisplayName;
+    public string PermissionSummary => Summary.Access.AccessStatus;
+    public string FailureCategory => Summary.Access.LastFailureCategory ?? "None";
+    public bool IsSelected => Summary.Access.IsSelected;
+    public string InclusionState => IsSelected ? "Included" : "Excluded";
+}
+
+public sealed class WorkloadIdentityCandidateRow(WorkloadIdentityCandidate candidate)
+{
+    public WorkloadIdentityCandidate Candidate { get; } = candidate;
+    public string DisplayName => Candidate.DisplayName;
+    public string IdentityType => Candidate.IdentityType;
+    public string ClientId => Candidate.ClientId;
+    public string PrincipalId => Candidate.PrincipalId;
+    public string Scope => string.IsNullOrWhiteSpace(Candidate.ResourceId)
+        ? Candidate.TenantId
+        : Candidate.ResourceId;
+    public string State => Candidate.IsEnabled ? "Enabled" : "Disabled";
+    public string PermissionSummary =>
+        $"View: {Candidate.Permissions.DirectoryVisibility}\n" +
+        $"Attach/use: {Candidate.Permissions.AttachOrUse}\n" +
+        $"Manage identity: {Candidate.Permissions.IdentityManagement}\n" +
+        $"Key Vault data: {Candidate.Permissions.KeyVaultDataAccess}\n" +
+        $"Role assignments: {Candidate.Permissions.RoleAssignmentManagement}\n" +
+        (Candidate.Permissions.Evidence.Count == 0
+            ? "Detailed evidence: not assessed for an exact Key Vault."
+            : "Detailed evidence:\n" +
+              string.Join(
+                  "\n",
+                  Candidate.Permissions.Evidence.Select(evidence =>
+                      $"{evidence.Capability} — {evidence.State}\n" +
+                      $"Subject: {evidence.Subject}\n" +
+                      $"Scope: {evidence.Scope}\n" +
+                      $"Basis: {evidence.Basis}\n" +
+                      $"Observed: {evidence.ObservedAt:yyyy-MM-dd HH:mm:ss} UTC")));
 }

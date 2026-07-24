@@ -9,6 +9,7 @@ namespace VaultProspector.Infrastructure;
 public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvider keyMaterial, IClock clock) : IProtectedValueStore
 {
     private const int CurrentKeyVersion = 2;
+    private const int MaximumEnvelopeBytes = 16 * 1024 * 1024;
     private sealed record Envelope(int KeyVersion, CachedSecretDescriptor Descriptor, string Nonce, string Tag, string Ciphertext);
     private sealed record AuthenticatedMetadata(int KeyVersion, Guid RequestedVaultItemId, CachedSecretDescriptor Descriptor);
 
@@ -126,6 +127,111 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
         return Task.CompletedTask;
     }
 
+    internal async Task<int> RotateEncryptionKeyAsync(
+        byte[] currentKey,
+        byte[] replacementKey,
+        CancellationToken cancellationToken)
+    {
+        if (currentKey.Length != 32 || replacementKey.Length != 32)
+            throw new ArgumentException(
+                "Offline-value rotation requires 256-bit current and replacement keys.");
+        if (!Directory.Exists(directory))
+            return 0;
+
+        var paths = Directory.EnumerateFiles(directory, "*.vpcache")
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+        var rotated = 0;
+        foreach (var path in paths)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!Guid.TryParse(Path.GetFileNameWithoutExtension(path), out var itemId))
+                throw new LocalDataIntegrityException(
+                    "An offline-value file has an invalid item identifier.");
+
+            Envelope envelope;
+            byte[] plaintext;
+            try
+            {
+                envelope = await ReadEnvelopeAsync(path, cancellationToken);
+                if (envelope.KeyVersion != CurrentKeyVersion)
+                    throw new CryptographicException(
+                        "An offline-value envelope has an unsupported key version.");
+                plaintext = DecryptWithKey(
+                    envelope,
+                    itemId,
+                    currentKey);
+                if (envelope.Descriptor.VaultItemId != itemId)
+                    throw new CryptographicException(
+                        "An offline-value envelope does not match its item path.");
+            }
+            catch (CryptographicException exception)
+            {
+                throw new LocalDataIntegrityException(
+                    "An offline value failed validation before key rotation.",
+                    exception);
+            }
+
+            try
+            {
+                await WriteEnvelopeWithKeyAsync(
+                    path,
+                    itemId,
+                    envelope.Descriptor,
+                    plaintext,
+                    replacementKey,
+                    cancellationToken);
+                rotated++;
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(plaintext);
+            }
+        }
+
+        return rotated;
+    }
+
+    internal async Task ValidateAllWithKeyAsync(
+        byte[] key,
+        CancellationToken cancellationToken)
+    {
+        if (key.Length != 32)
+            throw new ArgumentException(
+                "Offline-value validation requires a 256-bit key.",
+                nameof(key));
+        if (!Directory.Exists(directory))
+            return;
+
+        foreach (var path in Directory.EnumerateFiles(directory, "*.vpcache")
+            .OrderBy(path => path, StringComparer.Ordinal))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!Guid.TryParse(Path.GetFileNameWithoutExtension(path), out var itemId))
+                throw new LocalDataIntegrityException(
+                    "An offline-value file has an invalid item identifier.");
+            try
+            {
+                var envelope = await ReadEnvelopeAsync(path, cancellationToken);
+                if (envelope.KeyVersion != CurrentKeyVersion ||
+                    envelope.Descriptor.VaultItemId != itemId)
+                {
+                    throw new CryptographicException(
+                        "An offline-value envelope has invalid rotation metadata.");
+                }
+
+                var plaintext = DecryptWithKey(envelope, itemId, key);
+                CryptographicOperations.ZeroMemory(plaintext);
+            }
+            catch (CryptographicException exception)
+            {
+                throw new LocalDataIntegrityException(
+                    "An offline value failed post-rotation validation.",
+                    exception);
+            }
+        }
+    }
+
     private async Task PurgeWhereAsync(Func<Envelope, bool> predicate, CancellationToken cancellationToken)
     {
         if (!Directory.Exists(directory)) return;
@@ -167,7 +273,19 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
     {
         try
         {
-            var envelope = JsonSerializer.Deserialize<Envelope>(await File.ReadAllTextAsync(path, cancellationToken));
+            await using var stream = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                4096,
+                FileOptions.Asynchronous | FileOptions.SequentialScan);
+            if (stream.Length > MaximumEnvelopeBytes)
+                throw new CryptographicException(
+                    "The protected-value envelope exceeds the safe size limit.");
+            var envelope = await JsonSerializer.DeserializeAsync<Envelope>(
+                stream,
+                cancellationToken: cancellationToken);
             if (envelope?.Descriptor is null ||
                 string.IsNullOrWhiteSpace(envelope.Nonce) ||
                 string.IsNullOrWhiteSpace(envelope.Tag) ||
@@ -186,6 +304,22 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
 
     private async Task<byte[]> DecryptAsync(Envelope envelope, Guid requestedVaultItemId, CancellationToken cancellationToken)
     {
+        var key = await keyMaterial.GetExistingKeyAsync(KeyPurpose(envelope.KeyVersion), cancellationToken);
+        try
+        {
+            return DecryptWithKey(envelope, requestedVaultItemId, key);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(key);
+        }
+    }
+
+    private static byte[] DecryptWithKey(
+        Envelope envelope,
+        Guid requestedVaultItemId,
+        byte[] key)
+    {
         byte[] nonce;
         byte[] tag;
         byte[] ciphertext;
@@ -203,7 +337,6 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
         if (nonce.Length != 12 || tag.Length != 16)
             throw new CryptographicException("Invalid protected-value nonce or authentication tag length.");
 
-        var key = await keyMaterial.GetExistingKeyAsync(KeyPurpose(envelope.KeyVersion), cancellationToken);
         var plaintext = new byte[ciphertext.Length];
         var associatedData = AssociatedData(envelope.KeyVersion, requestedVaultItemId, envelope.Descriptor);
         var authenticated = false;
@@ -217,11 +350,64 @@ public sealed class EncryptedFileValueStore(string directory, IKeyMaterialProvid
         finally
         {
             if (!authenticated) CryptographicOperations.ZeroMemory(plaintext);
-            CryptographicOperations.ZeroMemory(key);
             CryptographicOperations.ZeroMemory(associatedData);
             CryptographicOperations.ZeroMemory(nonce);
             CryptographicOperations.ZeroMemory(tag);
             CryptographicOperations.ZeroMemory(ciphertext);
+        }
+    }
+
+    private static async Task WriteEnvelopeWithKeyAsync(
+        string path,
+        Guid itemId,
+        CachedSecretDescriptor descriptor,
+        byte[] plaintext,
+        byte[] key,
+        CancellationToken cancellationToken)
+    {
+        var nonce = RandomNumberGenerator.GetBytes(12);
+        var tag = new byte[16];
+        var ciphertext = new byte[plaintext.Length];
+        var associatedData = AssociatedData(
+            CurrentKeyVersion,
+            itemId,
+            descriptor);
+        try
+        {
+            using var aes = new AesGcm(key, tag.Length);
+            aes.Encrypt(
+                nonce,
+                plaintext,
+                ciphertext,
+                tag,
+                associatedData);
+            var envelope = new Envelope(
+                CurrentKeyVersion,
+                descriptor,
+                Convert.ToBase64String(nonce),
+                Convert.ToBase64String(tag),
+                Convert.ToBase64String(ciphertext));
+            var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+            try
+            {
+                await File.WriteAllTextAsync(
+                    temporaryPath,
+                    JsonSerializer.Serialize(envelope),
+                    cancellationToken);
+                File.Move(temporaryPath, path, true);
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                    File.Delete(temporaryPath);
+            }
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(nonce);
+            CryptographicOperations.ZeroMemory(tag);
+            CryptographicOperations.ZeroMemory(ciphertext);
+            CryptographicOperations.ZeroMemory(associatedData);
         }
     }
 

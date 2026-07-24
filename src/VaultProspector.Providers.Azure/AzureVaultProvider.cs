@@ -16,7 +16,11 @@ namespace VaultProspector.Providers.Azure;
 
 public sealed class AzureVaultProvider(MsalIdentityProvider identityProvider) : IVaultProvider
 {
-    public async Task<DiscoverySnapshot> DiscoverAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
+    public async Task<DiscoverySnapshot> DiscoverAsync(
+        ConnectedIdentity identity,
+        IReadOnlyList<string> excludedSubscriptions,
+        IReadOnlyList<string> excludedVaultResourceIds,
+        CancellationToken cancellationToken)
     {
         var credential = await identityProvider.GetCredentialAsync(identity, cancellationToken);
         var arm = new ArmClient(credential);
@@ -41,16 +45,27 @@ public sealed class AzureVaultProvider(MsalIdentityProvider identityProvider) : 
                 }
 
                 var subscriptionId = subscription.Data.SubscriptionId ?? subscription.Id.SubscriptionId ?? string.Empty;
+                if (excludedSubscriptions.Contains(subscriptionId)) continue;
                 subscriptions.Add(new SubscriptionAccess(Id(identity.Id, tenantId, subscriptionId), tenantAccess.Id, subscriptionId, subscription.Data.DisplayName ?? subscriptionId, subscription.Data.State?.ToString() ?? "Unknown", true, now));
                 try
                 {
                     await foreach (var resource in subscription.GetGenericResourcesAsync("resourceType eq 'Microsoft.KeyVault/vaults'", cancellationToken: cancellationToken))
                     {
+                        if (excludedVaultResourceIds.Contains(resource.Id.ToString(), StringComparer.OrdinalIgnoreCase))
+                            continue;
                         var vaultId = Id(resource.Id.ToString());
                         var vault = new VaultResource(vaultId, resource.Id.ToString(), resource.Data.Name, tenantId, subscriptionId, resource.Id.ResourceGroupName ?? string.Empty, resource.Data.Location.Name, ToTags(resource.Data.Tags), new Uri($"https://{resource.Data.Name}.vault.azure.net/"), now);
                         vaults.Add(vault);
-                        accessPaths.Add(new VaultAccess(Id(vaultId, identity.Id), vaultId, identity.Id, tenantId, "Discovered", now, null, 0));
-                        await EnumerateVaultAsync(credential, vault, items, errors, cancellationToken);
+                        var permissionObservation = await EnumerateVaultAsync(credential, vault, items, errors, cancellationToken);
+                        accessPaths.Add(new VaultAccess(
+                            Id(vaultId, identity.Id),
+                            vaultId,
+                            identity.Id,
+                            tenantId,
+                            permissionObservation.Summary,
+                            now,
+                            permissionObservation.FailureCategory,
+                            0));
                     }
                 }
                 catch (Exception ex) when (IsExpectedAzureFailure(ex))
@@ -82,8 +97,11 @@ public sealed class AzureVaultProvider(MsalIdentityProvider identityProvider) : 
         return new SensitiveValue(response.Value.Value);
     }
 
-    private static async Task EnumerateVaultAsync(TokenCredential credential, VaultResource vault, List<VaultItem> items, List<ProviderError> errors, CancellationToken cancellationToken)
+    private static async Task<VaultPermissionObservation> EnumerateVaultAsync(TokenCredential credential, VaultResource vault, List<VaultItem> items, List<ProviderError> errors, CancellationToken cancellationToken)
     {
+        var secretList = "Allowed";
+        var keyList = "Allowed";
+        var certificateList = "Allowed";
         try
         {
             var client = new SecretClient(vault.VaultUri, credential);
@@ -102,7 +120,11 @@ public sealed class AzureVaultProvider(MsalIdentityProvider identityProvider) : 
                 if (!foundVersion) items.Add(ToItem(vault.Id, current, DateTimeOffset.UtcNow));
             }
         }
-        catch (Exception ex) when (IsExpectedAzureFailure(ex)) { errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:secrets", ex)); }
+        catch (Exception ex) when (IsExpectedAzureFailure(ex))
+        {
+            secretList = PermissionState(ex);
+            errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:secrets", ex));
+        }
 
         try
         {
@@ -122,7 +144,11 @@ public sealed class AzureVaultProvider(MsalIdentityProvider identityProvider) : 
                 if (!foundVersion) items.Add(ToItem(vault.Id, current, DateTimeOffset.UtcNow));
             }
         }
-        catch (Exception ex) when (IsExpectedAzureFailure(ex)) { errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:keys", ex)); }
+        catch (Exception ex) when (IsExpectedAzureFailure(ex))
+        {
+            keyList = PermissionState(ex);
+            errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:keys", ex));
+        }
 
         try
         {
@@ -142,7 +168,24 @@ public sealed class AzureVaultProvider(MsalIdentityProvider identityProvider) : 
                 if (!foundVersion) items.Add(ToItem(vault.Id, current, DateTimeOffset.UtcNow));
             }
         }
-        catch (Exception ex) when (IsExpectedAzureFailure(ex)) { errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:certificates", ex)); }
+        catch (Exception ex) when (IsExpectedAzureFailure(ex))
+        {
+            certificateList = PermissionState(ex);
+            errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:certificates", ex));
+        }
+
+        var failedCategories = new[]
+        {
+            secretList == "Allowed" ? null : $"Secrets:{secretList}",
+            keyList == "Allowed" ? null : $"Keys:{keyList}",
+            certificateList == "Allowed" ? null : $"Certificates:{certificateList}",
+        }.Where(value => value is not null).ToArray();
+        var summary =
+            $"Management visibility: Visible; metadata list — secrets: {secretList}, keys: {keyList}, certificates: {certificateList}; " +
+            "secret value read: Not tested (only on explicit reveal); data-plane writes: Disabled by application policy.";
+        return new VaultPermissionObservation(
+            summary,
+            failedCategories.Length == 0 ? null : string.Join(", ", failedCategories!));
     }
 
     private static VaultItem ToItem(Guid vaultId, SecretProperties p, DateTimeOffset indexed) => CreateItem(vaultId, p.Name, VaultObjectType.Secret, p.Enabled ?? true, ToTags(p.Tags), p.ContentType, p.CreatedOn, p.UpdatedOn, p.ExpiresOn, VersionFromUri(p.Id), indexed);
@@ -158,7 +201,11 @@ public sealed class AzureVaultProvider(MsalIdentityProvider identityProvider) : 
     private static Dictionary<string, string> ToTags(IDictionary<string, string>? tags) => tags is null ? [] : new Dictionary<string, string>(tags, StringComparer.OrdinalIgnoreCase);
     private static string VersionFromUri(Uri uri) => uri.Segments.Length > 3 ? uri.Segments[^1].Trim('/') : string.Empty;
     private static bool IsExpectedAzureFailure(Exception ex) => ex is RequestFailedException or AuthenticationFailedException or MsalException;
+    private static string PermissionState(Exception ex) =>
+        ex is RequestFailedException { Status: 401 or 403 } ? "Denied" : "Indeterminate";
     private static ProviderError SafeError(string scope, Exception ex) => new(scope, ex.GetType().Name, ex switch { RequestFailedException r => $"Azure request failed with status {r.Status} ({r.ErrorCode ?? "unknown"}).", MsalUiRequiredException => "Interactive authentication is required.", _ => "Azure operation failed. See the diagnostic event type." });
     private static string Pseudonym(Guid value) => value.ToString("N")[..12];
     private static Guid Id(params object[] values) { var input = string.Join('|', values.Select(x => x.ToString())); var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input)); return new Guid(hash.AsSpan(0, 16)); }
+
+    private sealed record VaultPermissionObservation(string Summary, string? FailureCategory);
 }

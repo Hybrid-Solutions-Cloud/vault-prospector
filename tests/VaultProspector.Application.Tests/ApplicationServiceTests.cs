@@ -6,6 +6,50 @@ namespace VaultProspector.Application.Tests;
 public sealed class ApplicationServiceTests
 {
     [Fact]
+    public async Task LocalDataRecoveryRejectsIncorrectConfirmationBeforeVerification()
+    {
+        var verification = new CountingVerify();
+        var resetter = new FakeResetter();
+        var service = new LocalDataRecoveryService(verification, resetter);
+
+        await Assert.ThrowsAsync<LocalDataResetConfirmationException>(() =>
+            service.ArchiveAndResetAsync("reset", TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, verification.Calls);
+        Assert.Equal(0, resetter.Calls);
+    }
+
+    [Fact]
+    public async Task LocalDataRecoveryPreservesStateWhenVerificationIsNotCompleted()
+    {
+        var resetter = new FakeResetter();
+        var service = new LocalDataRecoveryService(new NeverVerify(), resetter);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.ArchiveAndResetAsync("RESET", TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, resetter.Calls);
+    }
+
+    [Fact]
+    public async Task LocalDataRecoveryArchivesOnlyAfterConfirmationAndVerification()
+    {
+        var resetter = new FakeResetter
+        {
+            Result = new LocalDataArchive("recovery-path", true),
+        };
+        var service = new LocalDataRecoveryService(new AlwaysVerify(), resetter);
+
+        var result = await service.ArchiveAndResetAsync(
+            " RESET ",
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.HadExistingData);
+        Assert.Equal("recovery-path", result.ArchivePath);
+        Assert.Equal(1, resetter.Calls);
+    }
+
+    [Fact]
     public async Task IdentityAdditionRejectsInvalidClientIdBeforeAuthentication()
     {
         var provider = new FakeIdentityProvider();
@@ -56,6 +100,386 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task ServicePrincipalProfileCanonicalizesIdentifiersAndCertificateThumbprint()
+    {
+        var repository = new FakeRepository(Identity());
+        var service = new IdentityService(new FakeIdentityProvider(), repository);
+
+        var identity = await service.AddWorkloadIdentityAsync(
+            "{11111111-1111-1111-1111-111111111111}",
+            "{22222222-2222-2222-2222-222222222222}",
+            " Automation ",
+            IdentityType.ServicePrincipal,
+            "aa11 bb22 cc33 dd44 ee55 ff66 0011 2233 4455 6677",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("11111111-1111-1111-1111-111111111111", identity.ClientId);
+        Assert.Equal("22222222-2222-2222-2222-222222222222", identity.HomeTenantId);
+        Assert.Equal("AA11BB22CC33DD44EE55FF660011223344556677", identity.CredentialData);
+        Assert.Equal("Automation", identity.DisplayName);
+        Assert.Equal(IdentityType.ServicePrincipal, repository.UpsertedIdentity?.Type);
+    }
+
+    [Theory]
+    [InlineData("", "22222222-2222-2222-2222-222222222222", "AA11BB22CC33DD44EE55FF660011223344556677")]
+    [InlineData("11111111-1111-1111-1111-111111111111", "", "AA11BB22CC33DD44EE55FF660011223344556677")]
+    [InlineData("11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222", "not-a-thumbprint")]
+    public async Task ServicePrincipalProfileRejectsIncompleteOrInvalidConfiguration(
+        string clientId,
+        string tenantId,
+        string thumbprint)
+    {
+        var repository = new FakeRepository(Identity());
+        var service = new IdentityService(new FakeIdentityProvider(), repository);
+
+        await Assert.ThrowsAsync<WorkloadIdentityConfigurationException>(() => service.AddWorkloadIdentityAsync(
+            clientId,
+            tenantId,
+            "Automation",
+            IdentityType.ServicePrincipal,
+            thumbprint,
+            TestContext.Current.CancellationToken));
+
+        Assert.Null(repository.UpsertedIdentity);
+    }
+
+    [Fact]
+    public async Task ManagedIdentityProfileRejectsCredentialMaterial()
+    {
+        var repository = new FakeRepository(Identity());
+        var service = new IdentityService(new FakeIdentityProvider(), repository);
+
+        await Assert.ThrowsAsync<WorkloadIdentityConfigurationException>(() => service.AddWorkloadIdentityAsync(
+            string.Empty,
+            string.Empty,
+            "Azure host",
+            IdentityType.ManagedIdentity,
+            "client-secret-must-never-be-stored",
+            TestContext.Current.CancellationToken));
+
+        Assert.Null(repository.UpsertedIdentity);
+    }
+
+    [Fact]
+    public async Task WorkloadProfileIsNotPersistedWhenCredentialValidationFails()
+    {
+        var repository = new FakeRepository(Identity());
+        var provider = new FakeIdentityProvider
+        {
+            ReauthenticateException = new InvalidOperationException("credential unavailable"),
+        };
+        var service = new IdentityService(provider, repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddWorkloadIdentityAsync(
+            "11111111-1111-1111-1111-111111111111",
+            "22222222-2222-2222-2222-222222222222",
+            "Automation",
+            IdentityType.ServicePrincipal,
+            "AA11BB22CC33DD44EE55FF660011223344556677",
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(1, provider.ReauthenticateCalls);
+        Assert.Null(repository.UpsertedIdentity);
+    }
+
+    [Fact]
+    public async Task FederatedProfileStoresOnlyCanonicalReadableTokenFilePath()
+    {
+        var tokenPath = Path.Combine(
+            Path.GetTempPath(),
+            $"vault-prospector-federated-{Guid.NewGuid():N}.token");
+        await File.WriteAllTextAsync(
+            tokenPath,
+            "test-token-content",
+            TestContext.Current.CancellationToken);
+        try
+        {
+            var repository = new FakeRepository(Identity());
+            var provider = new FakeIdentityProvider();
+            var service = new IdentityService(provider, repository);
+
+            var identity = await service.AddWorkloadIdentityAsync(
+                "11111111-1111-1111-1111-111111111111",
+                "22222222-2222-2222-2222-222222222222",
+                "Federated automation",
+                IdentityType.FederatedServicePrincipal,
+                tokenPath,
+                TestContext.Current.CancellationToken);
+
+            Assert.Equal(Path.GetFullPath(tokenPath), identity.CredentialData);
+            Assert.Equal(IdentityType.FederatedServicePrincipal, identity.Type);
+            Assert.Equal(1, provider.ReauthenticateCalls);
+            Assert.Equal(identity, repository.UpsertedIdentity);
+            Assert.DoesNotContain("test-token-content", identity.CredentialData, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(tokenPath);
+        }
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("missing-federated-token-file")]
+    public async Task FederatedProfileRejectsMissingOrUnreadableTokenFile(string path)
+    {
+        var repository = new FakeRepository(Identity());
+        var provider = new FakeIdentityProvider();
+        var service = new IdentityService(provider, repository);
+
+        await Assert.ThrowsAsync<WorkloadIdentityConfigurationException>(() =>
+            service.AddWorkloadIdentityAsync(
+                "11111111-1111-1111-1111-111111111111",
+                "22222222-2222-2222-2222-222222222222",
+                "Federated automation",
+                IdentityType.FederatedServicePrincipal,
+                path,
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.ReauthenticateCalls);
+        Assert.Null(repository.UpsertedIdentity);
+    }
+
+    [Fact]
+    public async Task CertificateRotationValidatesReplacementBeforePersistence()
+    {
+        var original = Identity() with
+        {
+            Type = IdentityType.ServicePrincipal,
+            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+        };
+        var repository = new FakeRepository(original);
+        var provider = new FakeIdentityProvider();
+        var service = new IdentityService(provider, repository);
+
+        await service.RotateWorkloadCredentialAsync(
+            original.Id,
+            "bb22 cc33 dd44 ee55 ff66 0011 2233 4455 6677 8899",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, provider.ReauthenticateCalls);
+        Assert.Equal(
+            "BB22CC33DD44EE55FF6600112233445566778899",
+            provider.ReauthenticatedIdentity?.CredentialData);
+        Assert.Equal(provider.ReauthenticatedIdentity?.CredentialData, repository.UpsertedIdentity?.CredentialData);
+        Assert.Equal(AuthenticationState.Ready, repository.UpsertedIdentity?.AuthenticationState);
+    }
+
+    [Fact]
+    public async Task FailedCredentialRotationPreservesPersistedProfile()
+    {
+        var original = Identity() with
+        {
+            Type = IdentityType.ServicePrincipal,
+            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+        };
+        var repository = new FakeRepository(original);
+        var provider = new FakeIdentityProvider
+        {
+            ReauthenticateException = new InvalidOperationException("replacement rejected"),
+        };
+        var service = new IdentityService(provider, repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.RotateWorkloadCredentialAsync(
+                original.Id,
+                "BB22CC33DD44EE55FF6600112233445566778899",
+                TestContext.Current.CancellationToken));
+
+        Assert.Null(repository.UpsertedIdentity);
+    }
+
+    [Fact]
+    public async Task LocalRevocationFailsClosedAndRemovesCredentialReference()
+    {
+        var firstVaultId = Guid.NewGuid();
+        var secondVaultId = Guid.NewGuid();
+        var original = Identity() with
+        {
+            Type = IdentityType.ServicePrincipal,
+            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+        };
+        var repository = new FakeRepository(original)
+        {
+            VaultIds = [firstVaultId, secondVaultId, firstVaultId],
+        };
+        var provider = new FakeIdentityProvider();
+        var values = new FakeValueStore();
+        var service = new IdentityService(
+            provider,
+            repository,
+            new FakeDiagnostics(),
+            values);
+
+        var result = await service.RevokeLocalAccessAsync(
+            original.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.False(repository.UpsertedIdentity?.IsEnabled);
+        Assert.Equal(AuthenticationState.Revoked, repository.UpsertedIdentity?.AuthenticationState);
+        Assert.Equal(string.Empty, repository.UpsertedIdentity?.CredentialData);
+        Assert.Equal(1, provider.RemoveCalls);
+        Assert.True(result.ProviderCredentialRemoved);
+        Assert.Equal(2, result.PurgedVaultCount);
+        Assert.Equal(
+            [firstVaultId, secondVaultId],
+            values.PurgedVaultIds);
+        Assert.All(
+            values.PurgeCancellationTokens,
+            token => Assert.False(token.CanBeCanceled));
+    }
+
+    [Fact]
+    public async Task ProviderCleanupFailureDoesNotSkipOfflinePurge()
+    {
+        var vaultId = Guid.NewGuid();
+        var original = Identity() with
+        {
+            Type = IdentityType.ServicePrincipal,
+            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+        };
+        var repository = new FakeRepository(original)
+        {
+            VaultIds = [vaultId],
+        };
+        var provider = new FakeIdentityProvider
+        {
+            RemoveException =
+                new InvalidOperationException("provider cleanup failed"),
+        };
+        var values = new FakeValueStore();
+        var diagnostics = new FakeDiagnostics();
+        var service = new IdentityService(
+            provider,
+            repository,
+            diagnostics,
+            values);
+
+        var result = await service.RevokeLocalAccessAsync(
+            original.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.ProviderCredentialRemoved);
+        Assert.Equal(1, result.PurgedVaultCount);
+        Assert.Equal([vaultId], values.PurgedVaultIds);
+        Assert.Contains(
+            "identity_provider_credential_removal_failed",
+            diagnostics.ErrorEvents);
+    }
+
+    [Fact]
+    public async Task OfflinePurgeFailureContinuesAndReportsRevokedState()
+    {
+        var failedVaultId = Guid.NewGuid();
+        var retainedAttemptId = Guid.NewGuid();
+        var original = Identity() with
+        {
+            Type = IdentityType.ServicePrincipal,
+            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+        };
+        var repository = new FakeRepository(original)
+        {
+            VaultIds = [failedVaultId, retainedAttemptId],
+        };
+        var values = new FakeValueStore
+        {
+            PurgeFailureVaultId = failedVaultId,
+        };
+        var diagnostics = new FakeDiagnostics();
+        var service = new IdentityService(
+            new FakeIdentityProvider(),
+            repository,
+            diagnostics,
+            values);
+
+        var exception =
+            await Assert.ThrowsAsync<LocalRevocationCleanupException>(
+                () => service.RevokeLocalAccessAsync(
+                    original.Id,
+                    TestContext.Current.CancellationToken));
+
+        Assert.Equal(1, exception.FailedVaultCount);
+        Assert.Equal(AuthenticationState.Revoked, repository.UpsertedIdentity?.AuthenticationState);
+        Assert.Equal(
+            [failedVaultId, retainedAttemptId],
+            values.PurgedVaultIds);
+        Assert.Contains(
+            "identity_offline_value_purge_failed",
+            diagnostics.ErrorEvents);
+    }
+
+    [Fact]
+    public async Task IdentityScopedOfflinePurgeIncludesRemovedAccessAndDeduplicatesVaults()
+    {
+        var firstVaultId = Guid.NewGuid();
+        var secondVaultId = Guid.NewGuid();
+        var identity = Identity();
+        var repository = new FakeRepository(identity)
+        {
+            VaultIds = [firstVaultId, secondVaultId, firstVaultId],
+        };
+        var values = new FakeValueStore();
+        var service = new IdentityService(
+            new FakeIdentityProvider(),
+            repository,
+            new FakeDiagnostics(),
+            values);
+
+        var purgedVaultCount = await service.PurgeOfflineValuesAsync(
+            identity.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, purgedVaultCount);
+        Assert.Equal([firstVaultId, secondVaultId], values.PurgedVaultIds);
+    }
+
+    [Fact]
+    public async Task EnableRevalidatesCredentialBeforeChangingPersistedState()
+    {
+        var disabled = Identity() with
+        {
+            IsEnabled = false,
+            AuthenticationState = AuthenticationState.Disabled,
+        };
+        var repository = new FakeRepository(disabled);
+        var provider = new FakeIdentityProvider();
+        var service = new IdentityService(provider, repository);
+
+        await service.EnableAsync(disabled.Id, TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, provider.ReauthenticateCalls);
+        Assert.True(repository.UpsertedIdentity?.IsEnabled);
+        Assert.Equal(AuthenticationState.Ready, repository.UpsertedIdentity?.AuthenticationState);
+    }
+
+    [Fact]
+    public async Task DirectoryReadAuthorizationRequiresInteractiveIdentityAndPersistsResult()
+    {
+        var interactive = Identity();
+        var repository = new FakeRepository(interactive);
+        var provider = new FakeIdentityProvider();
+        var service = new IdentityService(provider, repository);
+
+        await service.AuthorizeDirectoryReadAsync(
+            interactive.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, provider.DirectoryAuthorizeCalls);
+        Assert.Equal(AuthenticationState.Ready, repository.UpsertedIdentity?.AuthenticationState);
+
+        var workloadRepository = new FakeRepository(interactive with
+        {
+            Type = IdentityType.ServicePrincipal,
+        });
+        var workloadService = new IdentityService(provider, workloadRepository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            workloadService.AuthorizeDirectoryReadAsync(
+                interactive.Id,
+                TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task SynchronizationPersistsPartialSuccessAndSafeErrors()
     {
         var identity = Identity();
@@ -71,6 +495,142 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task SynchronizationDoesNotPersistAuthenticationExceptionMessages()
+    {
+        var identity = Identity();
+        var repository = new FakeRepository(identity);
+        var provider = new FakeProvider
+        {
+            DiscoveryException = new AuthenticationFailedException(
+                "secret-token-and-tenant-details"),
+        };
+        var service = new SynchronizationService(
+            provider,
+            repository,
+            new FixedClock(),
+            new FakeDiagnostics());
+
+        var run = await service.SynchronizeAsync(
+            identity,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(SyncStatus.Failed, run.Status);
+        Assert.Equal(
+            "Interactive Microsoft Entra authentication is required.",
+            Assert.Single(run.NonSensitiveErrors));
+        Assert.DoesNotContain("secret-token", run.NonSensitiveErrors[0], StringComparison.Ordinal);
+        Assert.Equal(
+            AuthenticationState.InteractionRequired,
+            repository.UpsertedIdentity?.AuthenticationState);
+    }
+
+    [Fact]
+    public async Task SynchronizationRejectsRevokedIdentityBeforeProviderCall()
+    {
+        var identity = Identity() with
+        {
+            IsEnabled = false,
+            AuthenticationState = AuthenticationState.Revoked,
+        };
+        var repository = new FakeRepository(identity);
+        var provider = new FakeProvider();
+        var service = new SynchronizationService(
+            provider,
+            repository,
+            new FixedClock(),
+            new FakeDiagnostics());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.SynchronizeAsync(identity, TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.DiscoveryCalls);
+    }
+
+    [Fact]
+    public async Task SynchronizationUsesPersistedIdentityStateInsteadOfStaleCallerState()
+    {
+        var staleCallerIdentity = Identity();
+        var persistedIdentity = staleCallerIdentity with
+        {
+            IsEnabled = false,
+            AuthenticationState = AuthenticationState.Revoked,
+        };
+        var repository = new FakeRepository(persistedIdentity);
+        var provider = new FakeProvider();
+        var service = new SynchronizationService(
+            provider,
+            repository,
+            new FixedClock(),
+            new FakeDiagnostics());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.SynchronizeAsync(staleCallerIdentity, TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, provider.DiscoveryCalls);
+    }
+
+    [Fact]
+    public async Task SynchronizationExcludesOnlySubscriptionsDisabledForTheSelectedIdentity()
+    {
+        var identity = Identity();
+        var repository = new FakeRepository(identity)
+        {
+            Subscriptions =
+            [
+                new(Guid.NewGuid(), Guid.NewGuid(), "included", "Included", "Enabled", true, DateTimeOffset.UtcNow),
+                new(Guid.NewGuid(), Guid.NewGuid(), "excluded", "Excluded", "Enabled", false, DateTimeOffset.UtcNow),
+                new(Guid.NewGuid(), Guid.NewGuid(), "EXCLUDED", "Duplicate", "Enabled", false, DateTimeOffset.UtcNow),
+            ],
+        };
+        var provider = new FakeProvider();
+        var service = new SynchronizationService(provider, repository, new FixedClock(), new FakeDiagnostics());
+
+        await service.SynchronizeAsync(identity, TestContext.Current.CancellationToken);
+
+        Assert.Equal(identity.Id, repository.RequestedSubscriptionIdentityId);
+        Assert.Equal(["excluded"], provider.ExcludedSubscriptions, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task SynchronizationExcludesOnlyVaultAccessPathsDisabledForTheSelectedIdentity()
+    {
+        var identity = Identity();
+        var includedVault = Vault();
+        var excludedVault = Vault() with
+        {
+            Id = Guid.NewGuid(),
+            ProviderResourceId = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/excluded",
+            Name = "excluded",
+            VaultUri = new Uri("https://excluded.vault.azure.net/"),
+        };
+        var repository = new FakeRepository(identity)
+        {
+            VaultAccessSummaries =
+            [
+                new(
+                    includedVault,
+                    new VaultAccess(Guid.NewGuid(), includedVault.Id, identity.Id, "tenant", "Visible", DateTimeOffset.UtcNow, null, 0, true),
+                    identity.DisplayName,
+                    "Tenant"),
+                new(
+                    excludedVault,
+                    new VaultAccess(Guid.NewGuid(), excludedVault.Id, identity.Id, "tenant", "Visible", DateTimeOffset.UtcNow, null, 0, false),
+                    identity.DisplayName,
+                    "Tenant"),
+            ],
+        };
+        var provider = new FakeProvider();
+        var service = new SynchronizationService(provider, repository, new FixedClock(), new FakeDiagnostics());
+
+        await service.SynchronizeAsync(identity, TestContext.Current.CancellationToken);
+
+        Assert.Equal([excludedVault.ProviderResourceId], provider.ExcludedVaultResourceIds, StringComparer.OrdinalIgnoreCase);
+        Assert.NotNull(repository.AppliedSnapshot);
+        Assert.Contains(repository.AppliedSnapshot.Vaults, vault => vault.Id == excludedVault.Id);
+        Assert.Contains(repository.AppliedSnapshot.AccessPaths, access => access.VaultId == excludedVault.Id && !access.IsSelected);
+    }
+
+    [Fact]
     public async Task SecretRetrievalRejectsKeysWithoutCallingProvider()
     {
         var identity = Identity();
@@ -81,6 +641,29 @@ public sealed class ApplicationServiceTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.RetrieveAsync(item.Id, TestContext.Current.CancellationToken));
         Assert.Equal(0, provider.RetrieveCalls);
+    }
+
+    [Fact]
+    public async Task CancellationAfterProviderReturnPreventsClipboardReleaseAndDisposesValue()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity) { Resolved = (item, Vault(), identity) };
+        var provider = new FakeProvider();
+        var clipboard = new FakeClipboard();
+        var service = new SecretAccessService(provider, repository, new FakeValueStore(), clipboard, new AlwaysVerify(), new FixedClock());
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.RetrieveAndCopyAsync(
+            item.Id,
+            TimeSpan.FromSeconds(30),
+            CachePolicy.SecureDefault,
+            cancellation.Token));
+
+        Assert.Equal(1, provider.RetrieveCalls);
+        Assert.Equal(0, clipboard.CopyCalls);
+        Assert.True(provider.LastRetrievedValue?.IsDisposed);
     }
 
     [Fact]
@@ -327,12 +910,25 @@ public sealed class ApplicationServiceTests
     private sealed class FakeProvider : IVaultProvider
     {
         public DiscoverySnapshot Snapshot { get; set; } = new([], [], [], [], [], []);
+        public Exception? DiscoveryException { get; init; }
         public bool HonorCancellation { get; init; }
+        public int DiscoveryCalls { get; private set; }
         public int RetrieveCalls { get; private set; }
         public SensitiveValue? LastRetrievedValue { get; private set; }
-        public Task<DiscoverySnapshot> DiscoverAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
+        public IReadOnlyList<string> ExcludedSubscriptions { get; private set; } = [];
+        public IReadOnlyList<string> ExcludedVaultResourceIds { get; private set; } = [];
+        public Task<DiscoverySnapshot> DiscoverAsync(
+            ConnectedIdentity identity,
+            IReadOnlyList<string> excludedSubscriptions,
+            IReadOnlyList<string> excludedVaultResourceIds,
+            CancellationToken cancellationToken)
         {
             if (HonorCancellation) cancellationToken.ThrowIfCancellationRequested();
+            if (DiscoveryException is not null)
+                return Task.FromException<DiscoverySnapshot>(DiscoveryException);
+            DiscoveryCalls++;
+            ExcludedSubscriptions = excludedSubscriptions.ToArray();
+            ExcludedVaultResourceIds = excludedVaultResourceIds.ToArray();
             return Task.FromResult(Snapshot);
         }
         public Task<SensitiveValue> RetrieveSecretAsync(ConnectedIdentity identity, VaultResource vault, VaultItem item, CancellationToken cancellationToken)
@@ -342,6 +938,8 @@ public sealed class ApplicationServiceTests
             return Task.FromResult(LastRetrievedValue);
         }
     }
+
+    private sealed class AuthenticationFailedException(string message) : Exception(message);
     private sealed class FakeRepository(ConnectedIdentity identity) : IMetadataRepository
     {
         public DiscoverySnapshot? AppliedSnapshot { get; private set; }
@@ -351,6 +949,10 @@ public sealed class ApplicationServiceTests
         public Exception? RecordAccessException { get; init; }
         public Exception? UpsertIdentityException { get; init; }
         public int RecordAccessCalls { get; private set; }
+        public IReadOnlyList<SubscriptionAccess> Subscriptions { get; init; } = [];
+        public IReadOnlyList<VaultAccessSummary> VaultAccessSummaries { get; init; } = [];
+        public IReadOnlyList<Guid> VaultIds { get; init; } = [];
+        public Guid? RequestedSubscriptionIdentityId { get; private set; }
         public Task InitializeAsync(CancellationToken c) => Task.CompletedTask;
         public Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(CancellationToken c) => Task.FromResult<IReadOnlyList<ConnectedIdentity>>([identity]);
         public Task<ConnectedIdentity?> GetIdentityAsync(Guid id, CancellationToken c) => Task.FromResult<ConnectedIdentity?>(identity);
@@ -360,6 +962,19 @@ public sealed class ApplicationServiceTests
             return UpsertIdentityException is null ? Task.CompletedTask : Task.FromException(UpsertIdentityException);
         }
         public Task RemoveIdentityAsync(Guid id, CancellationToken c) => Task.CompletedTask;
+        public Task<IReadOnlyList<TenantAccess>> GetTenantsAsync(Guid identityId, CancellationToken c) =>
+            Task.FromResult<IReadOnlyList<TenantAccess>>([]);
+        public Task<IReadOnlyList<SubscriptionAccess>> GetSubscriptionsAsync(Guid identityId, CancellationToken c)
+        {
+            RequestedSubscriptionIdentityId = identityId;
+            return Task.FromResult(Subscriptions);
+        }
+        public Task SetSubscriptionSelectedAsync(Guid subscriptionAccessId, bool isSelected, CancellationToken c) => Task.CompletedTask;
+        public Task<IReadOnlyList<VaultAccessSummary>> GetVaultAccessSummariesAsync(Guid identityId, CancellationToken c) =>
+            Task.FromResult(VaultAccessSummaries);
+        public Task<IReadOnlyList<Guid>> GetVaultIdsForIdentityAsync(Guid identityId, CancellationToken c) =>
+            Task.FromResult(VaultIds);
+        public Task SetVaultSelectedAsync(Guid vaultAccessId, bool isSelected, CancellationToken c) => Task.CompletedTask;
         public Task ApplyDiscoveryAsync(Guid id, DiscoverySnapshot snapshot, SyncRun run, CancellationToken c) { AppliedSnapshot = snapshot; return Task.CompletedTask; }
         public Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest r, DateTimeOffset n, CancellationToken c) => Task.FromResult<IReadOnlyList<SearchResult>>([]);
         public Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemAsync(Guid id, CancellationToken c) => Task.FromResult(Resolved);
@@ -378,10 +993,15 @@ public sealed class ApplicationServiceTests
     private sealed class FakeIdentityProvider : IIdentityProvider
     {
         public int SignInCalls { get; private set; }
+        public int ReauthenticateCalls { get; private set; }
+        public int DirectoryAuthorizeCalls { get; private set; }
         public int RemoveCalls { get; private set; }
         public string? ClientId { get; private set; }
         public string? DisplayName { get; private set; }
         public ConnectedIdentity? RemovedIdentity { get; private set; }
+        public ConnectedIdentity? ReauthenticatedIdentity { get; private set; }
+        public Exception? ReauthenticateException { get; init; }
+        public Exception? RemoveException { get; init; }
         public Task<ConnectedIdentity> SignInAsync(string clientId, string displayName, CancellationToken cancellationToken)
         {
             SignInCalls++;
@@ -389,21 +1009,66 @@ public sealed class ApplicationServiceTests
             DisplayName = displayName;
             return Task.FromResult(new ConnectedIdentity(Guid.NewGuid(), clientId, "account", "user@example.invalid", displayName, "tenant", AuthenticationState.Ready, DateTimeOffset.UtcNow));
         }
+        public Task<ConnectedIdentity> ReauthenticateAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
+        {
+            ReauthenticateCalls++;
+            ReauthenticatedIdentity = identity;
+            if (ReauthenticateException is not null)
+                return Task.FromException<ConnectedIdentity>(ReauthenticateException);
+            return Task.FromResult(identity with { AuthenticationState = AuthenticationState.Ready, LastInteractiveAuthentication = DateTimeOffset.UtcNow });
+        }
+        public Task<ConnectedIdentity> AuthorizeDirectoryReadAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
+        {
+            DirectoryAuthorizeCalls++;
+            return Task.FromResult(identity with
+            {
+                AuthenticationState = AuthenticationState.Ready,
+                LastInteractiveAuthentication = DateTimeOffset.UtcNow,
+            });
+        }
         public Task RemoveAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
         {
             RemoveCalls++;
             RemovedIdentity = identity;
-            return Task.CompletedTask;
+            return RemoveException is null
+                ? Task.CompletedTask
+                : Task.FromException(RemoveException);
         }
     }
-    private sealed class FakeDiagnostics : IDiagnosticSink { public void Information(string e, IReadOnlyDictionary<string, object?> f) { } public void WriteError(string e, Exception x, IReadOnlyDictionary<string, object?> f) { } }
-    private sealed class AlwaysVerify : IUserVerificationService { public bool IsAvailable => true; public Task<bool> VerifyAsync(string r, CancellationToken c) => Task.FromResult(true); }
-    private sealed class NeverVerify : IUserVerificationService { public bool IsAvailable => true; public Task<bool> VerifyAsync(string r, CancellationToken c) => Task.FromResult(false); }
+    private sealed class FakeDiagnostics : IDiagnosticSink
+    {
+        public List<string> ErrorEvents { get; } = [];
+
+        public void Information(
+            string eventName,
+            IReadOnlyDictionary<string, object?> fields)
+        {
+        }
+
+        public void WriteError(
+            string eventName,
+            Exception exception,
+            IReadOnlyDictionary<string, object?> fields) =>
+            ErrorEvents.Add(eventName);
+    }
+    private sealed class FakeResetter : ILocalDataResetter
+    {
+        public int Calls { get; private set; }
+        public LocalDataArchive Result { get; init; } = new(string.Empty, false);
+
+        public Task<LocalDataArchive> ArchiveForResetAsync(CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult(Result);
+        }
+    }
+    private sealed class AlwaysVerify : IUserVerificationService { public bool IsAvailable => true; public Task<UserVerificationResult> VerifyAsync(string r, CancellationToken c) => Task.FromResult(UserVerificationResult.Verified); }
+    private sealed class NeverVerify : IUserVerificationService { public bool IsAvailable => true; public Task<UserVerificationResult> VerifyAsync(string r, CancellationToken c) => Task.FromResult(UserVerificationResult.Canceled); }
     private sealed class CountingVerify : IUserVerificationService
     {
         public bool IsAvailable => true;
         public int Calls { get; private set; }
-        public Task<bool> VerifyAsync(string r, CancellationToken c) { Calls++; return Task.FromResult(true); }
+        public Task<UserVerificationResult> VerifyAsync(string r, CancellationToken c) { Calls++; return Task.FromResult(UserVerificationResult.Verified); }
     }
     private sealed class FakeClipboard : IClipboardService
     {
@@ -421,6 +1086,9 @@ public sealed class ApplicationServiceTests
         public string? Value { get; init; }
         public int RetrieveCalls { get; private set; }
         public int StoreCalls { get; private set; }
+        public Guid? PurgeFailureVaultId { get; init; }
+        public List<Guid> PurgedVaultIds { get; } = [];
+        public List<CancellationToken> PurgeCancellationTokens { get; } = [];
         public SensitiveValue? LastRetrievedValue { get; private set; }
         public string? StoredValue { get; private set; }
         public string? StoredFingerprint { get; private set; }
@@ -438,7 +1106,15 @@ public sealed class ApplicationServiceTests
             return Task.FromResult(LastRetrievedValue);
         }
         public Task PurgeItemAsync(Guid i, CancellationToken c) => Task.CompletedTask;
-        public Task PurgeVaultAsync(Guid i, CancellationToken c) => Task.CompletedTask;
+        public Task PurgeVaultAsync(Guid i, CancellationToken c)
+        {
+            PurgedVaultIds.Add(i);
+            PurgeCancellationTokens.Add(c);
+            return i == PurgeFailureVaultId
+                ? Task.FromException(
+                    new IOException("offline purge failed"))
+                : Task.CompletedTask;
+        }
         public Task PurgeWorkspaceAsync(Guid i, CancellationToken c) => Task.CompletedTask;
         public Task PurgeAllAsync(CancellationToken c) => Task.CompletedTask;
     }
