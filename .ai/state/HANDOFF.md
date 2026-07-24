@@ -358,10 +358,14 @@
 - MSI packaging includes the native host, disabled-by-default machine policy, and exact HKLM Chrome,
   Edge, and Firefox native-host registrations.
 - The full locked Release gate passes 318/318 .NET tests with zero warnings/errors and no known
-  vulnerable NuGet packages. Extension tests pass 6/6. Local MSI `0.1.0-ci.1001` passes rollback,
+  vulnerable NuGet packages. Extension tests pass 6/6. Local MSI `0.1.0-ci.1002` passes rollback,
   icon, native-host, disabled-policy, and three-registration checks; exact-commit CI remains.
 - Phase 11 remains validation-open: no signed extension packages, live installed-browser matrix,
   independent review, compromise/revocation exercise, or representative-user/AT evidence yet.
+- Exact-branch review found and fixed a lock race by cancelling pending/in-flight retrieval and
+  zeroing any approved response that loses the completion race. The first PR CI secret scan also
+  identified the Chromium public key; `.gitleaks.toml` now has an exact-value/exact-path public-key
+  exception, and local full-history scanning passes.
 - Canonical docs: `docs/browser-integration.md`,
   `docs/security/browser-integration-threat-model.md`, ADR-0014, spike-0009, and
   `docs/release-evidence/browser-integration-phase-11-2026-07-23.md`.
