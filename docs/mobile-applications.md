@@ -1,6 +1,6 @@
 # Mobile applications
 
-**Status:** Source implementation and CI validation in progress; not released
+**Status:** Application source and exact-merge CI complete; external validation open; not released
 
 **Platforms:** Android 12/API 31 or later and iOS/iPadOS 18 or later
 
@@ -42,6 +42,25 @@ Microsoft Entra reauthentication, and metadata resynchronization.
 
 See the [mobile threat model](security/mobile-threat-model.md) and
 [native-host ADR](adr/0016-native-mobile-security-hosts.md).
+
+## Native autofill feasibility
+
+Native compile-time prototypes now establish the public extension boundaries without enabling an
+unsafe partial feature:
+
+- Android includes a real, package-disabled `AutofillService`. Its bounded parser accepts only one
+  HTTPS web origin and unambiguous username/password hints, implements no save/import behavior,
+  and returns no dataset.
+- iOS embeds a credential-provider extension target. It validates domain/URL service identifiers,
+  requires interaction for every no-UI request, has no shared app database/Keychain access, and
+  returns no credential.
+- Shared tests cover exact-origin normalization and unsafe scheme, port, user information, path,
+  ambiguous-field, duplicate-purpose, mapping, foreground, object-type, and verification cases.
+
+Both prototypes remain disabled for value delivery until encrypted exact mappings, foreground
+verification, Android package/domain/signature association, signed physical-device negative
+matrices, and independent review are complete. See the
+[platform credential-integration spike](spikes/0007-platform-credential-integration.md).
 
 ## Microsoft Entra registration
 
