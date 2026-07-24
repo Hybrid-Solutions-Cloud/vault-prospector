@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Net.NetworkInformation;
+using System.Security.Cryptography;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -8,6 +9,7 @@ using Avalonia.Threading;
 using VaultProspector.App.ViewModels;
 using VaultProspector.App.Views;
 using VaultProspector.Application;
+using VaultProspector.BrowserProtocol;
 using VaultProspector.Domain;
 using VaultProspector.Infrastructure;
 using VaultProspector.Platform;
@@ -38,6 +40,23 @@ public partial class App : Avalonia.Application
             var valueStore = new EncryptedFileValueStore(VaultProspectorPaths.CacheDirectory, keyProvider, clock);
             var clipboard = new AvaloniaClipboardService();
             IUserVerificationService verification = new WindowsHelloVerificationService();
+            var secretAccessService = new SecretAccessService(
+                azureProvider,
+                repository,
+                valueStore,
+                clipboard,
+                verification,
+                clock);
+            var browserFillService = new BrowserFillService(
+                repository,
+                secretAccessService,
+                clock,
+                new WindowsMachineBrowserFillPolicy(
+                    Path.Combine(
+                        AppContext.BaseDirectory,
+                        "browser-fill-policy.json"),
+                    Environment.GetFolderPath(
+                        Environment.SpecialFolder.ProgramFiles)));
             var localDataRecovery = new LocalDataRecoveryService(
                 verification,
                 new FileSystemLocalDataResetter(VaultProspectorPaths.DataDirectory));
@@ -75,7 +94,7 @@ public partial class App : Avalonia.Application
                     valueStore),
                 new SynchronizationService(azureProvider, repository, clock, diagnostics),
                 new SearchService(repository, clock),
-                new SecretAccessService(azureProvider, repository, valueStore, clipboard, verification, clock),
+                secretAccessService,
                 new WorkspaceService(repository),
                 valueStore,
                 new AppSettingsStore(Path.Combine(VaultProspectorPaths.DataDirectory, "settings.json")),
@@ -92,9 +111,99 @@ public partial class App : Avalonia.Application
                     VaultProspectorPaths.CacheDirectory,
                     keyProvider,
                     clock),
-                localRecoveryArchiveService);
+                localRecoveryArchiveService,
+                browserFillService);
             var window = new MainWindow { DataContext = viewModel };
-            window.Opened += async (_, _) => await viewModel.InitializeAsync();
+            BrowserBrokerServer? browserBrokerServer = null;
+            async Task StartBrowserBrokerAsync()
+            {
+                if (browserBrokerServer is not null)
+                    return;
+
+                byte[]? authenticationKey = null;
+                try
+                {
+                    authenticationKey = await keyProvider.GetOrCreateKeyAsync(
+                        BrowserBrokerAuthentication.KeyPurpose,
+                        CancellationToken.None);
+                    browserBrokerServer = new BrowserBrokerServer(
+                        "VaultProspector.BrowserBroker.v1",
+                        authenticationKey,
+                        BrowserKnownIdentities.IsAllowed,
+                        new WindowsBrowserHostProcessVerifier(
+                            Path.Combine(
+                                AppContext.BaseDirectory,
+                                "BrowserHost",
+                                "VaultProspector.BrowserHost.exe")).IsAllowed,
+                        HandleBrowserFillAsync);
+                    browserBrokerServer.Start();
+                }
+                catch (Exception exception)
+                {
+                    diagnostics.WriteError(
+                        "browser_broker_start_failed",
+                        exception,
+                        new Dictionary<string, object?>());
+                    if (browserBrokerServer is not null)
+                    {
+                        await browserBrokerServer.DisposeAsync();
+                        browserBrokerServer = null;
+                    }
+                }
+                finally
+                {
+                    if (authenticationKey is not null)
+                        CryptographicOperations.ZeroMemory(authenticationKey);
+                }
+            }
+
+            async Task<BrowserFillResponse> HandleBrowserFillAsync(
+                ValidatedBrowserFillRequest request,
+                CancellationToken cancellationToken)
+            {
+                var completion =
+                    new TaskCompletionSource<BrowserFillResponse>(
+                        TaskCreationOptions.RunContinuationsAsynchronously);
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    try
+                    {
+                        if (!window.IsVisible ||
+                            !viewModel.IsUnlocked ||
+                            !viewModel.IsApplicationReady)
+                        {
+                            completion.TrySetResult(
+                                BrowserFillResponse.Failure(
+                                    request.Request.RequestId,
+                                    BrowserFillResultCode.Unavailable));
+                            return;
+                        }
+
+                        completion.TrySetResult(
+                            await viewModel.RequestBrowserFillAsync(
+                                request,
+                                cancellationToken));
+                    }
+                    catch (Exception exception)
+                    {
+                        diagnostics.WriteError(
+                            "browser_fill_request_failed",
+                            exception,
+                            new Dictionary<string, object?>());
+                        completion.TrySetResult(
+                            BrowserFillResponse.Failure(
+                                request.Request.RequestId,
+                                BrowserFillResultCode.Denied));
+                    }
+                });
+                return await completion.Task.WaitAsync(cancellationToken);
+            }
+
+            window.Opened += async (_, _) =>
+            {
+                await viewModel.InitializeAsync();
+                await StartBrowserBrokerAsync();
+            };
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             var showItem = new NativeMenuItem("Show Vault Prospector");
             var statusItem = new NativeMenuItem("Starting securely…") { IsEnabled = false };
@@ -181,6 +290,7 @@ public partial class App : Avalonia.Application
             trayIcon.Clicked += (_, _) => ShowWindow();
             viewModel.ExitRequested += async (_, _) => await ExitAsync();
             viewModel.ContinueInBackgroundRequested += (_, _) => ContinueInBackground();
+            viewModel.BrowserFillConfirmationRequested += (_, _) => ShowWindow();
             viewModel.PropertyChanged += RefreshTrayState;
             NetworkAvailabilityChangedEventHandler networkAvailabilityChanged = (_, _) =>
                 Dispatcher.UIThread.Post(() => RefreshTrayState());
@@ -260,6 +370,11 @@ public partial class App : Avalonia.Application
                     {
                         diagnostics.WriteError("clipboard_shutdown_clear_failed", exception, new Dictionary<string, object?>());
                     }
+                }
+                if (browserBrokerServer is not null)
+                {
+                    browserBrokerServer.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                    browserBrokerServer = null;
                 }
                 DisposeTray();
             };

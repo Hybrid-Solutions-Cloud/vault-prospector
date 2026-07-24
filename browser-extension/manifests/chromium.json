@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Vault Prospector",
+  "description": "Fill one explicitly mapped Vault Prospector value after local verification.",
+  "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxkz3FY0thmDPBVeHNi81pxOFeXuRBfrsMd1DpFZciqgWmJzfMP5w20xO2eJT8Ya8yc8U3qnXmitcsAueDP3SO1ICbEAXX6aPVIwYfveFQ3M9T5ldU9AA8aF+Q3R2nb5Z3a4L/D8HRWBJvjLrKLuVLqMfdLF4UCuYq010nW/iVK1naFC9DpUC/ijaJnR46GKGE1xMA7h6M3zTUYHunx+fIDXc5zoUkr8z7RQLJg8DwUu75n/9z60TbPvKa2dfvocfuPTAr6B6PejOUM4bSB++r9cYWotI8TLop4yUwpj+N5SCpyJCTVYxFvrD4PPeNFmLxW+/dkKu6WQBLF3AVIA5jQIDAQAB",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Fill with Vault Prospector"
+  }
+}

@@ -29,6 +29,12 @@ jobs:
         run: dotnet build VaultProspector.sln --configuration Release --no-restore
       - name: Test
         run: dotnet test VaultProspector.sln --configuration Release --no-build --logger "trx;LogFileName=tests.trx" --collect "XPlat Code Coverage" --results-directory TestResults
+      - name: Verify browser extension source
+        shell: pwsh
+        run: |
+          node --version
+          npm test --prefix browser-extension
+          npm run build --prefix browser-extension
       - name: Verify PowerShell syntax
         shell: pwsh
         run: |
@@ -49,6 +55,7 @@ jobs:
           ./scripts/PackageInstaller.ps1 -Version $env:CI_CANDIDATE_VERSION
           ./scripts/Test-InstallerUpgradeSchedule.ps1 -InstallerPath "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi"
           ./scripts/Test-InstallerShortcutIcon.ps1 -InstallerPath "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi"
+          ./scripts/Test-BrowserHostInstaller.ps1 -InstallerPath "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi" -PublishDirectory "./artifacts/publish-win-x64"
           ./scripts/PackageDistribution.ps1 -Version $env:CI_CANDIDATE_VERSION
           winget validate --manifest "./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/$env:CI_CANDIDATE_VERSION"
 

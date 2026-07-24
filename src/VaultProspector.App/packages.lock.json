@@ -471,8 +471,12 @@
       "vaultprospector.application": {
         "type": "Project",
         "dependencies": {
+          "VaultProspector.BrowserProtocol": "[0.1.0, )",
           "VaultProspector.Domain": "[0.1.0, )"
         }
+      },
+      "vaultprospector.browserprotocol": {
+        "type": "Project"
       },
       "vaultprospector.domain": {
         "type": "Project"
@@ -491,7 +495,8 @@
         "dependencies": {
           "Microsoft.Win32.SystemEvents": "[10.0.10, )",
           "System.Security.Cryptography.ProtectedData": "[10.0.10, )",
-          "VaultProspector.Application": "[0.1.0, )"
+          "VaultProspector.Application": "[0.1.0, )",
+          "VaultProspector.BrowserProtocol": "[0.1.0, )"
         }
       },
       "vaultprospector.providers.azure": {

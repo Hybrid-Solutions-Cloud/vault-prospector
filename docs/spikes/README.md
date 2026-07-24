@@ -21,3 +21,4 @@ Each spike should produce:
 - [SPK-0006: Secure clipboard behavior](0006-secure-clipboard.md)
 - [SPK-0007: Apple and Windows credential integration](0007-platform-credential-integration.md)
 - [SPK-0008: Background synchronization](0008-background-synchronization.md)
+- [SPK-0009: Browser integration and password-vault interoperability](0009-browser-integration-feasibility.md)

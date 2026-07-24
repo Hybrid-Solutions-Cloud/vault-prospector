@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VaultProspector.Application\VaultProspector.Application.csproj" />
+    <ProjectReference Include="..\VaultProspector.BrowserProtocol\VaultProspector.BrowserProtocol.csproj" />
   </ItemGroup>
 
   <ItemGroup>

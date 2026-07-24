@@ -9,7 +9,7 @@ namespace VaultProspector.Infrastructure;
 
 public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyMaterialProvider keyMaterial) : IMetadataRepository
 {
-    private const int CurrentSchemaVersion = 4;
+    private const int CurrentSchemaVersion = 5;
     private string? _connectionString;
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
@@ -71,6 +71,12 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
                 {
                     await EnsureVaultSelectionColumnAsync(connection, transaction, cancellationToken);
                     schemaVersion = 4;
+                }
+
+                if (schemaVersion == 4)
+                {
+                    await EnsureBrowserIntegrationTablesAsync(connection, transaction, cancellationToken);
+                    schemaVersion = 5;
                 }
 
                 if (schemaVersion != CurrentSchemaVersion)
@@ -364,6 +370,25 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         return (item, ReadVault(reader, 14, item.VaultId), ReadIdentity(reader, 23));
     }
 
+    public async Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemForIdentityAsync(
+        Guid itemId,
+        Guid identityId,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = ResolveSql.Replace(
+            "WHERE i.id=$id AND ident.is_enabled=1",
+            "WHERE i.id=$id AND ident.id=$identity AND ident.is_enabled=1",
+            StringComparison.Ordinal);
+        command.Parameters.AddWithValue("$id", itemId.ToString("D"));
+        command.Parameters.AddWithValue("$identity", identityId.ToString("D"));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+        var item = ReadItem(reader, 0);
+        return (item, ReadVault(reader, 14, item.VaultId), ReadIdentity(reader, 23));
+    }
+
     public async Task RecordAccessAsync(Guid itemId, DateTimeOffset accessedAt, CancellationToken cancellationToken)
     {
         await using var connection = await OpenAsync(cancellationToken);
@@ -427,6 +452,165 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         await using var connection = await OpenAsync(cancellationToken);
         await ExecuteAsync(connection, null, "DELETE FROM workspace_links WHERE workspace_id=$workspace AND resource_type=$type AND resource_id=$resource", cancellationToken,
             ("$workspace", workspaceId.ToString("D")), ("$type", (int)resourceType), ("$resource", resourceId));
+    }
+
+    public async Task<IReadOnlyList<BrowserFillMapping>> GetBrowserFillMappingsAsync(
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = BrowserMappingSelect + " ORDER BY top_origin,frame_origin,field_purpose";
+        var result = new List<BrowserFillMapping>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            result.Add(ReadBrowserMapping(reader));
+        return result;
+    }
+
+    public async Task<BrowserFillMapping?> GetBrowserFillMappingAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = BrowserMappingSelect + " WHERE id=$id";
+        command.Parameters.AddWithValue("$id", id.ToString("D"));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadBrowserMapping(reader) : null;
+    }
+
+    public async Task<BrowserFillMapping?> FindBrowserFillMappingAsync(
+        string topOrigin,
+        string frameOrigin,
+        BrowserMappingFieldPurpose fieldPurpose,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = BrowserMappingSelect +
+            " WHERE top_origin=$top AND frame_origin=$frame AND field_purpose=$purpose";
+        command.Parameters.AddWithValue("$top", topOrigin);
+        command.Parameters.AddWithValue("$frame", frameOrigin);
+        command.Parameters.AddWithValue("$purpose", (int)fieldPurpose);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadBrowserMapping(reader) : null;
+    }
+
+    public async Task UpsertBrowserFillMappingAsync(
+        BrowserFillMapping mapping,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await ExecuteAsync(
+            connection,
+            null,
+            """
+            INSERT INTO browser_fill_mappings(
+                id,item_id,identity_id,top_origin,frame_origin,field_purpose,is_enabled,created_at,updated_at)
+            VALUES($id,$item,$identity,$top,$frame,$purpose,$enabled,$created,$updated)
+            ON CONFLICT(id) DO UPDATE SET
+                item_id=excluded.item_id,
+                identity_id=excluded.identity_id,
+                top_origin=excluded.top_origin,
+                frame_origin=excluded.frame_origin,
+                field_purpose=excluded.field_purpose,
+                is_enabled=excluded.is_enabled,
+                updated_at=excluded.updated_at
+            """,
+            cancellationToken,
+            ("$id", mapping.Id.ToString("D")),
+            ("$item", mapping.VaultItemId.ToString("D")),
+            ("$identity", mapping.ConnectedIdentityId.ToString("D")),
+            ("$top", mapping.TopOrigin),
+            ("$frame", mapping.FrameOrigin),
+            ("$purpose", (int)mapping.FieldPurpose),
+            ("$enabled", mapping.IsEnabled ? 1 : 0),
+            ("$created", Format(mapping.CreatedAt)),
+            ("$updated", Format(mapping.UpdatedAt)));
+    }
+
+    public async Task RemoveBrowserFillMappingAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await ExecuteAsync(
+            connection,
+            null,
+            "DELETE FROM browser_fill_mappings WHERE id=$id",
+            cancellationToken,
+            ("$id", id.ToString("D")));
+    }
+
+    public async Task RecordBrowserFillAuditAsync(
+        BrowserFillAuditEvent auditEvent,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var transaction =
+            (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        await ExecuteAsync(
+            connection,
+            transaction,
+            """
+            INSERT INTO browser_fill_audit(
+                id,occurred_at,mapping_id,item_id,identity_id,top_origin,frame_origin,field_purpose,result)
+            VALUES($id,$at,$mapping,$item,$identity,$top,$frame,$purpose,$result)
+            """,
+            cancellationToken,
+            ("$id", auditEvent.Id.ToString("D")),
+            ("$at", Format(auditEvent.OccurredAt)),
+            ("$mapping", auditEvent.MappingId?.ToString("D") ?? (object)DBNull.Value),
+            ("$item", auditEvent.VaultItemId?.ToString("D") ?? (object)DBNull.Value),
+            ("$identity", auditEvent.ConnectedIdentityId?.ToString("D") ?? (object)DBNull.Value),
+            ("$top", auditEvent.TopOrigin),
+            ("$frame", auditEvent.FrameOrigin),
+            ("$purpose", (int)auditEvent.FieldPurpose),
+            ("$result", auditEvent.Result));
+        await ExecuteAsync(
+            connection,
+            transaction,
+            """
+            DELETE FROM browser_fill_audit
+            WHERE id IN (
+                SELECT id FROM browser_fill_audit
+                ORDER BY occurred_at DESC,id DESC
+                LIMIT -1 OFFSET 500
+            )
+            """,
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<BrowserFillAuditEvent>> GetBrowserFillAuditAsync(
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        if (limit is < 1 or > 500)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id,occurred_at,mapping_id,item_id,identity_id,top_origin,frame_origin,field_purpose,result
+            FROM browser_fill_audit
+            ORDER BY occurred_at DESC,id DESC
+            LIMIT $limit
+            """;
+        command.Parameters.AddWithValue("$limit", limit);
+        var result = new List<BrowserFillAuditEvent>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new BrowserFillAuditEvent(
+                reader.GetGuid(0),
+                DateTimeOffset.Parse(reader.GetString(1), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.IsDBNull(2) ? null : reader.GetGuid(2),
+                reader.IsDBNull(3) ? null : reader.GetGuid(3),
+                reader.IsDBNull(4) ? null : reader.GetGuid(4),
+                reader.GetString(5),
+                reader.GetString(6),
+                (BrowserMappingFieldPurpose)reader.GetInt32(7),
+                reader.GetString(8)));
+        }
+        return result;
     }
 
     private async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
@@ -505,6 +689,8 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
             ["workspaces"] = ["id", "name", "description", "sort_order", "cache_enabled", "cache_lifetime_minutes", "require_unlock", "allow_clipboard"],
             ["workspace_links"] = ["id", "workspace_id", "resource_type", "resource_id"],
             ["sync_runs"] = ["id", "scope", "started_at", "completed_at", "status", "vault_count", "item_count", "error_count"],
+            ["browser_fill_mappings"] = ["id", "item_id", "identity_id", "top_origin", "frame_origin", "field_purpose", "is_enabled", "created_at", "updated_at"],
+            ["browser_fill_audit"] = ["id", "occurred_at", "mapping_id", "item_id", "identity_id", "top_origin", "frame_origin", "field_purpose", "result"],
         };
         var actualTables = new HashSet<string>(StringComparer.Ordinal);
         await using (var command = connection.CreateCommand())
@@ -585,6 +771,16 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
             await ExecuteAsync(connection, transaction, "ALTER TABLE vault_access ADD COLUMN is_selected INTEGER NOT NULL DEFAULT 1", cancellationToken);
     }
 
+    private static Task EnsureBrowserIntegrationTablesAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken) =>
+        ExecuteAsync(
+            connection,
+            transaction,
+            BrowserIntegrationSchema,
+            cancellationToken);
+
     private static string Format(DateTimeOffset value) => value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
     private static DateTimeOffset? ReadDate(SqliteDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : DateTimeOffset.Parse(reader.GetString(ordinal), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
     private static string EscapeLike(string value) => value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("%", "\\%", StringComparison.Ordinal).Replace("_", "\\_", StringComparison.Ordinal);
@@ -592,8 +788,19 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
     private static ConnectedIdentity ReadIdentity(SqliteDataReader r, int o = 0) => new(r.GetGuid(o), r.GetString(o + 1), r.GetString(o + 2), r.GetString(o + 3), r.GetString(o + 4), r.GetString(o + 5), (AuthenticationState)r.GetInt32(o + 6), DateTimeOffset.Parse(r.GetString(o + 7), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), r.GetBoolean(o + 8), (IdentityType)r.GetInt32(o + 9), r.GetString(o + 10));
     private static VaultItem ReadItem(SqliteDataReader r, int o) => new(r.GetGuid(o), r.GetGuid(o + 1), r.GetString(o + 2), (VaultObjectType)r.GetInt32(o + 3), r.GetBoolean(o + 4), ReadTags(r, o + 5), r.IsDBNull(o + 6) ? null : r.GetString(o + 6), ReadDate(r, o + 7), ReadDate(r, o + 8), ReadDate(r, o + 9), r.GetString(o + 10), r.GetString(o + 11), DateTimeOffset.Parse(r.GetString(o + 12), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), r.GetBoolean(o + 13));
     private static VaultResource ReadVault(SqliteDataReader r, int o, Guid id) => new(id, r.GetString(o), r.GetString(o + 1), r.GetString(o + 2), r.GetString(o + 3), r.GetString(o + 4), r.GetString(o + 5), ReadTags(r, o + 6), new Uri(r.GetString(o + 7)), DateTimeOffset.Parse(r.GetString(o + 8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind));
+    private static BrowserFillMapping ReadBrowserMapping(SqliteDataReader r) => new(
+        r.GetGuid(0),
+        r.GetGuid(1),
+        r.GetGuid(2),
+        r.GetString(3),
+        r.GetString(4),
+        (BrowserMappingFieldPurpose)r.GetInt32(5),
+        r.GetBoolean(6),
+        DateTimeOffset.Parse(r.GetString(7), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+        DateTimeOffset.Parse(r.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind));
 
     private const string IdentitySelect = "SELECT id,client_id,account_identifier,username_hint,display_name,home_tenant_id,auth_state,last_interactive,is_enabled,identity_type,credential_data FROM identities";
+    private const string BrowserMappingSelect = "SELECT id,item_id,identity_id,top_origin,frame_origin,field_purpose,is_enabled,created_at,updated_at FROM browser_fill_mappings";
     private const string SearchSql = """
         SELECT i.id,i.vault_id,i.name,i.object_type,i.enabled,i.tags,i.content_type,i.created_at,i.updated_at,i.expires_at,i.provider_version,i.fingerprint,i.last_indexed,i.is_deleted,
                v.resource_id,v.name,v.tenant_id,v.subscription_id,v.resource_group,v.location,v.tags,v.vault_uri,v.last_indexed,
@@ -617,6 +824,33 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         WHERE i.id=$id AND ident.is_enabled=1 ORDER BY va.preferred_rank LIMIT 1
         """;
     private const string Configuration = "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA secure_delete=ON;";
+    private const string BrowserIntegrationSchema = """
+        CREATE TABLE IF NOT EXISTS browser_fill_mappings(
+            id TEXT PRIMARY KEY,
+            item_id TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+            identity_id TEXT NOT NULL REFERENCES identities(id) ON DELETE CASCADE,
+            top_origin TEXT NOT NULL,
+            frame_origin TEXT NOT NULL,
+            field_purpose INTEGER NOT NULL,
+            is_enabled INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE(top_origin,frame_origin,field_purpose));
+        CREATE INDEX IF NOT EXISTS ix_browser_fill_mappings_item
+            ON browser_fill_mappings(item_id,identity_id);
+        CREATE TABLE IF NOT EXISTS browser_fill_audit(
+            id TEXT PRIMARY KEY,
+            occurred_at TEXT NOT NULL,
+            mapping_id TEXT,
+            item_id TEXT,
+            identity_id TEXT,
+            top_origin TEXT NOT NULL,
+            frame_origin TEXT NOT NULL,
+            field_purpose INTEGER NOT NULL,
+            result TEXT NOT NULL);
+        CREATE INDEX IF NOT EXISTS ix_browser_fill_audit_time
+            ON browser_fill_audit(occurred_at DESC);
+        """;
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS identities(id TEXT PRIMARY KEY,client_id TEXT NOT NULL,account_identifier TEXT NOT NULL UNIQUE,username_hint TEXT NOT NULL,display_name TEXT NOT NULL,home_tenant_id TEXT NOT NULL,auth_state INTEGER NOT NULL,last_interactive TEXT NOT NULL,is_enabled INTEGER NOT NULL,identity_type INTEGER NOT NULL DEFAULT 0,credential_data TEXT NOT NULL DEFAULT '');
         CREATE TABLE IF NOT EXISTS tenants(id TEXT PRIMARY KEY,identity_id TEXT NOT NULL REFERENCES identities(id) ON DELETE CASCADE,tenant_id TEXT NOT NULL,display_name TEXT NOT NULL,tenant_type TEXT NOT NULL,last_validated TEXT NOT NULL,status TEXT NOT NULL,UNIQUE(identity_id,tenant_id));
@@ -629,5 +863,9 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         CREATE TABLE IF NOT EXISTS workspaces(id TEXT PRIMARY KEY,name TEXT NOT NULL UNIQUE,description TEXT NOT NULL,sort_order INTEGER NOT NULL,cache_enabled INTEGER NOT NULL,cache_lifetime_minutes INTEGER NOT NULL,require_unlock INTEGER NOT NULL,allow_clipboard INTEGER NOT NULL);
         CREATE TABLE IF NOT EXISTS workspace_links(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,resource_type INTEGER NOT NULL,resource_id TEXT NOT NULL,UNIQUE(workspace_id,resource_type,resource_id));
         CREATE TABLE IF NOT EXISTS sync_runs(id TEXT PRIMARY KEY,scope TEXT NOT NULL,started_at TEXT NOT NULL,completed_at TEXT,status INTEGER NOT NULL,vault_count INTEGER NOT NULL,item_count INTEGER NOT NULL,error_count INTEGER NOT NULL);
+        CREATE TABLE IF NOT EXISTS browser_fill_mappings(id TEXT PRIMARY KEY,item_id TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,identity_id TEXT NOT NULL REFERENCES identities(id) ON DELETE CASCADE,top_origin TEXT NOT NULL,frame_origin TEXT NOT NULL,field_purpose INTEGER NOT NULL,is_enabled INTEGER NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(top_origin,frame_origin,field_purpose));
+        CREATE INDEX IF NOT EXISTS ix_browser_fill_mappings_item ON browser_fill_mappings(item_id,identity_id);
+        CREATE TABLE IF NOT EXISTS browser_fill_audit(id TEXT PRIMARY KEY,occurred_at TEXT NOT NULL,mapping_id TEXT,item_id TEXT,identity_id TEXT,top_origin TEXT NOT NULL,frame_origin TEXT NOT NULL,field_purpose INTEGER NOT NULL,result TEXT NOT NULL);
+        CREATE INDEX IF NOT EXISTS ix_browser_fill_audit_time ON browser_fill_audit(occurred_at DESC);
         """;
 }

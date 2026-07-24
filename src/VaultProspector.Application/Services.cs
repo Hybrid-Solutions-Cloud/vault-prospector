@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using VaultProspector.BrowserProtocol;
 using VaultProspector.Domain;
 
 namespace VaultProspector.Application;
@@ -535,6 +537,44 @@ public sealed class SecretAccessService(
         }
     }
 
+    public async Task<SensitiveValue> RetrieveForIdentityAsync(
+        Guid itemId,
+        Guid identityId,
+        string verificationReason,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(verificationReason) || verificationReason.Length > 160)
+            throw new ArgumentException("A bounded verification reason is required.", nameof(verificationReason));
+        var source = await repository.ResolveItemForIdentityAsync(itemId, identityId, cancellationToken)
+            ?? throw new KeyNotFoundException("The mapped vault item or identity access path no longer exists.");
+        if (source.Item.ObjectType != VaultObjectType.Secret)
+            throw new InvalidOperationException("Only secret values can be filled.");
+        EnsureOnlineIdentityIsUsable(source.Identity);
+        if (!verification.IsAvailable ||
+            await verification.VerifyAsync(verificationReason, cancellationToken) !=
+            UserVerificationResult.Verified)
+        {
+            throw new UnauthorizedAccessException("Local verification was not completed.");
+        }
+
+        var value = await provider.RetrieveSecretAsync(
+            source.Identity,
+            source.Vault,
+            source.Item,
+            cancellationToken);
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
+            return value;
+        }
+        catch
+        {
+            value.Dispose();
+            throw;
+        }
+    }
+
     public async Task RetrieveAndCopyAsync(Guid itemId, TimeSpan clearAfter, CachePolicy policy, CancellationToken cancellationToken)
     {
         if (!policy.AllowClipboard) throw new InvalidOperationException("Clipboard use is disabled by policy.");
@@ -593,6 +633,288 @@ public sealed class SecretAccessService(
         if (!identity.IsEnabled || identity.AuthenticationState != AuthenticationState.Ready)
             throw new InvalidOperationException("The selected identity is disabled, revoked, or requires authentication.");
     }
+}
+
+public sealed class BrowserFillService(
+    IMetadataRepository repository,
+    SecretAccessService secretAccess,
+    IClock clock,
+    IBrowserFillPolicy? policy = null)
+{
+    private static readonly TimeSpan ApprovalLifetime = TimeSpan.FromSeconds(30);
+
+    public Task<IReadOnlyList<BrowserFillMapping>> GetMappingsAsync(
+        CancellationToken cancellationToken) =>
+        repository.GetBrowserFillMappingsAsync(cancellationToken);
+
+    public Task<IReadOnlyList<BrowserFillAuditEvent>> GetAuditAsync(
+        int limit,
+        CancellationToken cancellationToken) =>
+        repository.GetBrowserFillAuditAsync(limit, cancellationToken);
+
+    public Task<string> GetPolicyStatusAsync(CancellationToken cancellationToken) =>
+        policy?.GetStatusAsync(cancellationToken) ??
+        Task.FromResult(
+            "Browser fill is disabled because no machine policy provider is configured.");
+
+    public async Task<BrowserFillMapping> SaveMappingAsync(
+        Guid? expectedMappingId,
+        Guid itemId,
+        Guid identityId,
+        string topOrigin,
+        string frameOrigin,
+        BrowserMappingFieldPurpose fieldPurpose,
+        bool isEnabled,
+        CancellationToken cancellationToken)
+    {
+        if (itemId == Guid.Empty || identityId == Guid.Empty || !Enum.IsDefined(fieldPurpose))
+            throw new ArgumentException("Mapping item, identity, and field purpose are required.");
+
+        var canonicalTop = CanonicalBrowserOrigin.Parse(topOrigin);
+        var canonicalFrame = CanonicalBrowserOrigin.Parse(frameOrigin);
+        var source = await repository.ResolveItemForIdentityAsync(
+            itemId,
+            identityId,
+            cancellationToken)
+            ?? throw new KeyNotFoundException(
+                "The selected item is not reachable through the selected identity.");
+        if (source.Item.ObjectType != VaultObjectType.Secret ||
+            source.Item.IsDeletedOrUnavailable ||
+            !source.Item.Enabled)
+        {
+            throw new InvalidOperationException("Only an enabled, available secret can be mapped.");
+        }
+
+        var existing = await repository.FindBrowserFillMappingAsync(
+            canonicalTop.SerializedOrigin,
+            canonicalFrame.SerializedOrigin,
+            fieldPurpose,
+            cancellationToken);
+        if (existing is not null && existing.Id != expectedMappingId)
+        {
+            throw new InvalidOperationException(
+                "That top origin, frame origin, and field purpose already have a mapping. Select it before replacing the mapped item.");
+        }
+
+        BrowserFillMapping? selected = null;
+        if (expectedMappingId is { } mappingId)
+        {
+            selected = await repository.GetBrowserFillMappingAsync(mappingId, cancellationToken)
+                ?? throw new KeyNotFoundException("The selected browser mapping no longer exists.");
+        }
+
+        var now = clock.UtcNow;
+        var mapping = new BrowserFillMapping(
+            selected?.Id ?? Guid.NewGuid(),
+            source.Item.Id,
+            source.Identity.Id,
+            canonicalTop.SerializedOrigin,
+            canonicalFrame.SerializedOrigin,
+            fieldPurpose,
+            isEnabled,
+            selected?.CreatedAt ?? now,
+            now);
+        await repository.UpsertBrowserFillMappingAsync(mapping, cancellationToken);
+        return mapping;
+    }
+
+    public Task RemoveMappingAsync(Guid mappingId, CancellationToken cancellationToken)
+    {
+        if (mappingId == Guid.Empty)
+            throw new ArgumentException("Mapping identifier is required.", nameof(mappingId));
+        return repository.RemoveBrowserFillMappingAsync(mappingId, cancellationToken);
+    }
+
+    public async Task<BrowserFillApproval?> PrepareAsync(
+        ValidatedBrowserFillRequest request,
+        CancellationToken cancellationToken)
+    {
+        var fieldPurpose = ToDomainPurpose(request.Request.FieldPurpose);
+        if (policy is null)
+        {
+            await RecordAuditAsync(request, null, "DeniedPolicy", cancellationToken);
+            return null;
+        }
+        var policyDecision = await policy.EvaluateAsync(
+            request.Request.BrowserFamily,
+            request.TopOrigin,
+            request.FrameOrigin,
+            fieldPurpose,
+            cancellationToken);
+        if (!policyDecision.IsAllowed)
+        {
+            await RecordAuditAsync(request, null, "DeniedPolicy", cancellationToken);
+            return null;
+        }
+
+        var mapping = await repository.FindBrowserFillMappingAsync(
+            request.TopOrigin.SerializedOrigin,
+            request.FrameOrigin.SerializedOrigin,
+            fieldPurpose,
+            cancellationToken);
+        if (mapping is null)
+        {
+            await RecordAuditAsync(request, null, "DeniedUnmapped", cancellationToken);
+            return null;
+        }
+        if (!mapping.IsEnabled)
+        {
+            await RecordAuditAsync(request, mapping, "DeniedDisabled", cancellationToken);
+            return null;
+        }
+
+        var source = await repository.ResolveItemForIdentityAsync(
+            mapping.VaultItemId,
+            mapping.ConnectedIdentityId,
+            cancellationToken);
+        if (source is null)
+        {
+            await RecordAuditAsync(request, mapping, "DeniedUnavailable", cancellationToken);
+            return null;
+        }
+        var resolved = source.Value;
+        if (resolved.Item.ObjectType != VaultObjectType.Secret ||
+            resolved.Item.IsDeletedOrUnavailable ||
+            !resolved.Item.Enabled ||
+            !resolved.Identity.IsEnabled ||
+            resolved.Identity.AuthenticationState != AuthenticationState.Ready)
+        {
+            await RecordAuditAsync(request, mapping, "DeniedUnavailable", cancellationToken);
+            return null;
+        }
+
+        var expiresAt = request.Request.CreatedAtUtc + ApprovalLifetime;
+        if (clock.UtcNow > expiresAt)
+        {
+            await RecordAuditAsync(request, mapping, "DeniedExpired", cancellationToken);
+            return null;
+        }
+
+        return new BrowserFillApproval(
+            Guid.NewGuid(),
+            request,
+            mapping,
+            resolved.Item.ProviderObjectName,
+            resolved.Vault.Name,
+            resolved.Identity.DisplayName,
+            expiresAt);
+    }
+
+    public async Task<BrowserFillResponse> ApproveAsync(
+        BrowserFillApproval approval,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(approval);
+        if (approval.ApprovalId == Guid.Empty || clock.UtcNow > approval.ExpiresAt)
+        {
+            await RecordAuditAsync(
+                approval.Request,
+                approval.Mapping,
+                "DeniedExpired",
+                cancellationToken);
+            return BrowserFillResponse.Failure(
+                approval.Request.Request.RequestId,
+                BrowserFillResultCode.Expired);
+        }
+
+        var current = await repository.GetBrowserFillMappingAsync(
+            approval.Mapping.Id,
+            cancellationToken);
+        if (current is null ||
+            current != approval.Mapping ||
+            !current.IsEnabled ||
+            current.TopOrigin != approval.Request.TopOrigin.SerializedOrigin ||
+            current.FrameOrigin != approval.Request.FrameOrigin.SerializedOrigin ||
+            current.FieldPurpose != ToDomainPurpose(approval.Request.Request.FieldPurpose))
+        {
+            await RecordAuditAsync(
+                approval.Request,
+                current ?? approval.Mapping,
+                "DeniedChanged",
+                cancellationToken);
+            return BrowserFillResponse.Failure(
+                approval.Request.Request.RequestId,
+                BrowserFillResultCode.ChangedContext);
+        }
+
+        if (policy is null ||
+            !(await policy.EvaluateAsync(
+                approval.Request.Request.BrowserFamily,
+                approval.Request.TopOrigin,
+                approval.Request.FrameOrigin,
+                current.FieldPurpose,
+                cancellationToken)).IsAllowed)
+        {
+            await RecordAuditAsync(
+                approval.Request,
+                current,
+                "DeniedPolicy",
+                cancellationToken);
+            return BrowserFillResponse.Failure(
+                approval.Request.Request.RequestId,
+                BrowserFillResultCode.Denied);
+        }
+
+        byte[]? valueBytes = null;
+        try
+        {
+            using var value = await secretAccess.RetrieveForIdentityAsync(
+                current.VaultItemId,
+                current.ConnectedIdentityId,
+                $"Fill the approved {current.FieldPurpose} field for {current.TopOrigin}",
+                cancellationToken);
+            valueBytes = value.CopyUtf8Bytes();
+            cancellationToken.ThrowIfCancellationRequested();
+            await RecordAuditAsync(approval.Request, current, "Approved", cancellationToken);
+            return new BrowserFillResponse(
+                BrowserProtocolConstants.CurrentVersion,
+                approval.Request.Request.RequestId,
+                BrowserFillResultCode.Approved,
+                Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
+                current.Id,
+                valueBytes);
+        }
+        catch
+        {
+            if (valueBytes is not null)
+                CryptographicOperations.ZeroMemory(valueBytes);
+            await RecordAuditAsync(approval.Request, current, "Denied", CancellationToken.None);
+            throw;
+        }
+    }
+
+    public Task DenyAsync(
+        BrowserFillApproval approval,
+        CancellationToken cancellationToken) =>
+        RecordAuditAsync(approval.Request, approval.Mapping, "DeniedByUser", cancellationToken);
+
+    private Task RecordAuditAsync(
+        ValidatedBrowserFillRequest request,
+        BrowserFillMapping? mapping,
+        string result,
+        CancellationToken cancellationToken) =>
+        repository.RecordBrowserFillAuditAsync(
+            new BrowserFillAuditEvent(
+                Guid.NewGuid(),
+                clock.UtcNow,
+                mapping?.Id,
+                mapping?.VaultItemId,
+                mapping?.ConnectedIdentityId,
+                request.TopOrigin.SerializedOrigin,
+                request.FrameOrigin.SerializedOrigin,
+                ToDomainPurpose(request.Request.FieldPurpose),
+                result),
+            cancellationToken);
+
+    private static BrowserMappingFieldPurpose ToDomainPurpose(
+        BrowserFieldPurpose purpose) =>
+        purpose switch
+        {
+            BrowserFieldPurpose.Username => BrowserMappingFieldPurpose.Username,
+            BrowserFieldPurpose.Password => BrowserMappingFieldPurpose.Password,
+            BrowserFieldPurpose.OneTimeCode => BrowserMappingFieldPurpose.OneTimeCode,
+            _ => throw new BrowserProtocolException("Field purpose is not supported."),
+        };
 }
 
 public sealed class WorkspaceService(IMetadataRepository repository)

@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Vault Prospector",
+  "description": "Fill one explicitly mapped Vault Prospector value after local verification.",
+  "version": "0.1.0",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "nativeMessaging"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "action": {
+    "default_title": "Fill with Vault Prospector"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "vault-prospector@hybrid-solutions.cloud",
+      "strict_min_version": "128.0"
+    }
+  }
+}

@@ -516,6 +516,148 @@
         </ScrollViewer>
       </TabItem>
 
+      <TabItem Header="Browser">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+          <StackPanel Margin="4,14" Spacing="14">
+            <Border Classes="card"
+                    AutomationProperties.Name="Browser fill machine policy status">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Machine policy"
+                           FontSize="{StaticResource VaultFontSize20}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserPolicyStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <TextBlock Text="A local mapping alone never authorizes fill. An administrator must also enable this exact destination, browser family, and field purpose in the protected installation policy."
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card"
+                    BorderBrush="#DC6B6B"
+                    BorderThickness="2"
+                    IsVisible="{Binding IsBrowserFillPending}"
+                    AutomationProperties.Name="Browser fill confirmation"
+                    AutomationProperties.LiveSetting="Assertive">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Confirm browser fill"
+                           FontSize="{StaticResource VaultFontSize22}"
+                           FontWeight="Bold" />
+                <TextBlock Text="A browser asked for one mapped value. Confirm both the destination and source; approval still requires fresh Windows verification."
+                           TextWrapping="Wrap" />
+                <TextBlock Text="{Binding BrowserFillDestination, StringFormat='Destination: {0}'}"
+                           TextWrapping="Wrap"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserFillPurpose, StringFormat='Field purpose: {0}'}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="{Binding BrowserFillSource, StringFormat='Source: {0}'}"
+                           TextWrapping="Wrap"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserFillStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <WrapPanel>
+                  <Button Classes="primary"
+                          Content="Verify and fill once"
+                          Command="{Binding ApproveBrowserFillCommand}"
+                          AutomationProperties.Name="Verify with Windows and approve this one browser fill"
+                          Margin="0,0,8,8" />
+                  <Button Content="Deny"
+                          Command="{Binding DenyBrowserFillCommand}"
+                          AutomationProperties.Name="Deny this browser fill without retrieving a value"
+                          Margin="0,0,8,8" />
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+
+            <Grid ColumnDefinitions="1*,1*" ColumnSpacing="14">
+              <Border Classes="card">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Origin-to-secret mappings"
+                             FontSize="{StaticResource VaultFontSize20}"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="Mappings are encrypted locally and disabled by absence. Wildcards, HTTP pages, browser-internal pages, and private browser password databases are never supported."
+                             TextWrapping="Wrap" />
+                  <ListBox ItemsSource="{Binding BrowserFillMappings}"
+                           SelectedItem="{Binding SelectedBrowserFillMapping}"
+                           MinHeight="180"
+                           AutomationProperties.Name="Browser fill mappings">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Summary}"
+                                   Margin="6"
+                                   TextWrapping="Wrap" />
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                  <WrapPanel>
+                    <Button Content="Refresh mappings"
+                            Command="{Binding RefreshBrowserIntegrationCommand}"
+                            Margin="0,0,8,8" />
+                    <Button Content="Remove selected mapping"
+                            Command="{Binding RemoveBrowserMappingCommand}"
+                            Margin="0,0,8,8" />
+                  </WrapPanel>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="1" Classes="card">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Map the selected secret"
+                             FontSize="{StaticResource VaultFontSize20}"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding BrowserSelectedSource}"
+                             TextWrapping="Wrap" />
+                  <TextBlock Text="Top-frame HTTPS origin" />
+                  <TextBox Text="{Binding BrowserTopOrigin}"
+                           PlaceholderText="https://login.example.com"
+                           AutomationProperties.Name="Approved browser top-frame HTTPS origin" />
+                  <TextBlock Text="Target-frame HTTPS origin" />
+                  <TextBox Text="{Binding BrowserFrameOrigin}"
+                           PlaceholderText="https://login.example.com"
+                           AutomationProperties.Name="Approved browser target-frame HTTPS origin" />
+                  <TextBlock Text="Field purpose" />
+                  <ComboBox ItemsSource="{Binding BrowserFieldPurposes}"
+                            SelectedItem="{Binding SelectedBrowserFieldPurpose}"
+                            AutomationProperties.Name="Approved browser field purpose" />
+                  <CheckBox Content="Enable this exact mapping"
+                            IsChecked="{Binding BrowserMappingEnabled}"
+                            AutomationProperties.Name="Enable this exact browser mapping" />
+                  <Button Classes="primary"
+                          Content="Save selected secret mapping"
+                          Command="{Binding SaveBrowserMappingCommand}"
+                          AutomationProperties.Name="Save the selected secret and identity as this exact browser mapping"
+                          HorizontalAlignment="Left" />
+                </StackPanel>
+              </Border>
+            </Grid>
+
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Recent value-free browser audit"
+                           FontSize="{StaticResource VaultFontSize20}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="Audit entries contain time, result, canonical origin, field purpose, and local identifiers—never a secret value."
+                           TextWrapping="Wrap" />
+                <ListBox ItemsSource="{Binding BrowserFillAudit}"
+                         MinHeight="140"
+                         AutomationProperties.Name="Recent browser fill audit">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding Summary}"
+                                 Margin="6"
+                                 TextWrapping="Wrap" />
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
       <TabItem Header="Settings">
         <ScrollViewer Margin="4,14"><Border Classes="card" MaxWidth="700" HorizontalAlignment="Left">
           <StackPanel Spacing="12">

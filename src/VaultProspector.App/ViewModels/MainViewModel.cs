@@ -22,7 +22,8 @@ public sealed partial class MainViewModel(
     IManagedIdentityEnvironmentDetector managedIdentityEnvironmentDetector,
     IWorkloadIdentityAdministrationService? workloadIdentityAdministrationService = null,
     ILocalEncryptionRotationEngine? localEncryptionRotationEngine = null,
-    LocalRecoveryArchiveService? localRecoveryArchiveService = null) : ViewModelBase
+    LocalRecoveryArchiveService? localRecoveryArchiveService = null,
+    BrowserFillService? browserFillService = null) : ViewModelBase
 {
     private CancellationTokenSource? _activeOperation;
     private bool _isReloadingIdentities;
@@ -234,6 +235,7 @@ public sealed partial class MainViewModel(
             await ReloadIdentitiesAsync(cancellationToken);
             await ReloadWorkspacesAsync(cancellationToken);
             await SearchCoreAsync(cancellationToken);
+            await ReloadBrowserIntegrationAsync(cancellationToken);
             IsApplicationReady = true;
             await ReloadRecoveryArchivesCoreAsync(cancellationToken);
             StatusText = recoveredInterruptedRotation
@@ -582,6 +584,7 @@ public sealed partial class MainViewModel(
 
     public void LockForBackground()
     {
+        CancelPendingBrowserFill("Browser fill was cancelled because Vault Prospector moved to the notification area.");
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
         SecretPreview = "Secret hidden.";
@@ -592,6 +595,7 @@ public sealed partial class MainViewModel(
 
     public void LockForSystemBoundary()
     {
+        CancelPendingBrowserFill("Browser fill was cancelled by a Windows security boundary.");
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
         IsCloseChoiceVisible = false;
@@ -1041,6 +1045,7 @@ public sealed partial class MainViewModel(
     partial void OnSelectedIdentityChanged(ConnectedIdentity? value)
     {
         OnPropertyChanged(nameof(HasSelectedIdentity));
+        OnPropertyChanged(nameof(BrowserSelectedSource));
         OnPropertyChanged(nameof(SelectedIdentitySupportsCredentialRotation));
         OnPropertyChanged(nameof(CredentialRotationLabel));
         if (value is null) FilterSelectedIdentity = false;
@@ -1063,6 +1068,7 @@ public sealed partial class MainViewModel(
         AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
+        SaveBrowserMappingCommand.NotifyCanExecuteChanged();
         ReplaceWorkloadCandidates([]);
         Tenants.Clear();
         Subscriptions.Clear();
@@ -1093,6 +1099,7 @@ public sealed partial class MainViewModel(
 
     partial void OnSelectedResultChanged(SearchResultRow? value)
     {
+        OnPropertyChanged(nameof(BrowserSelectedSource));
         ToggleFavoriteCommand.NotifyCanExecuteChanged();
         RevealCommand.NotifyCanExecuteChanged();
         CopyCommand.NotifyCanExecuteChanged();
@@ -1101,6 +1108,7 @@ public sealed partial class MainViewModel(
         PurgeSelectedCachedValueCommand.NotifyCanExecuteChanged();
         PurgeSelectedVaultCacheCommand.NotifyCanExecuteChanged();
         AddSelectedVaultToWorkspaceCommand.NotifyCanExecuteChanged();
+        SaveBrowserMappingCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedWorkspaceChanged(Workspace? value)

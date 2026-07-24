@@ -4,6 +4,7 @@ public enum AuthenticationState { Unknown, Ready, InteractionRequired, Disabled,
 public enum VaultObjectType { Secret, Key, Certificate }
 public enum SyncStatus { Running, Completed, CompletedWithErrors, Cancelled, Failed }
 public enum ResourceLinkType { Identity, Tenant, Subscription, Vault }
+public enum BrowserMappingFieldPurpose { Username, Password, OneTimeCode }
 public enum IdentityType
 {
     InteractiveUser = 0,
@@ -100,6 +101,28 @@ public sealed record WorkspaceResourceLink(
     Guid WorkspaceId,
     ResourceLinkType ResourceType,
     string ResourceId);
+
+public sealed record BrowserFillMapping(
+    Guid Id,
+    Guid VaultItemId,
+    Guid ConnectedIdentityId,
+    string TopOrigin,
+    string FrameOrigin,
+    BrowserMappingFieldPurpose FieldPurpose,
+    bool IsEnabled,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record BrowserFillAuditEvent(
+    Guid Id,
+    DateTimeOffset OccurredAt,
+    Guid? MappingId,
+    Guid? VaultItemId,
+    Guid? ConnectedIdentityId,
+    string TopOrigin,
+    string FrameOrigin,
+    BrowserMappingFieldPurpose FieldPurpose,
+    string Result);
 
 public sealed record SyncRun(
     Guid Id,

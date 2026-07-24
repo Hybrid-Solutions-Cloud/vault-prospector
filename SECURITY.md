@@ -51,6 +51,7 @@ The project distinguishes between:
 - In-memory decrypted values.
 - Clipboard contents.
 - Exported or shared content.
+- Browser extension, native-host, desktop-broker, machine-policy, and page-origin boundaries.
 
 Each boundary must be documented and tested before a production release.
 
@@ -64,6 +65,12 @@ The application must never:
 - Include secret values in crash reports.
 - Include secret values in logs.
 - Silently weaken encryption when a platform capability is unavailable.
+- Offer a vault value to a browser without exact machine policy, local mapping, page-context,
+  extension/host identity, visible confirmation, and fresh local-verification checks.
+
+The unreleased browser boundary is defined in the
+[browser integration threat model](docs/security/browser-integration-threat-model.md). Browser
+password databases are out of scope and must never be scraped or parsed.
 
 ## Release withdrawal
 

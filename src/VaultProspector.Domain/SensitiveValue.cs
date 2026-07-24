@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 
 namespace VaultProspector.Domain;
 
@@ -20,6 +21,12 @@ public sealed class SensitiveValue : IDisposable
     }
 
     public string Mask() => new('●', Math.Clamp(Length, 8, 24));
+
+    public byte[] CopyUtf8Bytes()
+    {
+        ObjectDisposedException.ThrowIf(_value is null, this);
+        return Encoding.UTF8.GetBytes(_value);
+    }
 
     public void Dispose()
     {

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net9.0-windows10.0.19041": {
+      "Microsoft.Win32.SystemEvents": {
+        "type": "Transitive",
+        "resolved": "10.0.10",
+        "contentHash": "IY0lTfC2uVwTizjtGgQ03ViwyXGQ9lMDblzB889/HyguAZJ2J8pRrjPown8h2eJe8WFc8nh+BUEsEPkshzizYQ=="
+      },
+      "System.Security.Cryptography.ProtectedData": {
+        "type": "Transitive",
+        "resolved": "10.0.10",
+        "contentHash": "BKt0SQgq2lq3ESE68jkeLwv95ypANrPDtkTOIFGcnhg2aRUeUUBDrQlkVDZctrg1WenVcvn5P5XZnuYI7q6rFQ=="
+      },
+      "vaultprospector.application": {
+        "type": "Project",
+        "dependencies": {
+          "VaultProspector.BrowserProtocol": "[0.1.0, )",
+          "VaultProspector.Domain": "[0.1.0, )"
+        }
+      },
+      "vaultprospector.browserprotocol": {
+        "type": "Project"
+      },
+      "vaultprospector.domain": {
+        "type": "Project"
+      },
+      "vaultprospector.platform": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": "[10.0.10, )",
+          "System.Security.Cryptography.ProtectedData": "[10.0.10, )",
+          "VaultProspector.Application": "[0.1.0, )",
+          "VaultProspector.BrowserProtocol": "[0.1.0, )"
+        }
+      }
+    }
+  }
+}

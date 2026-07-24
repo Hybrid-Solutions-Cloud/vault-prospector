@@ -11,6 +11,10 @@
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
+    <Content Include="browser-fill-policy.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\VaultProspector.BrowserProtocol\VaultProspector.BrowserProtocol.csproj" />
     <ProjectReference Include="..\VaultProspector.Domain\VaultProspector.Domain.csproj" />
     <ProjectReference Include="..\VaultProspector.Application\VaultProspector.Application.csproj" />
     <ProjectReference Include="..\VaultProspector.Infrastructure\VaultProspector.Infrastructure.csproj" />

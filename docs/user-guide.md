@@ -167,6 +167,18 @@ It never calls secret-value
 retrieval, clipboard, or offline-cache operations. Azure interaction-required or network failures
 remain visible as status and do not unlock foreground access.
 
+## Browser fill (unreleased)
+
+The source build includes an unreleased Browser tab for exact, one-time fills. A local mapping is
+not enough: an administrator must also enable the same HTTPS destination, browser family, and field
+purpose in protected machine policy. Each request displays its destination, purpose, secret, vault,
+and identity in the desktop app and requires **Verify and fill once** plus fresh Windows
+verification.
+
+Vault Prospector never scans saved browser passwords and does not fill in the background. See
+[Browser integration](browser-integration.md) for setup, policy format, limitations, and release
+status.
+
 ## Remove local data
 
 - Remove an identity from **Identities** to purge its MSAL token-cache account and local access mapping.

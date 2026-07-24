@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\VaultProspector.BrowserProtocol\VaultProspector.BrowserProtocol.csproj" />
     <ProjectReference Include="..\..\src\VaultProspector.Domain\VaultProspector.Domain.csproj" />
     <ProjectReference Include="..\..\src\VaultProspector.Application\VaultProspector.Application.csproj" />
   </ItemGroup>

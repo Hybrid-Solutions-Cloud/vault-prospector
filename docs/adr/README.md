@@ -25,3 +25,4 @@ Architecture Decision Records document important decisions, their context, alter
 - [ADR-0011: Local key rotation and device replacement](0011-local-key-rotation-and-device-replacement.md)
 - [ADR-0012: Isolate and rotate workload credentials](0012-isolate-and-rotate-workload-credentials.md)
 - [ADR-0013: Report effective Azure authorization evidence without simulating access](0013-report-effective-azure-authorization-evidence.md)
+- [ADR-0014: Use a user-initiated, origin-bound browser fill boundary](0014-user-initiated-origin-bound-browser-fill.md)
