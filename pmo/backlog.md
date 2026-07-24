@@ -143,6 +143,7 @@ not implementation.
 | 14.1 | ADR-0015, CyberArk threat model, dedicated provider/contracts/UI, DPAPI credential store, SQLCipher schema v6, verified retrieval, fail-closed local revoke/remove, and value-free audit | Automated provider/application/platform/persistence/accessibility evidence; governed live tenant permission/failure/audit matrix; independent review; exact signed release. |
 | 15.1 | `preview-feedback.md`, privacy notice, HCS-governed intake and triage process | Sanitized operational records proving notice, consent, privacy boundary, response targets, and escalation. |
 | 15.2 | Readiness G-01 thresholds and go/no-go process | Required evaluator/task/build/install/upgrade coverage, completion rate, blocker closure, 14-day stability, named approval. |
+| 15.3 | Support lifecycle, operations runbook, readiness manifest/validator, Dependabot, scheduled monitor | Named backup operator, retained successful hosted runs, incident/withdrawal/recovery exercise, Authenticode lifecycle approval, and exact-candidate review. |
 
 ## Open implementation and release-gate traceability
 
@@ -845,3 +846,24 @@ Acceptance criteria:
 - The final candidate completes a 14-day blocker-free stability window before G-01 passes.
 
 Implementation status: In progress; evaluator, upgrade, completion-rate, and stability evidence remain open.
+
+### Story: Operational support and lifecycle readiness
+
+As a release approver, I need ownership, maintenance, monitoring, response, and end-of-support
+controls so that a public release remains supportable after publication.
+
+Acceptance criteria:
+
+- Support, security, and release owners plus non-contractual response targets are explicit.
+- Current/superseded/withdrawn/end-of-support states and immutable replacement rules are published.
+- Desktop/mobile NuGet, browser/design npm, and pinned GitHub Actions receive scheduled update
+  proposals without automatic merging.
+- A scheduled monitor checks runtime lifecycle, known dependency vulnerabilities, and public
+  release/support endpoints and retains machine-readable evidence.
+- Incident, withdrawal, recovery, credential/signing rotation, and communication procedures are
+  exercised against the exact candidate.
+
+Implementation status (2026-07-24): source policy and automation are implemented locally. The
+validator passed 35 contract checks and three live public endpoints; it warns that desktop .NET 9
+reaches end of support on 2026-11-10. A named backup operator, successful hosted-monitor history,
+complete runbook exercise, Authenticode lifecycle approval, and exact-candidate review remain open.

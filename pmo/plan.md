@@ -545,7 +545,9 @@ repetition remain open.
 
 **Priority:** GA
 
-**Status:** In progress; operational thresholds and stability evidence remain open
+**Status:** In progress; operational automation and lifecycle policy are implemented locally,
+while hosted history, backup ownership, exercises, evaluator thresholds, and stability evidence
+remain open
 
 **Backlog coverage:** Epic 15
 
@@ -553,6 +555,10 @@ repetition remain open.
 
 - Operate the voluntary, privacy-safe feedback and private vulnerability channels.
 - Triage every report and maintain sanitized weekly rollups.
+- Operate weekly dependency, vulnerability, runtime-lifecycle, public-release, and support-channel
+  monitoring with retained machine-readable evidence.
+- Maintain named support/security ownership, immutable supersedence and end-of-support policy,
+  credential/signing rotation controls, and an exercised incident/withdrawal/recovery runbook.
 - Meet the defined evaluator, task-attempt, Windows-build, install-path, completion-rate, upgrade,
   and response-time thresholds.
 - Complete the final blocker-free stability window on the exact GA candidate.
@@ -564,6 +570,13 @@ repetition remain open.
 - Production documentation, support, security, privacy, installation, recovery, and operations
   guidance agree with the exact artifact.
 - The product owner approves GA with recorded evidence and no unresolved release blocker.
+
+Progress note (2026-07-24): a machine-readable operational-readiness contract, fail-closed
+PowerShell validator, weekly Dependabot coverage, scheduled vulnerability/runtime/public-endpoint
+monitor, and support/EOS policy are implemented. A local live check passed all 35 contract checks
+and three public endpoints, with an actionable warning for the 2026-11-10 desktop .NET 9 support
+deadline. G-08 remains In progress pending a backup operator, retained hosted runs, the complete
+exercise, and Authenticode lifecycle approval.
 
 ## Backlog-to-plan traceability
 

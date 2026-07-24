@@ -1,0 +1,92 @@
+version: 2
+
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "13:17"
+      timezone: America/New_York
+    open-pull-requests-limit: 10
+    groups:
+      desktop-runtime:
+        patterns:
+          - "Avalonia*"
+          - "Microsoft.*"
+          - "SQLitePCLRaw.*"
+      test-tooling:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - desktop
+
+  - package-ecosystem: nuget
+    directory: /mobile
+    schedule:
+      interval: weekly
+      day: monday
+      time: "13:27"
+      timezone: America/New_York
+    open-pull-requests-limit: 10
+    groups:
+      mobile-runtime:
+        patterns:
+          - "Microsoft.Maui.*"
+          - "Microsoft.Extensions.*"
+          - "Xamarin.*"
+      mobile-test-tooling:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - mobile
+
+  - package-ecosystem: npm
+    directory: /browser-extension
+    schedule:
+      interval: weekly
+      day: monday
+      time: "13:37"
+      timezone: America/New_York
+    open-pull-requests-limit: 5
+    groups:
+      browser-tooling:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - browser
+
+  - package-ecosystem: npm
+    directory: /docs/design/vault-prospector-ui-concepts
+    schedule:
+      interval: weekly
+      day: monday
+      time: "13:47"
+      timezone: America/New_York
+    open-pull-requests-limit: 5
+    groups:
+      design-prototype:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - design
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "13:57"
+      timezone: America/New_York
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - ci

@@ -6,6 +6,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ### Added
 
+- Add an operational-readiness contract and validator, weekly dependency update coverage, scheduled
+  vulnerability/runtime/public-endpoint monitoring, and a published support/end-of-support policy.
 - Add fail-closed local unlock/recovery, schema-v4 migration, and an internal crash-recoverable
   SQLCipher/offline-value key-rotation engine.
 - Add a guided first-run path that opens directly on identity setup after local unlock, separates

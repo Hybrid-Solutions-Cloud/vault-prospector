@@ -145,11 +145,16 @@ Provider expansion must not weaken the Azure security model or create a lowest-c
 
 ## Phase 8 — Preview learning and GA promotion
 
-Status: in progress. The process is operational; real evaluator and reliability evidence remains.
+Status: in progress. Feedback and operational-readiness processes are implemented; real hosted,
+exercise, evaluator, and reliability evidence remains.
 
 - Voluntary HCS-governed public intake with an explicit publication notice and sensitive-data exclusions.
 - Private security reporting separated from public product feedback.
 - Business-day triage and weekly sanitized evidence rollups.
+- Weekly dependency proposals plus vulnerability, runtime-EOS, public-release, and support-channel
+  monitoring with retained JSON evidence.
+- Published Preview supersedence/withdrawal and future GA end-of-support rules, named primary
+  support/security ownership, and documented credential/signing controls.
 - Measurable evaluator, task-completion, Windows-build, install-path, upgrade, blocker, and stability thresholds.
 - Formal G-01 decision only after [all feedback-cycle criteria](preview-feedback.md) are evidenced.
 - GA promotion only after every remaining [release-readiness gate](release-readiness.md) passes.
