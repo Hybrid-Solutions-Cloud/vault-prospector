@@ -14,7 +14,7 @@ using VaultProspector.Domain;
 
 namespace VaultProspector.Providers.Azure;
 
-public sealed class AzureVaultProvider(MsalIdentityProvider identityProvider) : IVaultProvider
+public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider) : IVaultProvider
 {
     public async Task<DiscoverySnapshot> DiscoverAsync(
         ConnectedIdentity identity,

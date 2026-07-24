@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:installLocation="internalOnly">
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+  <application
+      android:allowBackup="false"
+      android:dataExtractionRules="@xml/data_extraction_rules"
+      android:fullBackupContent="@xml/backup_rules"
+      android:hasFragileUserData="false"
+      android:icon="@drawable/vault_prospector"
+      android:killAfterRestore="true"
+      android:label="Vault Prospector"
+      android:usesCleartextTraffic="false">
+    <activity
+        android:name="microsoft.identity.client.BrowserTabActivity"
+        android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data
+            android:host="auth"
+            android:scheme="msal221af888-1c16-4637-9d45-b6dd2e1e7634" />
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>

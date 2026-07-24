@@ -4,7 +4,7 @@ This is the authoritative gate matrix for promoting Vault Prospector from an int
 Windows Preview and later to General Availability (GA). A roadmap item being implemented does not
 prove release readiness; every required gate needs current, reproducible evidence.
 
-**Assessment date:** 2026-07-17
+**Assessment date:** 2026-07-24
 
 **Current decision:** **`0.1.1-preview.1` released for non-production Preview; not ready for GA**
 
@@ -72,6 +72,22 @@ GA requires every Preview gate to remain green plus the following evidence.
 | G-08 | Operational readiness | Not started | Named support and security owners, severity/SLA definitions, incident and compromise runbooks, dependency and signing-key rotation, release monitoring, and end-of-support policy. |
 | G-09 | Legal and privacy approval | Not started | Approve license notices, privacy statement, telemetry schema if enabled, data-retention language, third-party components, and store/package metadata. |
 | G-10 | Formal GA go/no-go | Not started | Named approvers sign the completed matrix; all release artifacts and package-manager entries are independently installed and upgraded on clean supported Windows systems. |
+
+## Mobile release gates
+
+Mobile readiness is independent from the Windows Preview and GA decisions.
+
+| ID | Gate | Status | Evidence required |
+| --- | --- | --- | --- |
+| M-01 | Shared workflow and native security hosts | In progress | Source, locked restore, tests, Android package, and iOS simulator jobs pass on the exact merged commit. Current local evidence is recorded in [Phase 13 mobile evidence](../release-evidence/mobile-phase-13-2026-07-24.md). |
+| M-02 | Microsoft Entra mobile authentication | In progress | The production registration preserves the desktop loopback and now includes the exact custom mobile callback. Governed multi-account, tenant, guest, MFA, Conditional Access, cancellation, token-expiry, removal, and signing-bound Android broker matrix remains. |
+| M-03 | Android device security and accessibility | Not started | Physical-device Keystore/BiometricPrompt invalidation, lifecycle, backup/transfer/reinstall, screenshot, clipboard, TalkBack, scaling, navigation, and recovery evidence. |
+| M-04 | iOS device security and accessibility | Not started | Physical-device Keychain/LocalAuthentication invalidation, protected-data lifecycle, backup/migration/reinstall, capture, pasteboard, VoiceOver, Dynamic Type, navigation, and recovery evidence. |
+| M-05 | Native autofill feasibility | In progress | Fail-closed exact-origin policy is tested; native credential-provider prototypes and positive/negative live framework evidence remain. |
+| M-06 | Mobile independent security review | Not started | Separate review of source and exact signed artifacts with no unresolved critical/high findings. |
+| M-07 | Protected signing and provenance | Blocked | Governed Apple Distribution and Play upload identities, protected automation, SBOM, checksums, provenance, and signature verification for immutable artifacts. |
+| M-08 | Store declarations and closed testing | Not started | Reconciled App Store privacy and Play data-safety declarations, TestFlight and Play closed-test results, representative-user feedback, and blocker closure. |
+| M-09 | Store acceptance and mobile go/no-go | Not started | App Store and Google Play acceptance plus a dated, platform-specific named decision and rollback/support plan. |
 
 ## Evidence required for each release candidate
 

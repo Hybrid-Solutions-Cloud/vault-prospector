@@ -489,7 +489,7 @@ assistive-technology behavior remain required evidence.
 
 **Priority:** P3
 
-**Status:** On hold
+**Status:** In progress; application source implemented, external platform/store gates open
 
 **Backlog coverage:** Epic 8
 

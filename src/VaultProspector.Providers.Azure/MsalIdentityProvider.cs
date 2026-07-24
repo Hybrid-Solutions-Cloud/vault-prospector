@@ -18,7 +18,15 @@ public static class AzureAuthenticationScopes
         Array.AsReadOnly(["https://graph.microsoft.com/Application.Read.All"]);
 }
 
-public sealed class MsalIdentityProvider(string cacheDirectory) : IIdentityProvider
+public interface IAzureCredentialProvider
+{
+    Task<TokenCredential> GetCredentialAsync(
+        ConnectedIdentity identity,
+        CancellationToken cancellationToken);
+}
+
+public sealed class MsalIdentityProvider(string cacheDirectory)
+    : IIdentityProvider, IAzureCredentialProvider
 {
     private readonly Dictionary<string, IPublicClientApplication> _applications = new(StringComparer.OrdinalIgnoreCase);
 

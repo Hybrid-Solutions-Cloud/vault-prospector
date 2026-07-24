@@ -3,7 +3,8 @@
 ## Current delivery state
 
 `0.1.1-preview.1` is the current public, unsigned Windows Preview for non-production evaluation.
-The installed Start-menu/Search icon fix and Phases 3–11 implementation are complete locally but
+The installed Start-menu/Search icon fix and Phases 3–13 implementation are complete or in progress
+locally but
 remain unreleased and subject to the validation gates recorded below.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
@@ -32,7 +33,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | Password-manager UI research/redesign | In progress locally | Primary-source research, four interactive concepts, sixteen automated concept/task states, narrow-viewport and console validation | Participant usability sessions, concept selection, production implementation, accessibility validation |
 | Browser autofill/password-vault integration | Implemented locally, validation open | Toolbar-only Chromium/Firefox extension source, strict protocol, authenticated native host/broker, exact mappings, protected machine policy, desktop confirmation, fresh Windows verification, audit, MSI registration, tests | Signed extension distribution, independent review, live installed-browser/compromise/revocation/usability/AT evidence |
 | CyberArk source | Implemented and merged, validation open | Privilege Cloud ADR/threat model, isolated provider and DPAPI credential store, SQLCipher metadata, verified retrieval, fail-closed local revoke/remove controls, explicit UI, automated tests, exact-commit CI | Governed live tenant, independent review, signed exact-artifact validation |
-| iPhone/iOS and Android/Google apps | Not implemented | Roadmap and store/security requirements only | Mobile applications, platform secure storage, testing, signing, store submission |
+| iPhone/iOS and Android/Google apps | Implemented locally, validation open | Shared search/retrieval UI, native Keychain/Keystore verification and lifecycle controls, locked builds, tests, threat model, and CI | Exact-commit CI, native autofill prototypes, physical-device/accessibility matrices, signing, TestFlight/closed test, privacy/data-safety and store acceptance |
 
 ## Story status and plan mapping
 
@@ -68,10 +69,10 @@ exit criteria.
 | 7.4 | Schema upgrade validation | In progress locally | Phases 3 and 7 |
 | 7.5 | Authenticode signing | Blocked externally | Phase 14 |
 | 7.6 | Complete workspace resource assignment | Implemented locally, unreleased | Phase 7 validation |
-| 8.1 | Apple platform security validation | On hold | On hold |
-| 8.2 | iPhone/iOS application and App Store release | On hold | On hold |
-| 8.3 | Android application and Google Play release | On hold | On hold |
-| 8.4 | Mobile autofill feasibility | On hold | On hold |
+| 8.1 | Apple platform security validation | Implemented locally; live/independent validation open | Phase 13 |
+| 8.2 | iPhone/iOS application and App Store release | Implemented locally; signing/store gates open | Phase 13 |
+| 8.3 | Android application and Google Play release | Implemented locally; signing/store gates open | Phase 13 |
+| 8.4 | Mobile autofill feasibility | In progress; fail-closed policy tested, native/live prototypes open | Phase 13 |
 | 9.1 | Secure first-run wizard | Implemented locally, validation open | Phase 3 |
 | 9.2 | Mandatory local encryption verification | Implemented; independent review open | Phases 3 and 14 |
 | 9.3 | Isolated Azure authentication contexts | Implemented; live matrix open | Phases 2 and 14 |
@@ -503,7 +504,12 @@ Acceptance criteria:
 - Apple-specific platform security protections are implemented.
 - Security review validates Keychain and LocalAuthentication compliance.
 
-Implementation status: On hold. No Apple security implementation or validation evidence exists yet.
+Implementation status: Implemented locally; live and independent validation remains open.
+The iOS host uses a device-only, access-controlled Keychain key, LocalAuthentication, encrypted
+local storage, backup exclusion, local-only expiring pasteboard content, lifecycle locking,
+background covering, and active-capture lockout. Windows reference-pack compilation and automated
+session-policy tests pass; macOS CI, physical-device enrollment/passcode/migration/reinstall
+matrices, accessibility, and independent review remain mandatory.
 
 ### Story: iPhone/iOS application and App Store release (coming soon)
 
@@ -513,7 +519,11 @@ Acceptance criteria:
 - iOS application passes TestFlight and App Store reviews.
 - Separate threat model and privacy reviews are approved.
 
-Implementation status: On hold.
+Implementation status: Implemented locally; signing and store gates remain open. The iOS
+application provides native unlock, MSAL identity connection, synchronization, encrypted metadata
+search, bounded reveal, and bounded clipboard copy. It includes a privacy manifest and unsigned
+simulator CI path. Production Entra callback registration, signed archives, TestFlight,
+physical-device validation, privacy review, and App Store acceptance remain open.
 
 ### Story: Android application and Google Play release (coming soon)
 
@@ -523,7 +533,12 @@ Acceptance criteria:
 - Android application passes Google Play review.
 - Separate threat model and data-safety reviews are approved.
 
-Implementation status: On hold.
+Implementation status: Implemented locally; signing and store gates remain open. The Android
+application provides the same mobile workflow with Android Keystore, BiometricPrompt,
+`FLAG_SECURE`, sensitive clipboard labeling, and explicit backup/data-transfer exclusions. A local
+Release App Bundle build and native compilation pass. Exact-commit CI, protected upload signing,
+closed testing, physical-device validation, data-safety review, and Google Play acceptance remain
+open.
 
 ### Story: Mobile autofill feasibility
 
@@ -533,7 +548,12 @@ Acceptance criteria:
 - Autofill framework capabilities are tested on iOS and Android.
 - Findings determine safe integration patterns for specific secrets.
 
-Implementation status: On hold.
+Implementation status: In progress. A shared policy accepts only explicit credential fields for an
+exact default-port HTTPS origin, exact saved mapping, foreground invocation, secret object, and
+fresh user verification; positive and negative unit tests pass. Native Apple credential-provider
+and Android Autofill/Credential Manager prototypes plus real-framework negative-origin testing
+remain open. No arbitrary secret, key, certificate, wildcard origin, or background fill is
+offered.
 
 ## Epic 9 — Secure first-run setup and identity architecture (highest priority)
 
@@ -777,7 +797,12 @@ Acceptance criteria:
 - Provider credentials are isolated, encrypted, removable, and never logged.
 - Contract, integration, security, and redaction tests cover the provider before release.
 
-Implementation status: On hold.
+Implementation status: Implemented and merged; validation remains open. The selected Privilege
+Cloud integration has separate profiles, DPAPI-protected client credentials, SQLCipher metadata,
+safe/account/version/permission mapping, verified explicit retrieval, fail-closed revoke/remove
+controls, user-visible configuration, and automated contract/security/redaction tests. Governed
+live-tenant permission/failure/audit evidence, independent review, and signed exact-artifact
+validation remain mandatory.
 
 ## Epic 15 — Preview feedback and GA promotion
 

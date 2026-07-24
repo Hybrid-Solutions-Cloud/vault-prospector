@@ -1,27 +1,11 @@
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace VaultProspector.BrowserProtocol;
 
 public static class BrowserMessageCodec
 {
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
-
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
-    {
-        AllowTrailingCommas = false,
-        MaxDepth = 16,
-        NumberHandling = JsonNumberHandling.Strict,
-        PropertyNameCaseInsensitive = false,
-        ReadCommentHandling = JsonCommentHandling.Disallow,
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-    };
-
-    static BrowserMessageCodec()
-    {
-        SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false));
-    }
 
     public static ValidatedBrowserFillRequest ParseAndValidateRequest(
         ReadOnlySpan<byte> payload,
@@ -36,7 +20,9 @@ public static class BrowserMessageCodec
         try
         {
             var json = StrictUtf8.GetString(payload);
-            request = JsonSerializer.Deserialize<BrowserFillRequest>(json, SerializerOptions)
+            request = JsonSerializer.Deserialize(
+                json,
+                BrowserProtocolJsonContext.Default.BrowserFillRequest)
                 ?? throw new BrowserProtocolException("Request is empty.");
         }
         catch (DecoderFallbackException exception)
@@ -88,7 +74,9 @@ public static class BrowserMessageCodec
     public static byte[] SerializeResponse(BrowserFillResponse response)
     {
         ValidateResponse(response);
-        var payload = JsonSerializer.SerializeToUtf8Bytes(response, SerializerOptions);
+        var payload = JsonSerializer.SerializeToUtf8Bytes(
+            response,
+            BrowserProtocolJsonContext.Default.BrowserFillResponse);
         if (payload.Length > BrowserProtocolConstants.MaximumNativeMessageBytes)
             throw new BrowserProtocolException("Response exceeds the protocol limit.");
         return payload;
@@ -105,7 +93,9 @@ public static class BrowserMessageCodec
         try
         {
             var json = StrictUtf8.GetString(payload);
-            response = JsonSerializer.Deserialize<BrowserFillResponse>(json, SerializerOptions)
+            response = JsonSerializer.Deserialize(
+                json,
+                BrowserProtocolJsonContext.Default.BrowserFillResponse)
                 ?? throw new BrowserProtocolException("Response is empty.");
         }
         catch (DecoderFallbackException exception)

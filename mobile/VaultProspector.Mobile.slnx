@@ -1,0 +1,11 @@
+<Solution>
+  <Project Path="VaultProspector.Mobile.Core/VaultProspector.Mobile.Core.csproj" />
+  <Project Path="VaultProspector.Mobile/VaultProspector.Mobile.csproj" />
+  <Project Path="VaultProspector.Mobile.Android/VaultProspector.Mobile.Android.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="VaultProspector.Mobile.Tests/VaultProspector.Mobile.Tests.csproj" />
+</Solution>

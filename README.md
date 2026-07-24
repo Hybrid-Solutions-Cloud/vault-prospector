@@ -77,6 +77,7 @@ No local application can protect a deliberately revealed value from malware alre
 - [Privacy and local data handling](docs/privacy.md)
 - [Browser integration and administrator policy](docs/browser-integration.md)
 - [CyberArk Privilege Cloud integration](docs/cyberark-integration.md)
+- [Mobile applications](docs/mobile-applications.md)
 - [Preview feedback and GA promotion](docs/product/preview-feedback.md)
 - [Release and artifact verification](docs/release.md)
 - [Release operations and incident runbook](docs/release-operations-runbook.md)
@@ -90,7 +91,10 @@ No local application can protect a deliberately revealed value from malware alre
 
 ## Mobile status
 
-iPhone/iOS and Android/Google Play applications are **coming soon**. They are not included in the current Windows preview; their platform security, background execution, store distribution, and credential-provider work are tracked in the roadmap and backlog.
+iPhone/iOS and Android applications now have an unreleased shared UI and native security hosts.
+They remain **coming soon** and are not included in the current Windows preview: exact-commit CI,
+physical-device security/accessibility validation, protected signing, TestFlight/Play testing, and
+store review are still required.
 
 ## License
 

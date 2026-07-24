@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace VaultProspector.BrowserProtocol;
 
@@ -27,21 +28,6 @@ public sealed record AuthenticatedBrowserBrokerResponse(
 public static class BrowserBrokerAuthentication
 {
     public const string KeyPurpose = "browser-broker-auth";
-
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
-    {
-        AllowTrailingCommas = false,
-        MaxDepth = 16,
-        NumberHandling = JsonNumberHandling.Strict,
-        PropertyNameCaseInsensitive = false,
-        ReadCommentHandling = JsonCommentHandling.Disallow,
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-    };
-
-    static BrowserBrokerAuthentication()
-    {
-        SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false));
-    }
 
     public static AuthenticatedBrowserBrokerRequest CreateRequest(
         ReadOnlySpan<byte> key,
@@ -167,23 +153,33 @@ public static class BrowserBrokerAuthentication
 
     public static byte[] SerializeRequest(AuthenticatedBrowserBrokerRequest request)
     {
-        var payload = JsonSerializer.SerializeToUtf8Bytes(request, SerializerOptions);
+        var payload = JsonSerializer.SerializeToUtf8Bytes(
+            request,
+            BrowserProtocolJsonContext.Default.AuthenticatedBrowserBrokerRequest);
         EnsureSerializedLimit(payload);
         return payload;
     }
 
     public static AuthenticatedBrowserBrokerRequest ParseRequest(ReadOnlySpan<byte> payload) =>
-        Parse<AuthenticatedBrowserBrokerRequest>(payload, "request");
+        Parse(
+            payload,
+            "request",
+            BrowserProtocolJsonContext.Default.AuthenticatedBrowserBrokerRequest);
 
     public static byte[] SerializeResponse(AuthenticatedBrowserBrokerResponse response)
     {
-        var payload = JsonSerializer.SerializeToUtf8Bytes(response, SerializerOptions);
+        var payload = JsonSerializer.SerializeToUtf8Bytes(
+            response,
+            BrowserProtocolJsonContext.Default.AuthenticatedBrowserBrokerResponse);
         EnsureSerializedLimit(payload);
         return payload;
     }
 
     public static AuthenticatedBrowserBrokerResponse ParseResponse(ReadOnlySpan<byte> payload) =>
-        Parse<AuthenticatedBrowserBrokerResponse>(payload, "response");
+        Parse(
+            payload,
+            "response",
+            BrowserProtocolJsonContext.Default.AuthenticatedBrowserBrokerResponse);
 
     public static void ValidateExtensionId(BrowserFamily browserFamily, string extensionId)
     {
@@ -221,7 +217,10 @@ public static class BrowserBrokerAuthentication
                extensionId[(separator + 1)..].Contains('.', StringComparison.Ordinal);
     }
 
-    private static T Parse<T>(ReadOnlySpan<byte> payload, string description)
+    private static T Parse<T>(
+        ReadOnlySpan<byte> payload,
+        string description,
+        JsonTypeInfo<T> typeInfo)
     {
         if (payload.Length is < 2 or > BrowserProtocolConstants.MaximumNativeMessageBytes)
             throw new BrowserProtocolException($"Broker {description} size is outside the protocol limit.");
@@ -229,7 +228,7 @@ public static class BrowserBrokerAuthentication
         BrowserMessageCodec.ValidateJsonObject(payload);
         try
         {
-            return JsonSerializer.Deserialize<T>(payload, SerializerOptions)
+            return JsonSerializer.Deserialize(payload, typeInfo)
                 ?? throw new BrowserProtocolException($"Broker {description} is empty.");
         }
         catch (JsonException exception)

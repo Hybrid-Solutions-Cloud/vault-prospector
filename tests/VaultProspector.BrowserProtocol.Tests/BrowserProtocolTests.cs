@@ -125,6 +125,22 @@ public sealed class BrowserProtocolTests
     }
 
     [Fact]
+    public void FailureResponseRoundTripsWithoutSensitiveFields()
+    {
+        var response = BrowserFillResponse.Failure(
+            Guid.NewGuid(),
+            BrowserFillResultCode.Denied);
+
+        var payload = BrowserMessageCodec.SerializeResponse(response);
+        var roundTrip = BrowserMessageCodec.ParseAndValidateResponse(payload);
+
+        Assert.Equal(response, roundTrip);
+        Assert.Null(roundTrip.TransactionNonce);
+        Assert.Null(roundTrip.MappingId);
+        Assert.Null(roundTrip.ValueUtf8);
+    }
+
+    [Fact]
     public void ApprovedResponseRoundTrips()
     {
         var response = new BrowserFillResponse(

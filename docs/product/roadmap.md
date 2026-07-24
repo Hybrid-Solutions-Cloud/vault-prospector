@@ -18,7 +18,7 @@ The next work is ordered by security dependency rather than visual novelty. Secu
 | Next | Identity-source expansion and read-only/write-mode policy | In progress locally | Workload profiles, discovery, dry-run provisioning plans, and permission-aware read-only discovery are implemented locally. Governed mutations remain gated behind independent security review. |
 | Next | CyberArk provider integration | Implemented locally, validation open | Privilege Cloud provider, isolated credential/metadata/UI boundaries, and automated tests are present; governed live tenant, independent review, and signed exact-artifact evidence remain. |
 | Next | Browser extension and explicit one-time fill | In progress locally | Origin/frame/purpose binding, authenticated native messaging, protected machine policy, mappings, confirmation, verification, audit, and MSI host registration are implemented; signed distribution, live installed-browser, independent-review, compromise/revocation, usability, and AT gates remain. Private browser password-store access is prohibited. |
-| Parallel | iPhone/iOS and Android/Google Play applications | Coming soon | Mobile delivery continues, but does not bypass the same security and store-review gates. |
+| Parallel | iPhone/iOS and Android/Google Play applications | Implemented locally, validation open | Shared application and native security hosts are present; exact-commit CI, native autofill prototypes, physical-device/accessibility matrices, signing, closed testing, privacy/data-safety, independent review, and store acceptance remain. |
 
 Identity planning follows current Microsoft platform boundaries:
 
@@ -82,18 +82,23 @@ Status: delivered for evaluation in the 0.1 preview; independent security review
 
 ## Phase 4 — iPhone and Google mobile applications (coming soon)
 
-These applications are coming soon after the Windows distribution path. No Apple App Store or Google Play release is included in the current Windows desktop preview, and each mobile release must satisfy its own security and store review gates.
+These applications are implemented locally but remain coming soon. No Apple App Store or Google
+Play release is included in the current Windows desktop preview, and each mobile release must
+satisfy its own security and store review gates.
 
 - macOS validation.
-- iOS application shell.
-- Android application shell.
-- Mobile-safe search and retrieval.
-- Apple Keychain, Secure Enclave, and Android Keystore integration.
+- iOS application shell — implemented locally.
+- Android application shell — implemented locally.
+- Mobile-safe search and retrieval — implemented locally.
+- Apple Keychain/LocalAuthentication and Android Keystore/BiometricPrompt integration —
+  implemented locally; physical-device validation open.
 - Background refresh feasibility.
 - Apple Password AutoFill and Android Autofill framework feasibility.
-- Mobile offline cache policy.
-- Apple App Store privacy, entitlement, signing, and review preparation.
-- Google Play data-safety, signing, target-SDK, and review preparation.
+- Mobile offline cache policy — secure default disables value caching.
+- Apple App Store privacy, entitlement, signing, and review preparation — source baseline present;
+  signing and review open.
+- Google Play data-safety, signing, target-SDK, and review preparation — source baseline present;
+  signing and review open.
 - Separate mobile threat models and penetration testing before public distribution.
 
 ## Phase 5 — Enterprise controls
