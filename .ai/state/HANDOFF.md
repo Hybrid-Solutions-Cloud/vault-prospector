@@ -656,3 +656,29 @@ the repository and must not be committed.
   `30099139278`. All five jobs had zero steps and the organization payment/spending-limit
   startup rejection. This is not a code result; leave the PR unmerged until required exact-head
   jobs execute and pass.
+
+## HCS Azure DevOps delivery migration — 2026-07-24
+
+- HCS MCP confirmed the solution must use Azure DevOps for CI/CD rather than mixed GitHub Actions
+  and ADO workflows.
+- Private ADO project `Vault Prospector` now contains CI definition `5`, scheduled operational
+  readiness definition `6`, and release definition `7`.
+- GitHub App connection `Hybrid-Solutions-Cloud GitHub`, Azure connection `HCS Platform Azure`,
+  and Key Vault-linked variable group `vp-prd-secrets` are authorized to their required pipelines.
+- Platform governance registration PR `#7` merged as
+  `fd1cb41f5d6118d6b4013537282263802b49e472`.
+- Release package key `hcs-vault-prospector-release-signing-key` exists in `kv-hcs-vault-01`;
+  a real Cosign sign/verify smoke test passed against the committed public key.
+- GitHub Actions workflow definitions were removed. The private source repository remains private;
+  the existing public `vault-prospector-releases` repository is binary distribution only.
+- Hosted validation corrected two environment-specific defects without weakening gates:
+  WinGet is copied from the verified AppX install into agent temp before manifest validation, and
+  both iOS projects now lock `iossimulator-x64` assets for Intel macOS agents.
+- Exact PR validation ADO build `281` passed Windows, secret scan, native iOS, and Android jobs against
+  PR merge commit `c39270f62537f34c1094213b76a20a93e74e1598`. Windows passed all 370 tests and
+  package/readiness checks; mobile passed 44 tests, Android Release packaging, and native iOS
+  application/extension compilation on pinned Xcode 26.0.1.
+- ADO work item `AB#5095` owns the migration and Preview delivery.
+- Next: validate the evidence-only head, merge PR `#22`, validate the exact `main` merge commit,
+  run the immutable Preview release pipeline, verify public artifacts and package submissions,
+  then remove the temporary HCS Windows fallback.

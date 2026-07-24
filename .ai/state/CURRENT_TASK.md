@@ -1,21 +1,21 @@
 # Current task
 
-Fully implement the canonical backlog in `pmo/backlog.md` in dependency order and within the
-security/release gates defined by `pmo/plan.md`, the project charter, and `.ai/state/GOAL.md`.
+Complete delivery of the readiness integration candidate in accordance with `pmo/backlog.md`,
+`pmo/plan.md`, the project charter, and `.ai/state/GOAL.md`.
 
-Phases 11–13 browser integration, CyberArk Privilege Cloud, native mobile applications, and
-fail-closed autofill feasibility source are merged. Their live-service/device, independent-review,
-signed-artifact, representative-user, assistive-technology, and store gates remain open and must
-not be overstated.
+PR `#22` now uses HCS Azure DevOps as the sole CI/CD system. Exact PR validation build `281` passed all
+four jobs: Windows build/package and 370 tests, full-history secret scan, native iOS simulator
+application plus credential-provider extension, and 44 managed mobile tests plus Android Release
+App Bundle.
 
-The local integration candidate combines the completed .NET 10 LTS migration, performance/scale
-gate, operational-readiness controls, legal/privacy inventory, and machine-managed enterprise
-policy on `integration/readiness-candidate`. Exact integrated source and disposable-package
-validation pass. Consolidation PR `#22` is open; require final-head hosted checks after the
-organization billing/spending condition is corrected.
+Next:
 
-GitHub-hosted checks remain blocked before step execution by the Hybrid-Solutions-Cloud
-billing/spending condition. Do not merge or substitute local evidence for exact-head hosted checks,
-clean-machine installed lifecycle, trusted signing, physical-device/live-service evidence,
-independent review, representative-user/assistive-technology evidence, human approvals, or store
-acceptance.
+1. validate this evidence-only head in ADO and merge PR `#22`;
+2. require ADO CI to pass on the exact `main` merge commit;
+3. publish and verify the next immutable Preview through the Key Vault-backed ADO release pipeline;
+4. synchronize public release documentation and package-manager status; and
+5. remove the temporary HCS Windows fallback infrastructure.
+
+Do not overstate the remaining clean-machine installed lifecycle, live Azure/CyberArk,
+physical-device, independent security/legal, representative usability/accessibility, store
+acceptance, operational exercise, or stability-window gates.

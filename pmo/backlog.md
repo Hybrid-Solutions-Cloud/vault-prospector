@@ -176,9 +176,10 @@ Acceptance criteria:
 Source evidence: `VaultProspector.sln`, `src/VaultProspector.App/VaultProspector.App.csproj`
 
 Implementation status: Delivered in `0.1.1-preview.1`. The unreleased desktop source, tests,
-locked dependency graphs, CI/release workflows, and self-contained packaging are migrated locally
-to .NET 10 LTS; exact-head hosted, clean-machine, signed-artifact, and supported-platform validation
-remain open in Phase 14.
+locked dependency graphs, ADO CI/release workflows, and self-contained packaging are migrated to
+.NET 10 LTS. Exact PR validation ADO build `281` passes Windows, secret scan, Android, and native iOS;
+merge-commit, clean-machine, signed-artifact, and supported-platform validation remain open in
+Phase 14.
 
 ### Story: Application shell
 
@@ -868,8 +869,9 @@ Acceptance criteria:
 
 - Support, security, and release owners plus non-contractual response targets are explicit.
 - Current/superseded/withdrawn/end-of-support states and immutable replacement rules are published.
-- Desktop/mobile NuGet, browser/design npm, and pinned GitHub Actions receive scheduled update
-  proposals without automatic merging.
+- Desktop/mobile NuGet and browser/design npm dependencies receive scheduled update proposals
+  without automatic merging; pinned ADO tasks and third-party pipeline tools require governed
+  version review.
 - A scheduled monitor checks runtime lifecycle, known dependency vulnerabilities, and public
   release/support endpoints and retains machine-readable evidence.
 - Incident, withdrawal, recovery, credential/signing rotation, and communication procedures are

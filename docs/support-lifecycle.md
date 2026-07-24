@@ -92,7 +92,7 @@ normal review.
 
 The scheduled Azure DevOps operational-readiness pipeline checks the machine-readable ownership/lifecycle
 contract, direct and transitive desktop NuGet vulnerabilities, runtime lifecycle dates, and public
-release/support endpoints. Its JSON report is retained as workflow evidence. A failed scheduled
+release/support endpoints. Its JSON report is retained as pipeline evidence. A failed scheduled
 run is a support-owner action item and blocks a release until it is dispositioned.
 
 Patch updates should be evaluated promptly. A known critical/high vulnerability, runtime end of

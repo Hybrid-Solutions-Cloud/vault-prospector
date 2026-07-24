@@ -2,13 +2,14 @@
 
 ## Scope and truth boundary
 
-Source commit `1185747307c6f0ca6b916abfbfc29cb16b125d4b` combines the completed
+Source commit `fc20f58973b541195cf49141ae8a74a03d9681da` combines the completed
 .NET 10 LTS, performance/scale, operational-readiness, legal/privacy, and
 machine-managed enterprise-policy slices on `integration/readiness-candidate`.
-It also retains the Phase 13 merge-evidence correction.
+It also retains the Phase 13 merge-evidence correction and migrates all delivery automation to
+the HCS Azure DevOps project.
 
-This is exact local source and disposable package evidence. It is not a trusted-signed public
-candidate, a clean-machine installed lifecycle, hosted CI, independent security/legal approval,
+This is exact local source, disposable package, and Azure Pipelines hosted evidence. It is not a
+trusted-signed public candidate, a clean-machine installed lifecycle, independent security/legal approval,
 representative-user or assistive-technology evidence, live Azure/CyberArk validation, physical
 mobile-device validation, store acceptance, or GA approval.
 
@@ -26,12 +27,23 @@ Combining the independently developed slices exposed three fail-closed contract 
    `AvaloniaUI.DiagnosticsSupport 2.2.3` approval-required finding.
 
 CI now validates packaged legal/privacy files, and TRX logging no longer assigns one shared
-filename that parallel test projects overwrite.
+filename that parallel test projects overwrite. Hosted validation also exposed and corrected:
+
+4. Azure Pipelines service identities could not execute the AppX-owned WinGet binary directly
+   from `WindowsApps`; the verified installed payload is now copied to agent temp before manifest
+   validation.
+5. Intel macOS agents correctly selected `iossimulator-x64`, but locked restore contained only
+   Apple-silicon simulator assets; both the application and credential-provider extension now
+   include locked Intel simulator targets.
 
 ## Exact-source verification
 
 Using pinned SDK `10.0.302`:
 
+- Azure Pipelines build
+  [`281`](https://dev.azure.com/hybridcloudsolutions/51cf361f-78a7-4a0d-8804-25cb4887361b/_build/results?buildId=281)
+  passed all four jobs against PR merge commit
+  `c39270f62537f34c1094213b76a20a93e74e1598`;
 - locked solution restore passed;
 - formatting verification passed;
 - the Release solution build passed with 0 warnings and 0 errors;
@@ -43,7 +55,7 @@ Using pinned SDK `10.0.302`:
 - managed mobile tests passed 44/44;
 - Android arm64 Release AOT/linking/App Bundle production passed with 0 warnings and 0 errors;
 - Windows-hosted iOS application/credential-provider reference-pack compilation passed; and
-- full-history gitleaks scanned 141 commits and found no leaks.
+- full-history Gitleaks scanned 150 commits and found no leaks.
 
 ## Readiness contracts
 
@@ -59,12 +71,9 @@ Using pinned SDK `10.0.302`:
 
 ## Disposable Windows candidate
 
-Version `0.1.0-ci.940` was built from exact source commit `1185747`:
-
-| Artifact | Bytes | SHA-256 |
-| --- | ---: | --- |
-| MSI | 67,288,096 | `1E67B6267CA7A69EC6A529A185A9364512D968714F3AC323B1002F538D6C97AB` |
-| ZIP | 104,518,274 | `16B7168D6EC0E5D7E54DCC2D3B447F731B133CB067C626A28B50F90D96F77EFC` |
+Azure Pipelines version `0.1.0-ci.281` was built from the exact PR merge commit. The MSI SHA-256 is
+`CDCADBB18C81DBC056CE6728DF8008B9F92C014EDB00D61C239A9ABA1C7283BF`; the pipeline retained the
+candidate, provenance, and test evidence as build artifacts.
 
 The self-contained runtime reports `net10.0` and `Microsoft.NETCore.App 10.0.10`. The packaged
 application remained alive for a five-second launch smoke test. Validation also passed:
@@ -84,8 +93,9 @@ The disposable artifacts remain ignored local output and were not published.
 
 ## Remaining mandatory gates
 
-- Required GitHub jobs must execute and pass on the final PR head and merge commit. Organization
-  jobs are currently rejected before step 1 by the account payment/spending-limit condition.
+- Merge PR #22 and require the ADO CI definition to pass again on the exact `main` merge commit.
+- Run the ADO release definition on the immutable Preview tag and verify the public release,
+  checksums, SPDX SBOM, Sigstore bundles, and package-manager submission.
 - Run the exact trusted-signed candidate through clean supported-Windows install, upgrade,
   rollback, repair, uninstall, and package-manager lifecycle matrices.
 - Complete governed Group Policy/Intune deployment and live Azure/CyberArk allowed/denied matrices.
@@ -106,5 +116,31 @@ created `managed-tests`, `android-package`, and `ios-simulator`.
 
 All five jobs completed as failures with zero steps. Each check-run annotation states that the job
 was not started because recent account payments failed or the spending limit must be increased.
-This is an external hosted-startup block, not a code-test result. PR #22 must remain unmerged until
-required exact-head checks execute and pass.
+This was an external hosted-startup block, not a code-test result.
+
+## Final hosted PR state
+
+HCS delivery automation now uses Azure DevOps exclusively:
+
+- private project: `Vault Prospector`;
+- CI definition: `Vault Prospector CI` (definition `5`);
+- scheduled readiness definition: `Vault Prospector Operational Readiness` (definition `6`);
+- release definition: `Vault Prospector Release` (definition `7`);
+- GitHub App service connection: `Hybrid-Solutions-Cloud GitHub`;
+- Key Vault-linked release variable group: `vp-prd-secrets`; and
+- release package signing key: `hcs-vault-prospector-release-signing-key` in
+  `kv-hcs-vault-01`.
+
+Exact PR validation build
+[`281`](https://dev.azure.com/hybridcloudsolutions/51cf361f-78a7-4a0d-8804-25cb4887361b/_build/results?buildId=281)
+ran from `2026-07-24T19:21:51Z` through `2026-07-24T19:42:15Z` and passed:
+
+- Windows build, all 370 tests, performance, browser, PowerShell, MSI/ZIP/package-manager
+  validation, operational/legal/policy gates, and artifact retention;
+- full-history secret scan;
+- native iOS simulator application and embedded credential-provider extension compilation on
+  Xcode 26.0.1; and
+- all 44 managed mobile tests plus the Android Release App Bundle with zero warnings and errors.
+
+GitHub reports the ADO `Vault Prospector CI` status on PR #22. The obsolete GitHub Actions workflow
+definitions were removed so the repository does not mix CI/CD systems.
