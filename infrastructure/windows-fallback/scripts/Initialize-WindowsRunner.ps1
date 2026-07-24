@@ -3,7 +3,7 @@ param(
     [Parameter(Mandatory)]
     [string]$KeyVaultName,
 
-    [switch]$RunAsBuildUser
+    [switch]$InstallWinget
 )
 
 Set-StrictMode -Version Latest
@@ -51,44 +51,13 @@ function Get-ManagedIdentitySecret {
     }
 }
 
-if ($RunAsBuildUser) {
+if ($InstallWinget) {
     & "$env:ProgramData\chocolatey\bin\choco.exe" install winget-cli --yes --no-progress --limit-output
-    if ($LASTEXITCODE -ne 0) {
-        throw "WinGet installation failed with exit code $LASTEXITCODE."
+    $wingetInstallExitCode = $LASTEXITCODE
+    if ($wingetInstallExitCode -notin @(0, 2)) {
+        throw "WinGet installation failed with exit code $wingetInstallExitCode."
     }
-
-    $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
-    $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-    $env:Path = "$machinePath;$userPath;$env:LOCALAPPDATA\Microsoft\WindowsApps"
-
-    $githubPat = Get-ManagedIdentitySecret -SecretName 'hcs-platform-github-org-pat'
-    $registration = Invoke-RestMethod `
-        -Method Post `
-        -Headers @{
-            Authorization = "Bearer $githubPat"
-            Accept = 'application/vnd.github+json'
-            'X-GitHub-Api-Version' = '2022-11-28'
-        } `
-        -Uri 'https://api.github.com/repos/Hybrid-Solutions-Cloud/vault-prospector/actions/runners/registration-token'
-
-    $githubPat = $null
-    Set-Location -LiteralPath 'C:\actions-runner'
-    & .\config.cmd `
-        --unattended `
-        --ephemeral `
-        --disableupdate `
-        --url 'https://github.com/Hybrid-Solutions-Cloud/vault-prospector' `
-        --token $registration.token `
-        --name "hcs-vp-win-$env:COMPUTERNAME" `
-        --labels 'hcs,vault-prospector' `
-        --work '_work'
-    if ($LASTEXITCODE -ne 0) {
-        throw "Runner registration failed with exit code $LASTEXITCODE."
-    }
-
-    $registration = $null
-    & .\run.cmd
-    exit $LASTEXITCODE
+    return
 }
 
 if (-not (Get-Command choco.exe -ErrorAction SilentlyContinue)) {
@@ -104,13 +73,56 @@ if (-not (Get-Command choco.exe -ErrorAction SilentlyContinue)) {
     --yes `
     --no-progress `
     --limit-output
-if ($LASTEXITCODE -ne 0) {
-    throw "Build prerequisite installation failed with exit code $LASTEXITCODE."
+$chocolateyExitCode = $LASTEXITCODE
+if ($chocolateyExitCode -notin @(0, 2)) {
+    throw "Build prerequisite installation failed with exit code $chocolateyExitCode."
+}
+
+$adminPassword = Get-ManagedIdentitySecret -SecretName 'hcs-vault-prospector-windows-build-password'
+$secureAdminPassword = ConvertTo-SecureString -String $adminPassword -AsPlainText -Force
+Set-LocalUser -Name 'buildadmin' -Password $secureAdminPassword
+Enable-LocalUser -Name 'buildadmin'
+$credential = [PSCredential]::new("$env:COMPUTERNAME\buildadmin", $secureAdminPassword)
+$adminPassword = $null
+
+$scriptPath = 'C:\Windows\Temp\Initialize-WindowsRunner.ps1'
+Copy-Item -LiteralPath $PSCommandPath -Destination $scriptPath -Force
+Set-Service -Name WinRM -StartupType Manual
+Start-Service -Name WinRM
+Enable-PSRemoting -SkipNetworkProfileCheck -Force
+Invoke-Command `
+    -ComputerName localhost `
+    -Authentication Negotiate `
+    -Credential $credential `
+    -ScriptBlock {
+        param(
+            [string]$RemoteScriptPath,
+            [string]$RemoteKeyVaultName
+        )
+        & $RemoteScriptPath -KeyVaultName $RemoteKeyVaultName -InstallWinget
+    } `
+    -ArgumentList @($scriptPath, $KeyVaultName)
+
+$credential = $null
+$secureAdminPassword.Dispose()
+
+$wingetPackage = Get-ChildItem `
+    -LiteralPath 'C:\Program Files\WindowsApps' `
+    -Directory `
+    -Filter 'Microsoft.DesktopAppInstaller_*_x64__8wekyb3d8bbwe' |
+    Sort-Object Name -Descending |
+    Select-Object -First 1
+if (-not $wingetPackage) {
+    throw 'The WinGet package directory was not found after installation.'
 }
 
 $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-$env:Path = "$machinePath;$userPath"
+$env:Path = "$machinePath;$userPath;$($wingetPackage.FullName)"
+& (Join-Path $wingetPackage.FullName 'winget.exe') --version
+if ($LASTEXITCODE -ne 0) {
+    throw "WinGet verification failed with exit code $LASTEXITCODE."
+}
 
 $runnerVersion = '2.336.0'
 $runnerArchive = 'C:\Windows\Temp\actions-runner.zip'
@@ -123,82 +135,40 @@ $actualRunnerHash = (Get-FileHash -LiteralPath $runnerArchive -Algorithm SHA256)
 if ($actualRunnerHash -ne $runnerSha256) {
     throw 'The downloaded GitHub Actions runner did not match the pinned SHA-256.'
 }
-
+if (Test-Path -LiteralPath $runnerDirectory) {
+    Remove-Item -LiteralPath $runnerDirectory -Recurse -Force
+}
 New-Item -ItemType Directory -Path $runnerDirectory -Force | Out-Null
 Expand-Archive -LiteralPath $runnerArchive -DestinationPath $runnerDirectory -Force
 
-$adminPassword = Get-ManagedIdentitySecret -SecretName 'hcs-vault-prospector-windows-build-password'
-$secureAdminPassword = ConvertTo-SecureString -String $adminPassword -AsPlainText -Force
-Set-LocalUser -Name 'buildadmin' -Password $secureAdminPassword
-Enable-LocalUser -Name 'buildadmin'
+$githubPat = Get-ManagedIdentitySecret -SecretName 'hcs-platform-github-org-pat'
+$registration = Invoke-RestMethod `
+    -Method Post `
+    -Headers @{
+        Authorization = "Bearer $githubPat"
+        Accept = 'application/vnd.github+json'
+        'X-GitHub-Api-Version' = '2022-11-28'
+    } `
+    -Uri 'https://api.github.com/repos/Hybrid-Solutions-Cloud/vault-prospector/actions/runners/registration-token'
 
-$buildUserSid = (Get-LocalUser -Name 'buildadmin').SID.Value
-$securityPolicyPath = 'C:\Windows\Temp\vault-prospector-security-policy.inf'
-$securityDatabasePath = 'C:\Windows\Temp\vault-prospector-security-policy.sdb'
-& secedit.exe /export /cfg $securityPolicyPath /areas USER_RIGHTS /quiet
+$githubPat = $null
+Set-Location -LiteralPath $runnerDirectory
+& .\config.cmd `
+    --unattended `
+    --ephemeral `
+    --disableupdate `
+    --url 'https://github.com/Hybrid-Solutions-Cloud/vault-prospector' `
+    --token $registration.token `
+    --name "hcs-vp-win-$env:COMPUTERNAME-system" `
+    --labels 'hcs,vault-prospector' `
+    --work '_work'
 if ($LASTEXITCODE -ne 0) {
-    throw "Security policy export failed with exit code $LASTEXITCODE."
+    throw "Runner registration failed with exit code $LASTEXITCODE."
 }
 
-$securityPolicy = Get-Content -LiteralPath $securityPolicyPath
-$batchRightIndex = -1
-for ($index = 0; $index -lt $securityPolicy.Count; $index++) {
-    if ($securityPolicy[$index] -like 'SeBatchLogonRight*') {
-        $batchRightIndex = $index
-        break
-    }
-}
-
-if ($batchRightIndex -ge 0) {
-    if ($securityPolicy[$batchRightIndex] -notmatch [regex]::Escape($buildUserSid)) {
-        $securityPolicy[$batchRightIndex] = "$($securityPolicy[$batchRightIndex]),*$buildUserSid"
-    }
-}
-else {
-    $privilegeIndex = [Array]::IndexOf($securityPolicy, '[Privilege Rights]')
-    if ($privilegeIndex -lt 0) {
-        throw 'The exported security policy did not contain a Privilege Rights section.'
-    }
-    $securityPolicy = @(
-        $securityPolicy[0..$privilegeIndex]
-        "SeBatchLogonRight = *$buildUserSid"
-        $securityPolicy[($privilegeIndex + 1)..($securityPolicy.Count - 1)]
-    )
-}
-
-Set-Content -LiteralPath $securityPolicyPath -Value $securityPolicy -Encoding Unicode
-& secedit.exe /configure /db $securityDatabasePath /cfg $securityPolicyPath /areas USER_RIGHTS /quiet
-if ($LASTEXITCODE -ne 0) {
-    throw "Security policy configuration failed with exit code $LASTEXITCODE."
-}
-
-$taskName = 'VaultProspectorEphemeralRunner'
-$taskAction = New-ScheduledTaskAction `
-    -Execute 'powershell.exe' `
-    -Argument "-NoLogo -NoProfile -ExecutionPolicy Bypass -File C:\Windows\Temp\Initialize-WindowsRunner.ps1 -KeyVaultName $KeyVaultName -RunAsBuildUser"
-$taskSettings = New-ScheduledTaskSettingsSet `
-    -ExecutionTimeLimit (New-TimeSpan -Hours 3) `
-    -AllowStartIfOnBatteries `
-    -DontStopIfGoingOnBatteries
-Register-ScheduledTask `
-    -TaskName $taskName `
-    -Action $taskAction `
-    -Settings $taskSettings `
-    -User "$env:COMPUTERNAME\buildadmin" `
-    -Password $adminPassword `
-    -RunLevel Highest `
-    -Force | Out-Null
-
-$adminPassword = $null
-$secureAdminPassword.Dispose()
-Start-ScheduledTask -TaskName $taskName
-do {
-    Start-Sleep -Seconds 10
-    $task = Get-ScheduledTask -TaskName $taskName
-} while ($task.State -eq 'Running')
-
-$taskInfo = Get-ScheduledTaskInfo -TaskName $taskName
-$runnerExitCode = $taskInfo.LastTaskResult
+$registration = $null
+& .\run.cmd
+$runnerExitCode = $LASTEXITCODE
 
 shutdown.exe /s /t 30 /d p:0:0 /c 'Vault Prospector ephemeral CI runner completed.'
 exit $runnerExitCode
