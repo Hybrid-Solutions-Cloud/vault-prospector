@@ -48,7 +48,7 @@ resource runnerBootstrap 'Microsoft.Compute/virtualMachines/runCommands@2024-03-
         value: keyVaultName
       }
     ]
-    asyncExecution: false
+    asyncExecution: true
     timeoutInSeconds: 10800
     treatFailureAsDeploymentFailure: true
   }
