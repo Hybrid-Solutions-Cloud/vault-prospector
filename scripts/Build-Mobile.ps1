@@ -110,8 +110,7 @@ try {
                 'VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj',
                 '--configuration',
                 $Configuration,
-                '--no-restore',
-                '-p:CodesignKey='
+                '--no-restore'
             ) + $iosProperties)
         }
         else {
