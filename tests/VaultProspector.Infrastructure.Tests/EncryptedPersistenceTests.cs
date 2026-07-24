@@ -47,6 +47,202 @@ public sealed class EncryptedPersistenceTests : IDisposable
     }
 
     [Fact]
+    public async Task CyberArkMetadataRemainsProviderSpecificAndAuditSurvivesRemoval()
+    {
+        var path = Path.Combine(_directory, "cyberark.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var profileId = Guid.NewGuid();
+        var profile = new CyberArkProfile(
+            profileId,
+            "Production CyberArk",
+            new Uri("https://tenant.id.cyberark.cloud/"),
+            new Uri("https://tenant.privilegecloud.cyberark.cloud/"),
+            "svc@example.com",
+            "VaultProspector",
+            CyberArkAuthenticationState.Ready,
+            true,
+            _clock.UtcNow,
+            _clock.UtcNow);
+        await repository.UpsertCyberArkProfileAsync(
+            profile,
+            TestContext.Current.CancellationToken);
+        var safe = new CyberArkSafe(
+            profileId,
+            "safe-1",
+            "Production",
+            "Production systems",
+            "\\",
+            30,
+            5,
+            true,
+            _clock.UtcNow,
+            _clock.UtcNow);
+        var account = new CyberArkAccount(
+            profileId,
+            "account-1",
+            safe.Name,
+            "database-admin",
+            "administrator",
+            "db.example.test",
+            "WinServerLocal",
+            CyberArkSecretType.Password,
+            "ready",
+            _clock.UtcNow,
+            _clock.UtcNow,
+            "fingerprint",
+            _clock.UtcNow);
+        var version = new CyberArkSecretVersion(
+            profileId,
+            account.AccountId,
+            3,
+            false,
+            _clock.UtcNow,
+            "operator");
+        var permission = new CyberArkSafePermissionEvidence(
+            profileId,
+            safe.SafeId,
+            profile.ServiceUserName,
+            "User",
+            true,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            _clock.UtcNow,
+            "direct");
+        await repository.ApplyCyberArkDiscoveryAsync(
+            profileId,
+            new CyberArkDiscoverySnapshot(
+                [safe],
+                [account],
+                [version],
+                [permission],
+                [],
+                _clock.UtcNow),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            profile,
+            await repository.GetCyberArkProfileAsync(
+                profileId,
+                TestContext.Current.CancellationToken));
+        Assert.Equal(
+            safe,
+            Assert.Single(await repository.GetCyberArkSafesAsync(
+                profileId,
+                TestContext.Current.CancellationToken)));
+        Assert.Equal(
+            account,
+            Assert.Single(await repository.SearchCyberArkAccountsAsync(
+                profileId,
+                "database",
+                25,
+                TestContext.Current.CancellationToken)));
+        Assert.Equal(
+            version,
+            Assert.Single(await repository.GetCyberArkVersionsAsync(
+                profileId,
+                account.AccountId,
+                TestContext.Current.CancellationToken)));
+        Assert.Equal(
+            permission,
+            await repository.GetCyberArkPermissionAsync(
+                profileId,
+                safe.SafeId,
+                TestContext.Current.CancellationToken));
+
+        var audit = new CyberArkAuditEvent(
+            Guid.NewGuid(),
+            profileId,
+            account.AccountId,
+            safe.Name,
+            version.VersionId,
+            "show",
+            CyberArkAuditResult.Succeeded,
+            "Synthetic value was returned.",
+            _clock.UtcNow);
+        await repository.RecordCyberArkAuditAsync(
+            audit,
+            TestContext.Current.CancellationToken);
+        await repository.RemoveCyberArkProfileAsync(
+            profileId,
+            TestContext.Current.CancellationToken);
+
+        Assert.Empty(await repository.GetCyberArkProfilesAsync(
+            TestContext.Current.CancellationToken));
+        Assert.Empty(await repository.SearchCyberArkAccountsAsync(
+            profileId,
+            string.Empty,
+            25,
+            TestContext.Current.CancellationToken));
+        Assert.Equal(
+            audit,
+            Assert.Single(await repository.GetCyberArkAuditAsync(
+                profileId,
+                25,
+                TestContext.Current.CancellationToken)));
+        var bytes = await File.ReadAllBytesAsync(
+            path,
+            TestContext.Current.CancellationToken);
+        Assert.DoesNotContain(
+            "database-admin",
+            Encoding.UTF8.GetString(bytes),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task CyberArkDiscoveryRejectsCrossProfileDataAtomically()
+    {
+        var path = Path.Combine(_directory, "cyberark-boundary.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var profile = new CyberArkProfile(
+            Guid.NewGuid(),
+            "Test",
+            new Uri("https://tenant.id.cyberark.cloud/"),
+            new Uri("https://tenant.privilegecloud.cyberark.cloud/"),
+            "svc@example.com",
+            "VaultProspector",
+            CyberArkAuthenticationState.Ready,
+            true,
+            _clock.UtcNow,
+            _clock.UtcNow);
+        await repository.UpsertCyberArkProfileAsync(
+            profile,
+            TestContext.Current.CancellationToken);
+        var mismatchedSafe = new CyberArkSafe(
+            Guid.NewGuid(),
+            "safe-1",
+            "Wrong source",
+            string.Empty,
+            "\\",
+            null,
+            null,
+            false,
+            null,
+            null);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => repository.ApplyCyberArkDiscoveryAsync(
+                profile.Id,
+                new CyberArkDiscoverySnapshot(
+                    [mismatchedSafe],
+                    [],
+                    [],
+                    [],
+                    [],
+                    _clock.UtcNow),
+                TestContext.Current.CancellationToken));
+
+        Assert.Empty(await repository.GetCyberArkSafesAsync(
+            profile.Id,
+            TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task BrowserMappingsRemainIdentityBoundAndAuditSurvivesMappingRemoval()
     {
         var path = Path.Combine(_directory, "browser-mappings.db");
@@ -196,7 +392,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             TestContext.Current.CancellationToken));
         Assert.Empty(await migrated.GetBrowserFillMappingsAsync(
             TestContext.Current.CancellationToken));
-        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -277,7 +473,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
         Assert.NotNull(restored);
         Assert.Equal(IdentityType.InteractiveUser, restored.Type);
         Assert.Equal(string.Empty, restored.CredentialData);
-        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -308,7 +504,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         Assert.Single(summaries);
         Assert.True(summaries[0].Access.IsSelected);
-        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -899,7 +1095,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(99, exception.ObservedVersion);
-        Assert.Equal(5, exception.SupportedVersion);
+        Assert.Equal(6, exception.SupportedVersion);
         Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)));
         Assert.Equal(99, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
@@ -954,7 +1150,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name='sync_runs'"));
-        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -968,7 +1164,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM pragma_table_info('sync_runs') WHERE name='error_count'"));
-        Assert.Equal(5, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     private ConnectedIdentity TestIdentity(string accountIdentifier) => new(

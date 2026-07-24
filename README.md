@@ -18,6 +18,9 @@ Vault Prospector is a local-first Windows desktop application for discovering an
 - Redacted local diagnostics with no tokens, secret values, usernames, vault names, or object names.
 - Unreleased, fail-closed browser-fill source with explicit origin/field mappings, protected machine
   policy, one-time desktop confirmation, and fresh Windows verification.
+- Unreleased CyberArk Privilege Cloud source with separate profiles, safes, accounts, versions,
+  direct permission evidence, DPAPI-isolated credentials, metadata-only sync, and verified
+  reveal/copy.
 
 Vault Prospector does not create Azure role assignments, rotate secrets, export keys or certificate private keys, share secrets, or send telemetry.
 
@@ -73,6 +76,7 @@ No local application can protect a deliberately revealed value from malware alre
 - [Threat model](docs/security/threat-model.md)
 - [Privacy and local data handling](docs/privacy.md)
 - [Browser integration and administrator policy](docs/browser-integration.md)
+- [CyberArk Privilege Cloud integration](docs/cyberark-integration.md)
 - [Preview feedback and GA promotion](docs/product/preview-feedback.md)
 - [Release and artifact verification](docs/release.md)
 - [Release operations and incident runbook](docs/release-operations-runbook.md)

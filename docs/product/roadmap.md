@@ -16,7 +16,7 @@ The next work is ordered by security dependency rather than visual novelty. Secu
 | Now | Desktop UI and password-manager interface research | In progress | Comparative research and four interactive concepts are complete; participant evidence, selection, production implementation, and assistive-technology validation remain. |
 | Next | Taskbar background operation and metadata synchronization | In progress locally | Lock-on-hide notification-area lifecycle, session/suspend/resume boundary locking, and opt-in metadata-only synchronization are implemented; installed Windows lifecycle and policy evidence remain. |
 | Next | Identity-source expansion and read-only/write-mode policy | In progress locally | Workload profiles, discovery, dry-run provisioning plans, and permission-aware read-only discovery are implemented locally. Governed mutations remain gated behind independent security review. |
-| Next | CyberArk provider integration | Planned | Requires a provider-specific threat model and contracts that preserve source boundaries. |
+| Next | CyberArk provider integration | Implemented locally, validation open | Privilege Cloud provider, isolated credential/metadata/UI boundaries, and automated tests are present; governed live tenant, independent review, and signed exact-artifact evidence remain. |
 | Next | Browser extension and explicit one-time fill | In progress locally | Origin/frame/purpose binding, authenticated native messaging, protected machine policy, mappings, confirmation, verification, audit, and MSI host registration are implemented; signed distribution, live installed-browser, independent-review, compromise/revocation, usability, and AT gates remain. Private browser password-store access is prohibited. |
 | Parallel | iPhone/iOS and Android/Google Play applications | Coming soon | Mobile delivery continues, but does not bypass the same security and store-review gates. |
 
@@ -117,7 +117,7 @@ These applications are coming soon after the Windows distribution path. No Apple
 
 Potential providers, subject to separate ADRs:
 
-- CyberArk.
+- CyberArk Privilege Cloud is implemented locally under ADR-0015; release validation remains open.
 - HashiCorp Vault.
 - GitHub Actions secrets metadata.
 - 1Password Connect.

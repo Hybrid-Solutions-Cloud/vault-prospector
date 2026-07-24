@@ -262,6 +262,8 @@ public static class VaultProspectorPaths
     public static string CacheDirectory => Path.Combine(DataDirectory, "protected-values");
     public static string LogPath => Path.Combine(DataDirectory, "logs", "vault-prospector.log");
     public static string TokenCacheDirectory => Path.Combine(DataDirectory, "identity-cache");
+    public static string CyberArkCredentialDirectory =>
+        Path.Combine(DataDirectory, "cyberark-credentials");
 }
 
 public sealed class FileSystemLocalDataResetter(string dataDirectory) : ILocalDataResetter

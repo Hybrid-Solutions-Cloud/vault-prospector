@@ -72,6 +72,11 @@ The unreleased browser boundary is defined in the
 [browser integration threat model](docs/security/browser-integration-threat-model.md). Browser
 password databases are out of scope and must never be scraped or parsed.
 
+The unreleased CyberArk Privilege Cloud boundary is defined in the
+[CyberArk provider threat model](docs/security/cyberark-provider-threat-model.md). Its local
+revocation action fails closed and removes the protected local credential; administrators must
+still revoke the service user or credential in CyberArk Identity to invalidate external access.
+
 ## Release withdrawal
 
 A release is withdrawn when a reachable critical/high vulnerability exposes protected data,

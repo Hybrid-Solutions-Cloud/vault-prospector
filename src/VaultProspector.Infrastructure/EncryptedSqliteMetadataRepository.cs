@@ -9,7 +9,7 @@ namespace VaultProspector.Infrastructure;
 
 public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyMaterialProvider keyMaterial) : IMetadataRepository
 {
-    private const int CurrentSchemaVersion = 5;
+    private const int CurrentSchemaVersion = 6;
     private string? _connectionString;
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
@@ -77,6 +77,12 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
                 {
                     await EnsureBrowserIntegrationTablesAsync(connection, transaction, cancellationToken);
                     schemaVersion = 5;
+                }
+
+                if (schemaVersion == 5)
+                {
+                    await EnsureCyberArkTablesAsync(connection, transaction, cancellationToken);
+                    schemaVersion = 6;
                 }
 
                 if (schemaVersion != CurrentSchemaVersion)
@@ -613,6 +619,452 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         return result;
     }
 
+    public async Task<IReadOnlyList<CyberArkProfile>> GetCyberArkProfilesAsync(
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = CyberArkProfileSelect +
+            " ORDER BY display_name COLLATE NOCASE,id";
+        var result = new List<CyberArkProfile>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            result.Add(ReadCyberArkProfile(reader));
+        return result;
+    }
+
+    public async Task<CyberArkProfile?> GetCyberArkProfileAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = CyberArkProfileSelect + " WHERE id=$id";
+        command.Parameters.AddWithValue("$id", id.ToString("D"));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken)
+            ? ReadCyberArkProfile(reader)
+            : null;
+    }
+
+    public async Task UpsertCyberArkProfileAsync(
+        CyberArkProfile profile,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await ExecuteAsync(
+            connection,
+            null,
+            """
+            INSERT INTO cyberark_profiles(
+                id,display_name,identity_url,privilege_cloud_url,service_user_name,
+                application_name,auth_state,is_enabled,credential_updated_at,last_validated_at)
+            VALUES($id,$display,$identity,$privilege,$user,$application,$state,$enabled,$credential,$validated)
+            ON CONFLICT(id) DO UPDATE SET
+                display_name=excluded.display_name,
+                identity_url=excluded.identity_url,
+                privilege_cloud_url=excluded.privilege_cloud_url,
+                service_user_name=excluded.service_user_name,
+                application_name=excluded.application_name,
+                auth_state=excluded.auth_state,
+                is_enabled=excluded.is_enabled,
+                credential_updated_at=excluded.credential_updated_at,
+                last_validated_at=excluded.last_validated_at
+            """,
+            cancellationToken,
+            ("$id", profile.Id.ToString("D")),
+            ("$display", profile.DisplayName),
+            ("$identity", profile.IdentityUrl.AbsoluteUri),
+            ("$privilege", profile.PrivilegeCloudUrl.AbsoluteUri),
+            ("$user", profile.ServiceUserName),
+            ("$application", profile.ApplicationName),
+            ("$state", (int)profile.AuthenticationState),
+            ("$enabled", profile.IsEnabled ? 1 : 0),
+            ("$credential", Format(profile.CredentialUpdatedAt)),
+            ("$validated", profile.LastValidatedAt is null
+                ? DBNull.Value
+                : Format(profile.LastValidatedAt.Value)));
+    }
+
+    public async Task RemoveCyberArkProfileAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await ExecuteAsync(
+            connection,
+            null,
+            "DELETE FROM cyberark_profiles WHERE id=$id",
+            cancellationToken,
+            ("$id", id.ToString("D")));
+    }
+
+    public async Task ApplyCyberArkDiscoveryAsync(
+        Guid profileId,
+        CyberArkDiscoverySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var transaction =
+            (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        await ExecuteAsync(
+            connection,
+            transaction,
+            """
+            DELETE FROM cyberark_permissions WHERE profile_id=$profile;
+            DELETE FROM cyberark_versions WHERE profile_id=$profile;
+            DELETE FROM cyberark_accounts WHERE profile_id=$profile;
+            DELETE FROM cyberark_safes WHERE profile_id=$profile;
+            """,
+            cancellationToken,
+            ("$profile", profileId.ToString("D")));
+
+        foreach (var safe in snapshot.Safes)
+        {
+            EnsureCyberArkSource(profileId, safe.ProfileId);
+            await ExecuteAsync(
+                connection,
+                transaction,
+                """
+                INSERT INTO cyberark_safes(
+                    profile_id,safe_id,name,description,location,retention_days,
+                    retention_versions,olac_enabled,created_at,updated_at)
+                VALUES($profile,$safe,$name,$description,$location,$days,$versions,$olac,$created,$updated)
+                """,
+                cancellationToken,
+                ("$profile", profileId.ToString("D")),
+                ("$safe", safe.SafeId),
+                ("$name", safe.Name),
+                ("$description", safe.Description),
+                ("$location", safe.Location),
+                ("$days", safe.RetentionDays ?? (object)DBNull.Value),
+                ("$versions", safe.RetentionVersions ?? (object)DBNull.Value),
+                ("$olac", safe.ObjectLevelAccessControlEnabled ? 1 : 0),
+                ("$created", safe.CreatedAt is null
+                    ? DBNull.Value
+                    : Format(safe.CreatedAt.Value)),
+                ("$updated", safe.UpdatedAt is null
+                    ? DBNull.Value
+                    : Format(safe.UpdatedAt.Value)));
+        }
+
+        foreach (var account in snapshot.Accounts)
+        {
+            EnsureCyberArkSource(profileId, account.ProfileId);
+            await ExecuteAsync(
+                connection,
+                transaction,
+                """
+                INSERT INTO cyberark_accounts(
+                    profile_id,account_id,safe_name,name,user_name,address,platform_id,
+                    secret_type,status,created_at,updated_at,fingerprint,last_indexed,is_deleted)
+                VALUES($profile,$account,$safe,$name,$user,$address,$platform,$type,$status,
+                       $created,$updated,$fingerprint,$indexed,$deleted)
+                """,
+                cancellationToken,
+                ("$profile", profileId.ToString("D")),
+                ("$account", account.AccountId),
+                ("$safe", account.SafeName),
+                ("$name", account.Name),
+                ("$user", account.UserName ?? (object)DBNull.Value),
+                ("$address", account.Address ?? (object)DBNull.Value),
+                ("$platform", account.PlatformId ?? (object)DBNull.Value),
+                ("$type", (int)account.SecretType),
+                ("$status", account.Status ?? (object)DBNull.Value),
+                ("$created", account.CreatedAt is null
+                    ? DBNull.Value
+                    : Format(account.CreatedAt.Value)),
+                ("$updated", account.UpdatedAt is null
+                    ? DBNull.Value
+                    : Format(account.UpdatedAt.Value)),
+                ("$fingerprint", account.MetadataFingerprint),
+                ("$indexed", Format(account.LastIndexedAt)),
+                ("$deleted", account.IsDeletedOrUnavailable ? 1 : 0));
+        }
+
+        foreach (var version in snapshot.Versions)
+        {
+            EnsureCyberArkSource(profileId, version.ProfileId);
+            await ExecuteAsync(
+                connection,
+                transaction,
+                """
+                INSERT INTO cyberark_versions(
+                    profile_id,account_id,version_id,is_temporary,modified_at,modified_by)
+                VALUES($profile,$account,$version,$temporary,$modified,$by)
+                """,
+                cancellationToken,
+                ("$profile", profileId.ToString("D")),
+                ("$account", version.AccountId),
+                ("$version", version.VersionId),
+                ("$temporary", version.IsTemporary ? 1 : 0),
+                ("$modified", Format(version.ModifiedAt)),
+                ("$by", version.ModifiedBy));
+        }
+
+        foreach (var permission in snapshot.Permissions)
+        {
+            EnsureCyberArkSource(profileId, permission.ProfileId);
+            await ExecuteAsync(
+                connection,
+                transaction,
+                """
+                INSERT INTO cyberark_permissions(
+                    profile_id,safe_id,member_name,member_type,list_accounts,use_accounts,
+                    retrieve_accounts,view_audit_log,access_without_confirmation,
+                    requests_authorization_level1,requests_authorization_level2,observed_at,evidence_state)
+                VALUES($profile,$safe,$member,$type,$list,$use,$retrieve,$audit,$without,
+                       $level1,$level2,$observed,$evidence)
+                """,
+                cancellationToken,
+                ("$profile", profileId.ToString("D")),
+                ("$safe", permission.SafeId),
+                ("$member", permission.MemberName),
+                ("$type", permission.MemberType),
+                ("$list", permission.ListAccounts ? 1 : 0),
+                ("$use", permission.UseAccounts ? 1 : 0),
+                ("$retrieve", permission.RetrieveAccounts ? 1 : 0),
+                ("$audit", permission.ViewAuditLog ? 1 : 0),
+                ("$without", permission.AccessWithoutConfirmation ? 1 : 0),
+                ("$level1", permission.RequestsAuthorizationLevel1 ? 1 : 0),
+                ("$level2", permission.RequestsAuthorizationLevel2 ? 1 : 0),
+                ("$observed", Format(permission.ObservedAt)),
+                ("$evidence", permission.EvidenceState));
+        }
+
+        await ExecuteAsync(
+            connection,
+            transaction,
+            """
+            UPDATE cyberark_profiles
+            SET last_validated_at=$validated,auth_state=$state
+            WHERE id=$profile
+            """,
+            cancellationToken,
+            ("$validated", Format(snapshot.CompletedAt)),
+            ("$state", (int)CyberArkAuthenticationState.Ready),
+            ("$profile", profileId.ToString("D")));
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CyberArkSafe>> GetCyberArkSafesAsync(
+        Guid profileId,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT profile_id,safe_id,name,description,location,retention_days,
+                   retention_versions,olac_enabled,created_at,updated_at
+            FROM cyberark_safes
+            WHERE profile_id=$profile
+            ORDER BY name COLLATE NOCASE,safe_id
+            """;
+        command.Parameters.AddWithValue("$profile", profileId.ToString("D"));
+        var result = new List<CyberArkSafe>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new CyberArkSafe(
+                reader.GetGuid(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                reader.IsDBNull(6) ? null : reader.GetInt32(6),
+                reader.GetBoolean(7),
+                ReadDate(reader, 8),
+                ReadDate(reader, 9)));
+        }
+        return result;
+    }
+
+    public async Task<IReadOnlyList<CyberArkAccount>> SearchCyberArkAccountsAsync(
+        Guid profileId,
+        string searchText,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        if (limit is < 1 or > 500)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+        if (searchText.Length > 500)
+            throw new ArgumentOutOfRangeException(nameof(searchText));
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT profile_id,account_id,safe_name,name,user_name,address,platform_id,
+                   secret_type,status,created_at,updated_at,fingerprint,last_indexed,is_deleted
+            FROM cyberark_accounts
+            WHERE profile_id=$profile AND is_deleted=0
+              AND ($search='' OR name LIKE '%'||$search||'%' ESCAPE '\'
+                   OR safe_name LIKE '%'||$search||'%' ESCAPE '\'
+                   OR COALESCE(user_name,'') LIKE '%'||$search||'%' ESCAPE '\'
+                   OR COALESCE(address,'') LIKE '%'||$search||'%' ESCAPE '\')
+            ORDER BY name COLLATE NOCASE,safe_name COLLATE NOCASE,account_id
+            LIMIT $limit
+            """;
+        command.Parameters.AddWithValue("$profile", profileId.ToString("D"));
+        command.Parameters.AddWithValue("$search", EscapeLike(searchText));
+        command.Parameters.AddWithValue("$limit", limit);
+        var result = new List<CyberArkAccount>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            result.Add(ReadCyberArkAccount(reader));
+        return result;
+    }
+
+    public async Task<IReadOnlyList<CyberArkSecretVersion>> GetCyberArkVersionsAsync(
+        Guid profileId,
+        string accountId,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT profile_id,account_id,version_id,is_temporary,modified_at,modified_by
+            FROM cyberark_versions
+            WHERE profile_id=$profile AND account_id=$account
+            ORDER BY version_id DESC
+            """;
+        command.Parameters.AddWithValue("$profile", profileId.ToString("D"));
+        command.Parameters.AddWithValue("$account", accountId);
+        var result = new List<CyberArkSecretVersion>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new CyberArkSecretVersion(
+                reader.GetGuid(0),
+                reader.GetString(1),
+                reader.GetInt32(2),
+                reader.GetBoolean(3),
+                DateTimeOffset.Parse(
+                    reader.GetString(4),
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.RoundtripKind),
+                reader.GetString(5)));
+        }
+        return result;
+    }
+
+    public async Task<CyberArkSafePermissionEvidence?> GetCyberArkPermissionAsync(
+        Guid profileId,
+        string safeId,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT profile_id,safe_id,member_name,member_type,list_accounts,use_accounts,
+                   retrieve_accounts,view_audit_log,access_without_confirmation,
+                   requests_authorization_level1,requests_authorization_level2,
+                   observed_at,evidence_state
+            FROM cyberark_permissions
+            WHERE profile_id=$profile AND safe_id=$safe
+            """;
+        command.Parameters.AddWithValue("$profile", profileId.ToString("D"));
+        command.Parameters.AddWithValue("$safe", safeId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+            return null;
+        return new CyberArkSafePermissionEvidence(
+            reader.GetGuid(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetBoolean(4),
+            reader.GetBoolean(5),
+            reader.GetBoolean(6),
+            reader.GetBoolean(7),
+            reader.GetBoolean(8),
+            reader.GetBoolean(9),
+            reader.GetBoolean(10),
+            DateTimeOffset.Parse(
+                reader.GetString(11),
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.RoundtripKind),
+            reader.GetString(12));
+    }
+
+    public async Task RecordCyberArkAuditAsync(
+        CyberArkAuditEvent auditEvent,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var transaction =
+            (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        await ExecuteAsync(
+            connection,
+            transaction,
+            """
+            INSERT INTO cyberark_audit(
+                id,profile_id,account_id,safe_name,version_id,operation,result,safe_message,occurred_at)
+            VALUES($id,$profile,$account,$safe,$version,$operation,$result,$message,$at)
+            """,
+            cancellationToken,
+            ("$id", auditEvent.Id.ToString("D")),
+            ("$profile", auditEvent.ProfileId.ToString("D")),
+            ("$account", auditEvent.AccountId ?? (object)DBNull.Value),
+            ("$safe", auditEvent.SafeName ?? (object)DBNull.Value),
+            ("$version", auditEvent.VersionId ?? (object)DBNull.Value),
+            ("$operation", auditEvent.Operation),
+            ("$result", (int)auditEvent.Result),
+            ("$message", auditEvent.SafeMessage),
+            ("$at", Format(auditEvent.OccurredAt)));
+        await ExecuteAsync(
+            connection,
+            transaction,
+            """
+            DELETE FROM cyberark_audit
+            WHERE id IN (
+                SELECT id FROM cyberark_audit
+                ORDER BY occurred_at DESC,id DESC
+                LIMIT -1 OFFSET 2000
+            )
+            """,
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CyberArkAuditEvent>> GetCyberArkAuditAsync(
+        Guid profileId,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        if (limit is < 1 or > 500)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id,profile_id,account_id,safe_name,version_id,operation,result,safe_message,occurred_at
+            FROM cyberark_audit
+            WHERE profile_id=$profile
+            ORDER BY occurred_at DESC,id DESC
+            LIMIT $limit
+            """;
+        command.Parameters.AddWithValue("$profile", profileId.ToString("D"));
+        command.Parameters.AddWithValue("$limit", limit);
+        var result = new List<CyberArkAuditEvent>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new CyberArkAuditEvent(
+                reader.GetGuid(0),
+                reader.GetGuid(1),
+                reader.IsDBNull(2) ? null : reader.GetString(2),
+                reader.IsDBNull(3) ? null : reader.GetString(3),
+                reader.IsDBNull(4) ? null : reader.GetInt32(4),
+                reader.GetString(5),
+                (CyberArkAuditResult)reader.GetInt32(6),
+                reader.GetString(7),
+                DateTimeOffset.Parse(
+                    reader.GetString(8),
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.RoundtripKind)));
+        }
+        return result;
+    }
+
     private async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
     {
         if (_connectionString is null) throw new InvalidOperationException("Repository has not been initialized.");
@@ -691,6 +1143,12 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
             ["sync_runs"] = ["id", "scope", "started_at", "completed_at", "status", "vault_count", "item_count", "error_count"],
             ["browser_fill_mappings"] = ["id", "item_id", "identity_id", "top_origin", "frame_origin", "field_purpose", "is_enabled", "created_at", "updated_at"],
             ["browser_fill_audit"] = ["id", "occurred_at", "mapping_id", "item_id", "identity_id", "top_origin", "frame_origin", "field_purpose", "result"],
+            ["cyberark_profiles"] = ["id", "display_name", "identity_url", "privilege_cloud_url", "service_user_name", "application_name", "auth_state", "is_enabled", "credential_updated_at", "last_validated_at"],
+            ["cyberark_safes"] = ["profile_id", "safe_id", "name", "description", "location", "retention_days", "retention_versions", "olac_enabled", "created_at", "updated_at"],
+            ["cyberark_accounts"] = ["profile_id", "account_id", "safe_name", "name", "user_name", "address", "platform_id", "secret_type", "status", "created_at", "updated_at", "fingerprint", "last_indexed", "is_deleted"],
+            ["cyberark_versions"] = ["profile_id", "account_id", "version_id", "is_temporary", "modified_at", "modified_by"],
+            ["cyberark_permissions"] = ["profile_id", "safe_id", "member_name", "member_type", "list_accounts", "use_accounts", "retrieve_accounts", "view_audit_log", "access_without_confirmation", "requests_authorization_level1", "requests_authorization_level2", "observed_at", "evidence_state"],
+            ["cyberark_audit"] = ["id", "profile_id", "account_id", "safe_name", "version_id", "operation", "result", "safe_message", "occurred_at"],
         };
         var actualTables = new HashSet<string>(StringComparer.Ordinal);
         await using (var command = connection.CreateCommand())
@@ -781,6 +1239,16 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
             BrowserIntegrationSchema,
             cancellationToken);
 
+    private static Task EnsureCyberArkTablesAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken) =>
+        ExecuteAsync(
+            connection,
+            transaction,
+            CyberArkSchema,
+            cancellationToken);
+
     private static string Format(DateTimeOffset value) => value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
     private static DateTimeOffset? ReadDate(SqliteDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : DateTimeOffset.Parse(reader.GetString(ordinal), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
     private static string EscapeLike(string value) => value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("%", "\\%", StringComparison.Ordinal).Replace("_", "\\_", StringComparison.Ordinal);
@@ -798,9 +1266,53 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         r.GetBoolean(6),
         DateTimeOffset.Parse(r.GetString(7), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
         DateTimeOffset.Parse(r.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind));
+    private static CyberArkProfile ReadCyberArkProfile(SqliteDataReader r) => new(
+        r.GetGuid(0),
+        r.GetString(1),
+        new Uri(r.GetString(2)),
+        new Uri(r.GetString(3)),
+        r.GetString(4),
+        r.GetString(5),
+        (CyberArkAuthenticationState)r.GetInt32(6),
+        r.GetBoolean(7),
+        DateTimeOffset.Parse(
+            r.GetString(8),
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind),
+        ReadDate(r, 9));
+    private static CyberArkAccount ReadCyberArkAccount(SqliteDataReader r) => new(
+        r.GetGuid(0),
+        r.GetString(1),
+        r.GetString(2),
+        r.GetString(3),
+        r.IsDBNull(4) ? null : r.GetString(4),
+        r.IsDBNull(5) ? null : r.GetString(5),
+        r.IsDBNull(6) ? null : r.GetString(6),
+        (CyberArkSecretType)r.GetInt32(7),
+        r.IsDBNull(8) ? null : r.GetString(8),
+        ReadDate(r, 9),
+        ReadDate(r, 10),
+        r.GetString(11),
+        DateTimeOffset.Parse(
+            r.GetString(12),
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind),
+        r.GetBoolean(13));
+
+    private static void EnsureCyberArkSource(Guid expected, Guid actual)
+    {
+        if (expected != actual)
+            throw new InvalidOperationException(
+                "CyberArk discovery data crossed provider profile boundaries.");
+    }
 
     private const string IdentitySelect = "SELECT id,client_id,account_identifier,username_hint,display_name,home_tenant_id,auth_state,last_interactive,is_enabled,identity_type,credential_data FROM identities";
     private const string BrowserMappingSelect = "SELECT id,item_id,identity_id,top_origin,frame_origin,field_purpose,is_enabled,created_at,updated_at FROM browser_fill_mappings";
+    private const string CyberArkProfileSelect = """
+        SELECT id,display_name,identity_url,privilege_cloud_url,service_user_name,
+               application_name,auth_state,is_enabled,credential_updated_at,last_validated_at
+        FROM cyberark_profiles
+        """;
     private const string SearchSql = """
         SELECT i.id,i.vault_id,i.name,i.object_type,i.enabled,i.tags,i.content_type,i.created_at,i.updated_at,i.expires_at,i.provider_version,i.fingerprint,i.last_indexed,i.is_deleted,
                v.resource_id,v.name,v.tenant_id,v.subscription_id,v.resource_group,v.location,v.tags,v.vault_uri,v.last_indexed,
@@ -851,6 +1363,92 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         CREATE INDEX IF NOT EXISTS ix_browser_fill_audit_time
             ON browser_fill_audit(occurred_at DESC);
         """;
+    private const string CyberArkSchema = """
+        CREATE TABLE IF NOT EXISTS cyberark_profiles(
+            id TEXT PRIMARY KEY,
+            display_name TEXT NOT NULL,
+            identity_url TEXT NOT NULL,
+            privilege_cloud_url TEXT NOT NULL,
+            service_user_name TEXT NOT NULL,
+            application_name TEXT NOT NULL,
+            auth_state INTEGER NOT NULL,
+            is_enabled INTEGER NOT NULL,
+            credential_updated_at TEXT NOT NULL,
+            last_validated_at TEXT);
+        CREATE UNIQUE INDEX IF NOT EXISTS ix_cyberark_profiles_endpoint_user
+            ON cyberark_profiles(privilege_cloud_url,service_user_name,application_name);
+        CREATE TABLE IF NOT EXISTS cyberark_safes(
+            profile_id TEXT NOT NULL REFERENCES cyberark_profiles(id) ON DELETE CASCADE,
+            safe_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            location TEXT NOT NULL,
+            retention_days INTEGER,
+            retention_versions INTEGER,
+            olac_enabled INTEGER NOT NULL,
+            created_at TEXT,
+            updated_at TEXT,
+            PRIMARY KEY(profile_id,safe_id));
+        CREATE INDEX IF NOT EXISTS ix_cyberark_safes_name
+            ON cyberark_safes(profile_id,name COLLATE NOCASE);
+        CREATE TABLE IF NOT EXISTS cyberark_accounts(
+            profile_id TEXT NOT NULL REFERENCES cyberark_profiles(id) ON DELETE CASCADE,
+            account_id TEXT NOT NULL,
+            safe_name TEXT NOT NULL,
+            name TEXT NOT NULL,
+            user_name TEXT,
+            address TEXT,
+            platform_id TEXT,
+            secret_type INTEGER NOT NULL,
+            status TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            fingerprint TEXT NOT NULL,
+            last_indexed TEXT NOT NULL,
+            is_deleted INTEGER NOT NULL,
+            PRIMARY KEY(profile_id,account_id));
+        CREATE INDEX IF NOT EXISTS ix_cyberark_accounts_search
+            ON cyberark_accounts(profile_id,name COLLATE NOCASE,safe_name COLLATE NOCASE,is_deleted);
+        CREATE TABLE IF NOT EXISTS cyberark_versions(
+            profile_id TEXT NOT NULL,
+            account_id TEXT NOT NULL,
+            version_id INTEGER NOT NULL,
+            is_temporary INTEGER NOT NULL,
+            modified_at TEXT NOT NULL,
+            modified_by TEXT NOT NULL,
+            PRIMARY KEY(profile_id,account_id,version_id),
+            FOREIGN KEY(profile_id,account_id)
+                REFERENCES cyberark_accounts(profile_id,account_id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS cyberark_permissions(
+            profile_id TEXT NOT NULL,
+            safe_id TEXT NOT NULL,
+            member_name TEXT NOT NULL,
+            member_type TEXT NOT NULL,
+            list_accounts INTEGER NOT NULL,
+            use_accounts INTEGER NOT NULL,
+            retrieve_accounts INTEGER NOT NULL,
+            view_audit_log INTEGER NOT NULL,
+            access_without_confirmation INTEGER NOT NULL,
+            requests_authorization_level1 INTEGER NOT NULL,
+            requests_authorization_level2 INTEGER NOT NULL,
+            observed_at TEXT NOT NULL,
+            evidence_state TEXT NOT NULL,
+            PRIMARY KEY(profile_id,safe_id),
+            FOREIGN KEY(profile_id,safe_id)
+                REFERENCES cyberark_safes(profile_id,safe_id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS cyberark_audit(
+            id TEXT PRIMARY KEY,
+            profile_id TEXT NOT NULL,
+            account_id TEXT,
+            safe_name TEXT,
+            version_id INTEGER,
+            operation TEXT NOT NULL,
+            result INTEGER NOT NULL,
+            safe_message TEXT NOT NULL,
+            occurred_at TEXT NOT NULL);
+        CREATE INDEX IF NOT EXISTS ix_cyberark_audit_profile_time
+            ON cyberark_audit(profile_id,occurred_at DESC);
+        """;
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS identities(id TEXT PRIMARY KEY,client_id TEXT NOT NULL,account_identifier TEXT NOT NULL UNIQUE,username_hint TEXT NOT NULL,display_name TEXT NOT NULL,home_tenant_id TEXT NOT NULL,auth_state INTEGER NOT NULL,last_interactive TEXT NOT NULL,is_enabled INTEGER NOT NULL,identity_type INTEGER NOT NULL DEFAULT 0,credential_data TEXT NOT NULL DEFAULT '');
         CREATE TABLE IF NOT EXISTS tenants(id TEXT PRIMARY KEY,identity_id TEXT NOT NULL REFERENCES identities(id) ON DELETE CASCADE,tenant_id TEXT NOT NULL,display_name TEXT NOT NULL,tenant_type TEXT NOT NULL,last_validated TEXT NOT NULL,status TEXT NOT NULL,UNIQUE(identity_id,tenant_id));
@@ -867,5 +1465,15 @@ public sealed class EncryptedSqliteMetadataRepository(string databasePath, IKeyM
         CREATE INDEX IF NOT EXISTS ix_browser_fill_mappings_item ON browser_fill_mappings(item_id,identity_id);
         CREATE TABLE IF NOT EXISTS browser_fill_audit(id TEXT PRIMARY KEY,occurred_at TEXT NOT NULL,mapping_id TEXT,item_id TEXT,identity_id TEXT,top_origin TEXT NOT NULL,frame_origin TEXT NOT NULL,field_purpose INTEGER NOT NULL,result TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS ix_browser_fill_audit_time ON browser_fill_audit(occurred_at DESC);
+        CREATE TABLE IF NOT EXISTS cyberark_profiles(id TEXT PRIMARY KEY,display_name TEXT NOT NULL,identity_url TEXT NOT NULL,privilege_cloud_url TEXT NOT NULL,service_user_name TEXT NOT NULL,application_name TEXT NOT NULL,auth_state INTEGER NOT NULL,is_enabled INTEGER NOT NULL,credential_updated_at TEXT NOT NULL,last_validated_at TEXT);
+        CREATE UNIQUE INDEX IF NOT EXISTS ix_cyberark_profiles_endpoint_user ON cyberark_profiles(privilege_cloud_url,service_user_name,application_name);
+        CREATE TABLE IF NOT EXISTS cyberark_safes(profile_id TEXT NOT NULL REFERENCES cyberark_profiles(id) ON DELETE CASCADE,safe_id TEXT NOT NULL,name TEXT NOT NULL,description TEXT NOT NULL,location TEXT NOT NULL,retention_days INTEGER,retention_versions INTEGER,olac_enabled INTEGER NOT NULL,created_at TEXT,updated_at TEXT,PRIMARY KEY(profile_id,safe_id));
+        CREATE INDEX IF NOT EXISTS ix_cyberark_safes_name ON cyberark_safes(profile_id,name COLLATE NOCASE);
+        CREATE TABLE IF NOT EXISTS cyberark_accounts(profile_id TEXT NOT NULL REFERENCES cyberark_profiles(id) ON DELETE CASCADE,account_id TEXT NOT NULL,safe_name TEXT NOT NULL,name TEXT NOT NULL,user_name TEXT,address TEXT,platform_id TEXT,secret_type INTEGER NOT NULL,status TEXT,created_at TEXT,updated_at TEXT,fingerprint TEXT NOT NULL,last_indexed TEXT NOT NULL,is_deleted INTEGER NOT NULL,PRIMARY KEY(profile_id,account_id));
+        CREATE INDEX IF NOT EXISTS ix_cyberark_accounts_search ON cyberark_accounts(profile_id,name COLLATE NOCASE,safe_name COLLATE NOCASE,is_deleted);
+        CREATE TABLE IF NOT EXISTS cyberark_versions(profile_id TEXT NOT NULL,account_id TEXT NOT NULL,version_id INTEGER NOT NULL,is_temporary INTEGER NOT NULL,modified_at TEXT NOT NULL,modified_by TEXT NOT NULL,PRIMARY KEY(profile_id,account_id,version_id),FOREIGN KEY(profile_id,account_id) REFERENCES cyberark_accounts(profile_id,account_id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS cyberark_permissions(profile_id TEXT NOT NULL,safe_id TEXT NOT NULL,member_name TEXT NOT NULL,member_type TEXT NOT NULL,list_accounts INTEGER NOT NULL,use_accounts INTEGER NOT NULL,retrieve_accounts INTEGER NOT NULL,view_audit_log INTEGER NOT NULL,access_without_confirmation INTEGER NOT NULL,requests_authorization_level1 INTEGER NOT NULL,requests_authorization_level2 INTEGER NOT NULL,observed_at TEXT NOT NULL,evidence_state TEXT NOT NULL,PRIMARY KEY(profile_id,safe_id),FOREIGN KEY(profile_id,safe_id) REFERENCES cyberark_safes(profile_id,safe_id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS cyberark_audit(id TEXT PRIMARY KEY,profile_id TEXT NOT NULL,account_id TEXT,safe_name TEXT,version_id INTEGER,operation TEXT NOT NULL,result INTEGER NOT NULL,safe_message TEXT NOT NULL,occurred_at TEXT NOT NULL);
+        CREATE INDEX IF NOT EXISTS ix_cyberark_audit_profile_time ON cyberark_audit(profile_id,occurred_at DESC);
         """;
 }

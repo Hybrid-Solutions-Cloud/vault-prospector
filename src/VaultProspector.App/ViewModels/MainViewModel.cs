@@ -23,7 +23,8 @@ public sealed partial class MainViewModel(
     IWorkloadIdentityAdministrationService? workloadIdentityAdministrationService = null,
     ILocalEncryptionRotationEngine? localEncryptionRotationEngine = null,
     LocalRecoveryArchiveService? localRecoveryArchiveService = null,
-    BrowserFillService? browserFillService = null) : ViewModelBase
+    BrowserFillService? browserFillService = null,
+    CyberArkService? cyberArkService = null) : ViewModelBase
 {
     private CancellationTokenSource? _activeOperation;
     private bool _isReloadingIdentities;
@@ -236,6 +237,7 @@ public sealed partial class MainViewModel(
             await ReloadWorkspacesAsync(cancellationToken);
             await SearchCoreAsync(cancellationToken);
             await ReloadBrowserIntegrationAsync(cancellationToken);
+            await ReloadCyberArkProfilesAsync(cancellationToken);
             IsApplicationReady = true;
             await ReloadRecoveryArchivesCoreAsync(cancellationToken);
             StatusText = recoveredInterruptedRotation
@@ -588,6 +590,7 @@ public sealed partial class MainViewModel(
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
         SecretPreview = "Secret hidden.";
+        HideCyberArkValue();
         IsUnlocked = false;
         IsApplicationReady = false;
         StatusText = "Locked in the notification area. Metadata-only background sync may continue if enabled.";
@@ -600,6 +603,7 @@ public sealed partial class MainViewModel(
         _activeOperation?.Cancel();
         IsCloseChoiceVisible = false;
         SecretPreview = "Secret hidden.";
+        HideCyberArkValue();
         IsUnlocked = false;
         IsApplicationReady = false;
         StatusText = "Locked after a Windows session or power transition.";
@@ -1062,6 +1066,7 @@ public sealed partial class MainViewModel(
         DiscoverManagedIdentitiesCommand.NotifyCanExecuteChanged();
         DiscoverServicePrincipalsCommand.NotifyCanExecuteChanged();
         AssessWorkloadIdentityPermissionsCommand.NotifyCanExecuteChanged();
+        NotifyCyberArkCommands();
         PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
         PreviewServicePrincipalCommand.NotifyCanExecuteChanged();
         RefreshSubscriptionsCommand.NotifyCanExecuteChanged();
@@ -1369,6 +1374,7 @@ public sealed partial class MainViewModel(
             if (IsUnlocked)
                 StatusText = "Operation cancelled.";
             SecretPreview = "Secret hidden.";
+            HideCyberArkValue();
         }
         catch (Exception ex)
         {
@@ -1379,6 +1385,7 @@ public sealed partial class MainViewModel(
             HasActionableError = true;
             ErrorAnnouncement = $"{error.Title}. {error.Message} {error.Recovery}";
             SecretPreview = "Secret hidden.";
+            HideCyberArkValue();
         }
         finally { _activeOperation = null; IsBusy = false; }
     }

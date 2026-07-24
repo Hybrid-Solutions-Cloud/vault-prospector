@@ -114,6 +114,40 @@ public interface IVaultProvider
     Task<SensitiveValue> RetrieveSecretAsync(ConnectedIdentity identity, VaultResource vault, VaultItem item, CancellationToken cancellationToken);
 }
 
+public interface ICyberArkProvider
+{
+    Task ValidateAsync(
+        CyberArkProfile profile,
+        SensitiveValue clientCredential,
+        CancellationToken cancellationToken);
+
+    Task<CyberArkDiscoverySnapshot> DiscoverAsync(
+        CyberArkProfile profile,
+        SensitiveValue clientCredential,
+        CancellationToken cancellationToken);
+
+    Task<SensitiveValue> RetrieveAsync(
+        CyberArkProfile profile,
+        SensitiveValue clientCredential,
+        CyberArkAccount account,
+        int? versionId,
+        string reason,
+        string actionType,
+        CancellationToken cancellationToken);
+}
+
+public interface ICyberArkCredentialStore
+{
+    Task StoreAsync(Guid profileId, SensitiveValue credential, CancellationToken cancellationToken);
+    Task<SensitiveValue> RetrieveAsync(Guid profileId, CancellationToken cancellationToken);
+    Task RemoveAsync(Guid profileId, CancellationToken cancellationToken);
+}
+
+public sealed class CyberArkConfigurationException(
+    string message,
+    string? parameterName = null)
+    : ArgumentException(message, parameterName);
+
 public interface IMetadataRepository
 {
     Task InitializeAsync(CancellationToken cancellationToken);
@@ -159,6 +193,41 @@ public interface IMetadataRepository
         throw new NotSupportedException("Browser fill audit is not supported by this repository.");
     Task<IReadOnlyList<BrowserFillAuditEvent>> GetBrowserFillAuditAsync(int limit, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<BrowserFillAuditEvent>>([]);
+    Task<IReadOnlyList<CyberArkProfile>> GetCyberArkProfilesAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<CyberArkProfile>>([]);
+    Task<CyberArkProfile?> GetCyberArkProfileAsync(Guid id, CancellationToken cancellationToken) =>
+        Task.FromResult<CyberArkProfile?>(null);
+    Task UpsertCyberArkProfileAsync(CyberArkProfile profile, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("CyberArk profiles are not supported by this repository.");
+    Task RemoveCyberArkProfileAsync(Guid id, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("CyberArk profiles are not supported by this repository.");
+    Task ApplyCyberArkDiscoveryAsync(Guid profileId, CyberArkDiscoverySnapshot snapshot, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("CyberArk discovery is not supported by this repository.");
+    Task<IReadOnlyList<CyberArkSafe>> GetCyberArkSafesAsync(Guid profileId, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<CyberArkSafe>>([]);
+    Task<IReadOnlyList<CyberArkAccount>> SearchCyberArkAccountsAsync(
+        Guid profileId,
+        string searchText,
+        int limit,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<CyberArkAccount>>([]);
+    Task<IReadOnlyList<CyberArkSecretVersion>> GetCyberArkVersionsAsync(
+        Guid profileId,
+        string accountId,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<CyberArkSecretVersion>>([]);
+    Task<CyberArkSafePermissionEvidence?> GetCyberArkPermissionAsync(
+        Guid profileId,
+        string safeId,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<CyberArkSafePermissionEvidence?>(null);
+    Task RecordCyberArkAuditAsync(CyberArkAuditEvent auditEvent, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("CyberArk audit is not supported by this repository.");
+    Task<IReadOnlyList<CyberArkAuditEvent>> GetCyberArkAuditAsync(
+        Guid profileId,
+        int limit,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<CyberArkAuditEvent>>([]);
 }
 
 public interface IProtectedValueStore

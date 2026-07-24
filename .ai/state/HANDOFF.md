@@ -388,3 +388,49 @@ Do not delete `D:\tmp\vault-prospector-untracked-AzureIdentityAndVaultProvider.c
 quarantined pre-existing untracked source file with SHA-256
 `69AC58A44284A1D5B3947F81783288BE19B64C41ECECAC7538C874829849BBDC`; it is intentionally outside
 the repository and must not be committed.
+
+## Phase 12 CyberArk Privilege Cloud (local, unreleased) — 2026-07-24
+
+- Active branch: `feature/cyberark-privilege-cloud`, based on Phase 11 merge
+  `f44929c`; Phase 11 PR `#10` and exact CI run `30066830924` passed.
+- ADR-0015 selects CyberArk Privilege Cloud Shared Services with CyberArk Identity service-user
+  authentication. Conjur, on-premises PVWA, custom domains, and interactive authentication are
+  outside this first provider boundary.
+- Added dedicated CyberArk profiles, safes, accounts, versions, direct safe-member evidence,
+  provider errors, and value-free audit models. They do not reuse Azure identities, RBAC, vaults,
+  or token caches.
+- Added strict supported-origin authentication/API behavior, bounded response/pagination/item
+  processing, safe error categories, metadata-only discovery, and exact account/version retrieval.
+- Added SQLCipher schema v6 and atomic profile-scoped discovery replacement. Credential/tokens,
+  retrieval reason, and values do not enter metadata.
+- Added a per-profile DPAPI `CurrentUser` credential store with profile-specific entropy, bounded
+  files, zeroed buffers, exact removal, cross-profile replay rejection, and reparse-point rejection.
+- Added a separate desktop CyberArk destination for profile connect/rotation, local search,
+  safes/accounts/versions/direct-permission evidence, fresh-verified reveal/copy, local audit,
+  enable/disable, fail-closed local revocation, and permanent removal.
+- Added ADR, threat model, integration guide, privacy/architecture/security/release evidence, and
+  canonical backlog/plan/readiness/roadmap updates.
+- Exact local `pwsh ./scripts/Build.ps1 -Configuration Release` passed locked restore, vulnerable
+  package scan, format, zero-warning/error build, coverage collection, and 342/342 .NET tests:
+  Domain 4, BrowserProtocol 35, Application 66, Security 1, Platform 50, Azure 27, App 85,
+  BrowserHost 8, Infrastructure 54, CyberArk provider 12.
+- Browser extension tests pass 6/6 and its production bundle builds.
+- Disposable unsigned MSI `0.1.1-preview.12` packaged locally. Shortcut/icon,
+  rollback-safe-upgrade, and browser-host/policy inspections passed, and its File table contains
+  `VaultProspector.Providers.CyberArk.dll`. The generated artifacts were moved out of the worktree
+  to `D:\tmp\vault-prospector-phase12-artifacts-20260724`.
+- HCS `which_standards_apply("vault-prospector")` resolved standards by repository type, but
+  `check_drift` still returned Path not found. Do not claim drift passed.
+- Remaining Phase 12 gates: exact-commit CI and merge, governed live Privilege Cloud matrix,
+  external service-user revoke/rotation drill, independent security review, representative
+  user/AT evidence, and exact signed release artifact validation.
+
+## Immediate next actions
+
+1. Review/stage only the Phase 12 source, tests, docs, solution, and substantive lockfiles.
+2. Commit with a conventional message; no ADO reference exists because the HCS registry cannot
+   resolve an owning project/work item.
+3. Push with an HCS-minted GitHub App token, open a PR, require both checks, deliberately review,
+   and merge only after exact-commit CI passes.
+4. Record PR/commit/run/merge evidence, then continue Phase 13 without marking Phase 12 external
+   gates complete.

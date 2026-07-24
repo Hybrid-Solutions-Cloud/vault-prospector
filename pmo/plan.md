@@ -48,7 +48,9 @@ Status terms used in PMO reporting:
   retention, notification-area operation, and four desktop concepts. Each still requires its
   phase-specific live, independent, usability, accessibility, and release evidence.
 - Major unimplemented product work: governed Azure mutations, the selected production desktop
-  redesign, browser integration, CyberArk, and mobile applications.
+  redesign, and mobile applications. Browser and CyberArk implementations are locally complete
+  but remain unreleased while their live, usability, accessibility, and independent-review gates
+  are open.
 - Major GA work: signing, independent security review, complete live identity/accessibility test
   matrices, public package catalogs, feedback thresholds, and stability evidence.
 
@@ -452,7 +454,7 @@ assistive-technology behavior remain required evidence.
 
 **Priority:** P2
 
-**Status:** On hold
+**Status:** Implemented locally; validation open
 
 **Backlog coverage:** Epic 14
 
@@ -468,6 +470,18 @@ assistive-technology behavior remain required evidence.
 
 - Provider contract, integration, security, redaction, permission, failure, and live tests pass.
 - Azure and CyberArk identities, objects, errors, and audit context remain visibly distinct.
+
+### Current evidence
+
+- ADR-0015 selects Privilege Cloud Shared Services and Identity service-user authentication.
+- A dedicated provider, DPAPI credential store, SQLCipher schema v6, application service, and
+  CyberArk desktop destination implement profile lifecycle, metadata sync/search, version and
+  direct-permission evidence, explicit verified reveal/copy, fail-closed local revocation, removal,
+  and value-free audit.
+- Bounded/off-origin/oversize/redaction/provider-contract, credential replay/removal, schema,
+  cross-profile rollback, verification, audit-failure disposal, and accessibility tests are present.
+- Governed live tenant, independent security review, and exact signed-artifact evidence remain
+  required before the exit criteria pass.
 
 ## Phase 13 — iPhone/iOS and Android applications
 

@@ -674,7 +674,8 @@
           "VaultProspector.Domain": "[0.1.0, )",
           "VaultProspector.Infrastructure": "[0.1.0, )",
           "VaultProspector.Platform": "[0.1.0, )",
-          "VaultProspector.Providers.Azure": "[0.1.0, )"
+          "VaultProspector.Providers.Azure": "[0.1.0, )",
+          "VaultProspector.Providers.CyberArk": "[0.1.0, )"
         }
       },
       "vaultprospector.application": {
@@ -719,6 +720,13 @@
           "Azure.Security.KeyVault.Secrets": "[4.11.0, )",
           "Microsoft.Identity.Client": "[4.86.1, )",
           "Microsoft.Identity.Client.Extensions.Msal": "[4.86.1, )",
+          "VaultProspector.Application": "[0.1.0, )",
+          "VaultProspector.Domain": "[0.1.0, )"
+        }
+      },
+      "vaultprospector.providers.cyberark": {
+        "type": "Project",
+        "dependencies": {
           "VaultProspector.Application": "[0.1.0, )",
           "VaultProspector.Domain": "[0.1.0, )"
         }
