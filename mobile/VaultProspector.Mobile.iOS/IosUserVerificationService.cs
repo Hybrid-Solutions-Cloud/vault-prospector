@@ -11,7 +11,7 @@ public sealed class IosUserVerificationService : IUserVerificationService
         {
             using var context = new LAContext();
             return context.CanEvaluatePolicy(
-                LAPolicy.DeviceOwnerAuthentication,
+                LAPolicy.DeviceOwnerAuthenticationWithBiometrics,
                 out _);
         }
     }
@@ -25,7 +25,7 @@ public sealed class IosUserVerificationService : IUserVerificationService
             LocalizedCancelTitle = "Cancel",
         };
         if (!context.CanEvaluatePolicy(
-            LAPolicy.DeviceOwnerAuthentication,
+            LAPolicy.DeviceOwnerAuthenticationWithBiometrics,
             out _))
         {
             return UserVerificationResult.NotConfigured;
@@ -35,7 +35,7 @@ public sealed class IosUserVerificationService : IUserVerificationService
         try
         {
             var result = await context.EvaluatePolicyAsync(
-                LAPolicy.DeviceOwnerAuthentication,
+                LAPolicy.DeviceOwnerAuthenticationWithBiometrics,
                 BoundedReason(reason));
             return result.Item1
                 ? UserVerificationResult.Verified

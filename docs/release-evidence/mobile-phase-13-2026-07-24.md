@@ -14,7 +14,8 @@
   background.
 - Android native host with authentication-bound Android Keystore protection, BiometricPrompt,
   secure-window flags, sensitive clipboard behavior, and backup/data-transfer exclusions.
-- iOS native host with device-only Keychain access control, LocalAuthentication, background
+- iOS native host with current-biometric-set, device-only Keychain access control,
+  LocalAuthentication, background
   covering, active-capture lockout, local-only pasteboard expiration, and backup exclusion.
 - Platform-specific MSAL callback and native parent-window handling.
 - Exact-origin mobile autofill eligibility policy. Native credential-provider extensions remain a

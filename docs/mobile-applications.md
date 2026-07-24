@@ -29,12 +29,16 @@ biometric or device credential, `FLAG_SECURE`, sensitive clipboard labeling, pri
 and explicit backup/data-transfer exclusions.
 Touches reported as obscured or partially obscured are rejected before reaching the shared UI.
 
-iOS uses a device-only Keychain item protected by the current biometric enrollment or device
-passcode, LocalAuthentication, local-only expiring pasteboard items, backup exclusion, background
+iOS uses a device-only Keychain item protected by the current biometric enrollment,
+LocalAuthentication, local-only expiring pasteboard items, backup exclusion, background
 snapshot covering, and capture-state observation. iOS does not promise to prevent a screenshot
 that the operating system has already taken. While screen capture is active, the app remains
 covered and refuses to unlock. Protected-data loss locks the session, and a clean reinstall
 removes stale install-bound Keychain material before creating new local state.
+
+An iOS device without enrolled biometrics is unsupported and fails closed. Passcode fallback does
+not unlock the application key; enrollment changes invalidate access and require local reset,
+Microsoft Entra reauthentication, and metadata resynchronization.
 
 See the [mobile threat model](security/mobile-threat-model.md) and
 [native-host ADR](adr/0016-native-mobile-security-hosts.md).

@@ -72,8 +72,9 @@ co-resident apps remain adversarial.
 ### iOS
 
 - Target iOS 18 or later.
-- Store wrapping material as device-only, when-unlocked Keychain data protected by current local
-  authentication policy. Do not synchronize it through iCloud Keychain.
+- Store wrapping material as device-only, when-unlocked Keychain data protected by the current
+  biometric set. Do not permit passcode fallback for key access or synchronize it through iCloud
+  Keychain.
 - Treat protected-data unavailability, passcode removal, enrollment changes, and Keychain status
   errors as lock or reset conditions.
 - Remove stale install-bound Keychain items when the private, backup-excluded installation marker

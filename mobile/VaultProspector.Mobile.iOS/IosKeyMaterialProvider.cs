@@ -69,9 +69,7 @@ public sealed class IosKeyMaterialProvider : IKeyMaterialProvider
             using var data = NSData.FromArray(key);
             using var accessControl = new SecAccessControl(
                 SecAccessible.WhenPasscodeSetThisDeviceOnly,
-                SecAccessControlCreateFlags.BiometryCurrentSet |
-                SecAccessControlCreateFlags.DevicePasscode |
-                SecAccessControlCreateFlags.Or);
+                SecAccessControlCreateFlags.BiometryCurrentSet);
             using var record = new SecRecord(SecKind.GenericPassword)
             {
                 Service = Service,
