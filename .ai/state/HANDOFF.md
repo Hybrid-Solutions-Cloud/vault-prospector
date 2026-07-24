@@ -219,8 +219,11 @@
 - Local follow-up removes the obsolete MSI executable-icon row, binds the shortcut to the embedded
   `.ico`, constructs the fixture at runtime, and constrains the unavoidable historical exception
   by exact value/file/commit. Rebuilt MSI upgrade/icon checks pass, pinned Gitleaks v8.30.0 reports
-  no leaks across 80 commits, and the exact 254-test Release gate passes again. Commit/push and
-  exact-commit CI rerun remain next.
+  no leaks across 80 commits, and the exact 254-test Release gate passes again.
+- Follow-up commit `807a8ed` was pushed with an HCS-minted GitHub App token. Exact-commit CI run
+  `30063106013` passed both `secret-scan` and `build-test`, including restore, formatting, build,
+  all tests, PowerShell parsing, MSI/package validation, vulnerability inspection, and
+  commit-addressed candidate upload.
 
 ## Current state
 

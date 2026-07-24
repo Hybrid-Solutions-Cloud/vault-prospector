@@ -68,8 +68,10 @@ is removed. A rebuilt MSI passed ICE validation, rollback-safe upgrade-order ins
 MSI table inspection with a non-empty 71,158-byte icon stream. The test fixtures now construct the
 hexadecimal thumbprint at runtime; the unavoidable historical match is allowlisted only by exact
 value, file, and commit. Pinned Gitleaks v8.30.0 subsequently scanned all 80 commits with no leaks,
-and the complete 254-test local Release gate passed again. A succeeding exact-commit CI rerun is
-still required before this follow-up is closed.
+and the complete 254-test local Release gate passed again. Exact-commit CI run
+[30063106013](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30063106013)
+then passed both `secret-scan` and `build-test`, including installer/package validation,
+dependency checks, and commit-addressed candidate upload.
 
 ## Remaining boundary
 
