@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-24
 
-**Branch:** `feature/mobile-platforms`
+**Merged commit:** `ead0a29faa4802008ac4d7b0e9c1c10ad881d2df` (PR #13)
 
 **Release status:** Not released; signed-device and store gates open
 
@@ -27,14 +27,24 @@
 | Check | Result |
 | --- | --- |
 | Shared mobile unit and view-model tests | 19 passed, 0 failed |
-| Existing Windows/shared regression suite | 342 passed, 0 failed |
+| Existing Windows/shared regression suite | 343 passed, 0 failed |
 | Android managed/native compile on Windows | Passed |
 | iOS managed/native compile against .NET iOS reference pack | Passed |
-| Android Release App Bundle package build | Passed with 0 warnings/errors; exact-commit CI rerun required |
-| iOS simulator build on macOS/Xcode | Pending exact-commit CI |
+| Exact PR-head CI | Run `30076673071` passed build-test and secret-scan |
+| Android Release App Bundle package build | Run `30076673064` passed |
+| iOS simulator build on macOS 26/Xcode 26.0.1 | Run `30076673064` passed |
+| Exact merge-commit CI | Run `30077519402` passed build-test and secret-scan |
+| Exact merge-commit Mobile CI | Run `30077519354` passed managed-tests, Android package, and iOS simulator |
 
 The local mobile toolchains were installed under `D:/tmp` and did not modify a governed system
 toolchain. Local Android output used development signing and is not a release candidate.
+
+The iOS linker reports grouped `IL2104` warnings from Avalonia DesignerSupport, Azure Core,
+Azure Key Vault Certificates, and Microsoft.Data.Sqlite. The build keeps those package-internal
+warnings visible but does not promote `IL2104` to an error. Vault Prospector's own reflection-based
+JSON paths were replaced with source-generated metadata or direct structured writing, and
+project-owned trim diagnostics remain build-breaking. Physical-device tests remain required before
+release because a successful trimmed simulator build does not prove every upstream runtime path.
 
 The production Microsoft Entra public-client registration was updated on 2026-07-24 to preserve
 `http://localhost` and add the exact `msal221af888-1c16-4637-9d45-b6dd2e1e7634://auth` callback.
@@ -58,7 +68,6 @@ declaration must be reconciled against the exact signed bundle, SDK disclosures,
 
 - Live mobile system-browser, account, tenant, guest, MFA, Conditional Access, cancellation,
   expiry, and removal matrix; Android broker callback remains signing-bound.
-- CI green for the exact pull-request head on managed tests, Android package, and iOS simulator.
 - Signed Android App Bundle verified with the protected Play upload key.
 - Signed iOS archive verified with the protected Apple Distribution identity and provisioning.
 - Governed physical-device matrix for security, lifecycle, backup/migration/reinstall, identity,

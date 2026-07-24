@@ -425,5 +425,38 @@ the repository and must not be committed.
 
 ## Immediate next actions
 
-1. Merge the Phase 12 evidence synchronization through passing CI.
-2. Begin Phase 13 architecture and implementation without marking Phase 12 external gates complete.
+1. Synchronize the Phase 13 merge evidence after exact merge-commit CI completes.
+2. Complete the native Apple credential-provider and Android Autofill/Credential Manager
+   feasibility prototypes and record the capability decision.
+3. Continue the mandatory external gates across Phases 8–15: independent review, governed live
+   services and physical devices, usability/accessibility, protected signing, package/store
+   acceptance, evaluator thresholds, and the stability window.
+
+## Phase 13 native mobile applications (merged, unreleased) — 2026-07-24
+
+- PR `#13` merged exact head `a12b0b024d8cbea2263ac22668708753f6b91c8e` as
+  `ead0a29faa4802008ac4d7b0e9c1c10ad881d2df`.
+- Exact PR-head CI run `30076673071` passed build-test and secret-scan. Mobile CI run
+  `30076673064` passed 19 managed mobile tests, Android Release App Bundle packaging, and an
+  unsigned iOS simulator application on macOS 26/Xcode 26.0.1.
+- Exact merge-commit CI run `30077519402` passed build-test and secret-scan. Exact merge Mobile CI
+  run `30077519354` passed managed tests, Android packaging, and the iOS simulator application.
+- Local verification passed locked restore, dependency vulnerability checks, formatting, 343
+  desktop/shared tests, 19 mobile tests, Android Release linking/native compilation with zero
+  warnings, iOS reference-pack compilation, and staged secret scanning.
+- Added a separate .NET 10/Avalonia mobile solution, shared fail-closed session/search/retrieve
+  workflow, Android API 31+ host, and iOS 18+ host.
+- Android uses authentication-bound Keystore protection, BiometricPrompt, `FLAG_SECURE`,
+  obscured-touch rejection, ownership-aware sensitive clipboard clearing, and backup/transfer
+  exclusions.
+- iOS uses current-biometric-set device-only Keychain protection, LocalAuthentication,
+  protected-data lifecycle locking, privacy covering/capture response, expiring local-only
+  pasteboard writes, backup exclusion, and a privacy manifest.
+- The production Entra registration preserves desktop loopback and adds the exact mobile callback;
+  no application credential was created.
+- Project-owned reflection-based JSON paths were made trim-safe. The iOS linker keeps four grouped
+  upstream `IL2104` warnings visible while project warnings remain build-breaking; the successful
+  trimmed simulator build does not replace required physical-device testing.
+- Open Phase 13 gates: native autofill framework prototypes/live negative-origin testing,
+  governed Entra/device/accessibility matrices, signed Android/iOS artifacts, independent mobile
+  review, TestFlight/Play closed testing, declaration approval, and store acceptance.
