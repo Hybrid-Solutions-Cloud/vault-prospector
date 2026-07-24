@@ -477,7 +477,7 @@ the repository and must not be committed.
   targets. It normalizes service identifiers, returns `UserInteractionRequired` for no-UI
   requests, has no shared app database/Keychain group, and returns no credential.
 - Completed SPK-0007 with the cross-platform capability decision and primary vendor references.
-- Local checks pass: 43 mobile tests, locked restore/format/vulnerability checks, Android Release
+- Local checks pass: 44 mobile tests, locked restore/format/vulnerability checks, Android Release
   App Bundle with zero warnings/errors, and iOS application/extension reference-pack compilation.
 - Remaining evidence: hosted macOS bundle CI on the exact PR head, enabled signed physical-device
   framework matrices, encrypted one-record mapping exchange, Android association/signature

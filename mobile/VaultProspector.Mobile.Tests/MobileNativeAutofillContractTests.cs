@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Xml.Linq;
 
 namespace VaultProspector.Mobile.Tests;
@@ -116,6 +117,43 @@ public sealed class MobileNativeAutofillContractTests
                 "SupportsSavePasswordCredentials" or
                 "SupportsConditionalPasskeyRegistration" or
                 "ProvidesTextToInsert");
+    }
+
+    [Fact]
+    public void AppleExtensionDependencyGraphRemainsLeastPrivilege()
+    {
+        using var document = JsonDocument.Parse(File.ReadAllBytes(
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "NativeContracts",
+                "iOS-Extension-packages.lock.json")));
+        var target = document.RootElement
+            .GetProperty("dependencies")
+            .EnumerateObject()
+            .Single(property =>
+                property.Name.StartsWith(
+                    "net10.0-ios",
+                    StringComparison.Ordinal) &&
+                !property.Name.Contains('/'))
+            .Value;
+        var allowed = new HashSet<string>(
+            StringComparer.OrdinalIgnoreCase)
+        {
+            "Microsoft.NET.ILLink.Tasks",
+            "vaultprospector.browserprotocol",
+            "vaultprospector.domain",
+            "vaultprospector.mobile.autofill",
+        };
+
+        Assert.All(
+            target.EnumerateObject(),
+            dependency => Assert.Contains(dependency.Name, allowed));
+        Assert.Contains(
+            target.EnumerateObject(),
+            dependency => string.Equals(
+                dependency.Name,
+                "vaultprospector.mobile.autofill",
+                StringComparison.OrdinalIgnoreCase));
     }
 
     private static XDocument Load(string name) =>

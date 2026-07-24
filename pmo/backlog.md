@@ -554,7 +554,7 @@ default-port HTTPS origin. Final value release additionally requires an exact sa
 foreground invocation, secret object, and fresh user verification. A package-disabled Android
 `AutofillService` parses bounded `AssistStructure` input, never saves observed values, and returns
 no dataset. An embedded Apple credential-provider extension validates service identifiers, always
-requires interaction, shares no app database/Keychain group, and returns no credential. Forty-three
+requires interaction, shares no app database/Keychain group, and returns no credential. Forty-four
 mobile policy/package tests, a Release Android App Bundle, and iOS reference-pack compilation pass.
 Digital Asset Links/package-signature validation, encrypted one-record exchange, signed physical
 devices, real-framework negative-origin tests, accessibility, and independent review remain

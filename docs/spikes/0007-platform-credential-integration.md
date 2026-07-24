@@ -15,7 +15,7 @@ as a website credential or weakening the accepted origin, mapping, and user-pres
 
 | Surface | Evaluation baseline |
 | --- | --- |
-| Shared policy and native package contracts | .NET SDK 10.0.302; 43 mobile tests |
+| Shared policy and native package contracts | .NET SDK 10.0.302; 44 mobile tests |
 | Android | .NET for Android 36.1.2; Android API 36; minimum API 31 |
 | Apple | .NET for iOS 26.0.11017; iOS minimum 18; macOS 26/Xcode 26.0.1 CI baseline |
 | Windows | Windows App SDK/Win32 desktop implementation and Windows SDK 10.0.26100 contracts |

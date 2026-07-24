@@ -37,5 +37,8 @@
     <None Include="..\VaultProspector.Mobile.iOS.CredentialProvider\Info.plist"
           Link="NativeContracts\iOS-Extension-Info.plist"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\VaultProspector.Mobile.iOS.CredentialProvider\packages.lock.json"
+          Link="NativeContracts\iOS-Extension-packages.lock.json"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

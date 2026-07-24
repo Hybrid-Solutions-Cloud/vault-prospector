@@ -36,7 +36,7 @@
 | iOS simulator build on macOS 26/Xcode 26.0.1 | Run `30076673064` passed |
 | Exact merge-commit CI | Run `30077519402` passed build-test and secret-scan |
 | Exact merge-commit Mobile CI | Run `30077519354` passed managed-tests, Android package, and iOS simulator |
-| Follow-on native-autofill local checks | 43 mobile tests, Android Release App Bundle, iOS app/extension reference-pack compile, locked restore, formatting, and vulnerability checks passed |
+| Follow-on native-autofill local checks | 44 mobile tests, Android Release App Bundle, iOS app/extension reference-pack compile, locked restore, formatting, and vulnerability checks passed |
 
 The local mobile toolchains were installed under `D:/tmp` and did not modify a governed system
 toolchain. Local Android output used development signing and is not a release candidate.
