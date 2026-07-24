@@ -32,13 +32,13 @@ independent-review, and exact signed-artifact gates remain open.
 
 - `pwsh ./scripts/Build.ps1 -Configuration Release` passed on 2026-07-24: locked restore,
   vulnerable-package scan, format verification, Release build with zero warnings/errors, coverage
-  collection, and 342/342 .NET tests.
+  collection, and 343/343 .NET tests.
 - CyberArk provider contract/redaction suite: 12 tests passing, including service-user exchange,
   mapping, bounded responses, malformed JSON, endpoint/redirect/pagination rejection, and
   401/403/429/5xx safe failure mapping.
-- Application suite: 66 tests passing after addition of validation-order, replacement rollback,
+- Application suite: 67 tests passing after addition of validation-order, replacement rollback,
   verification denial, value-free audit, audit-failure disposal, and fail-closed local revocation
-  coverage.
+  and successful-sync revalidation coverage.
 - Platform suite: 50 tests passing, including DPAPI round trip/removal and cross-profile replay
   rejection.
 - Infrastructure suite: 54 tests passing, including schema v6, CyberArk round trip/audit retention,

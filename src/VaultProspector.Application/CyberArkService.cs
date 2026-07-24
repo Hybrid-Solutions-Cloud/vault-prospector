@@ -102,6 +102,13 @@ public sealed class CyberArkService(
             profileId,
             snapshot,
             cancellationToken);
+        await repository.UpsertCyberArkProfileAsync(
+            profile with
+            {
+                AuthenticationState = CyberArkAuthenticationState.Ready,
+                LastValidatedAt = clock.UtcNow,
+            },
+            cancellationToken);
         return snapshot;
     }
 

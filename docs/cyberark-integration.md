@@ -54,7 +54,8 @@ CyberArk values are not available to the initial offline-value cache.
 
 ## Disable, rotate, revoke, and remove
 
-- **Enable or disable** blocks retrieval locally without deleting encrypted metadata.
+- **Enable or disable** blocks retrieval locally without deleting encrypted metadata. A re-enabled
+  profile remains unvalidated until credential validation or a successful metadata sync completes.
 - To rotate, select the profile, enter the complete configuration and replacement credential, and
   validate again.
 - To revoke local access, type `REVOKE CYBERARK` and select **Revoke local CyberArk access**. The
