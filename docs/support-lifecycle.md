@@ -85,12 +85,12 @@ channel.
 
 ## Dependency and platform maintenance
 
-Dependabot checks desktop and mobile NuGet manifests, the browser and design-prototype npm
-manifests, and pinned GitHub Actions each week. Dependency pull requests are not auto-merged. They
+Dependabot checks desktop and mobile NuGet manifests and the browser and design-prototype npm
+manifests each week. Dependency pull requests are not auto-merged. They
 must preserve lock files, pass the applicable locked build/security/package workflows, and receive
 normal review.
 
-The scheduled operational-readiness workflow checks the machine-readable ownership/lifecycle
+The scheduled Azure DevOps operational-readiness pipeline checks the machine-readable ownership/lifecycle
 contract, direct and transitive desktop NuGet vulnerabilities, runtime lifecycle dates, and public
 release/support endpoints. Its JSON report is retained as workflow evidence. A failed scheduled
 run is a support-owner action item and blocks a release until it is dispositioned.

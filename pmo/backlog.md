@@ -101,7 +101,7 @@ not implementation.
 
 | ID | Current source or governing evidence | Acceptance proof required |
 | --- | --- | --- |
-| 1.1 | `VaultProspector.sln`, `Directory.Build.props`, `scripts/Build.ps1`, `.github/workflows/ci.yml` | Locked restore, formatting, dependency, supported-platform build, and all-project test gates on the exact release source. |
+| 1.1 | `VaultProspector.sln`, `Directory.Build.props`, `scripts/Build.ps1`, `.ado/ci.yml` | Locked restore, formatting, dependency, supported-platform build, and all-project test gates on the exact release source. |
 | 1.2 | `src/VaultProspector.App/App.axaml.cs`, `Views/MainWindow.axaml` | App/UI automation plus keyboard, scaling, contrast, screen-reader, lifecycle, and exact-candidate evidence. |
 | 2.1 | `MsalIdentityProvider`, `IdentityService`, `MainViewModel` | Automated authentication boundaries and live tenant/consent/MFA/Conditional Access/cancel matrix. |
 | 2.2 | App-owned MSAL account/cache implementation and identity UI | Multi-account/multi-tenant isolation, restart, removal, and live tool-context independence. |

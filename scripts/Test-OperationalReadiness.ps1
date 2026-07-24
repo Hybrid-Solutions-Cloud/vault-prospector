@@ -179,18 +179,18 @@ if ($dependabotExists) {
     }
 }
 
-$monitorWorkflowPath = Resolve-RepositoryPath '.github/workflows/operational-readiness.yml'
+$monitorWorkflowPath = Resolve-RepositoryPath '.ado/operational-readiness.yml'
 $monitorWorkflowExists = Test-Path -LiteralPath $monitorWorkflowPath -PathType Leaf
 Add-Check -Name 'Scheduled operational monitor' -Passed $monitorWorkflowExists `
-    -Detail '.github/workflows/operational-readiness.yml must exist.'
+    -Detail '.ado/operational-readiness.yml must exist.'
 if ($monitorWorkflowExists) {
     $monitorWorkflow = Get-Content -LiteralPath $monitorWorkflowPath -Raw
-    $workflowValid = $monitorWorkflow.Contains('schedule:') -and
-        $monitorWorkflow.Contains('workflow_dispatch:') -and
+    $workflowValid = $monitorWorkflow.Contains('schedules:') -and
+        $monitorWorkflow.Contains('trigger: none') -and
         $monitorWorkflow.Contains('Test-OperationalReadiness.ps1') -and
         $monitorWorkflow.Contains('-CheckPublicEndpoints') -and
         $monitorWorkflow.Contains('Test-VulnerablePackages.ps1') -and
-        $monitorWorkflow.Contains('actions/upload-artifact@')
+        $monitorWorkflow.Contains('publish: artifacts/operational-readiness/report.json')
     Add-Check -Name 'Operational monitor contract' -Passed $workflowValid `
         -Detail 'The monitor must be scheduled/manual, test public endpoints and vulnerabilities, and retain a report.'
 }

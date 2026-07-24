@@ -1,88 +1,65 @@
 # CI build environments
 
-Vault Prospector uses the HCS build-environment tiers. Linux work runs on an ephemeral
-Azure Container Apps job owned by this repository; the job scales to zero when no matching
-workflow is queued.
+Vault Prospector uses Azure DevOps Pipelines in the private **Vault Prospector** project, as
+required by the HCS ADO project strategy. Pipeline YAML lives in `.ado/`; GitHub Actions is not
+used for CI or release automation.
+
+## Pipelines
+
+| Pipeline | YAML | Trigger | Purpose |
+| --- | --- | --- | --- |
+| Vault Prospector CI | `.ado/ci.yml` | Pull requests and `main` | Windows build/test/package validation, full-history secret scanning, managed mobile tests, Android packaging, and unsigned iOS simulator compilation |
+| Vault Prospector Operational Readiness | `.ado/operational-readiness.yml` | Mondays at 18:17 UTC and manual | Dependency, runtime-lifecycle, ownership, support-channel, and public-endpoint verification |
+| Vault Prospector Release | `.ado/release.yml` | Immutable `v*` tags | Preview rebuild, package validation, SPDX SBOM, HCS Key Vault-backed Cosign signatures, public release publication, and Chocolatey submission |
+
+The project uses the Key Vault-linked `vp-prd-secrets` variable group. Pipeline definitions
+reference secret names only; values remain in `kv-hcs-vault-01`.
 
 ## Workload routing
 
 | Workload | Environment |
-|---|---|
-| Secret scanning, shared mobile tests, Android packaging | HCS Tier 2 Linux runner: `self-hosted, linux, ubuntu-22.04, hcs` |
-| Windows desktop build, tests, and packaging | HCS Tier 3 `bld-01`; Tier 4 Windows fallback only when Tier 3 is unavailable |
-| iOS simulator compilation | Governed macOS/Xcode runner |
+| --- | --- |
+| Windows desktop build, DPAPI tests, and desktop package validation | Azure Pipelines Windows Server 2025 hosted image |
+| Full-history secret scanning, shared mobile tests, Android packaging | Azure Pipelines Ubuntu 24.04 hosted image |
+| iOS simulator compilation | Azure Pipelines macOS 15 image with pinned Xcode 26.0.1 |
 
-GitHub coordinates workflow jobs, but HCS compute executes jobs carrying the HCS
-self-hosted labels. The repo-scoped Linux job cannot accept work from another repository.
+The macOS build selects `iossimulator-x64` on Intel agents and `iossimulator-arm64` on Apple
+Silicon. The .NET iOS workload is pinned by `global.json` and the locked mobile dependency graph.
 
-## Linux runner deployment
+## HCS tier evidence and fallback
 
-Prerequisites:
+The migration candidate was independently validated on the HCS build-environment tiers before the
+ADO cutover:
 
-- an active Azure session with deployment access to `rg-hcs-gh-runners-eus2-01`;
-- read access for Azure Resource Manager to `kv-hcs-vault-01`;
-- the `hcs-platform-github-org-pat` secret registered under the HCS Key Vault standard.
+- HCS Tier 2 Container Apps completed secret scanning, managed mobile tests, and Android packaging.
+- HCS Tier 4 Windows Server 2025 completed the full Windows validation suite under LocalSystem,
+  including DPAPI CurrentUser tests and installer/package validation.
+- HCS Tier 3 `bld-01` was unavailable because its registered Key Vault credential no longer matched
+  the VM; the machine was returned to its original powered-off state.
 
-Run a plan:
+The committed runner Bicep and deployment scripts remain a break-glass diagnostic fallback. They
+do not define a second CI/CD system and must not be attached to normal GitHub workflows.
 
-```powershell
-pwsh ./scripts/Deploy-HcsCiRunner.ps1
-```
+## Pull-request evidence
 
-Provision the planned resource:
+Every PR build checks out the synthetic pull-request merge ref. A successful run therefore proves
+both the submitted commit and its merge with the current target branch. Retained test results,
+package candidates, SBOMs, checksums, and signing bundles are Azure Pipeline artifacts.
 
-```powershell
-pwsh ./scripts/Deploy-HcsCiRunner.ps1 -Deploy
-```
+Before merging:
 
-The script always runs `az deployment group what-if` before provisioning. The committed
-parameter file contains only a Key Vault reference; the GitHub credential is not written to
-the repository or a temporary parameter file.
+1. Confirm every `Vault Prospector CI` job succeeded.
+2. Confirm the run source is the PR merge ref and the source version matches the current PR.
+3. Resolve any security, package, or platform failure without suppressing its gate.
 
-## Validation
+## Ephemeral Windows cleanup
 
-Confirm that Azure reports a successful job:
-
-```powershell
-az containerapp job show `
-  --resource-group rg-hcs-gh-runners-eus2-01 `
-  --name caj-hcs-vp-gh-runner-eus2-01 `
-  --query "{state:properties.provisioningState,trigger:properties.configuration.triggerType}" `
-  --output table
-```
-
-Queue a pull-request workflow and confirm that its Linux jobs report all four HCS labels.
-The Container Apps execution history and Log Analytics workspace
-`log-hcs-gh-runners-eus2-01` provide the infrastructure-side audit trail.
-
-## Tier 4 Windows fallback
-
-Use Tier 4 only when the HCS Tier 3 `bld-01` runner is unavailable:
-
-```powershell
-pwsh ./scripts/Deploy-HcsWindowsFallback.ps1
-pwsh ./scripts/Deploy-HcsWindowsFallback.ps1 -Deploy
-```
-
-The deployment creates only `rg-hcs-vp-winbuild-eus2-01`. Its Windows Server 2025 VM has no
-public IP, uses a system-assigned managed identity to read the runner-registration credential,
-and registers for one job with `self-hosted, windows, hcs, vault-prospector`. The temporary
-local-administrator username and password are paired Key Vault secrets with a 30-day expiry.
-
-After the Windows workflow job reaches a terminal state, validate and remove the fallback:
+The HCS Tier 4 validation VM is temporary. After its job reaches a terminal state:
 
 ```powershell
 pwsh ./scripts/Remove-HcsWindowsFallback.ps1
 pwsh ./scripts/Remove-HcsWindowsFallback.ps1 -Remove
 ```
 
-Cleanup first removes the VM identity's Key Vault assignment, then starts deletion of the exact
-tag-validated resource group and soft-deletes the temporary credential pair. The secrets remain
-recoverable under Key Vault soft-delete policy.
-
-## Recovery and retirement
-
-Redeploy the committed Bicep to repair configuration drift. If the job must be retired,
-remove the workflow references first, review a Bicep deletion plan, and use the governed
-infrastructure approval process; do not delete the shared Container Apps environment or the
-unrelated runner jobs it hosts.
+Cleanup validates the exact resource tags, removes the VM identity's Key Vault assignment, starts
+deletion of the isolated resource group, and soft-deletes the temporary credential pair.

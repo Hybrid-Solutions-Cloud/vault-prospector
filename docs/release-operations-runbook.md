@@ -58,12 +58,12 @@ The canonical support states, supersedence rules, response targets, and end-of-s
 defined in [Support and product lifecycle](support-lifecycle.md). The machine-readable contract is
 `ops/operational-readiness.json`.
 
-- Dependabot checks desktop/mobile NuGet, browser/design npm, and GitHub Actions dependencies each
-  Monday. Dependency pull requests are reviewed normally and are never auto-merged.
-- The **Operational Readiness** workflow runs weekly and on manual request. It checks lifecycle and
+- Dependabot checks desktop/mobile NuGet and browser/design npm dependencies each Monday.
+  Dependency pull requests are reviewed normally and are never auto-merged.
+- The **Vault Prospector Operational Readiness** ADO pipeline runs weekly and on manual request. It checks lifecycle and
   ownership agreement, runtime end-of-support dates, direct/transitive desktop NuGet
   vulnerabilities, and the current release, checksum, and feedback endpoints.
-- The normal CI workflow runs the same contract validator without network checks, preventing a
+- The normal ADO CI pipeline runs the same contract validator without network checks, preventing a
   policy or automation change from silently drifting away from the manifest.
 - The JSON report is retained for 90 days. A failed or missing scheduled run must be dispositioned
   by the support owner before another release.
@@ -92,7 +92,8 @@ assigned, the primary owner must not characterize this automation as a complete 
 - [ ] Version, release notes, evidence template, installer metadata, and package manifests agree.
 - [ ] The candidate has no unresolved critical/high security defect.
 - [ ] A clean supported Windows system is available for independent verification.
-- [ ] HCS MCP can mint the Hybrid Solutions Cloud GitHub App token.
+- [ ] The `vp-prd-secrets` Key Vault-linked variable group is healthy and authorized for the
+  protected release pipeline.
 - [ ] WinGetCreate is authenticated as `kristopherjturner` for WinGet submission.
 - [ ] `CHOCOLATEY_API_KEY` is available from `kv-hcs-vault-01` for Chocolatey submission.
 - [ ] Rollback triggers, last verified version, approver, and support owner are recorded before tagging.
@@ -136,8 +137,9 @@ git tag -a "v$version" -m "Vault Prospector $version"
 git push origin "v$version"
 ```
 
-Expected result: the protected GitHub release workflow builds/tests again and publishes source-repo
-artifacts, hashes, SPDX SBOM, and Sigstore bundles.
+Expected result: the protected Azure DevOps release pipeline builds/tests again, signs packages
+with the HCS Key Vault Cosign key, publishes the immutable public release, retains hashes and SPDX
+SBOM evidence, and submits the Chocolatey package.
 
 For an unsigned Preview, the tag must match `vX.Y.Z-preview.N`; the workflow records the unsigned
 classification and verifies that project binaries and MSI are actually `NotSigned`. Stable and GA
@@ -146,16 +148,11 @@ tags remain blocked until Artifact Signing is configured.
 If it fails: do not reuse the tag after any artifact was published. Diagnose the workflow, increment
 the version, and create a new candidate.
 
-### 4. Verify and mirror public artifacts
+### 4. Verify public artifacts
 
-Obtain a fresh HCS GitHub App installation token through the HCS MCP and expose it only as
-`GH_TOKEN` for the current process. Then run:
-
-```powershell
-pwsh ./scripts/PublishDistribution.ps1 -Version $version
-```
-
-Download the public assets anonymously and verify checksums and Sigstore bundles using
+The release pipeline mints a short-lived GitHub App installation token and calls
+`PublishDistribution.ps1`; maintainers do not supply or persist a personal PAT.
+Download the public assets anonymously and verify checksums and Cosign bundles using
 [Release and artifact verification](release.md). Record file sizes and hashes in a new
 `docs/release-evidence/<version>.md` file.
 

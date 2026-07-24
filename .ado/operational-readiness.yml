@@ -1,0 +1,48 @@
+name: operational-readiness-$(Date:yyyyMMdd).$(Rev:r)
+
+trigger: none
+pr: none
+
+schedules:
+  - cron: '17 18 * * 1'
+    displayName: Weekly operational-readiness verification
+    branches:
+      include:
+        - main
+    always: true
+
+variables:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+  DOTNET_NOLOGO: '1'
+
+jobs:
+  - job: Monitor
+    displayName: Validate dependencies, lifecycle, and public channels
+    pool:
+      vmImage: windows-2025
+    steps:
+      - checkout: self
+        clean: true
+
+      - task: UseDotNet@2
+        displayName: Use .NET SDK 10.0.302
+        inputs:
+          packageType: sdk
+          version: 10.0.302
+
+      - pwsh: dotnet restore VaultProspector.sln --locked-mode
+        displayName: Restore locked desktop dependencies
+
+      - pwsh: ./scripts/Test-VulnerablePackages.ps1
+        displayName: Check direct and transitive vulnerabilities
+
+      - pwsh: |
+          ./scripts/Test-OperationalReadiness.ps1 `
+            -CheckPublicEndpoints `
+            -OutputPath artifacts/operational-readiness/report.json
+        displayName: Validate lifecycle contract and public channels
+
+      - publish: artifacts/operational-readiness/report.json
+        artifact: operational-readiness-$(Build.BuildId)
+        displayName: Retain operational-readiness report
+        condition: always()

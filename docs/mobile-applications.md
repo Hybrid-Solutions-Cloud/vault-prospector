@@ -99,9 +99,10 @@ iOS compilation and simulator builds require the .NET iOS workload on a supporte
 host. App Store archives require an Apple Distribution identity, provisioning profile, App Store
 Connect application, and protected signing material supplied outside the repository.
 
-The mobile CI workflow runs shared tests and builds an Android App Bundle on the HCS Tier 2
-Linux runner, then builds an unsigned iOS simulator application on a governed macOS 26 runner.
-See [CI build environments](ci-build-environments.md). CI compilation is not a substitute for
+The Azure DevOps CI pipeline runs shared tests and builds an Android App Bundle on Ubuntu 24.04,
+then builds an unsigned iOS simulator application on macOS 15 with Xcode 26.0.1. The build script
+selects the simulator runtime identifier that matches the hosted Mac architecture. See
+[CI build environments](ci-build-environments.md). CI compilation is not a substitute for
 signed-device, TestFlight, closed-test, accessibility, or store-review evidence.
 
 ## Release boundary

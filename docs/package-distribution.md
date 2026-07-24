@@ -33,14 +33,14 @@ winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.
 
 ## CI validation candidates
 
-Every successful push to `main` builds a unique `0.1.0-ci.<run-number>` package set and retains a
-`windows-candidate-<source-commit>` workflow artifact for 14 days. The artifact contains the MSI,
+Every successful push to `main` builds a unique `0.1.0-ci.<build-id>` package set and retains a
+`windows-candidate` Azure Pipeline artifact. The artifact contains the MSI,
 WinGet manifest archive, Chocolatey package, their checksum files, and `ci-candidate.json`. The JSON
-binds the installer name, byte length, and SHA-256 to the repository, source commit/ref, workflow run,
-attempt, candidate version, and UTC creation time.
+binds the installer name, byte length, and SHA-256 to the repository, source commit/ref, pipeline
+build, candidate version, and UTC creation time.
 
 CI candidates exist for clean-machine validation and are not package-manager submissions. The
-protected tag workflow creates publishable Preview or stable artifacts. A Preview may be unsigned
+protected tag pipeline creates publishable Preview or stable artifacts. A Preview may be unsigned
 only when explicitly labeled and documented; stable and GA artifacts require trusted signing.
 
 ## Publish the public installer

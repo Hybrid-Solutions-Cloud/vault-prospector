@@ -3,7 +3,8 @@
 ```text
 vault-prospector/
 ├── .ai/state/                    # durable agent handoff state
-├── .github/workflows/            # CI, security analysis, and release automation
+├── .ado/                         # Azure DevOps CI, readiness, and release pipelines
+├── .github/                      # issue templates and dependency-update configuration
 ├── docs/
 │   ├── adr/                      # accepted architecture decisions
 │   ├── architecture/             # system and domain design

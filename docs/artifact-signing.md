@@ -8,16 +8,16 @@ provenance. Sigstore does not replace Windows publisher trust.
 ## Current state
 
 As of 2026-07-16, an HCS-governed Azure resource inventory query found no
-`Microsoft.CodeSigning/codeSigningAccounts` resource in subscription
-`be069ae1-fc96-4a07-9f8e-5994d83a137d`. The release workflow therefore fails closed for stable and
-GA tags when Artifact Signing configuration is absent. Only a tag matching
+`Microsoft.CodeSigning/codeSigningAccounts` resource in the HCS management subscription. The
+release pipeline therefore fails closed for stable and GA tags when Artifact Signing configuration
+is absent. Only a tag matching
 `vX.Y.Z-preview.N` may take the explicit unsigned evaluation path.
 
 The intended trust model is **Public Trust**. Azure recommends Public Trust for publicly
 distributed Win32 applications. Do not substitute a Public Trust Test or Private Trust profile for
 a signed release.
 
-## One-time Azure and GitHub setup
+## One-time Azure and Azure DevOps setup
 
 These steps create billable external resources and include a portal-only identity-validation
 decision. They require the HCS owner or an explicitly authorized administrator:
@@ -30,16 +30,12 @@ decision. They require the HCS owner or an explicitly authorized administrator:
    Trust identity validation, and complete the emailed verification. Identity validation cannot be
    completed through CLI automation.
 5. Create a **PublicTrust** certificate profile after validation succeeds.
-6. Create a least-privilege Microsoft Entra application/service principal for GitHub Actions. Add
-   a federated credential with this exact subject:
-
-   ```text
-   repo:Hybrid-Solutions-Cloud/vault-prospector:environment:release
-   ```
-
-7. Assign that service principal **Artifact Signing Certificate Profile Signer** on the certificate
+6. Install Microsoft's Artifact Signing Azure DevOps extension in the HCS organization.
+7. Create a least-privilege workload-identity-federated Azure service connection for the
+   `Vault Prospector` ADO project.
+8. Assign that service principal **Artifact Signing Certificate Profile Signer** on the certificate
    profile resource only. Do not assign subscription Owner or Contributor to the release identity.
-8. In the GitHub `release` environment, configure these non-secret variables:
+9. Configure these non-secret variables for the protected ADO release pipeline:
 
    | Variable | Value |
    | --- | --- |
@@ -50,13 +46,13 @@ decision. They require the HCS owner or an explicitly authorized administrator:
    | `ARTIFACT_SIGNING_ACCOUNT` | Artifact Signing account name |
    | `ARTIFACT_SIGNING_PROFILE` | Public Trust certificate profile name |
 
-No PFX, certificate password, Azure client secret, or long-lived signing key belongs in GitHub or
-Key Vault for this workflow. GitHub exchanges its short-lived OIDC assertion for Azure access, and
-Azure keeps the signing key in the managed service.
+No PFX, certificate password, Azure client secret, or exportable signing key belongs in a pipeline
+variable. Azure DevOps exchanges its workload-identity assertion for Azure access, and Azure keeps
+the signing key in the managed service.
 
 ## Workflow behavior
 
-For every version tag, `.github/workflows/release.yml`:
+For every version tag, `.ado/release.yml`:
 
 1. requires all signing variables for stable/GA, while permitting only an explicitly versioned
    Preview evaluation to proceed unsigned;

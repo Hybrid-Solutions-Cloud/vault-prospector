@@ -65,10 +65,6 @@
     {
       "ecosystem": "npm",
       "directory": "/docs/design/vault-prospector-ui-concepts"
-    },
-    {
-      "ecosystem": "github-actions",
-      "directory": "/"
     }
   ],
   "runtimeDependencies": [
@@ -105,7 +101,7 @@
     },
     {
       "name": "Sigstore",
-      "rotation": "keyless GitHub Actions OIDC",
+      "rotation": "HCS Key Vault EC P-256 key; P365D or immediately on suspected compromise",
       "status": "implemented"
     },
     {
