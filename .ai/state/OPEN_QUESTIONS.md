@@ -7,3 +7,6 @@
 - Who will supply the independent security review, browser-store/enterprise distribution approval,
   representative usability/assistive-technology sessions, trusted signing setup, and live service
   test environments required by the remaining release gates?
+- Who can correct the Hybrid-Solutions-Cloud GitHub Actions payment/spending-limit condition? The
+  Phase 13 autofill merge workflows and subsequent documentation PR checks were rejected before
+  their first step.

@@ -108,8 +108,8 @@ not implementation.
 | 3.2 | `AzureVaultProvider`, vault/access records, Identities UI | Metadata-only enumeration, partial authorization failure, and live multi-vault matrix. |
 | 3.3 | `VaultAccess`, search rows, Identities/Search source context | Tests and live evidence that identity, tenant, subscription, vault, and access state remain accurate. |
 | 3.4 | Subscription/vault selection persistence and provider exclusion inputs | Include/exclude/re-enable/reconciliation tests plus live scoped synchronization. |
-| 4.1 | Provider object discovery and encrypted metadata repository | Secret/key/certificate metadata tests, no implicit value retrieval, scale/performance evidence. |
-| 4.2 | `SearchService`, repository query, Search UI | Search correctness and under-one-second supported-device performance evidence. |
+| 4.1 | Provider object discovery, encrypted metadata repository, and `VaultProspector.PerformanceProbe` | Secret/key/certificate metadata tests, no implicit value retrieval, controlled 50,000-object baseline, and representative-device/live-provider scale evidence. |
+| 4.2 | `SearchService`, deterministic preferred-access query, Search UI, and performance probe | Search correctness and under-one-second controlled plus supported-device performance evidence. |
 | 4.3 | `SearchRequest`, repository filters, Search UI | Combined filter correctness, empty/error states, keyboard and representative-user evidence. |
 | 4.4 | Complete/partial discovery reconciliation in provider and repository | Tombstone/preserve/favorite/history/cache-reference tests and live permission-loss/removal evidence. |
 | 5.1 | `SecretAccessService`, provider retrieval, Windows verification, reveal UI | Verification-before-retrieval, disposal/masking, live Windows Hello, Key Vault, accessibility, and audit evidence. |
@@ -305,7 +305,10 @@ Acceptance criteria:
 
 Source evidence: `src/VaultProspector.Application/Services.cs`
 
-Implementation status: Delivered in `0.1.1-preview.1`; removal reconciliation remains open in Phase 7.
+Implementation status: Delivered in `0.1.1-preview.1`; removal reconciliation is implemented
+locally. The controlled G-05 baseline now persists 50,000 synthetic metadata objects in 6.6
+seconds and enforces startup/reopen, cancellation, memory, and storage limits. Live-provider,
+representative-device, UI, and exact signed-candidate evidence remains open.
 
 ### Story: Search by name
 
@@ -315,9 +318,13 @@ Acceptance criteria:
 - Search is performed locally and provides instant results.
 - Matches are found across all selected vaults.
 
-Source evidence: `src/VaultProspector.Domain/Models.cs`, `src/VaultProspector.App/ViewModels/MainWindowViewModel.cs`
+Source evidence: `src/VaultProspector.Domain/Models.cs`,
+`src/VaultProspector.App/ViewModels/MainViewModel.cs`
 
-Implementation status: Delivered in `0.1.1-preview.1`; usability validation remains open in Phase 9.
+Implementation status: Delivered in `0.1.1-preview.1`. The controlled 50,000-object G-05 baseline
+passes at 262 ms p95 and 275 ms maximum after remediation of repeated SQLCipher KDF work and
+nondeterministic grouped access-path selection. Representative-device, populated-UI,
+accessibility, and exact signed-candidate repetition remains open.
 
 ### Story: Filter search
 
