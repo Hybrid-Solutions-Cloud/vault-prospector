@@ -95,7 +95,7 @@ try {
         else {
             'ios-arm64'
         }
-        $iosProperties = @("-p:MobileRuntimeIdentifier=$iosRuntimeIdentifier")
+        $iosProperties = @("-p:RuntimeIdentifier=$iosRuntimeIdentifier")
 
         Invoke-DotNet (@(
             'restore',
