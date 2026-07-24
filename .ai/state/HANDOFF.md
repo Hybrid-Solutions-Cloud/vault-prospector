@@ -259,7 +259,8 @@
   `00EF9ED0DA0E56C9FB8FF43F9529A10FEDC13F335CC2899805520D41418F1DA2`.
 - Corrective PR `#24` fixes private-key normalization in `Set-AdoGitHubAppToken.ps1`; a real HCS
   GitHub App token-mint smoke test passed, ADO PR build `288` passed all four jobs, and the PR
-  merged as `ea1bbdccf96811acdd86d2a8f39893b488f91324`. Exact-merge `main` build `290` is running.
+  merged as `ea1bbdccf96811acdd86d2a8f39893b488f91324`. Exact-merge `main` build `290` passed all
+  four jobs.
 - The exact public MSI passed all 27 installer lifecycle gates on isolated Windows 11 Enterprise
   Evaluation 25H2 from `2026-07-24T21:03:59Z` through `21:05:23Z`. The run covered `0.1.1` install,
   deliberate failed-upgrade rollback, `0.2.0` upgrade, repair, downgrade rejection, uninstall, and
@@ -269,9 +270,9 @@
   external and pending.
 - Two exact Chocolatey submissions returned HTTP 504 and catalog lookup remains empty. Do not
   claim ingestion or catalog availability.
-- The exact tag-guarded cleanup script started deletion of ephemeral resource group
-  `rg-hcs-vp-winbuild-eus2-01` and soft-deleted its two temporary Key Vault credentials. Azure
-  resource-group deletion is asynchronous and must be confirmed before closeout.
+- The exact tag-guarded cleanup script deleted ephemeral resource group
+  `rg-hcs-vp-winbuild-eus2-01`. Its two temporary Key Vault credentials were soft-deleted and
+  remain recoverable under Key Vault retention policy.
 - GA remains open for trusted Authenticode, independent security/legal, governed live Azure and
   CyberArk, representative accessibility/usability, physical-device/mobile store, operational
   exercise, and stability-window evidence.
