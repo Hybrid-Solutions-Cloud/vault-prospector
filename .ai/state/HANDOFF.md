@@ -348,14 +348,35 @@
 - HCS drift cannot currently validate this local checkout because the MCP server cannot resolve the
   unregistered repository/path; do not report a drift pass.
 
+## Phase 11 browser integration (local, unreleased)
+
+- Active branch: `feature/browser-origin-bound-fill`.
+- Added Chromium/Firefox MV3 extension source, strict browser protocol, native host, authenticated
+  current-user broker, exact host-process and extension identity checks, encrypted mappings,
+  value-free audit, protected fail-closed machine policy, desktop confirmation, and fresh Windows
+  verification.
+- MSI packaging includes the native host, disabled-by-default machine policy, and exact HKLM Chrome,
+  Edge, and Firefox native-host registrations.
+- The full locked Release gate passes 318/318 .NET tests with zero warnings/errors and no known
+  vulnerable NuGet packages. Extension tests pass 6/6. Local MSI `0.1.0-ci.1001` passes rollback,
+  icon, native-host, disabled-policy, and three-registration checks; exact-commit CI remains.
+- Phase 11 remains validation-open: no signed extension packages, live installed-browser matrix,
+  independent review, compromise/revocation exercise, or representative-user/AT evidence yet.
+- Canonical docs: `docs/browser-integration.md`,
+  `docs/security/browser-integration-threat-model.md`, ADR-0014, spike-0009, and
+  `docs/release-evidence/browser-integration-phase-11-2026-07-23.md`.
+
 ## Next actions
 
-1. Push the post-publication evidence/documentation commit, require exact CI, and synchronize issue
-   `#5` with the public URL, hashes, accepted Preview risks, and remaining GA gates.
-2. Submit the exact immutable MSI to WinGet and the NUPKG to Chocolatey; verify catalog ingestion
-   and installation before changing P-10/P-11.
-3. Continue GA work: signing, independent security review issue `#9`, live Entra/MFA/Conditional
-   Access/Windows Hello testing, remaining accessibility/usability evidence, and G-01 feedback.
+1. Commit and push `feature/browser-origin-bound-fill` with the HCS-minted GitHub App token, open a
+   PR, require exact branch CI, deliberately self-review, and merge only after passing checks.
+2. Record the exact commit/PR/CI/merge evidence without marking signed, live-browser, independent,
+   participant, or exact-release gates complete.
+3. Continue Phase 12 with an explicit CyberArk product/API/authentication ADR and threat model
+   before adding provider credentials or network behavior.
+4. Continue remaining external GA work: signing, independent security review issue `#9`, live
+   Entra/MFA/Conditional Access/Windows Hello/browser testing, package-catalog ingestion,
+   accessibility/usability evidence, and G-01 feedback.
 
 ## Preserved external scratch
 
