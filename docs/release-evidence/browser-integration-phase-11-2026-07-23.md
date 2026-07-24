@@ -22,6 +22,8 @@ distribution remain open.
   origin, frame, browser family, purpose, item, and identity.
 - The visible, unlocked desktop application shows a one-time confirmation and requires fresh
   Windows verification before retrieval.
+- Pending and in-flight approvals have a cancellable lifetime; lock/background/security-boundary
+  transitions cancel retrieval, and a response that loses the completion race is zeroed.
 - Audit records never contain a secret value.
 - The implementation does not read private browser credential databases and does not implement
   browser password-store import, export, or synchronization.
@@ -41,12 +43,17 @@ formatting unchanged, and zero build warnings or errors. All 318 .NET tests pass
 
 The browser extension's six Node tests and production build passed, including rejection of
 password-creation and unlabelled username fields. Local candidate
-`0.1.0-ci.1001` passed rollback-safe MSI schedule, shortcut-icon, native-host payload,
+`0.1.0-ci.1002` passed rollback-safe MSI schedule, shortcut-icon, native-host payload,
 disabled-by-default policy, and exact HKLM Chrome, Edge, and Firefox registration checks. Its local
-MSI SHA-256 is `C052B91A5B27AFDD2BB0DF63284CB7B34DBC25AAE277813729ACDC704D8A51BE`.
+MSI SHA-256 is `5338874204E2B916F36493338E37B8132CB7AA553238683014E2132699EB5D5F`.
 This transient local candidate is not a published artifact.
 
 Exact-commit CI remains required after commit and push.
+
+The first PR CI attempt found the reviewed Chromium public key through the generic API-key
+detector. The key is public material that deterministically pins the extension ID. The scan
+configuration now permits only that exact value at the exact Chromium manifest path; local
+full-history Gitleaks passes. Exact follow-up CI remains required.
 
 ## Open release gates
 

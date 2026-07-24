@@ -11,6 +11,7 @@ public sealed partial class MainViewModel
 {
     private BrowserFillApproval? _pendingBrowserFillApproval;
     private TaskCompletionSource<BrowserFillResponse>? _pendingBrowserFillCompletion;
+    private CancellationTokenSource? _pendingBrowserFillCancellation;
 
     public ObservableCollection<BrowserFillMappingRow> BrowserFillMappings { get; } = [];
     public ObservableCollection<BrowserFillAuditRow> BrowserFillAudit { get; } = [];
@@ -77,6 +78,11 @@ public sealed partial class MainViewModel
         _pendingBrowserFillCompletion =
             new TaskCompletionSource<BrowserFillResponse>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
+        _pendingBrowserFillCancellation =
+            CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var remaining = approval.ExpiresAt - DateTimeOffset.UtcNow;
+        _pendingBrowserFillCancellation.CancelAfter(
+            remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
         BrowserFillDestination = approval.Request.TopOrigin.SerializedOrigin ==
                                  approval.Request.FrameOrigin.SerializedOrigin
             ? approval.Request.TopOrigin.SerializedOrigin
@@ -92,7 +98,7 @@ public sealed partial class MainViewModel
         DenyBrowserFillCommand.NotifyCanExecuteChanged();
         BrowserFillConfirmationRequested?.Invoke(this, EventArgs.Empty);
 
-        using var cancellationRegistration = cancellationToken.Register(
+        using var cancellationRegistration = _pendingBrowserFillCancellation.Token.Register(
             () => _pendingBrowserFillCompletion.TrySetResult(
                 BrowserFillResponse.Failure(
                     request.Request.RequestId,
@@ -160,7 +166,8 @@ public sealed partial class MainViewModel
     {
         if (browserFillService is null ||
             _pendingBrowserFillApproval is null ||
-            _pendingBrowserFillCompletion is null)
+            _pendingBrowserFillCompletion is null ||
+            _pendingBrowserFillCancellation is null)
         {
             return;
         }
@@ -169,22 +176,29 @@ public sealed partial class MainViewModel
         ApproveBrowserFillCommand.NotifyCanExecuteChanged();
         DenyBrowserFillCommand.NotifyCanExecuteChanged();
         var approval = _pendingBrowserFillApproval;
+        var completion = _pendingBrowserFillCompletion;
+        var operationToken = _pendingBrowserFillCancellation.Token;
         try
         {
             var response = await browserFillService.ApproveAsync(
                 approval,
-                CancellationToken.None);
+                operationToken);
             BrowserFillStatus = response.Result == BrowserFillResultCode.Approved
                 ? "Approved value returned for this one request. The extension must recheck the page before filling."
                 : "The request was denied because its mapped context changed or expired.";
-            _pendingBrowserFillCompletion.TrySetResult(response);
+            if (!completion.TrySetResult(response) &&
+                response.ValueUtf8 is not null)
+            {
+                System.Security.Cryptography.CryptographicOperations.ZeroMemory(
+                    response.ValueUtf8);
+            }
             await ReloadBrowserIntegrationAsync(CancellationToken.None);
         }
         catch (Exception)
         {
             BrowserFillStatus =
                 "The request was denied. Verify the mapping, identity, Windows verification, and Azure access before trying again.";
-            _pendingBrowserFillCompletion.TrySetResult(
+            completion.TrySetResult(
                 BrowserFillResponse.Failure(
                     approval.Request.Request.RequestId,
                     BrowserFillResultCode.Denied));
@@ -255,13 +269,13 @@ public sealed partial class MainViewModel
             return;
 
         BrowserFillStatus = status;
+        _pendingBrowserFillCancellation?.Cancel();
         completion.TrySetResult(
             BrowserFillResponse.Failure(
                 approval.Request.Request.RequestId,
                 BrowserFillResultCode.Denied));
         if (browserFillService is not null)
             _ = RecordBrowserDenialSafelyAsync(browserFillService, approval);
-        ClearPendingBrowserFill();
     }
 
     private static async Task RecordBrowserDenialSafelyAsync(
@@ -280,8 +294,10 @@ public sealed partial class MainViewModel
 
     private void ClearPendingBrowserFill()
     {
+        var cancellation = _pendingBrowserFillCancellation;
         _pendingBrowserFillApproval = null;
         _pendingBrowserFillCompletion = null;
+        _pendingBrowserFillCancellation = null;
         IsBrowserFillPending = false;
         IsBrowserFillProcessing = false;
         BrowserFillDestination = string.Empty;
@@ -289,6 +305,7 @@ public sealed partial class MainViewModel
         BrowserFillPurpose = string.Empty;
         ApproveBrowserFillCommand.NotifyCanExecuteChanged();
         DenyBrowserFillCommand.NotifyCanExecuteChanged();
+        cancellation?.Dispose();
     }
 
     private bool CanSaveBrowserMapping() =>
