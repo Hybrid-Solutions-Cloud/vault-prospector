@@ -396,6 +396,7 @@ public partial class App : Avalonia.Application
                     browserBrokerServer.DisposeAsync().AsTask().GetAwaiter().GetResult();
                     browserBrokerServer = null;
                 }
+                repository.Dispose();
                 DisposeTray();
             };
             desktop.MainWindow = window;

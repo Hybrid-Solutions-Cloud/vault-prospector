@@ -29,6 +29,9 @@ jobs:
         run: dotnet build VaultProspector.sln --configuration Release --no-restore
       - name: Test
         run: dotnet test VaultProspector.sln --configuration Release --no-build --logger "trx;LogFileName=tests.trx" --collect "XPlat Code Coverage" --results-directory TestResults
+      - name: Verify performance and scale baseline
+        shell: pwsh
+        run: ./scripts/Test-PerformanceScale.ps1 -OutputPath ./TestResults/performance-scale.json -NoBuild
       - name: Verify browser extension source
         shell: pwsh
         run: |
