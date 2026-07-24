@@ -47,6 +47,9 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Add a deterministic NuGet/npm component inventory and generated third-party notice, legal/privacy
   CI drift checks, package/store metadata and open-review records, and product license, privacy,
   and notice files in Windows distributable payloads.
+- Add unreleased versioned HKLM enterprise policy with packaged ADMX/ADML templates, allowed
+  tenant/provider/identity-type controls, clipboard and offline-cache restrictions, service-layer
+  enforcement, safe Settings status, and deterministic fail-closed package validation.
 
 ### Changed
 

@@ -108,11 +108,16 @@ Responsibilities:
 Responsibilities:
 
 - Windows Hello integration.
+- Read-only Windows machine-policy access.
 - Apple Keychain and LocalAuthentication integration.
 - Secure random generation.
 - Data protection.
 - Clipboard control.
 - Screen-capture and background-state mitigations where available.
+
+Machine policy is parsed into an immutable application-layer snapshot. The UI may explain its safe
+status, but provider, identity, discovery, value, clipboard, and offline-cache services enforce it
+independently so a caller cannot bypass the boundary through view-model state.
 
 ### Plugin host
 
@@ -128,24 +133,31 @@ Dynamic third-party plugins may be postponed until a safe trust and signing mode
 ## Data flow: metadata synchronization
 
 1. The user selects an identity, workspace, or global sync.
-2. The application obtains a token through the authentication adapter.
-3. The Azure provider discovers selected subscriptions and vaults.
-4. The provider enumerates object metadata without requesting values.
-5. Records are normalized into domain index models.
-6. The preview index transaction applies additions and updates. Tombstone reconciliation and durable checkpoints remain post-preview backlog work.
-7. Search becomes immediately available against the local index.
-8. Sync errors are retained as non-sensitive diagnostics.
+2. The application reads machine policy and rejects a disallowed provider, identity type, or home
+   tenant before obtaining a token.
+3. The application obtains a token through the authentication adapter.
+4. The Azure provider receives the allowed-tenant constraint before discovering subscriptions and
+   vaults.
+5. The provider enumerates object metadata without requesting values.
+6. The application reapplies tenant constraints before the index transaction.
+7. Records are normalized into domain index models.
+8. The preview index transaction applies additions and updates. Tombstone reconciliation and
+   durable checkpoints remain post-preview backlog work.
+9. Search becomes immediately available against the local index.
+10. Sync errors are retained as non-sensitive diagnostics.
 
 ## Data flow: secret retrieval
 
 1. The user selects a result.
 2. The application resolves a valid identity-to-vault access path.
-3. Policy determines whether local unlock is required.
-4. The Azure provider requests the selected version.
-5. The value exists in memory only.
-6. The user may reveal or copy it.
-7. The UI clears displayed content and application buffers as soon as practical.
-8. The value is not persisted unless the user explicitly enables offline caching.
+3. Machine, user, and workspace policy must all permit the provider, tenant, identity type, and
+   requested clipboard/offline action.
+4. Policy determines whether local unlock is required.
+5. The Azure provider requests the selected version.
+6. The value exists in memory only.
+7. The user may reveal or copy it.
+8. The UI clears displayed content and application buffers as soon as practical.
+9. The value is not persisted unless the user explicitly enables offline caching.
 
 ## Data flow: CyberArk metadata synchronization
 

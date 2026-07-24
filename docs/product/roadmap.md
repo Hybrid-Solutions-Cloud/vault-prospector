@@ -112,10 +112,10 @@ satisfy its own security and store review gates.
   condition uncertainty, and the distinction between static evidence and runtime access.
 - Read-only access mode by default, with separately governed and visibly elevated write capabilities.
 - Security review, attack testing, and encryption-at-rest verification before expanding write or unattended access.
-- Configuration policy.
-- Offline-cache disablement.
-- Allowed-tenant and allowed-provider policy.
-- Managed configuration.
+- Machine-managed configuration policy is implemented locally through versioned HKLM policy and
+  packaged ADMX/ADML templates. It constrains allowed tenants, providers, identity types, clipboard
+  use, and offline-cache retention; governed deployment and independent/live validation remain
+  open.
 - Audit-friendly local access history.
 - Exportable diagnostics without sensitive data.
 - Signed releases and supply-chain hardening.

@@ -14,3 +14,6 @@
   statement be hosted for WinGet/Chocolatey/App Store/Google Play metadata?
 - Will legal approve authoritative developer-use terms for `AvaloniaUI.DiagnosticsSupport 2.2.3`,
   or should the Debug-only package be removed/replaced before release?
+- Which named Windows/Intune administrator will deploy the packaged Vault Prospector ADMX/ADML in
+  a governed non-production environment and approve the G-06 allowed/denied tenant, provider,
+  identity-type, clipboard, offline-cache, diagnostics, and rollback matrix?
