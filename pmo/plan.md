@@ -527,6 +527,13 @@ external platform/store gates open
 - Maintain SBOM, checksums, Sigstore bundles, provenance, release notes, rollback, and vulnerability
   response for every release.
 
+Toolchain progress note (2026-07-24): the desktop solution, tests, lock files, CI, release workflow,
+self-contained application, MSI, ZIP, WinGet manifests, and Chocolatey package are migrated locally
+from .NET 9 to .NET 10 LTS. The locked 343-test Release gate, self-contained startup, rollback-safe
+MSI inspection, shortcut/icon and browser-host/policy inspection, and WinGet validation pass.
+Exact-head hosted CI, clean-machine installed lifecycle, trusted signing, and public-candidate
+repetition remain open.
+
 ### Exit criteria
 
 - Windows shows the trusted publisher on binaries and MSI.

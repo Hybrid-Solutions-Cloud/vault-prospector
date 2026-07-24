@@ -53,5 +53,7 @@ App ───────────────┬──> Application ──> 
 - The Android and iOS projects are separate mobile composition roots. They reuse portable
   contracts and providers but own platform key storage, verification, clipboard, lifecycle,
   authentication callback, and privacy behavior.
-- Desktop and platform projects explicitly target Windows and support cross-compilation from HCS Tier 1 WSL. Provider-neutral projects and tests run as native `net9.0`; final Windows Hello runtime validation runs on Windows.
+- Desktop and platform projects explicitly target Windows and support cross-compilation from HCS
+  Tier 1 WSL. Provider-neutral projects and tests run as native `net10.0`; final Windows Hello
+  runtime validation runs on Windows.
 - A dynamic plugin system remains intentionally absent until a signing and trust model is accepted.

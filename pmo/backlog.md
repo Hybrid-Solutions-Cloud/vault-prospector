@@ -169,7 +169,10 @@ Acceptance criteria:
 
 Source evidence: `VaultProspector.sln`, `src/VaultProspector.App/VaultProspector.App.csproj`
 
-Implementation status: Delivered in `0.1.1-preview.1`; supported-platform validation remains open in Phase 14.
+Implementation status: Delivered in `0.1.1-preview.1`. The unreleased desktop source, tests,
+locked dependency graphs, CI/release workflows, and self-contained packaging are migrated locally
+to .NET 10 LTS; exact-head hosted, clean-machine, signed-artifact, and supported-platform validation
+remain open in Phase 14.
 
 ### Story: Application shell
 

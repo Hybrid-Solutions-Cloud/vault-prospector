@@ -21,7 +21,7 @@ Never replace an asset under an existing version tag. Publish a new version if a
 
 ## Build the distribution artifacts
 
-Run on Windows with PowerShell 7, .NET 9, WiX, WinGet, and Chocolatey available:
+Run on Windows with PowerShell 7, .NET 10, WiX, WinGet, and Chocolatey available:
 
 ```powershell
 pwsh ./scripts/PackageInstaller.ps1 -Version 0.1.1-preview.1
