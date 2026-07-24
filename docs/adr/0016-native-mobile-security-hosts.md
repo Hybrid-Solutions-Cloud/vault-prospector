@@ -36,7 +36,7 @@ Build Phase 13 as a separate `mobile/` .NET 10 solution:
    Desktop `Microsoft.Identity.Client.Extensions.Msal` storage is not reused.
 6. Metadata and any explicitly cached values remain local. No project-hosted backend is introduced.
 
-Android targets API 36 with a minimum supported API of 28. The Android host must use an
+Android targets API 36 with a minimum supported API of 31. The Android host must use an
 authentication-bound Android Keystore key, BiometricPrompt/device credential, `FLAG_SECURE`,
 explicit backup/data-transfer exclusions, sensitive clipboard labeling, foreground-only value
 operations, and lock/cancel on background.

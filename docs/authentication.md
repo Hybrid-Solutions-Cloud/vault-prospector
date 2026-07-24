@@ -11,6 +11,11 @@ First run uses the Vault Prospector multi-tenant public-client registration auto
 - delegated `user_impersonation` permissions for Azure Resource Manager and Azure Key Vault;
 - no password/client-secret credentials and no certificate credentials.
 
+The unreleased mobile hosts require the additional public-client callback
+`msal221af888-1c16-4637-9d45-b6dd2e1e7634://auth`. The native manifests already use that exact
+value, and the production registration contains it as of 2026-07-24. Live system-browser and
+account/tenant validation remains open.
+
 The registration authenticates the desktop client; it does not grant the application or user an Azure role. Microsoft Entra still applies the resource tenant's consent, MFA, Conditional Access, passwordless, FIDO, guest-access, and risk policies. The product registration is not yet publisher-verified, so a tenant that restricts user consent may require an administrator to approve it before sign-in succeeds.
 
 ## Use an organization-controlled registration
@@ -22,6 +27,9 @@ To create one:
 1. In the Microsoft Entra admin center, open **App registrations** and create a registration.
 2. Select **Accounts in any organizational directory** if the application must reach customer or guest tenants. Use a single-tenant registration when cross-tenant use is prohibited by policy.
 3. Add a **Mobile and desktop applications** platform with the `http://localhost` redirect URI.
+   For a mobile build, also register its exact `msal{client-id}://auth` callback and configure the
+   corresponding Android package/signature or iOS URL scheme according to Microsoft identity
+   platform guidance.
 4. Enable public-client flows.
 5. Add these delegated permissions:
    - Azure Service Management: `user_impersonation`

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDisplayName</key>
+  <string>Vault Prospector</string>
+  <key>CFBundleIdentifier</key>
+  <string>cloud.hybridsolutions.vaultprospector</string>
+  <key>CFBundleShortVersionString</key>
+  <string>0.1.0</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>msal221af888-1c16-4637-9d45-b6dd2e1e7634</string>
+      </array>
+    </dict>
+  </array>
+  <key>ITSAppUsesNonExemptEncryption</key>
+  <false/>
+  <key>LSRequiresIPhoneOS</key>
+  <true/>
+  <key>MinimumOSVersion</key>
+  <string>18.0</string>
+  <key>NSFaceIDUsageDescription</key>
+  <string>Vault Prospector uses Face ID to unlock encrypted local data and authorize explicit secret access.</string>
+  <key>UIApplicationSupportsIndirectInputEvents</key>
+  <true/>
+  <key>UIFileSharingEnabled</key>
+  <false/>
+  <key>UISupportsDocumentBrowser</key>
+  <false/>
+  <key>UIDeviceFamily</key>
+  <array>
+    <integer>1</integer>
+    <integer>2</integer>
+  </array>
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    <string>UIInterfaceOrientationLandscapeLeft</string>
+    <string>UIInterfaceOrientationLandscapeRight</string>
+  </array>
+</dict>
+</plist>

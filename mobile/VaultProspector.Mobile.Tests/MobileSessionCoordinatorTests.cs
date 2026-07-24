@@ -48,6 +48,41 @@ public sealed class MobileSessionCoordinatorTests
                 CancellationToken.None));
     }
 
+    [Fact]
+    public async Task FailedUncoverNeverOpensSession()
+    {
+        using var coordinator = new MobileSessionCoordinator(
+            new Verification(UserVerificationResult.Verified),
+            (_, _) => throw new PlatformNotSupportedException(
+                "Capture protection is active."));
+
+        await Assert.ThrowsAsync<PlatformNotSupportedException>(
+            () => coordinator.UnlockAsync(CancellationToken.None));
+
+        Assert.True(coordinator.IsLocked);
+        Assert.Throws<InvalidOperationException>(
+            () => coordinator.BeginSensitiveOperation(
+                CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task RepeatedLockStillCoversSafeUi()
+    {
+        var covers = new List<bool>();
+        using var coordinator = new MobileSessionCoordinator(
+            new Verification(UserVerificationResult.Verified),
+            (covered, _) =>
+            {
+                covers.Add(covered);
+                return Task.CompletedTask;
+            });
+
+        await coordinator.LockAsync(CancellationToken.None);
+
+        Assert.True(coordinator.IsLocked);
+        Assert.Equal([true], covers);
+    }
+
     private sealed class Verification(UserVerificationResult result)
         : IUserVerificationService
     {

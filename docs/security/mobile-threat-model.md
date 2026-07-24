@@ -58,9 +58,10 @@ co-resident apps remain adversarial.
 
 ### Android
 
-- Target API 36; minimum API 28.
+- Target API 36; minimum API 31.
 - Use Android Keystore keys restricted to encryption/decryption and current device authentication.
 - Use the platform BiometricPrompt with device credential fallback only when policy permits.
+- Reject touches flagged as obscured or partially obscured before Avalonia receives them.
 - Set `FLAG_SECURE` before rendering and keep it set for every activity that can show sensitive
   state.
 - Set `allowBackup="false"` and explicit `dataExtractionRules`/`fullBackupContent` exclusions;
@@ -75,6 +76,8 @@ co-resident apps remain adversarial.
   authentication policy. Do not synchronize it through iCloud Keychain.
 - Treat protected-data unavailability, passcode removal, enrollment changes, and Keychain status
   errors as lock or reset conditions.
+- Remove stale install-bound Keychain items when the private, backup-excluded installation marker
+  is absent so uninstall/reinstall cannot silently inherit prior local wrapping material.
 - Cover the UI before background snapshots and clear it only after foreground unlock.
 - Observe screen capture state and screenshot notifications, but do not claim that iOS prevents a
   screenshot already taken.

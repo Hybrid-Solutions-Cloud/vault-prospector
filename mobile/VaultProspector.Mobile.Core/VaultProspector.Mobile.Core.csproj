@@ -6,6 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\VaultProspector.Application\VaultProspector.Application.csproj" />
     <ProjectReference Include="..\..\src\VaultProspector.Domain\VaultProspector.Domain.csproj" />
+    <ProjectReference Include="..\..\src\VaultProspector.Infrastructure\VaultProspector.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\VaultProspector.Providers.Azure\VaultProspector.Providers.Azure.csproj" />
   </ItemGroup>
 </Project>

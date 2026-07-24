@@ -26,6 +26,8 @@ public sealed class MobileSessionCoordinator(
         if (result != UserVerificationResult.Verified)
             return false;
 
+        await setSensitiveUiCovered(false, cancellationToken);
+
         lock (_gate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
@@ -34,7 +36,6 @@ public sealed class MobileSessionCoordinator(
             IsLocked = false;
         }
 
-        await setSensitiveUiCovered(false, cancellationToken);
         StateChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
@@ -43,14 +44,26 @@ public sealed class MobileSessionCoordinator(
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         CancellationTokenSource toCancel;
+        var alreadyLocked = false;
         lock (_gate)
         {
             if (IsLocked)
-                return;
+            {
+                alreadyLocked = true;
+                toCancel = _sessionCancellation;
+            }
+            else
+            {
+                IsLocked = true;
+                toCancel = _sessionCancellation;
+                _sessionCancellation = new CancellationTokenSource();
+            }
+        }
 
-            IsLocked = true;
-            toCancel = _sessionCancellation;
-            _sessionCancellation = new CancellationTokenSource();
+        if (alreadyLocked)
+        {
+            await setSensitiveUiCovered(true, cancellationToken);
+            return;
         }
 
         toCancel.Cancel();

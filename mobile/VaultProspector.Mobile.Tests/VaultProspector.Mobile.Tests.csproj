@@ -17,5 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VaultProspector.Mobile.Core\VaultProspector.Mobile.Core.csproj" />
+    <ProjectReference Include="..\VaultProspector.Mobile\VaultProspector.Mobile.csproj" />
   </ItemGroup>
 </Project>

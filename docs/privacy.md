@@ -142,6 +142,24 @@ Local CyberArk audit records operation, result, profile/account identifier, safe
 and a fixed safe message. They do not store the credential, tokens, business reason, or account
 value. CyberArk remains authoritative for server-side access and audit records.
 
+## Mobile applications
+
+The unreleased Android and iOS applications store encrypted metadata and app-owned identity state
+inside platform-private storage. Value caching is disabled by default. Protected key material is
+device-bound and local data is excluded from operating-system backup and transfer paths. Losing
+that key material requires local reset, reauthentication, and metadata resynchronization.
+
+Mobile authentication and vault requests go directly to Microsoft and Azure. The project does not
+operate a mobile relay, collect product analytics, track users, sell data, or serve advertising.
+iOS pasteboard writes are local-only and expire; Android marks copied content sensitive. Both
+platforms clear only unchanged app-owned content on timeout or background. Other software may read
+content before it is cleared. Android blocks ordinary screenshots with a secure window. iOS covers
+background snapshots and reacts to active capture but cannot prevent a screenshot already taken.
+
+The iOS privacy manifest and Android data-safety baseline declare no project-controlled collection
+or tracking. Final store declarations must be reconciled against the exact signed artifact,
+transitive SDK disclosures, and observed live traffic before submission.
+
 ## Security and privacy contact
 
 Report suspected vulnerabilities privately as described in [SECURITY.md](../SECURITY.md). For a
