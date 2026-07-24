@@ -83,3 +83,13 @@ to .NET 10.
 - Approve and test Authenticode key custody, expiration, rotation, timestamping, revocation, and
   compromise response.
 - Repeat the full operational review on the exact signed public candidate.
+
+## Initial hosted PR state
+
+PR [#18](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/18) opened from initial
+head `9aef1f31ad6b44a66bcdd4e7d18813d7c30f48e9`. CI run
+[`30084503284`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30084503284)
+created `build-test` and `secret-scan`, but both jobs had zero steps and were rejected before
+execution. Their annotations state that recent account payments failed or the spending limit must
+be increased. This is organization-hosting evidence only: it neither passes nor fails source
+validation. PR #18 must remain unmerged until required exact-head checks execute and pass.
