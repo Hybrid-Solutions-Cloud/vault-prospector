@@ -50,7 +50,7 @@ co-resident apps remain adversarial.
 | Token theft or identity confusion | Platform MSAL cache, exact application callback, selected account binding, silent-first token use, removal on disconnect | Multi-account/tenant/broker/callback/revocation live matrix |
 | Secret in diagnostics or crashes | Allow-listed value-free fields; safe exception categories; no request/response bodies or revealed strings | Canary scans, crash/log inspection, independent review |
 | Overlay/tapjacking or untrusted display | Android secure window and obscured-touch review; visible confirmation and system-owned authentication UI | Device/manual security review |
-| Autofill origin confusion | Exact canonical HTTPS origin, explicit item/identity/field mapping, foreground invocation, fresh verification, one-shot response | Negative-origin/frame/mapping tests and native framework review |
+| Autofill origin confusion | Exact canonical HTTPS origin, explicit item/identity/field mapping, foreground invocation, fresh verification, one-shot response; Android package/domain/signature association | Shared negative tests, native prototype compilation, live negative-origin/framework review |
 | Extension compromise | Separate least-privilege extension process; no bulk export, wildcard mapping, background sync, or key/certificate exposure | Extension threat model, compromise/revocation exercise |
 | Unsupported platform behavior | Fail closed when protected storage, local verification, backup exclusion, or privacy controls are unavailable | Capability policy tests and unsupported-device matrix |
 
@@ -68,6 +68,10 @@ co-resident apps remain adversarial.
   do not rely on `allowBackup` alone for device-to-device transfer behavior.
 - Mark copied content sensitive where the platform supports it and clear only content the
   application still owns.
+- Keep the packaged `AutofillService` prototype disabled. Before enablement, validate the
+  canonical web domain against the requesting package and signing certificate through Digital
+  Asset Links, then require an encrypted exact mapping and an authenticated foreground
+  `FillResponse`. Never implement `onSaveRequest` import/persistence.
 
 ### iOS
 
@@ -83,6 +87,10 @@ co-resident apps remain adversarial.
 - Observe screen capture state and screenshot notifications, but do not claim that iOS prevents a
   screenshot already taken.
 - Exclude database, cache, and diagnostic files from iCloud/iTunes backup.
+- Keep the credential-provider extension unable to access app storage by default. No-interaction
+  requests must return `UserInteractionRequired`; a future reviewed App Group/Keychain exchange
+  may expose only opaque mapping identifiers and one post-verification value, never a vault
+  inventory or wrapping key.
 
 ## Explicit non-goals
 
@@ -106,3 +114,6 @@ co-resident apps remain adversarial.
   removal.
 - Signed TestFlight/closed-test artifacts, SBOM/provenance, privacy/data-safety declarations, store
   review, and independent security approval.
+- Enabled native autofill on physical devices, including HTTP/port/path/IDN/subdomain, unassociated
+  WebView/package, ambiguous-field, stale-mapping, background, cancellation, and verification
+  failure matrices.

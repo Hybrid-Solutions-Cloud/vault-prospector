@@ -457,6 +457,28 @@ the repository and must not be committed.
 - Project-owned reflection-based JSON paths were made trim-safe. The iOS linker keeps four grouped
   upstream `IL2104` warnings visible while project warnings remain build-breaking; the successful
   trimmed simulator build does not replace required physical-device testing.
-- Open Phase 13 gates: native autofill framework prototypes/live negative-origin testing,
-  governed Entra/device/accessibility matrices, signed Android/iOS artifacts, independent mobile
-  review, TestFlight/Play closed testing, declaration approval, and store acceptance.
+- Open Phase 13 gates: enabled native autofill mapping/package-association and signed-device
+  positive/negative framework testing, governed Entra/device/accessibility matrices, signed
+  Android/iOS artifacts, independent mobile review, TestFlight/Play closed testing, declaration
+  approval, and store acceptance.
+
+## Phase 13 native autofill feasibility — 2026-07-24
+
+- Added a two-stage shared analyzer: native metadata must contain one canonical default-port HTTPS
+  DNS origin and unambiguous username/password hints; value release separately requires a secret,
+  exact saved mapping, foreground invocation, and fresh verification.
+- Isolated that policy in a dedicated assembly with only domain/browser-origin references so the
+  credential-provider extension cannot inherit Azure, SQLCipher, cache, or application services.
+- Added a real Android `AutofillService` with bounded `AssistStructure` parsing, required manifest
+  permission/action/metadata, and no save/import behavior. The component is package-disabled and
+  returns no dataset pending Digital Asset Links/package-signature, mapping, verification, device,
+  and review gates.
+- Added and embedded an Apple credential-provider extension with the required entitlement on both
+  targets. It normalizes service identifiers, returns `UserInteractionRequired` for no-UI
+  requests, has no shared app database/Keychain group, and returns no credential.
+- Completed SPK-0007 with the cross-platform capability decision and primary vendor references.
+- Local checks pass: 44 mobile tests, locked restore/format/vulnerability checks, Android Release
+  App Bundle with zero warnings/errors, and iOS application/extension reference-pack compilation.
+- Remaining evidence: hosted macOS bundle CI on the exact PR head, enabled signed physical-device
+  framework matrices, encrypted one-record mapping exchange, Android association/signature
+  validation, accessibility, independent review, and store acceptance.

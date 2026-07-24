@@ -363,6 +363,13 @@
           "VaultProspector.Mobile.Core": "[0.1.0, )"
         }
       },
+      "vaultprospector.mobile.autofill": {
+        "type": "Project",
+        "dependencies": {
+          "VaultProspector.BrowserProtocol": "[0.1.0, )",
+          "VaultProspector.Domain": "[0.1.0, )"
+        }
+      },
       "vaultprospector.mobile.core": {
         "type": "Project",
         "dependencies": {
@@ -370,6 +377,12 @@
           "VaultProspector.Domain": "[0.1.0, )",
           "VaultProspector.Infrastructure": "[0.1.0, )",
           "VaultProspector.Providers.Azure": "[0.1.0, )"
+        }
+      },
+      "vaultprospector.mobile.ios.credentialprovider": {
+        "type": "Project",
+        "dependencies": {
+          "VaultProspector.Mobile.Autofill": "[0.1.0, )"
         }
       },
       "vaultprospector.providers.azure": {

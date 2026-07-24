@@ -33,7 +33,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | Password-manager UI research/redesign | In progress locally | Primary-source research, four interactive concepts, sixteen automated concept/task states, narrow-viewport and console validation | Participant usability sessions, concept selection, production implementation, accessibility validation |
 | Browser autofill/password-vault integration | Implemented locally, validation open | Toolbar-only Chromium/Firefox extension source, strict protocol, authenticated native host/broker, exact mappings, protected machine policy, desktop confirmation, fresh Windows verification, audit, MSI registration, tests | Signed extension distribution, independent review, live installed-browser/compromise/revocation/usability/AT evidence |
 | CyberArk source | Implemented and merged, validation open | Privilege Cloud ADR/threat model, isolated provider and DPAPI credential store, SQLCipher metadata, verified retrieval, fail-closed local revoke/remove controls, explicit UI, automated tests, exact-commit CI | Governed live tenant, independent review, signed exact-artifact validation |
-| iPhone/iOS and Android/Google apps | Implemented locally, validation open | Shared search/retrieval UI, native Keychain/Keystore verification and lifecycle controls, locked builds, tests, threat model, and CI | Exact-commit CI, native autofill prototypes, physical-device/accessibility matrices, signing, TestFlight/closed test, privacy/data-safety and store acceptance |
+| iPhone/iOS and Android/Google apps | Implemented and merged, validation open | Shared search/retrieval UI, native Keychain/Keystore verification and lifecycle controls, fail-closed native autofill prototypes, locked builds, tests, threat model, and CI | Enabled live autofill, physical-device/accessibility matrices, signing, TestFlight/closed test, privacy/data-safety and store acceptance |
 
 ## Story status and plan mapping
 
@@ -72,7 +72,7 @@ exit criteria.
 | 8.1 | Apple platform security validation | Implemented and merged; live/independent validation open | Phase 13 |
 | 8.2 | iPhone/iOS application and App Store release | Implemented and merged; signing/store gates open | Phase 13 |
 | 8.3 | Android application and Google Play release | Implemented and merged; signing/store gates open | Phase 13 |
-| 8.4 | Mobile autofill feasibility | In progress; fail-closed policy tested, native/live prototypes open | Phase 13 |
+| 8.4 | Mobile autofill feasibility | Native prototypes implemented; enabled live-framework evidence open | Phase 13 |
 | 9.1 | Secure first-run wizard | Implemented locally, validation open | Phase 3 |
 | 9.2 | Mandatory local encryption verification | Implemented; independent review open | Phases 3 and 14 |
 | 9.3 | Isolated Azure authentication contexts | Implemented; live matrix open | Phases 2 and 14 |
@@ -548,12 +548,18 @@ Acceptance criteria:
 - Autofill framework capabilities are tested on iOS and Android.
 - Findings determine safe integration patterns for specific secrets.
 
-Implementation status: In progress. A shared policy accepts only explicit credential fields for an
-exact default-port HTTPS origin, exact saved mapping, foreground invocation, secret object, and
-fresh user verification; positive and negative unit tests pass. Native Apple credential-provider
-and Android Autofill/Credential Manager prototypes plus real-framework negative-origin testing
-remain open. No arbitrary secret, key, certificate, wildcard origin, or background fill is
-offered.
+Implementation status: Native feasibility prototypes are implemented; enabled live-framework
+evidence remains open. Shared analysis accepts only explicit credential fields for one canonical,
+default-port HTTPS origin. Final value release additionally requires an exact saved mapping,
+foreground invocation, secret object, and fresh user verification. A package-disabled Android
+`AutofillService` parses bounded `AssistStructure` input, never saves observed values, and returns
+no dataset. An embedded Apple credential-provider extension validates service identifiers, always
+requires interaction, shares no app database/Keychain group, and returns no credential. Forty-four
+mobile policy/package tests, a Release Android App Bundle, and iOS reference-pack compilation pass.
+Digital Asset Links/package-signature validation, encrypted one-record exchange, signed physical
+devices, real-framework negative-origin tests, accessibility, and independent review remain
+mandatory before either component can deliver a value. No arbitrary secret, key, certificate,
+wildcard origin, background fill, import, or save behavior is offered.
 
 ## Epic 9 — Secure first-run setup and identity architecture (highest priority)
 

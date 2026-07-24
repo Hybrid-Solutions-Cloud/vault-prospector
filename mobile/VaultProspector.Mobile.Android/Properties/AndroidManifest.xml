@@ -25,5 +25,23 @@
             android:scheme="msal221af888-1c16-4637-9d45-b6dd2e1e7634" />
       </intent-filter>
     </activity>
+    <!--
+      Compile-time feasibility prototype only. It is intentionally disabled in production
+      packages until exact encrypted mappings, fresh verification, physical-device origin
+      negatives, and independent review are complete.
+    -->
+    <service
+        android:name="cloud.hybridsolutions.vaultprospector.autofill.VaultProspectorAutofillService"
+        android:enabled="false"
+        android:exported="true"
+        android:label="Vault Prospector AutoFill (prototype)"
+        android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+      <intent-filter>
+        <action android:name="android.service.autofill.AutofillService" />
+      </intent-filter>
+      <meta-data
+          android:name="android.autofill"
+          android:resource="@xml/autofill_service" />
+    </service>
   </application>
 </manifest>

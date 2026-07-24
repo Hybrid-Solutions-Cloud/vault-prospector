@@ -18,8 +18,9 @@
   LocalAuthentication, background
   covering, active-capture lockout, local-only pasteboard expiration, and backup exclusion.
 - Platform-specific MSAL callback and native parent-window handling.
-- Exact-origin mobile autofill eligibility policy. Native credential-provider extensions remain a
-  separate validation gate and no arbitrary vault value is offered.
+- Exact-origin mobile autofill eligibility policy, a package-disabled Android `AutofillService`,
+  and an embedded least-privilege Apple credential-provider extension. Both native prototypes
+  return no value until the remaining mapping, verification, device, and review gates pass.
 - Mobile threat model, architecture decision, build automation, privacy manifest, and CI workflow.
 
 ## Automated evidence
@@ -35,6 +36,7 @@
 | iOS simulator build on macOS 26/Xcode 26.0.1 | Run `30076673064` passed |
 | Exact merge-commit CI | Run `30077519402` passed build-test and secret-scan |
 | Exact merge-commit Mobile CI | Run `30077519354` passed managed-tests, Android package, and iOS simulator |
+| Follow-on native-autofill local checks | 44 mobile tests, Android Release App Bundle, iOS app/extension reference-pack compile, locked restore, formatting, and vulnerability checks passed |
 
 The local mobile toolchains were installed under `D:/tmp` and did not modify a governed system
 toolchain. Local Android output used development signing and is not a release candidate.
@@ -72,8 +74,9 @@ declaration must be reconciled against the exact signed bundle, SDK disclosures,
 - Signed iOS archive verified with the protected Apple Distribution identity and provisioning.
 - Governed physical-device matrix for security, lifecycle, backup/migration/reinstall, identity,
   accessibility, offline behavior, and representative-user tasks.
-- Native Apple Password AutoFill and Android Autofill/Credential Manager eligibility prototypes and
-  negative-origin testing.
+- Enabled Apple Password AutoFill and Android Autofill/Credential Manager on signed physical
+  devices, including exact mapping exchange, Android package/domain/signature association,
+  fresh-verification, positive fill, and negative-origin/lifecycle/accessibility tests.
 - Independent mobile threat-model review with all critical/high findings closed.
 - TestFlight, Play closed-test, privacy/data-safety approval, and store acceptance.
 
