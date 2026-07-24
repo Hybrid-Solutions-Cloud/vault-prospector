@@ -101,7 +101,7 @@ try {
             'restore',
             'VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj',
             '--locked-mode'
-        ) + $iosProperties)
+        ))
         & $vulnerabilityScript `
             -Solution 'VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj'
         if ($IsMacOS) {

@@ -7,8 +7,8 @@
     <ApplicationTitle>Vault Prospector</ApplicationTitle>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
-    <MobileRuntimeIdentifier Condition="'$(MobileRuntimeIdentifier)' == ''">ios-arm64</MobileRuntimeIdentifier>
-    <RuntimeIdentifier>$(MobileRuntimeIdentifier)</RuntimeIdentifier>
+    <RuntimeIdentifiers>ios-arm64;iossimulator-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(MobileRuntimeIdentifier)' != ''">$(MobileRuntimeIdentifier)</RuntimeIdentifier>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
   </PropertyGroup>
 
