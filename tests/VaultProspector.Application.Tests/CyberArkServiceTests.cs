@@ -180,30 +180,6 @@ public sealed class CyberArkServiceTests
         Assert.Equal("synthetic", credentialStore.Value);
     }
 
-    [Fact]
-    public async Task SuccessfulSynchronizationRevalidatesEnabledProfile()
-    {
-        var repository = new CyberArkRepository { Profile = Profile() };
-        var provider = new FakeProvider();
-        var service = Service(
-            provider,
-            new FakeCredentialStore { Value = "synthetic" },
-            repository,
-            new FakeVerification(UserVerificationResult.Verified));
-
-        await service.SynchronizeAsync(
-            Profile().Id,
-            TestContext.Current.CancellationToken);
-
-        Assert.Equal(1, provider.DiscoveryCount);
-        Assert.NotNull(repository.Profile);
-        Assert.True(repository.Profile.IsEnabled);
-        Assert.Equal(
-            CyberArkAuthenticationState.Ready,
-            repository.Profile.AuthenticationState);
-        Assert.Equal(FixedClock.Now, repository.Profile.LastValidatedAt);
-    }
-
     private static CyberArkService Service(
         ICyberArkProvider provider,
         ICyberArkCredentialStore credentialStore,
@@ -258,7 +234,6 @@ public sealed class CyberArkServiceTests
     {
         public bool FailValidation { get; init; }
         public int ValidationCount { get; private set; }
-        public int DiscoveryCount { get; private set; }
         public int RetrievalCount { get; private set; }
         public SensitiveValue? LastRetrievedValue { get; private set; }
 
@@ -276,17 +251,14 @@ public sealed class CyberArkServiceTests
         public Task<CyberArkDiscoverySnapshot> DiscoverAsync(
             CyberArkProfile profile,
             SensitiveValue clientCredential,
-            CancellationToken cancellationToken)
-        {
-            DiscoveryCount++;
-            return Task.FromResult(new CyberArkDiscoverySnapshot(
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new CyberArkDiscoverySnapshot(
                 [],
                 [],
                 [],
                 [],
                 [],
                 FixedClock.Now));
-        }
 
         public Task<SensitiveValue> RetrieveAsync(
             CyberArkProfile profile,
@@ -396,12 +368,6 @@ public sealed class CyberArkServiceTests
             Profile = null;
             return Task.CompletedTask;
         }
-
-        public Task ApplyCyberArkDiscoveryAsync(
-            Guid profileId,
-            CyberArkDiscoverySnapshot snapshot,
-            CancellationToken cancellationToken) =>
-            Task.CompletedTask;
 
         public Task RecordCyberArkAuditAsync(
             CyberArkAuditEvent auditEvent,

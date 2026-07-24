@@ -60,10 +60,10 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new Uri("https://tenant.privilegecloud.cyberark.cloud/"),
             "svc@example.com",
             "VaultProspector",
-            CyberArkAuthenticationState.Ready,
+            CyberArkAuthenticationState.Unknown,
             true,
             _clock.UtcNow,
-            _clock.UtcNow);
+            null);
         await repository.UpsertCyberArkProfileAsync(
             profile,
             TestContext.Current.CancellationToken);
@@ -125,7 +125,11 @@ public sealed class EncryptedPersistenceTests : IDisposable
             TestContext.Current.CancellationToken);
 
         Assert.Equal(
-            profile,
+            profile with
+            {
+                AuthenticationState = CyberArkAuthenticationState.Ready,
+                LastValidatedAt = _clock.UtcNow,
+            },
             await repository.GetCyberArkProfileAsync(
                 profileId,
                 TestContext.Current.CancellationToken));

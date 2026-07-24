@@ -411,8 +411,8 @@ the repository and must not be committed.
 - Added ADR, threat model, integration guide, privacy/architecture/security/release evidence, and
   canonical backlog/plan/readiness/roadmap updates.
 - Exact local `pwsh ./scripts/Build.ps1 -Configuration Release` passed locked restore, vulnerable
-  package scan, format, zero-warning/error build, coverage collection, and 343/343 .NET tests:
-  Domain 4, BrowserProtocol 35, Application 67, Security 1, Platform 50, Azure 27, App 85,
+  package scan, format, zero-warning/error build, coverage collection, and 342/342 .NET tests:
+  Domain 4, BrowserProtocol 35, Application 66, Security 1, Platform 50, Azure 27, App 85,
   BrowserHost 8, Infrastructure 54, CyberArk provider 12.
 - Browser extension tests pass 6/6 and its production bundle builds.
 - Disposable unsigned MSI `0.1.1-preview.12` packaged locally. Shortcut/icon,
