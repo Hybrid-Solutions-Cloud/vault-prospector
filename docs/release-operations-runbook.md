@@ -4,11 +4,14 @@
 
 **Frequency:** Every release, package update, credential rotation, or incident
 
-**Last updated:** 2026-07-17
+**Last updated:** 2026-07-24
 
 **Last exercised:** Exact public `0.1.1-preview.1` MSI completed the full 27-gate lifecycle and all
 13 public assets passed credential-free byte comparison on 2026-07-17; package-service failure
-handling was exercised during earlier Chocolatey HTTP 504 responses
+handling was exercised during earlier Chocolatey HTTP 504 responses. On 2026-07-24 the local
+operational-readiness validator passed 35 source-policy checks and all three current public
+release/support endpoints returned HTTP 200. This is not a substitute for the complete incident,
+withdrawal, communication, and recovery exercise.
 
 ## Purpose
 
@@ -48,6 +51,37 @@ Before each Preview refresh and the GA decision:
 3. record task-outcome, Windows-build, install-path, and triage-latency totals;
 4. rerun the supported-version upgrade matrix after any installer or storage change; and
 5. update G-01 without claiming Passed until every numerical and stability threshold is evidenced.
+
+## Operational monitoring and maintenance
+
+The canonical support states, supersedence rules, response targets, and end-of-support process are
+defined in [Support and product lifecycle](support-lifecycle.md). The machine-readable contract is
+`ops/operational-readiness.json`.
+
+- Dependabot checks desktop/mobile NuGet, browser/design npm, and GitHub Actions dependencies each
+  Monday. Dependency pull requests are reviewed normally and are never auto-merged.
+- The **Operational Readiness** workflow runs weekly and on manual request. It checks lifecycle and
+  ownership agreement, runtime end-of-support dates, direct/transitive desktop NuGet
+  vulnerabilities, and the current release, checksum, and feedback endpoints.
+- The normal CI workflow runs the same contract validator without network checks, preventing a
+  policy or automation change from silently drifting away from the manifest.
+- The JSON report is retained for 90 days. A failed or missing scheduled run must be dispositioned
+  by the support owner before another release.
+- Review the credential/signing inventory every 30 days and exercise this complete runbook at least
+  every 90 days and against the exact GA candidate.
+
+Run the same check locally:
+
+```powershell
+pwsh ./scripts/Test-OperationalReadiness.ps1 -CheckPublicEndpoints
+```
+
+The validator warns 120 days before a recorded runtime end-of-support date and fails after it.
+Desktop .NET 9 currently reaches end of support on 2026-11-10, so migration to a supported runtime
+must complete before Vault Prospector claims support beyond that date.
+
+A named backup support/security operator is still required before G-08 can pass. Until one is
+assigned, the primary owner must not characterize this automation as a complete on-call function.
 
 ## Release prerequisites
 

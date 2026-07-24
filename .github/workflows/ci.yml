@@ -79,6 +79,9 @@ jobs:
       - name: Check vulnerable dependencies
         shell: pwsh
         run: ./scripts/Test-VulnerablePackages.ps1
+      - name: Validate operational-readiness contract
+        shell: pwsh
+        run: ./scripts/Test-OperationalReadiness.ps1 -OutputPath TestResults/operational-readiness.json
       - name: Upload commit-addressed Windows candidate
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "product": "Vault Prospector",
+  "lifecycleStage": "preview",
+  "documents": {
+    "supportLifecycle": "docs/support-lifecycle.md",
+    "operationsRunbook": "docs/release-operations-runbook.md",
+    "securityPolicy": "SECURITY.md",
+    "releaseReadiness": "docs/product/release-readiness.md"
+  },
+  "owners": [
+    {
+      "role": "release",
+      "name": "Kristopher Turner",
+      "organization": "Hybrid Solutions Cloud",
+      "channel": "HCS repository and release process"
+    },
+    {
+      "role": "support",
+      "name": "Kristopher Turner",
+      "organization": "Hybrid Solutions Cloud",
+      "channel": "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/FEEDBACK.md"
+    },
+    {
+      "role": "security",
+      "name": "Kristopher Turner",
+      "organization": "Hybrid Solutions Cloud",
+      "channel": "mailto:kris@hybridsolutions.cloud"
+    }
+  ],
+  "serviceTargets": {
+    "contractualSla": false,
+    "previewQueueReviewBusinessDays": 1,
+    "previewClassificationBusinessDays": 3,
+    "securityAcknowledgementBusinessDays": 3,
+    "securityInitialAssessmentBusinessDays": 7
+  },
+  "cadences": {
+    "dependencyUpdates": "P7D",
+    "operationalMonitor": "P7D",
+    "credentialInventoryReview": "P30D",
+    "runbookExercise": "P90D"
+  },
+  "supportedRelease": {
+    "channel": "preview",
+    "currentVersion": "0.1.1-preview.1",
+    "supportedVersions": [
+      "0.1.1-preview.1"
+    ],
+    "productionSupported": false
+  },
+  "dependencyAutomation": [
+    {
+      "ecosystem": "nuget",
+      "directory": "/"
+    },
+    {
+      "ecosystem": "nuget",
+      "directory": "/mobile"
+    },
+    {
+      "ecosystem": "npm",
+      "directory": "/browser-extension"
+    },
+    {
+      "ecosystem": "npm",
+      "directory": "/docs/design/vault-prospector-ui-concepts"
+    },
+    {
+      "ecosystem": "github-actions",
+      "directory": "/"
+    }
+  ],
+  "runtimeDependencies": [
+    {
+      "name": "Desktop .NET",
+      "versionFile": "global.json",
+      "expectedMajor": 9,
+      "endOfSupportDate": "2026-11-10",
+      "policyUrl": "https://dotnet.microsoft.com/platform/support/policy/dotnet-core"
+    },
+    {
+      "name": "Mobile .NET",
+      "versionFile": "mobile/global.json",
+      "expectedMajor": 10,
+      "endOfSupportDate": "2028-11-14",
+      "policyUrl": "https://dotnet.microsoft.com/platform/support/policy/dotnet-core"
+    }
+  ],
+  "credentialAndSigningControls": [
+    {
+      "name": "Chocolatey publisher API key",
+      "rotation": "P180D",
+      "status": "documented"
+    },
+    {
+      "name": "WinGet contributor OAuth credential",
+      "rotation": "provider managed or immediately on suspected compromise",
+      "status": "documented"
+    },
+    {
+      "name": "HCS GitHub App private key",
+      "rotation": "central HCS platform policy or immediately on suspected compromise",
+      "status": "documented"
+    },
+    {
+      "name": "Sigstore",
+      "rotation": "keyless GitHub Actions OIDC",
+      "status": "implemented"
+    },
+    {
+      "name": "Authenticode",
+      "rotation": "approval and protected key lifecycle required before stable or GA",
+      "status": "blocked"
+    }
+  ],
+  "publicMonitors": [
+    {
+      "name": "Current Preview release page",
+      "url": "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1"
+    },
+    {
+      "name": "Current Preview MSI checksum",
+      "url": "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.1.1-preview.1/VaultProspector-0.1.1-preview.1-win-x64.msi.sha256"
+    },
+    {
+      "name": "Preview feedback channel",
+      "url": "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/FEEDBACK.md"
+    }
+  ],
+  "openEvidence": [
+    {
+      "id": "G08-BACKUP-OWNER",
+      "description": "A named backup support and security operator has not been assigned."
+    },
+    {
+      "id": "G08-MONITOR-HISTORY",
+      "description": "The scheduled monitor needs successful hosted runs and retained reports."
+    },
+    {
+      "id": "G08-RUNBOOK-EXERCISE",
+      "description": "A complete incident, withdrawal, recovery, and communication exercise is required on the GA candidate."
+    },
+    {
+      "id": "G08-AUTHENTICODE-LIFECYCLE",
+      "description": "Authenticode key custody, rotation, revocation, and compromise handling remain blocked on signing setup."
+    }
+  ]
+}

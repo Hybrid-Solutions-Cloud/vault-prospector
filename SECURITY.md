@@ -9,7 +9,8 @@ provided only for the latest published Preview version. Older Preview builds may
 a replacement is available.
 
 No version is supported for production use until the repository's GA readiness gates are complete.
-See the [release-readiness matrix](docs/product/release-readiness.md).
+See the [support lifecycle](docs/support-lifecycle.md) and
+[release-readiness matrix](docs/product/release-readiness.md).
 
 ## Reporting a vulnerability
 
