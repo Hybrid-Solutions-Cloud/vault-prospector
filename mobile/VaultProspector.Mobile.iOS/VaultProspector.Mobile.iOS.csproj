@@ -7,7 +7,7 @@
     <ApplicationTitle>Vault Prospector</ApplicationTitle>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
-    <RuntimeIdentifiers>ios-arm64;iossimulator-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>ios-arm64;iossimulator-arm64;iossimulator-x64</RuntimeIdentifiers>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
     <!-- Keep package-internal trim warnings visible while project warnings remain errors. -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2104</WarningsNotAsErrors>
