@@ -47,6 +47,186 @@ public sealed class EncryptedPersistenceTests : IDisposable
     }
 
     [Fact]
+    public async Task SearchSelectsDeterministicPreferredAccessAndHonorsIdentityFilter()
+    {
+        var path = Path.Combine(_directory, "preferred-access.db");
+        using var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var secondary = new ConnectedIdentity(
+            Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            "11111111-1111-1111-1111-111111111111",
+            "secondary-account",
+            "secondary@example.invalid",
+            "Secondary identity",
+            "tenant",
+            AuthenticationState.Ready,
+            _clock.UtcNow);
+        var preferred = new ConnectedIdentity(
+            Guid.Parse("00000000-0000-0000-0000-000000000002"),
+            "11111111-1111-1111-1111-111111111111",
+            "preferred-account",
+            "preferred@example.invalid",
+            "Preferred identity",
+            "tenant",
+            AuthenticationState.Ready,
+            _clock.UtcNow);
+        await repository.UpsertIdentityAsync(
+            secondary,
+            TestContext.Current.CancellationToken);
+        await repository.UpsertIdentityAsync(
+            preferred,
+            TestContext.Current.CancellationToken);
+
+        var secondaryTenant = new TenantAccess(
+            Guid.NewGuid(),
+            secondary.Id,
+            "tenant",
+            "Secondary tenant",
+            "Home",
+            _clock.UtcNow,
+            "Available");
+        var preferredTenant = new TenantAccess(
+            Guid.NewGuid(),
+            preferred.Id,
+            "tenant",
+            "Preferred tenant",
+            "Home",
+            _clock.UtcNow,
+            "Available");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            secondaryTenant.Id,
+            "subscription",
+            "Subscription",
+            "Enabled",
+            true,
+            _clock.UtcNow);
+        var vault = new VaultResource(
+            Guid.NewGuid(),
+            "/resource/preferred-access",
+            "preferred-access",
+            "tenant",
+            "subscription",
+            "rg",
+            "eastus",
+            new Dictionary<string, string>(),
+            new Uri("https://preferred-access.vault.azure.net/"),
+            _clock.UtcNow);
+        var secondaryAccess = new VaultAccess(
+            Guid.NewGuid(),
+            vault.Id,
+            secondary.Id,
+            "tenant",
+            "Secondary",
+            _clock.UtcNow,
+            null,
+            5);
+        var preferredAccess = new VaultAccess(
+            Guid.NewGuid(),
+            vault.Id,
+            preferred.Id,
+            "tenant",
+            "Preferred",
+            _clock.UtcNow,
+            null,
+            1);
+        var item = new VaultItem(
+            Guid.NewGuid(),
+            vault.Id,
+            "preferred-secret",
+            VaultObjectType.Secret,
+            true,
+            new Dictionary<string, string>(),
+            null,
+            _clock.UtcNow,
+            _clock.UtcNow,
+            null,
+            "v1",
+            "preferred-fingerprint",
+            _clock.UtcNow);
+        await repository.ApplyDiscoveryAsync(
+            secondary.Id,
+            new DiscoverySnapshot(
+                [secondaryTenant, preferredTenant],
+                [subscription],
+                [vault],
+                [secondaryAccess, preferredAccess],
+                [item],
+                []),
+            new SyncRun(
+                Guid.NewGuid(),
+                "preferred access",
+                _clock.UtcNow,
+                _clock.UtcNow,
+                SyncStatus.Completed,
+                1,
+                1,
+                []),
+            TestContext.Current.CancellationToken);
+
+        var defaultResult = Assert.Single(await repository.SearchAsync(
+            new SearchRequest("preferred-secret"),
+            _clock.UtcNow,
+            TestContext.Current.CancellationToken));
+        Assert.Equal("Preferred identity", defaultResult.IdentityDisplayName);
+        Assert.Equal("Preferred", defaultResult.AccessStatus);
+
+        var filteredResult = Assert.Single(await repository.SearchAsync(
+            new SearchRequest("preferred-secret", IdentityId: secondary.Id),
+            _clock.UtcNow,
+            TestContext.Current.CancellationToken));
+        Assert.Equal("Secondary identity", filteredResult.IdentityDisplayName);
+        Assert.Equal("Secondary", filteredResult.AccessStatus);
+
+        await repository.UpsertIdentityAsync(
+            preferred with { IsEnabled = false },
+            TestContext.Current.CancellationToken);
+        var enabledFallback = Assert.Single(await repository.SearchAsync(
+            new SearchRequest("preferred-secret"),
+            _clock.UtcNow,
+            TestContext.Current.CancellationToken));
+        Assert.Equal("Secondary identity", enabledFallback.IdentityDisplayName);
+    }
+
+    [Fact]
+    public async Task RawKeyOpenRemainsCompatibleWithLegacyPassphraseDatabase()
+    {
+        var path = Path.Combine(_directory, "legacy-passphrase.db");
+        Directory.CreateDirectory(_directory);
+        SQLitePCL.Batteries_V2.Init();
+        var key = await _keys.GetOrCreateKeyAsync(
+            "metadata-database",
+            TestContext.Current.CancellationToken);
+        try
+        {
+            await using var connection = new SqliteConnection(
+                new SqliteConnectionStringBuilder
+                {
+                    DataSource = path,
+                    Mode = SqliteOpenMode.ReadWriteCreate,
+                    Password = Convert.ToBase64String(key),
+                    Pooling = false,
+                }.ToString());
+            await connection.OpenAsync(TestContext.Current.CancellationToken);
+            await using var command = connection.CreateCommand();
+            command.CommandText =
+                "CREATE TABLE legacy_probe(id INTEGER PRIMARY KEY); PRAGMA user_version=0;";
+            await command.ExecuteNonQueryAsync(
+                TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(key);
+        }
+
+        using var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+
+        Assert.Empty(await repository.GetIdentitiesAsync(
+            TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task CyberArkMetadataRemainsProviderSpecificAndAuditSurvivesRemoval()
     {
         var path = Path.Combine(_directory, "cyberark.db");
