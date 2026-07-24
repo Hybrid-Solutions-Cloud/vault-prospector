@@ -37,6 +37,9 @@ All notable changes to Vault Prospector are documented here. The project follows
   accounts, versions, direct safe-member evidence, SQLCipher schema v6 metadata, DPAPI-isolated
   credentials, bounded metadata sync, fresh-verified reveal/copy, fail-closed local revocation,
   explicit removal, and value-free audit.
+- Add a deterministic NuGet/npm component inventory and generated third-party notice, legal/privacy
+  CI drift checks, package/store metadata and open-review records, and product license, privacy,
+  and notice files in Windows distributable payloads.
 
 ### Security
 

@@ -7,3 +7,9 @@
 - Who will supply the independent security review, browser-store/enterprise distribution approval,
   representative usability/assistive-technology sessions, trusted signing setup, and live service
   test environments required by the remaining release gates?
+- Who is the named legal/privacy approver for G-09, and where should the approved public privacy
+  statement be hosted for WinGet/Chocolatey/App Store/Google Play metadata?
+- Will legal approve authoritative developer-use terms for `AvaloniaUI.DiagnosticsSupport 2.2.3`,
+  or should the Debug-only package be removed/replaced before release?
+- GitHub Actions currently rejects every organization job before execution because the account is
+  over its payment/spending limit. Exact-head CI cannot be completed until the owner resolves it.

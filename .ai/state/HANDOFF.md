@@ -482,3 +482,19 @@ the repository and must not be committed.
 - Remaining evidence: hosted macOS bundle CI on the exact PR head, enabled signed physical-device
   framework matrices, encrypted one-record mapping exchange, Android association/signature
   validation, accessibility, independent review, and store acceptance.
+
+## G-09 legal and privacy source readiness — 2026-07-24
+
+- Implementation commit `96300e9` generates a deterministic 236-record NuGet/npm component
+  inventory and `THIRD-PARTY-NOTICES.md`, enforced by a CI drift/contract check.
+- Windows packaging now fails on notice drift and embeds `LICENSE.txt`, `PRIVACY.md`, and
+  `THIRD-PARTY-NOTICES.md`. Disposable MSI/ZIP `0.1.0-ci.920` contain all three.
+- Local evidence passes: 25/25 source checks, 29/29 packaged checks, locked Release build with zero
+  warnings/errors, and 343/343 desktop/shared tests.
+- `AvaloniaUI.DiagnosticsSupport 2.2.3` is Release-excluded but has no declared NuGet license; it
+  remains an explicit approval-required finding rather than an invented license.
+- G-09 remains In progress. Exact signed-candidate SBOM/file and upstream-obligation review, an
+  approved public privacy URL, Apple/Google declaration reconciliation, and named legal/privacy
+  approval remain mandatory.
+- GitHub Actions exact-head validation is externally blocked because organization jobs are
+  rejected before execution by the account spending limit.
