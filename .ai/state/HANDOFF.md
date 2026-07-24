@@ -269,6 +269,9 @@
   external and pending.
 - Two exact Chocolatey submissions returned HTTP 504 and catalog lookup remains empty. Do not
   claim ingestion or catalog availability.
+- The exact tag-guarded cleanup script started deletion of ephemeral resource group
+  `rg-hcs-vp-winbuild-eus2-01` and soft-deleted its two temporary Key Vault credentials. Azure
+  resource-group deletion is asynchronous and must be confirmed before closeout.
 - GA remains open for trusted Authenticode, independent security/legal, governed live Azure and
   CyberArk, representative accessibility/usability, physical-device/mobile store, operational
   exercise, and stability-window evidence.

@@ -15,7 +15,8 @@ Next:
 2. merge this release-documentation update after ADO validation;
 3. monitor WinGet moderation and Chocolatey service recovery without claiming catalog acceptance;
 4. update ADO work item `AB#5095`; and
-5. remove the temporary HCS Windows fallback infrastructure.
+5. confirm completion of the asynchronous deletion of the temporary HCS Windows fallback resource
+   group; its two temporary Key Vault credentials are already soft-deleted.
 
 GA remains open for the named live Azure/CyberArk, physical-device, independent security/legal,
 representative usability/accessibility, trusted Windows signing, operational exercise, and
