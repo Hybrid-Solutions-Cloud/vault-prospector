@@ -499,3 +499,28 @@ the repository and must not be committed.
   merge-commit evidence.
 - HCS bootstrap resolved the default `hcs` standards by type. HCS drift validation still returns
   `Path not found` for this checkout, so no drift pass is claimed.
+
+## Phase 14 G-05 performance and scale — 2026-07-24
+
+- PR `#15` is merged as `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`. Its exact-head
+  checks passed, but merge-commit workflows `30080923681` and `30080923682` could not start because
+  of the organization Actions payment/spending limit. Evidence correction PR `#16` is open and its
+  checks are affected by the same condition.
+- Commit `04688ff3a386a120ef9d975fe91a65a4000c1953` adds a controlled performance
+  gate over the production synchronization service, encrypted SQLCipher repository, and search
+  service. CI is configured to publish its JSON report with the other test results.
+- The supported controlled profile is 10 identities, 20 tenants, 200 subscriptions, 200 vaults,
+  50,000 metadata objects, and 60 measured searches.
+- The first run exposed metadata persistence beyond three minutes and search at 3,532 ms p95 /
+  6,047 ms maximum. Bounded 50-row parameterized upserts, one-time SQLCipher effective-key
+  derivation, and deterministic ranked access-path selection corrected the production paths.
+- Exact-source local results pass: initialization 329 ms, 50,000-object sync 6,595 ms, repository
+  reopen 1,318 ms, search p95 262 ms, search maximum 275 ms, cancellation 4 ms, private memory
+  41.4 MiB, and encrypted database 24.6 MiB.
+- Connection pooling remains disabled. The effective SQLCipher key is stored in a mutable buffer
+  and zeroed on repository disposal; a regression proves legacy passphrase databases remain
+  readable. The full locked Release gate passes 345/345 tests with zero warnings/errors and no
+  known vulnerable dependencies.
+- G-05 remains In progress pending clean-machine packaged startup, representative supported and
+  low-resource devices, live throttled/partial/cancel/resume provider sync, populated UI/AT
+  responsiveness, and exact signed-candidate repetition.

@@ -8,5 +8,5 @@
   representative usability/assistive-technology sessions, trusted signing setup, and live service
   test environments required by the remaining release gates?
 - Who can correct the Hybrid-Solutions-Cloud GitHub Actions payment/spending-limit condition? The
-  Phase 13 autofill merge-commit CI and Mobile CI runs were created but every job was rejected
-  before its first step.
+  Phase 13 autofill merge workflows and subsequent documentation PR checks were rejected before
+  their first step.

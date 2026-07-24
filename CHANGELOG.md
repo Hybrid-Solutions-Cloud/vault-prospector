@@ -39,6 +39,16 @@ All notable changes to Vault Prospector are documented here. The project follows
   accounts, versions, direct safe-member evidence, SQLCipher schema v6 metadata, DPAPI-isolated
   credentials, bounded metadata sync, fresh-verified reveal/copy, fail-closed local revocation,
   explicit removal, and value-free audit.
+- Add unreleased iOS and Android applications with a shared fail-closed search/retrieval workflow,
+  platform-native protected storage and verification hosts, lifecycle/clipboard/capture controls,
+  locked builds, and package-disabled native autofill feasibility extensions.
+- Add a CI-enforced 50,000-object performance probe covering encrypted initialization/reopen,
+  metadata sync, search, cancellation, memory, and storage targets.
+
+### Changed
+
+- Batch encrypted metadata upserts, derive SQLCipher's compatible effective key once per repository
+  lifetime without connection pooling, and select preferred search access paths deterministically.
 
 ### Changed
 

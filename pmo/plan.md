@@ -519,6 +519,9 @@ external platform/store gates open
 
 ### Scope
 
+- Enforce startup/reopen, encrypted metadata sync, search, cancellation, memory, storage, and
+  large-estate targets in controlled automation, then repeat them on representative devices and
+  the exact packaged candidate.
 - Complete Azure Artifact Signing Public Trust setup and timestamped Authenticode verification.
 - Submit immutable packages to WinGet and Chocolatey; verify catalog installation and update.
 - Execute the independent security-review plan and close all critical/high findings.
