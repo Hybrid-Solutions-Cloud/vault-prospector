@@ -7,6 +7,6 @@
 - Who will supply the independent security review, browser-store/enterprise distribution approval,
   representative usability/assistive-technology sessions, trusted signing setup, and live service
   test environments required by the remaining release gates?
-- Who can correct the Hybrid-Solutions-Cloud GitHub Actions payment/spending-limit condition? The
-  Phase 13 autofill merge workflows and subsequent documentation PR checks were rejected before
-  their first step.
+- Who is the named backup support/security operator required for G-08?
+- Who can resolve the Hybrid Solutions Cloud GitHub Actions payment/spending-limit condition so
+  required exact-head CI and scheduled operational-monitor jobs can execute?

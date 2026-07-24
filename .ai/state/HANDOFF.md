@@ -524,3 +524,27 @@ the repository and must not be committed.
 - G-05 remains In progress pending clean-machine packaged startup, representative supported and
   low-resource devices, live throttled/partial/cancel/resume provider sync, populated UI/AT
   responsiveness, and exact signed-candidate repetition.
+
+## G-08 operational readiness (local, unreleased) — 2026-07-24
+
+- Branch `feature/operational-readiness` starts from merged main commit
+  `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`.
+- Implementation commit `3410f77f71a374eca684b6d97f3936a8693ee1d3` adds the machine-readable
+  readiness contract, fail-closed validator, weekly Dependabot coverage, scheduled
+  vulnerability/runtime/public-endpoint monitor, and support/EOS policy.
+- Exact implementation-head live validation passed 35/35 contract checks and returned HTTP 200
+  for the current Preview release page, exact MSI checksum, and feedback channel.
+- An injected `2026-11-11` observation correctly failed with `RUNTIME_END_OF_SUPPORT`.
+- The locked Release gate passed restore, structured vulnerability inspection, format, zero
+  warnings/errors, and 343/343 desktop/shared tests. Initial overlapping file-lock failures were
+  traced to and cleared with the exact stale child process tree left by a command-wrapper timeout;
+  unchanged source then passed.
+- The official .NET support policy places desktop .NET 9 end of support at 2026-11-10. The monitor
+  emits the intended 120-day warning; migrate before any support promise extends past that date.
+- G-08 remains In progress. Open proof: named backup operator, successful retained hosted monitor
+  runs, complete incident/withdrawal/communication/recovery exercise, approved Authenticode key
+  lifecycle, and exact signed-public-candidate review.
+- PRs `#16` (Phase 13 evidence) and `#17` (G-05 performance) remain open. GitHub-hosted jobs are
+  rejected before the first step because the organization reports a payment/spending-limit
+  problem; do not describe those startup rejections as code failures or merge without required
+  passing checks.
