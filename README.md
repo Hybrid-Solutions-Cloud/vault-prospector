@@ -2,7 +2,7 @@
 
 Vault Prospector is a local-first Windows desktop application for discovering and searching Azure Key Vault metadata across multiple Microsoft Entra identities, tenants, and subscriptions. Secret values are retrieved only after an explicit action and Windows Hello verification.
 
-> **Release status:** [`0.1.1-preview.1`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1) is the current unsigned Windows Preview for non-production evaluation. Windows displays **Unknown Publisher**; verify the published SHA-256 before installation. Submit voluntary, non-sensitive feedback through the [public Preview feedback process](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/FEEDBACK.md), and report security issues privately as described in [SECURITY.md](SECURITY.md).
+> **Release status:** [`0.2.0-preview.1`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.1) is the current unsigned Windows Preview for non-production evaluation. Windows displays **Unknown Publisher**; verify the published SHA-256 before installation. Submit voluntary, non-sensitive feedback through the [public Preview feedback process](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/FEEDBACK.md), and report security issues privately as described in [SECURITY.md](SECURITY.md).
 
 ## What works
 
@@ -16,11 +16,11 @@ Vault Prospector is a local-first Windows desktop application for discovering an
 - Optional AES-GCM encrypted offline values, disabled by default and protected with Windows DPAPI.
 - Version-aware indexing, workspaces, favorites, access recency, cancelable synchronization, partial-sync diagnostics, and per-vault error isolation.
 - Redacted local diagnostics with no tokens, secret values, usernames, vault names, or object names.
-- Unreleased machine-managed enterprise policy for allowed tenants, providers, and identity types,
+- Preview machine-managed enterprise policy for allowed tenants, providers, and identity types,
   clipboard/offline-cache restrictions, packaged ADMX/ADML templates, and fail-closed enforcement.
-- Unreleased, fail-closed browser-fill source with explicit origin/field mappings, protected machine
+- Preview, fail-closed browser-fill source with explicit origin/field mappings, protected machine
   policy, one-time desktop confirmation, and fresh Windows verification.
-- Unreleased CyberArk Privilege Cloud source with separate profiles, safes, accounts, versions,
+- Preview CyberArk Privilege Cloud source with separate profiles, safes, accounts, versions,
   direct permission evidence, DPAPI-isolated credentials, metadata-only sync, and verified
   reveal/copy.
 
@@ -51,8 +51,8 @@ Prerequisites:
 
 ```powershell
 pwsh ./scripts/Build.ps1
-pwsh ./scripts/PackageInstaller.ps1 -Version 0.1.1-preview.1
-pwsh ./scripts/PackageDistribution.ps1 -Version 0.1.1-preview.1
+pwsh ./scripts/PackageInstaller.ps1 -Version 0.2.0-preview.1
+pwsh ./scripts/PackageDistribution.ps1 -Version 0.2.0-preview.1
 ```
 
 HCS Tier 1 WSL is supported for restore, formatting, build, and non-Windows tests. The protected desktop release is built on a Windows runner so the Windows Hello projection is included.

@@ -6,12 +6,13 @@
 
 **Last updated:** 2026-07-24
 
-**Last exercised:** Exact public `0.1.1-preview.1` MSI completed the full 27-gate lifecycle and all
-13 public assets passed credential-free byte comparison on 2026-07-17; package-service failure
-handling was exercised during earlier Chocolatey HTTP 504 responses. On 2026-07-24 the local
-operational-readiness validator passed 35 source-policy checks and all three current public
-release/support endpoints returned HTTP 200. This is not a substitute for the complete incident,
-withdrawal, communication, and recovery exercise.
+**Last exercised:** Exact public `0.2.0-preview.1` MSI completed the full 27-gate lifecycle and all
+13 public assets matched the retained ADO artifact through a credential-free size/digest check on
+2026-07-24. The release artifact's four Key Vault-backed Cosign bundles verified, and
+package-service failure handling was exercised during two Chocolatey HTTP 504 responses. The
+operational-readiness validator passed 34 source-policy checks and all three public release/support
+endpoints returned HTTP 200. This is not a substitute for the complete incident, withdrawal,
+communication, and recovery exercise.
 
 ## Purpose
 
@@ -273,9 +274,11 @@ fresh installation token without recording it.
 
 ### Sigstore and future Authenticode identity
 
-Sigstore signing is keyless through GitHub Actions OIDC and has no repository signing secret to
-rotate. An Authenticode certificate is not yet configured; its protected storage, access, rotation,
-timestamping, revocation, and compromise procedure must be approved before P-13 passes.
+Package signing uses the HCS release key in `kv-hcs-vault-01` through the Key Vault-linked ADO
+release boundary. Rotation requires a new protected key version, committed public-key update, and
+old/new verification evidence before the previous version is disabled. An Authenticode certificate
+is not yet configured; its protected storage, access, rotation, timestamping, revocation, and
+compromise procedure must be approved before P-13 passes.
 
 ## Verification and history
 
@@ -288,6 +291,10 @@ timestamping, revocation, and compromise procedure must be approved before P-13 
 
 | Date | Operator | Result |
 | --- | --- | --- |
+| 2026-07-24 21:05 UTC | Codex under HCS governance | Exact public `0.2.0-preview.1` MSI passed all 27 isolated Windows 11 lifecycle gates. The reversible checkpoint was restored and removed; final inspection found the VM off, zero registrations, no test root, and Guest Service disabled. |
+| 2026-07-24 20:44 UTC | Codex under HCS governance | Recovered ADO release build 287 after its final publication helper failed: published the retained complete artifact through the HCS GitHub App boundary, verified all 13 public asset sizes/digests, and preserved the failed build plus corrective PR #24. |
+| 2026-07-24 20:49 UTC | WinGet Manifest Creator / Codex review | Validated and submitted exact `0.2.0-preview.1` manifests as `microsoft/winget-pkgs#407541`; moderation and catalog install remain pending. |
+| 2026-07-24 UTC | Codex under HCS governance | Two exact `0.2.0-preview.1` Chocolatey pushes returned HTTP 504; exact catalog lookup remained empty, so ingestion is not claimed and duplicate retrying is paused pending service recovery. |
 | 2026-07-17 14:45 UTC | Codex under HCS governance | Applied rollback containment: marked public Preview.2 **WITHDRAWN — DO NOT INSTALL OR SUBMIT**, preserved immutable assets for evidence/repair, posted the defect rationale to WinGet PR `#403473`, and closed the PR before catalog acceptance. Chocolatey never ingested the version and it must not be retried. |
 | 2026-07-17 14:27 UTC | Codex under HCS governance | A deterministic post-`InstallFiles` failure first exposed that the default WiX major-upgrade schedule removed the working prior version. After moving `RemoveExistingProducts` inside the transaction, the corrected candidate restored the exact Preview.2 registration/files/shortcut/state and passed all 27 lifecycle gates. |
 | 2026-07-17 12:41 UTC | Codex under HCS governance | Revalidated the Preview.2 Chocolatey package hash and HCS Key Vault credential path; the service front door returned HTTP 200 but the sixth authenticated upload returned HTTP 504, followed by exact OData 404 and empty exact pre-release search |

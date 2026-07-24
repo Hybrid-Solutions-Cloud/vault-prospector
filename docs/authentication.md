@@ -72,7 +72,7 @@ response remains unproven. Authorization can also change after the displayed UTC
 
 ## Advanced workload profiles
 
-Development builds after `0.1.1-preview.1` provide three isolated workload paths:
+`0.2.0-preview.1` provides three isolated workload paths for non-production evaluation:
 
 - **Managed identity** is available only when the running Azure host exposes a managed-identity
   endpoint. A system-assigned identity has no client ID; a user-assigned identity uses its client

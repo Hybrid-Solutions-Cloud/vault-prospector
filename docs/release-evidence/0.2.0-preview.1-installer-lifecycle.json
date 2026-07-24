@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "scenario": "windows-installer-lifecycle",
+  "started_at": "2026-07-24T21:03:59.5567249+00:00",
+  "completed_at": "2026-07-24T21:05:23.1101913+00:00",
+  "passed": true,
+  "failure": null,
+  "windows_version": "Microsoft Windows NT 10.0.26200.0",
+  "previous_msi": {
+    "file_name": "VaultProspector-0.1.1-preview.1-win-x64.msi",
+    "sha256": "9F9DC0C04362F979FFA064D274961241F12D8789D910CE53C57B6EE119B5C8B0",
+    "product_code": "{30E1536C-4E4D-46FD-840F-46C34988C12D}",
+    "product_version": "0.1.101",
+    "upgrade_code": "{6E0981B0-6AD5-4B72-8ACA-ECEE660951B2}"
+  },
+  "current_msi": {
+    "file_name": "VaultProspector-0.2.0-preview.1-win-x64.msi",
+    "sha256": "DC15AF609EE6D55933551D24339DB914060E9616D40604D2AD9F10E7625EA4F2",
+    "product_code": "{BB911A46-EEC3-4792-A939-B0CF5F5F8D05}",
+    "product_version": "0.2.1",
+    "upgrade_code": "{6E0981B0-6AD5-4B72-8ACA-ECEE660951B2}"
+  },
+  "failed_upgrade_probe": {
+    "file_name": "VaultProspector-deliberate-failed-upgrade.msi",
+    "sha256": "BAD9E2C4D8CEC246B2401FBE2DC2FCAE3BD40B2C939D2028800829AB3F91EB12",
+    "failure_action": "VP_TEST_FAIL_AFTER_FILES",
+    "failure_sequence": 4001
+  },
+  "gates": [
+    {
+      "name": "administrator-context",
+      "result": "PASS",
+      "detail": "Per-machine lifecycle runs in an elevated Windows session.",
+      "observed_at": "2026-07-24T21:04:03.5609939+00:00"
+    },
+    {
+      "name": "clean-start",
+      "result": "PASS",
+      "detail": "No pre-existing Vault Prospector MSI registration is present.",
+      "observed_at": "2026-07-24T21:04:03.7346921+00:00"
+    },
+    {
+      "name": "previous-checksum",
+      "result": "PASS",
+      "detail": "Previous MSI SHA-256 is 9F9DC0C04362F979FFA064D274961241F12D8789D910CE53C57B6EE119B5C8B0.",
+      "observed_at": "2026-07-24T21:04:03.7434883+00:00"
+    },
+    {
+      "name": "current-checksum",
+      "result": "PASS",
+      "detail": "Current MSI SHA-256 is DC15AF609EE6D55933551D24339DB914060E9616D40604D2AD9F10E7625EA4F2.",
+      "observed_at": "2026-07-24T21:04:03.7484350+00:00"
+    },
+    {
+      "name": "upgrade-code-stability",
+      "result": "PASS",
+      "detail": "UpgradeCode is {6E0981B0-6AD5-4B72-8ACA-ECEE660951B2}.",
+      "observed_at": "2026-07-24T21:04:03.7517512+00:00"
+    },
+    {
+      "name": "product-code-change",
+      "result": "PASS",
+      "detail": "Major-upgrade candidates use distinct ProductCodes.",
+      "observed_at": "2026-07-24T21:04:03.7614235+00:00"
+    },
+    {
+      "name": "version-order",
+      "result": "PASS",
+      "detail": "Version advances from 0.1.101 to 0.2.1.",
+      "observed_at": "2026-07-24T21:04:03.7827921+00:00"
+    },
+    {
+      "name": "install-previous-exit",
+      "result": "PASS",
+      "detail": "msiexec returned 0.",
+      "observed_at": "2026-07-24T21:04:13.5044289+00:00"
+    },
+    {
+      "name": "install-previous-registration",
+      "result": "PASS",
+      "detail": "Exactly one Installed apps entry reports 0.1.101.",
+      "observed_at": "2026-07-24T21:04:13.5825406+00:00"
+    },
+    {
+      "name": "install-previous-files",
+      "result": "PASS",
+      "detail": "Executable and Start menu shortcut are present.",
+      "observed_at": "2026-07-24T21:04:13.5889839+00:00"
+    },
+    {
+      "name": "failed-upgrade-probe-distinct",
+      "result": "PASS",
+      "detail": "Test-only rollback probe has distinct SHA-256 BAD9E2C4D8CEC246B2401FBE2DC2FCAE3BD40B2C939D2028800829AB3F91EB12.",
+      "observed_at": "2026-07-24T21:04:15.9166087+00:00"
+    },
+    {
+      "name": "failed-upgrade-exit",
+      "result": "PASS",
+      "detail": "Injected post-InstallFiles failure returned Windows Installer exit code 1603.",
+      "observed_at": "2026-07-24T21:04:31.5148342+00:00"
+    },
+    {
+      "name": "failed-upgrade-registration-rollback",
+      "result": "PASS",
+      "detail": "Rollback restored exactly one Installed apps entry at 0.1.101.",
+      "observed_at": "2026-07-24T21:04:31.5796131+00:00"
+    },
+    {
+      "name": "failed-upgrade-file-rollback",
+      "result": "PASS",
+      "detail": "Rollback restored byte-identical previous executable and runtime configuration.",
+      "observed_at": "2026-07-24T21:04:31.6706034+00:00"
+    },
+    {
+      "name": "failed-upgrade-shortcut-rollback",
+      "result": "PASS",
+      "detail": "Rollback preserved the previous Start menu shortcut.",
+      "observed_at": "2026-07-24T21:04:31.6749726+00:00"
+    },
+    {
+      "name": "failed-upgrade-state-rollback",
+      "result": "PASS",
+      "detail": "Rollback preserved pre-existing LocalApplicationData state.",
+      "observed_at": "2026-07-24T21:04:31.6780831+00:00"
+    },
+    {
+      "name": "upgrade-current-exit",
+      "result": "PASS",
+      "detail": "msiexec returned 0.",
+      "observed_at": "2026-07-24T21:04:50.7139140+00:00"
+    },
+    {
+      "name": "upgrade-current-registration",
+      "result": "PASS",
+      "detail": "Exactly one Installed apps entry reports 0.2.1.",
+      "observed_at": "2026-07-24T21:04:50.7697338+00:00"
+    },
+    {
+      "name": "repair-probe-changed",
+      "result": "PASS",
+      "detail": "A non-secret runtime configuration file was deliberately changed.",
+      "observed_at": "2026-07-24T21:04:50.8107813+00:00"
+    },
+    {
+      "name": "repair-current-exit",
+      "result": "PASS",
+      "detail": "msiexec returned 0.",
+      "observed_at": "2026-07-24T21:05:12.9995183+00:00"
+    },
+    {
+      "name": "repair-current-restored-file",
+      "result": "PASS",
+      "detail": "Forced repair restored the original packaged runtime configuration.",
+      "observed_at": "2026-07-24T21:05:13.0063108+00:00"
+    },
+    {
+      "name": "downgrade-rejected",
+      "result": "PASS",
+      "detail": "Older MSI was rejected with the expected Windows Installer exit code 1603.",
+      "observed_at": "2026-07-24T21:05:17.0594897+00:00"
+    },
+    {
+      "name": "downgrade-preserved-current",
+      "result": "PASS",
+      "detail": "Installed version remains 0.2.1.",
+      "observed_at": "2026-07-24T21:05:17.1575821+00:00"
+    },
+    {
+      "name": "uninstall-current-exit",
+      "result": "PASS",
+      "detail": "msiexec returned 0.",
+      "observed_at": "2026-07-24T21:05:22.9503497+00:00"
+    },
+    {
+      "name": "uninstall-registration-cleanup",
+      "result": "PASS",
+      "detail": "Installed apps registration is removed.",
+      "observed_at": "2026-07-24T21:05:23.0133218+00:00"
+    },
+    {
+      "name": "uninstall-file-cleanup",
+      "result": "PASS",
+      "detail": "Executable and Start menu shortcut are removed.",
+      "observed_at": "2026-07-24T21:05:23.0209396+00:00"
+    },
+    {
+      "name": "uninstall-retained-state",
+      "result": "PASS",
+      "detail": "Uninstall retained pre-existing LocalApplicationData state.",
+      "observed_at": "2026-07-24T21:05:23.0242465+00:00"
+    }
+  ]
+}
