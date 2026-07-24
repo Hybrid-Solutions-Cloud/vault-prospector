@@ -6,8 +6,9 @@ security/release gates defined by `pmo/plan.md`, the project charter, and `.ai/s
 Phases 11–13 browser integration, CyberArk Privilege Cloud, native mobile application/autofill
 source, and the G-06 machine-managed enterprise-policy source are implemented. The enterprise
 policy is on `feature/enterprise-policy` at implementation commit
-`5d20399ce37370213fdf280a2b9ff97918fbf1ef`; documentation/evidence and governed PR publication are
-the active work.
+`5d20399ce37370213fdf280a2b9ff97918fbf1ef`. PR #21 is open with local exact-source evidence;
+hosted checks are blocked before step execution by the organization payment/spending limit and the
+PR must remain unmerged until exact-head checks run and pass.
 
 Do not merge any open readiness PR until exact-head checks execute and pass. GitHub-hosted jobs are
 currently starting with zero steps because the organization has a payment/spending-limit block;

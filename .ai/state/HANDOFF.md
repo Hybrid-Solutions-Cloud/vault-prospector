@@ -483,7 +483,7 @@ the repository and must not be committed.
   framework matrices, encrypted one-record mapping exchange, Android association/signature
   validation, accessibility, independent review, and store acceptance.
 
-## G-06 machine-managed enterprise policy (PR pending) — 2026-07-24
+## G-06 machine-managed enterprise policy (PR #21, unmerged) — 2026-07-24
 
 - Active worktree: `D:\tmp\vault-prospector-enterprise-policy`; branch:
   `feature/enterprise-policy`; implementation commit:
@@ -511,6 +511,10 @@ the repository and must not be committed.
 - G-06 remains in progress. Governed Group Policy/Intune deployment, live Azure/CyberArk
   allowed/denied matrices, diagnostics review, independent review, and exact trusted-signed
   candidate validation are still required.
-- Next: commit documentation/evidence, push with the HCS GitHub App token, create the governed PR,
-  inspect exact-head checks, and leave unmerged if the organization payment/spending-limit block
-  again prevents jobs from executing.
+- PR `#21` is open. Initial exact head
+  `930dc361de8999b4320900af5e50f1c88a2e2c4d` started CI run `30088899332` and Mobile CI run
+  `30088899350`. All five jobs completed as failures with zero steps and the same GitHub annotation
+  that recent account payments failed or the spending limit must be increased. Evidence comment:
+  `https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/21#issuecomment-5069245820`.
+  This is an external infrastructure block, not a code-test result. Leave the PR unmerged until
+  exact-head required checks execute and pass.
