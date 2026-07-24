@@ -212,6 +212,15 @@
 - Internal review does not approve the independent security gate. Live Azure/Windows,
   representative-user/accessibility, exact packaged-candidate, and external governance drift
   evidence remain open.
+- Commit `41aa0c5` was pushed to `main` with an HCS-minted GitHub App token. CI run `30062290743`
+  passed restore, formatting, build, all tests, and PowerShell parsing but then exposed an MSI
+  shortcut-icon mismatch and five Gitleaks false positives from one synthetic certificate
+  thumbprint fixture.
+- Local follow-up removes the obsolete MSI executable-icon row, binds the shortcut to the embedded
+  `.ico`, constructs the fixture at runtime, and constrains the unavoidable historical exception
+  by exact value/file/commit. Rebuilt MSI upgrade/icon checks pass, pinned Gitleaks v8.30.0 reports
+  no leaks across 80 commits, and the exact 254-test Release gate passes again. Commit/push and
+  exact-commit CI rerun remain next.
 
 ## Current state
 

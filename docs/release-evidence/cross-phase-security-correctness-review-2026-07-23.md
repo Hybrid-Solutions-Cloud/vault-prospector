@@ -57,6 +57,20 @@ The first full run exposed one transient Windows access denial at the
 `OfflineKeyPublished` injected crash boundary. After bounded directory-swap retry was added, all
 nine injected crash checkpoints passed, followed by the complete 254-test gate above.
 
+The first exact-commit CI run then found two release-pipeline issues after build/test passed:
+
+- the MSI shortcut referenced the executable icon row instead of the embedded product `.ico`; and
+- Gitleaks classified five identical synthetic certificate-thumbprint literals in one historical
+  test commit as generic API keys.
+
+The WiX shortcut now references `VaultProspector.ico` at index 0 and the unused executable icon row
+is removed. A rebuilt MSI passed ICE validation, rollback-safe upgrade-order inspection, and direct
+MSI table inspection with a non-empty 71,158-byte icon stream. The test fixtures now construct the
+hexadecimal thumbprint at runtime; the unavoidable historical match is allowlisted only by exact
+value, file, and commit. Pinned Gitleaks v8.30.0 subsequently scanned all 80 commits with no leaks,
+and the complete 254-test local Release gate passed again. A succeeding exact-commit CI rerun is
+still required before this follow-up is closed.
+
 ## Remaining boundary
 
 Live Azure tenant/permission matrices, installed Windows lifecycle testing, representative-user

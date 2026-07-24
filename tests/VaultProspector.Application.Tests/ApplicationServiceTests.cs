@@ -246,7 +246,7 @@ public sealed class ApplicationServiceTests
         var original = Identity() with
         {
             Type = IdentityType.ServicePrincipal,
-            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+            CredentialData = new string('A', 40),
         };
         var repository = new FakeRepository(original);
         var provider = new FakeIdentityProvider();
@@ -271,7 +271,7 @@ public sealed class ApplicationServiceTests
         var original = Identity() with
         {
             Type = IdentityType.ServicePrincipal,
-            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+            CredentialData = new string('A', 40),
         };
         var repository = new FakeRepository(original);
         var provider = new FakeIdentityProvider
@@ -297,7 +297,7 @@ public sealed class ApplicationServiceTests
         var original = Identity() with
         {
             Type = IdentityType.ServicePrincipal,
-            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+            CredentialData = new string('A', 40),
         };
         var repository = new FakeRepository(original)
         {
@@ -336,7 +336,7 @@ public sealed class ApplicationServiceTests
         var original = Identity() with
         {
             Type = IdentityType.ServicePrincipal,
-            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+            CredentialData = new string('A', 40),
         };
         var repository = new FakeRepository(original)
         {
@@ -375,7 +375,7 @@ public sealed class ApplicationServiceTests
         var original = Identity() with
         {
             Type = IdentityType.ServicePrincipal,
-            CredentialData = "AA11BB22CC33DD44EE55FF660011223344556677",
+            CredentialData = new string('A', 40),
         };
         var repository = new FakeRepository(original)
         {

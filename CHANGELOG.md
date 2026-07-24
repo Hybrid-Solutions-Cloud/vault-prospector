@@ -43,6 +43,13 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Retry transient Windows directory swaps during rotation recovery without allowing cancellation
   to strand the canonical data path after the active state has moved.
 
+### Fixed
+
+- Embed the product icon in the MSI and bind the advertised Start-menu shortcut to that icon at
+  index 0, preventing the installed shortcut from falling back to a blank document icon.
+- Keep full-history secret scanning strict while constraining one historical synthetic
+  certificate-thumbprint exception by exact value, file, and commit.
+
 ## [0.1.1-preview.1] - 2026-07-17
 
 ### Added
