@@ -60,6 +60,7 @@ resource runnerJob 'Microsoft.App/jobs@2024-03-01' = {
                 owner: repositoryOwner
                 runnerScope: 'repo'
                 repos: repositoryName
+                labels: 'hcs,ubuntu-22.04'
                 targetWorkflowQueueLength: '1'
               }
               auth: [
