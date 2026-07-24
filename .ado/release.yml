@@ -61,7 +61,18 @@ jobs:
           if (-not $wingetPackage) {
             throw 'The WinGet package directory was not found after installation.'
           }
-          $winget = Join-Path $wingetPackage.FullName 'winget.exe'
+          # The hosted service identity can read the installed AppX package, but Windows
+          # denies direct execution from WindowsApps. A normal copy inherits executable
+          # ACLs from the agent's temporary directory.
+          $portableWinGet = Join-Path $env:AGENT_TEMPDIRECTORY 'winget-portable'
+          New-Item -ItemType Directory -Path $portableWinGet -Force | Out-Null
+          Get-ChildItem -LiteralPath $wingetPackage.FullName -Force |
+            Copy-Item -Destination $portableWinGet -Recurse -Force
+          $winget = Join-Path $portableWinGet 'winget.exe'
+          & $winget --version
+          if ($LASTEXITCODE -ne 0) {
+            throw "The portable WinGet client failed with exit code $LASTEXITCODE."
+          }
 
           ./scripts/Package.ps1 -Version $env:RELEASE_VERSION -SkipArchive
 
