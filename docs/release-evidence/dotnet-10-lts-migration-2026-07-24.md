@@ -88,3 +88,16 @@ The disposable artifacts remain ignored local test output and were not published
 - Repeat iOS application/extension compilation on the governed macOS runner and physical devices.
 - Re-run SBOM, provenance, signature, WinGet, Chocolatey, and public-asset verification on the
   immutable release candidate.
+
+## Initial hosted PR state
+
+PR [#19](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/19) opened from initial
+head `15e72f8eefa7ca5792b7519d16007a9449f8a6d0`. CI run
+[`30085663231`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30085663231)
+created `build-test` and `secret-scan`; Mobile CI run
+[`30085663253`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30085663253)
+created `managed-tests`, `android-package`, and `ios-simulator`. All five jobs contained zero steps
+and were rejected before execution with the organization payment/spending-limit annotation.
+
+This is hosted-startup evidence, not a .NET 10 test result. PR #19 must remain unmerged until the
+required exact-head workflows execute and pass.

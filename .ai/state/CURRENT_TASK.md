@@ -15,7 +15,12 @@ dependency graphs, CI/release automation, and self-contained packaging from .NET
 app remains running after startup; MSI rollback scheduling, shortcut/icon, browser-host/policy, and
 WinGet manifest checks pass.
 
-Next: commit and publish the migration with evidence, capture exact-head hosted state, and continue
-the remaining Phase 8–15 validation/signing/distribution/usability/reliability gates. Do not
-substitute source or local package evidence for clean-machine installed lifecycle, trusted signing,
-physical-device/live-service evidence, independent review, or store acceptance.
+PR `#19` is open for the migration. Its initial exact-head desktop and mobile jobs all contained
+zero steps and were rejected before execution because the organization reports a
+payment/spending-limit problem. That is not a code result; do not merge until required exact-head
+checks execute and pass.
+
+Next: capture the final PR-head state and continue the remaining Phase 8–15
+validation/signing/distribution/usability/reliability gates. Do not substitute source or local
+package evidence for clean-machine installed lifecycle, trusted signing, physical-device/live-
+service evidence, independent review, or store acceptance.

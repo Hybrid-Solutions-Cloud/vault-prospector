@@ -502,3 +502,7 @@ the repository and must not be committed.
   not published.
 - Remaining: exact-head hosted CI, macOS iOS build, clean-machine installed lifecycle, trusted
   signing, and exact immutable public-candidate repetition.
+- PR `#19` is open. Initial head `15e72f8eefa7ca5792b7519d16007a9449f8a6d0` received CI run
+  `30085663231` and Mobile CI run `30085663253`; all five jobs had zero steps and the organization
+  payment/spending-limit startup rejection. The PR is mergeable by Git but must remain unmerged
+  until required exact-head checks execute and pass.
