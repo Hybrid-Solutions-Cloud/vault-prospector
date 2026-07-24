@@ -11,7 +11,8 @@ not be overstated.
 The local integration candidate combines the completed .NET 10 LTS migration, performance/scale
 gate, operational-readiness controls, legal/privacy inventory, and machine-managed enterprise
 policy on `integration/readiness-candidate`. Exact integrated source and disposable-package
-validation pass; publish the governed consolidation PR and require final-head hosted checks.
+validation pass. Consolidation PR `#22` is open; require final-head hosted checks after the
+organization billing/spending condition is corrected.
 
 GitHub-hosted checks remain blocked before step execution by the Hybrid-Solutions-Cloud
 billing/spending condition. Do not merge or substitute local evidence for exact-head hosted checks,

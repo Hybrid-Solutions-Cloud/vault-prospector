@@ -94,3 +94,17 @@ The disposable artifacts remain ignored local output and were not published.
   physical-device and store validation, operational exercises, and the required stability windows.
 
 No local result in this record closes those external gates.
+
+## Initial hosted PR state
+
+PR [#22](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/22) opened from evidence
+head `4427f48b8a8d90594f74bba5b8dde509cbc11dd9`. CI run
+[`30099139189`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30099139189)
+created `build-test` and `secret-scan`; Mobile CI run
+[`30099139278`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30099139278)
+created `managed-tests`, `android-package`, and `ios-simulator`.
+
+All five jobs completed as failures with zero steps. Each check-run annotation states that the job
+was not started because recent account payments failed or the spending limit must be increased.
+This is an external hosted-startup block, not a code-test result. PR #22 must remain unmerged until
+required exact-head checks execute and pass.

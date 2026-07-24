@@ -651,3 +651,8 @@ the repository and must not be committed.
 - This remains local/disposable evidence. Hosted checks, trusted signing, clean-machine installed
   lifecycle, live services/devices, independent and human approvals, stores, exercises, and
   stability windows remain mandatory.
+- PR `#22` is open. Initial evidence head
+  `4427f48b8a8d90594f74bba5b8dde509cbc11dd9` started CI run `30099139189` and Mobile CI run
+  `30099139278`. All five jobs had zero steps and the organization payment/spending-limit
+  startup rejection. This is not a code result; leave the PR unmerged until required exact-head
+  jobs execute and pass.
