@@ -548,3 +548,7 @@ the repository and must not be committed.
   rejected before the first step because the organization reports a payment/spending-limit
   problem; do not describe those startup rejections as code failures or merge without required
   passing checks.
+- PR `#18` is open for G-08. Initial head `9aef1f31ad6b44a66bcdd4e7d18813d7c30f48e9`
+  received CI run `30084503284`; both jobs had zero steps and the same payment/spending-limit
+  startup rejection. The PR is mergeable by Git but must remain unmerged until required exact-head
+  checks can execute and pass.
