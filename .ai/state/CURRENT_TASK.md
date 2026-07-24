@@ -8,13 +8,12 @@ fail-closed autofill feasibility source are merged. Their live-service/device, i
 signed-artifact, representative-user, assistive-technology, and store gates remain open and must
 not be overstated.
 
-Current local slice: `feature/dotnet10-lts` migrates the complete desktop solution, tests, locked
-dependency graphs, CI/release automation, and self-contained packaging from .NET 9 to pinned .NET
-10.0.302 LTS. The locked 343-test Release gate passes with zero warnings/errors; the self-contained
-app remains running after startup; MSI rollback scheduling, shortcut/icon, browser-host/policy, and
-WinGet manifest checks pass.
+Current local integration slice combines the completed .NET 10 LTS migration, performance/scale
+gate, operational-readiness controls, legal/privacy inventory, and machine-managed enterprise
+policy on `integration/readiness-candidate`. Validate the combined source and exact local packages
+before publishing consolidation evidence.
 
-Next: commit and publish the migration with evidence, capture exact-head hosted state, and continue
-the remaining Phase 8–15 validation/signing/distribution/usability/reliability gates. Do not
-substitute source or local package evidence for clean-machine installed lifecycle, trusted signing,
-physical-device/live-service evidence, independent review, or store acceptance.
+GitHub-hosted checks remain blocked before step execution by the Hybrid-Solutions-Cloud
+billing/spending condition. Do not merge or substitute local evidence for exact-head hosted checks,
+clean-machine installed lifecycle, trusted signing, physical-device/live-service evidence,
+independent review, representative-user/assistive-technology evidence, or store acceptance.

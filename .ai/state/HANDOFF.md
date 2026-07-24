@@ -482,3 +482,20 @@ the repository and must not be committed.
 - Remaining evidence: hosted macOS bundle CI on the exact PR head, enabled signed physical-device
   framework matrices, encrypted one-record mapping exchange, Android association/signature
   validation, accessibility, independent review, and store acceptance.
+
+## Phase 13 native autofill merge evidence — 2026-07-24
+
+- PR `#15` merged exact head `bf34e178b8c5c531718a505c507d0752a5bc3d1c` as
+  `69c4c9e0fc84b7485ea019cf8f9bbfd466516896`.
+- Exact PR-head CI run `30080022795` passed build-test with 343 desktop/shared tests and
+  secret-scan. Mobile CI run `30080022802` passed 44 managed tests, Android Release packaging, and
+  the unsigned iOS application plus embedded credential-provider extension on macOS 26/Xcode
+  26.0.1.
+- Exact merge-commit CI run `30080923681` and Mobile CI run `30080923682` failed before any step
+  started. Every job annotation reports that recent organization payments failed or the spending
+  limit must be increased. These runs are infrastructure failures and provide no code result.
+- Rerun both workflows on the exact merge commit after the Hybrid-Solutions-Cloud GitHub Actions
+  billing/spending condition is corrected. Do not describe the passing PR-head jobs as
+  merge-commit evidence.
+- HCS bootstrap resolved the default `hcs` standards by type. HCS drift validation still returns
+  `Path not found` for this checkout, so no drift pass is claimed.

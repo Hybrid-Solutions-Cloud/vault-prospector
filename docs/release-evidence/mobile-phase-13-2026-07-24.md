@@ -2,7 +2,11 @@
 
 **Date:** 2026-07-24
 
-**Merged commit:** `ead0a29faa4802008ac4d7b0e9c1c10ad881d2df` (PR #13)
+**Merged commits:**
+
+- `ead0a29faa4802008ac4d7b0e9c1c10ad881d2df` — mobile applications (PR #13)
+- `69c4c9e0fc84b7485ea019cf8f9bbfd466516896` — native autofill feasibility
+  prototypes (PR #15)
 
 **Release status:** Not released; signed-device and store gates open
 
@@ -36,10 +40,20 @@
 | iOS simulator build on macOS 26/Xcode 26.0.1 | Run `30076673064` passed |
 | Exact merge-commit CI | Run `30077519402` passed build-test and secret-scan |
 | Exact merge-commit Mobile CI | Run `30077519354` passed managed-tests, Android package, and iOS simulator |
-| Follow-on native-autofill local checks | 44 mobile tests, Android Release App Bundle, iOS app/extension reference-pack compile, locked restore, formatting, and vulnerability checks passed |
+| Native-autofill exact PR-head CI | Run `30080022795` passed build-test with 343 desktop/shared tests and secret-scan |
+| Native-autofill exact PR-head Mobile CI | Run `30080022802` passed 44 managed tests, Android Release packaging, and the unsigned iOS app plus embedded credential-provider extension on macOS 26/Xcode 26.0.1 |
+| Native-autofill exact merge-commit CI | Run `30080923681` did not start either job; GitHub reported organization payment/spending-limit failure |
+| Native-autofill exact merge-commit Mobile CI | Run `30080923682` did not start any job for the same organization payment/spending-limit failure |
+| Native-autofill local checks | 44 mobile tests, Android Release App Bundle, iOS app/extension reference-pack compile, locked restore, formatting, and vulnerability checks passed |
 
 The local mobile toolchains were installed under `D:/tmp` and did not modify a governed system
 toolchain. Local Android output used development signing and is not a release candidate.
+
+The two failed native-autofill merge workflows contain no executed steps and therefore provide no
+code or package result. They must be rerun on
+`69c4c9e0fc84b7485ea019cf8f9bbfd466516896` after the Hybrid-Solutions-Cloud GitHub Actions
+billing/spending condition is corrected. The passing exact PR-head workflows remain valid evidence
+for the reviewed source commit, but they are not relabeled as merge-commit evidence.
 
 The iOS linker reports grouped `IL2104` warnings from Avalonia DesignerSupport, Azure Core,
 Azure Key Vault Certificates, and Microsoft.Data.Sqlite. The build keeps those package-internal
