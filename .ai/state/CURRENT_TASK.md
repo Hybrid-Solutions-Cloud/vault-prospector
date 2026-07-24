@@ -16,4 +16,5 @@ before publishing consolidation evidence.
 GitHub-hosted checks remain blocked before step execution by the Hybrid-Solutions-Cloud
 billing/spending condition. Do not merge or substitute local evidence for exact-head hosted checks,
 clean-machine installed lifecycle, trusted signing, physical-device/live-service evidence,
-independent review, representative-user/assistive-technology evidence, or store acceptance.
+independent review, representative-user/assistive-technology evidence, human approvals, or store
+acceptance.

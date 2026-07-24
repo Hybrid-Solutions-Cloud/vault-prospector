@@ -537,6 +537,13 @@ MSI inspection, shortcut/icon and browser-host/policy inspection, and WinGet val
 Exact-head hosted CI, clean-machine installed lifecycle, trusted signing, and public-candidate
 repetition remain open.
 
+Progress note (2026-07-24): G-09 source controls now generate a deterministic 236-record
+NuGet/npm inventory and third-party notice, fail CI on lock-file or disclosure drift, document
+package/store declarations, and embed the repository license, privacy statement, and notice in
+Windows ZIP/MSI payloads. G-09 remains in progress: exact signed-candidate SBOM/file
+reconciliation, the diagnostics-package license disposition, a public privacy URL, Apple/Google
+declaration review, and named human approval are external decision gates.
+
 ### Exit criteria
 
 - Windows shows the trusted publisher on binaries and MSI.
@@ -557,6 +564,8 @@ remain open
 ### Scope
 
 - Operate the voluntary, privacy-safe feedback and private vulnerability channels.
+- Maintain the legal/privacy inventory, packaged disclosures, public privacy statement, and
+  package/store declarations against each exact candidate.
 - Triage every report and maintain sanitized weekly rollups.
 - Operate weekly dependency, vulnerability, runtime-lifecycle, public-release, and support-channel
   monitoring with retained machine-readable evidence.

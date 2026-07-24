@@ -44,14 +44,14 @@ All notable changes to Vault Prospector are documented here. The project follows
   locked builds, and package-disabled native autofill feasibility extensions.
 - Add a CI-enforced 50,000-object performance probe covering encrypted initialization/reopen,
   metadata sync, search, cancellation, memory, and storage targets.
+- Add a deterministic NuGet/npm component inventory and generated third-party notice, legal/privacy
+  CI drift checks, package/store metadata and open-review records, and product license, privacy,
+  and notice files in Windows distributable payloads.
 
 ### Changed
 
 - Batch encrypted metadata upserts, derive SQLCipher's compatible effective key once per repository
   lifetime without connection pooling, and select preferred search access paths deterministically.
-
-### Changed
-
 - Migrate the complete Windows desktop solution, tests, locked dependency graphs, self-contained
   packaging, and protected CI/release automation from .NET 9 to .NET 10 LTS.
 

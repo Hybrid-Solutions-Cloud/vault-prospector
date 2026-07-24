@@ -88,6 +88,7 @@ exit criteria.
 | 14.1 | CyberArk source integration | Implemented and merged, validation open | Phase 12 |
 | 15.1 | Consent-based Preview feedback | Delivered as process | Phase 15 operation |
 | 15.2 | Evidence-based GA feedback gate | In progress | Phase 15 |
+| 15.3 | Legal/privacy release controls and approval | In progress | Phases 14 and 15 |
 
 ## Story source and acceptance traceability
 
@@ -144,6 +145,7 @@ not implementation.
 | 15.1 | `preview-feedback.md`, privacy notice, HCS-governed intake and triage process | Sanitized operational records proving notice, consent, privacy boundary, response targets, and escalation. |
 | 15.2 | Readiness G-01 thresholds and go/no-go process | Required evaluator/task/build/install/upgrade coverage, completion rate, blocker closure, 14-day stability, named approval. |
 | 15.3 | Support lifecycle, operations runbook, readiness manifest/validator, Dependabot, scheduled monitor | Named backup operator, retained successful hosted runs, incident/withdrawal/recovery exercise, Authenticode lifecycle approval, and exact-candidate review. |
+| 15.4 | Deterministic lock inventory/notices, technical privacy statement, package/store metadata, CI drift gate, and packaged disclosure files | Exact signed-candidate SBOM/file and upstream-obligation reconciliation, approved public privacy URL and store declarations, diagnostics-package license disposition, and named legal/privacy approval. |
 
 ## Open implementation and release-gate traceability
 
@@ -874,3 +876,24 @@ Implementation status (2026-07-24): source policy and automation are implemented
 validator passed 35 contract checks and three live public endpoints; it warns that desktop .NET 9
 reaches end of support on 2026-11-10. A named backup operator, successful hosted-monitor history,
 complete runbook exercise, Authenticode lifecycle approval, and exact-candidate review remain open.
+
+### Story: Legal/privacy release controls and approval
+
+As a release approver, I need each candidate's license, third-party, privacy, retention, telemetry,
+and package/store statements to be complete and reviewed so that distribution obligations and user
+expectations are explicit.
+
+Acceptance criteria:
+
+- CI fails when committed NuGet/npm lock files diverge from the generated component inventory and
+  third-party notice.
+- Windows distributables contain the product license, privacy statement, and third-party notice.
+- Apple, Google, WinGet, and Chocolatey metadata and unresolved declarations are reconciled to the
+  exact signed artifacts.
+- A named legal/privacy reviewer records approval, exceptions, corrective dates, and artifact
+  hashes; automated validation is not treated as legal approval.
+
+Implementation status: In progress. Deterministic source inventory/notices, technical disclosures,
+package/store draft metadata, a CI contract, and Windows package embedding are implemented and
+locally verified. Exact-candidate review, public privacy publication, store declarations, one
+unknown upstream license disposition, and named approval remain open.
