@@ -55,6 +55,10 @@ public static class UserFacingErrorMapper
             "Microsoft Graph directory read is not permitted",
             "The selected identity or app registration lacks the delegated Application.Read.All permission or required directory role.",
             "Ask a Microsoft Entra administrator to approve the least-privileged directory-read permission, then authorize again."),
+        EnterprisePolicyDeniedException => new(
+            "Blocked by machine-managed enterprise policy",
+            "Vault Prospector stopped before using the governed provider, tenant, identity type, clipboard, or offline-value path.",
+            "Open Settings to review the safe policy status, then ask an administrator to correct the HKLM policy if this access is required."),
         UnauthorizedAccessException => new(
             "Windows verification was not completed",
             "Vault Prospector did not reveal, copy, or cache the secret.",

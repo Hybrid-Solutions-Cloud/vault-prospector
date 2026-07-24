@@ -206,6 +206,28 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public void EnterprisePolicyFailureDoesNotMasqueradeAsWindowsVerification()
+    {
+        var error = UserFacingErrorMapper.From(
+            new EnterprisePolicyDeniedException(
+                "AllowedTenantIds",
+                "internal policy detail"));
+
+        Assert.Contains(
+            "machine-managed",
+            error.Title,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "HKLM",
+            error.Recovery,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "internal policy detail",
+            $"{error.Title}|{error.Message}|{error.Recovery}",
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void CorruptedSettingsFailureProvidesNarrowRecoveryWithoutDeletingProtectedData()
     {
         var error = UserFacingErrorMapper.From(new JsonException("internal file content"));

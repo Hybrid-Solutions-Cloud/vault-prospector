@@ -19,38 +19,46 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
     private readonly Func<ConnectedIdentity, CancellationToken, Task<TokenCredential>> _credentialResolver;
     private readonly HttpClient _graphClient;
     private readonly AzureAuthorizationEvidenceEvaluator _authorizationEvaluator;
+    private readonly IEnterprisePolicy _enterprisePolicy;
 
     public WorkloadIdentityDiscoveryService(
         IAzureCredentialProvider identityProvider,
         HttpClient graphClient,
-        HttpClient authorizationClient)
+        HttpClient authorizationClient,
+        IEnterprisePolicy? enterprisePolicy = null)
         : this(
             identityProvider.GetCredentialAsync,
             graphClient,
-            new AzureAuthorizationEvidenceEvaluator(authorizationClient))
+            new AzureAuthorizationEvidenceEvaluator(authorizationClient),
+            enterprisePolicy)
     {
     }
 
     public WorkloadIdentityDiscoveryService(
         TokenCredential credential,
         HttpClient? graphClient = null,
-        HttpClient? authorizationClient = null)
+        HttpClient? authorizationClient = null,
+        IEnterprisePolicy? enterprisePolicy = null)
         : this(
             (_, _) => Task.FromResult(credential),
             graphClient ?? new HttpClient(),
             new AzureAuthorizationEvidenceEvaluator(
-                authorizationClient ?? graphClient ?? new HttpClient()))
+                authorizationClient ?? graphClient ?? new HttpClient()),
+            enterprisePolicy)
     {
     }
 
     private WorkloadIdentityDiscoveryService(
         Func<ConnectedIdentity, CancellationToken, Task<TokenCredential>> credentialResolver,
         HttpClient graphClient,
-        AzureAuthorizationEvidenceEvaluator authorizationEvaluator)
+        AzureAuthorizationEvidenceEvaluator authorizationEvaluator,
+        IEnterprisePolicy? enterprisePolicy)
     {
         _credentialResolver = credentialResolver;
         _graphClient = graphClient;
         _authorizationEvaluator = authorizationEvaluator;
+        _enterprisePolicy =
+            enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance;
     }
 
     public async Task<IReadOnlyList<WorkloadIdentityCandidate>> ListManagedIdentitiesAsync(
@@ -59,6 +67,8 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         CancellationToken cancellationToken)
     {
         EnsureInteractiveAdministrator(administrator);
+        EnsureAdministratorAllowed(administrator);
+        Policy().EnsureIdentityTypeAllowed(IdentityType.ManagedIdentity);
         var normalizedSubscriptionId = NormalizeGuid(subscriptionId, nameof(subscriptionId));
         var credential = await _credentialResolver(administrator, cancellationToken);
         var armClient = new ArmClient(credential);
@@ -92,6 +102,8 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         CancellationToken cancellationToken)
     {
         EnsureInteractiveAdministrator(administrator);
+        EnsureAdministratorAllowed(administrator);
+        Policy().EnsureIdentityTypeAllowed(IdentityType.ServicePrincipal);
         var credential = await _credentialResolver(administrator, cancellationToken);
         var token = await credential.GetTokenAsync(
             new TokenRequestContext(
@@ -151,7 +163,12 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         CancellationToken cancellationToken)
     {
         EnsureInteractiveAdministrator(administrator);
+        EnsureAdministratorAllowed(administrator);
         ArgumentNullException.ThrowIfNull(candidate);
+        var policy = Policy();
+        policy.EnsureIdentityTypeAllowed(
+            CandidateIdentityType(candidate.IdentityType));
+        policy.EnsureTenantAllowed(candidate.TenantId);
         if (!string.Equals(
                 administrator.HomeTenantId,
                 candidate.TenantId,
@@ -178,7 +195,7 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         string identityName,
         string? keyVaultResourceId,
         string? keyVaultRoleDefinitionId) =>
-        BuildManagedIdentityDryRunCore(
+        BuildManagedIdentityDryRunWithPolicy(
             tenantId,
             subscriptionId,
             resourceGroupName,
@@ -191,11 +208,51 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         string identityName,
         string? keyVaultResourceId,
         string? keyVaultRoleDefinitionId) =>
-        BuildServicePrincipalDryRunCore(
+        BuildServicePrincipalDryRunWithPolicy(
             tenantId,
             identityName,
             keyVaultResourceId,
             keyVaultRoleDefinitionId);
+
+    private WorkloadIdentityProvisioningPlan BuildManagedIdentityDryRunWithPolicy(
+        string tenantId,
+        string subscriptionId,
+        string resourceGroupName,
+        string identityName,
+        string? keyVaultResourceId,
+        string? keyVaultRoleDefinitionId)
+    {
+        var plan = BuildManagedIdentityDryRunCore(
+            tenantId,
+            subscriptionId,
+            resourceGroupName,
+            identityName,
+            keyVaultResourceId,
+            keyVaultRoleDefinitionId);
+        var policy = Policy();
+        policy.EnsureProviderAllowed(EnterpriseProvider.AzureKeyVault);
+        policy.EnsureIdentityTypeAllowed(IdentityType.ManagedIdentity);
+        policy.EnsureTenantAllowed(plan.TenantId);
+        return plan;
+    }
+
+    private WorkloadIdentityProvisioningPlan BuildServicePrincipalDryRunWithPolicy(
+        string tenantId,
+        string identityName,
+        string? keyVaultResourceId,
+        string? keyVaultRoleDefinitionId)
+    {
+        var plan = BuildServicePrincipalDryRunCore(
+            tenantId,
+            identityName,
+            keyVaultResourceId,
+            keyVaultRoleDefinitionId);
+        var policy = Policy();
+        policy.EnsureProviderAllowed(EnterpriseProvider.AzureKeyVault);
+        policy.EnsureIdentityTypeAllowed(IdentityType.ServicePrincipal);
+        policy.EnsureTenantAllowed(plan.TenantId);
+        return plan;
+    }
 
     private static WorkloadIdentityProvisioningPlan BuildServicePrincipalDryRunCore(
         string tenantId,
@@ -460,6 +517,24 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
                 "Select an enabled, ready interactive administrator identity.");
         }
     }
+
+    private void EnsureAdministratorAllowed(ConnectedIdentity administrator) =>
+        Policy().EnsureIdentityAllowed(administrator);
+
+    private static IdentityType CandidateIdentityType(string candidateType) =>
+        candidateType switch
+        {
+            "User-assigned managed identity" =>
+                IdentityType.ManagedIdentity,
+            "Service principal" =>
+                IdentityType.ServicePrincipal,
+            _ => throw new EnterprisePolicyDeniedException(
+                "AllowedIdentityTypes",
+                "The selected workload identity type is not permitted by machine-managed enterprise policy."),
+        };
+
+    private EnterprisePolicySnapshot Policy() =>
+        _enterprisePolicy.GetSnapshot();
 
     private static string NormalizeGuid(string value, string parameterName)
     {

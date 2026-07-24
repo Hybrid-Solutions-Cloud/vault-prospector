@@ -24,10 +24,19 @@ public sealed partial class MainViewModel(
     ILocalEncryptionRotationEngine? localEncryptionRotationEngine = null,
     LocalRecoveryArchiveService? localRecoveryArchiveService = null,
     BrowserFillService? browserFillService = null,
-    CyberArkService? cyberArkService = null) : ViewModelBase
+    CyberArkService? cyberArkService = null,
+    IEnterprisePolicy? enterprisePolicy = null) : ViewModelBase
 {
+    private static readonly IdentityType[] SupportedIdentityTypes =
+    [
+        IdentityType.InteractiveUser,
+        IdentityType.ManagedIdentity,
+        IdentityType.ServicePrincipal,
+        IdentityType.FederatedServicePrincipal,
+    ];
     private CancellationTokenSource? _activeOperation;
     private bool _isReloadingIdentities;
+    private bool _managedIdentityHostSupported;
     private int _subscriptionLoadVersion;
     private int _sensitivePresentationEpoch;
 
@@ -95,6 +104,7 @@ public sealed partial class MainViewModel(
         OnPropertyChanged(nameof(IsFederatedServicePrincipal));
         OnPropertyChanged(nameof(IsWorkloadIdentity));
         OnPropertyChanged(nameof(ConnectIdentityActionText));
+        AddIdentityCommand.NotifyCanExecuteChanged();
     }
 
     [ObservableProperty] private string _clientId = string.Empty;
@@ -156,9 +166,16 @@ public sealed partial class MainViewModel(
     [ObservableProperty]
     private string _recoveryArchiveStatus =
         "Recovery archives remain local until you explicitly delete them.";
+    [ObservableProperty]
+    private string _enterprisePolicyStatus =
+        "No machine-managed enterprise policy is configured.";
 
     public bool HasSelectedIdentity => SelectedIdentity is not null;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
+    public bool IsEnterpriseOfflineCacheAllowed =>
+        EnterprisePolicy().AllowOfflineCache;
+    public bool IsEnterpriseClipboardAllowed =>
+        EnterprisePolicy().AllowClipboard;
 
     [RelayCommand]
     public async Task InitializeAsync()
@@ -219,6 +236,7 @@ public sealed partial class MainViewModel(
             ClipboardClearSeconds = settings.ClipboardClearSeconds;
             SelectedCloseBehavior = settings.CloseBehavior;
             BackgroundMetadataSyncEnabled = settings.BackgroundMetadataSyncEnabled;
+            ApplyEnterprisePolicyToPreferences();
             await ConfigureManagedIdentityAvailabilityAsync(cancellationToken);
 
             try
@@ -280,7 +298,7 @@ public sealed partial class MainViewModel(
     partial void OnIsRecoveryCompleteChanged(bool value) =>
         ArchiveAndResetLocalDataCommand.NotifyCanExecuteChanged();
 
-    [RelayCommand(CanExecute = nameof(CanStartOperation))]
+    [RelayCommand(CanExecute = nameof(CanAddIdentity))]
     private Task AddIdentityAsync() => RunAsync(async cancellationToken =>
     {
         var clientId = SelectedIdentityType == IdentityType.InteractiveUser
@@ -424,7 +442,7 @@ public sealed partial class MainViewModel(
         StatusText = $"{candidates.Count} user-assigned managed identities are visible in the exact subscription. No Azure resources were changed.";
     });
 
-    [RelayCommand(CanExecute = nameof(CanAdministerWorkloadIdentities))]
+    [RelayCommand(CanExecute = nameof(CanDiscoverServicePrincipals))]
     private Task DiscoverServicePrincipalsAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedIdentity is null || workloadIdentityAdministrationService is null) return;
@@ -668,7 +686,7 @@ public sealed partial class MainViewModel(
         StatusText = $"Encrypted offline copy expires in {MaximumCacheHours} hours.";
     });
 
-    [RelayCommand(CanExecute = nameof(CanUseSelectedSecret))]
+    [RelayCommand(CanExecute = nameof(CanOpenOfflineSecret))]
     private Task OpenOfflineAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
@@ -764,11 +782,12 @@ public sealed partial class MainViewModel(
         if (SelectedWorkspace is null) return;
         var updated = SelectedWorkspace with
         {
-            CachePolicyOverride = new CachePolicy(
-                WorkspaceCacheEnabled,
-                TimeSpan.FromHours(Math.Clamp(WorkspaceMaximumCacheHours, 1, 168)),
-                true,
-                WorkspaceAllowClipboard),
+            CachePolicyOverride = EnterprisePolicy().Constrain(
+                new CachePolicy(
+                    WorkspaceCacheEnabled,
+                    TimeSpan.FromHours(Math.Clamp(WorkspaceMaximumCacheHours, 1, 168)),
+                    true,
+                    WorkspaceAllowClipboard)),
         };
         await workspaceService.SaveAsync(updated, cancellationToken);
         await ReloadWorkspacesAsync(cancellationToken);
@@ -890,20 +909,44 @@ public sealed partial class MainViewModel(
         var selectedSubscriptionId = SelectedSubscription?.Id;
         var selectedVaultAccessId = SelectedVaultAccess?.Id;
         var selectedTenantId = SelectedTenant?.Id;
+        var enterprise = EnterprisePolicy();
+        var azureAllowed = enterprise.AllowedProviders.Contains(
+            EnterpriseProvider.AzureKeyVault);
+        var visibleTenants = azureAllowed
+            ? tenants
+                .Where(tenant =>
+                    !enterprise.RestrictsTenants ||
+                    enterprise.AllowedTenantIds.Contains(
+                        tenant.TenantId))
+                .ToArray()
+            : [];
+        var visibleTenantIds = visibleTenants
+            .Select(tenant => tenant.Id)
+            .ToHashSet();
         Tenants.Clear();
-        foreach (var tenant in tenants) Tenants.Add(tenant);
+        foreach (var tenant in visibleTenants) Tenants.Add(tenant);
         SelectedTenant = selectedTenantId is null
             ? Tenants.FirstOrDefault()
             : Tenants.FirstOrDefault(tenant => tenant.Id == selectedTenantId) ?? Tenants.FirstOrDefault();
         Subscriptions.Clear();
-        foreach (var subscription in subscriptions)
+        foreach (var subscription in subscriptions.Where(
+                     subscription =>
+                         azureAllowed &&
+                         (!enterprise.RestrictsTenants ||
+                          visibleTenantIds.Contains(
+                              subscription.TenantAccessId))))
             Subscriptions.Add(new SubscriptionSelectionRow(subscription));
         SelectedSubscription = selectedSubscriptionId is null
             ? Subscriptions.FirstOrDefault()
             : Subscriptions.FirstOrDefault(subscription => subscription.Id == selectedSubscriptionId) ??
               Subscriptions.FirstOrDefault();
         VaultAccessPaths.Clear();
-        foreach (var accessPath in vaultAccessPaths)
+        foreach (var accessPath in vaultAccessPaths.Where(
+                     accessPath =>
+                         azureAllowed &&
+                         (!enterprise.RestrictsTenants ||
+                          enterprise.AllowedTenantIds.Contains(
+                              accessPath.Vault.TenantId))))
             VaultAccessPaths.Add(new VaultAccessRow(accessPath));
         SelectedVaultAccess = selectedVaultAccessId is null
             ? VaultAccessPaths.FirstOrDefault()
@@ -986,6 +1029,11 @@ public sealed partial class MainViewModel(
     private string EffectiveClientId() => UseCustomClientId ? ClientId.Trim() : ProductIdentity.DefaultClientId;
 
     private bool CanStartOperation() => !IsBusy;
+    private bool CanAddIdentity() =>
+        !IsBusy &&
+        IsProviderAllowed(EnterpriseProvider.AzureKeyVault) &&
+        EnterprisePolicy().AllowedIdentityTypes.Contains(
+            SelectedIdentityType);
     private bool CanManageRecoveryArchives() =>
         localRecoveryArchiveService is not null &&
         !IsBusy;
@@ -1002,7 +1050,8 @@ public sealed partial class MainViewModel(
         {
             IsEnabled: true,
             AuthenticationState: AuthenticationState.Ready,
-        } &&
+        } identity &&
+        IsIdentityAllowed(identity) &&
         !IsBusy;
     private bool CanAdministerWorkloadIdentities() =>
         workloadIdentityAdministrationService is not null &&
@@ -1011,21 +1060,29 @@ public sealed partial class MainViewModel(
             Type: IdentityType.InteractiveUser,
             IsEnabled: true,
             AuthenticationState: AuthenticationState.Ready,
-        } &&
+        } identity &&
+        IsIdentityAllowed(identity) &&
         !IsBusy;
     private bool CanDiscoverManagedIdentities() =>
         CanAdministerWorkloadIdentities() &&
+        EnterprisePolicy().AllowedIdentityTypes.Contains(
+            IdentityType.ManagedIdentity) &&
         Guid.TryParse(AdministrationSubscriptionId, out _);
+    private bool CanDiscoverServicePrincipals() =>
+        CanAdministerWorkloadIdentities() &&
+        EnterprisePolicy().AllowedIdentityTypes.Contains(
+            IdentityType.ServicePrincipal);
     private bool CanAssessWorkloadIdentityPermissions() =>
         CanAdministerWorkloadIdentities() &&
-        SelectedWorkloadIdentityCandidate is not null &&
+        SelectedWorkloadIdentityCandidate is { } candidate &&
+        IsWorkloadCandidateTypeAllowed(candidate.Candidate.IdentityType) &&
         !string.IsNullOrWhiteSpace(AdministrationVaultResourceId);
     private bool CanPreviewManagedIdentity() =>
         CanDiscoverManagedIdentities() &&
         !string.IsNullOrWhiteSpace(AdministrationResourceGroup) &&
         !string.IsNullOrWhiteSpace(AdministrationIdentityName);
     private bool CanPreviewServicePrincipal() =>
-        CanAdministerWorkloadIdentities() &&
+        CanDiscoverServicePrincipals() &&
         !string.IsNullOrWhiteSpace(AdministrationIdentityName);
     private bool CanRotateSelectedCredential() =>
         SelectedIdentitySupportsCredentialRotation &&
@@ -1035,6 +1092,9 @@ public sealed partial class MainViewModel(
     private bool CanUseSelectedSecret() => SelectedResult?.Result.Item.ObjectType is VaultObjectType.Secret && !IsBusy;
     private bool CanCopySelectedSecret() => EffectivePolicy().AllowClipboard && CanUseSelectedSecret();
     private bool CanCacheSelectedSecret() => EffectivePolicy().IsEnabled && CanUseSelectedSecret();
+    private bool CanOpenOfflineSecret() =>
+        EnterprisePolicy().AllowOfflineCache &&
+        CanUseSelectedSecret();
     private bool CanUseSelectedWorkspace() => SelectedWorkspace is not null && !IsBusy;
     private bool CanCreateWorkspace() => !string.IsNullOrWhiteSpace(WorkspaceName) && !IsBusy;
     private bool CanAddSelectedVaultToWorkspace() => SelectedWorkspace is not null && SelectedResult is not null && !IsBusy;
@@ -1129,7 +1189,8 @@ public sealed partial class MainViewModel(
         SaveWorkspacePolicyCommand.NotifyCanExecuteChanged();
         if (value is not null)
         {
-            var policy = value.CachePolicyOverride ?? CachePolicy.SecureDefault;
+            var policy = EnterprisePolicy().Constrain(
+                value.CachePolicyOverride ?? CachePolicy.SecureDefault);
             WorkspaceCacheEnabled = policy.IsEnabled;
             WorkspaceMaximumCacheHours = Math.Clamp((int)policy.MaximumLifetime.TotalHours, 1, 168);
             WorkspaceAllowClipboard = policy.AllowClipboard;
@@ -1141,6 +1202,7 @@ public sealed partial class MainViewModel(
     partial void OnOfflineCacheEnabledChanged(bool value)
     {
         CacheSelectedCommand.NotifyCanExecuteChanged();
+        OpenOfflineCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnWorkspaceNameChanged(string value)
@@ -1228,7 +1290,88 @@ public sealed partial class MainViewModel(
     }
 
     private CachePolicy GlobalPolicy() => new(OfflineCacheEnabled, TimeSpan.FromHours(Math.Clamp(MaximumCacheHours, 1, 168)), true, true);
-    private CachePolicy EffectivePolicy() => SelectedWorkspace?.CachePolicyOverride ?? GlobalPolicy();
+    private CachePolicy EffectivePolicy() => EnterprisePolicy().Constrain(
+        SelectedWorkspace?.CachePolicyOverride ?? GlobalPolicy());
+
+    private EnterprisePolicySnapshot EnterprisePolicy() =>
+        (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance)
+            .GetSnapshot();
+
+    private bool IsProviderAllowed(EnterpriseProvider provider) =>
+        EnterprisePolicy().AllowedProviders.Contains(provider);
+
+    private bool IsIdentityAllowed(ConnectedIdentity identity)
+    {
+        try
+        {
+            EnterprisePolicy().EnsureIdentityAllowed(identity);
+            return true;
+        }
+        catch (EnterprisePolicyDeniedException)
+        {
+            return false;
+        }
+    }
+
+    private bool IsWorkloadCandidateTypeAllowed(string candidateType)
+    {
+        var allowedIdentityTypes = EnterprisePolicy().AllowedIdentityTypes;
+        return candidateType switch
+        {
+            "User-assigned managed identity" =>
+                allowedIdentityTypes.Contains(
+                    IdentityType.ManagedIdentity),
+            "Service principal" =>
+                allowedIdentityTypes.Contains(
+                    IdentityType.ServicePrincipal),
+            _ => false,
+        };
+    }
+
+    private void ApplyEnterprisePolicyToPreferences()
+    {
+        var policy = EnterprisePolicy();
+        EnterprisePolicyStatus = policy.SafeStatus;
+        OnPropertyChanged(nameof(IsEnterpriseOfflineCacheAllowed));
+        OnPropertyChanged(nameof(IsEnterpriseClipboardAllowed));
+        OfflineCacheEnabled &= policy.AllowOfflineCache;
+        if (policy.MaximumOfflineCacheLifetime is { } maximum)
+        {
+            MaximumCacheHours = Math.Min(
+                MaximumCacheHours,
+                Math.Max(1, (int)Math.Floor(maximum.TotalHours)));
+        }
+
+        IdentityTypes.Clear();
+        foreach (var identityType in SupportedIdentityTypes)
+        {
+            if (policy.AllowedIdentityTypes.Contains(identityType) &&
+                (identityType != IdentityType.ManagedIdentity ||
+                 _managedIdentityHostSupported))
+            {
+                IdentityTypes.Add(identityType);
+            }
+        }
+
+        if (!IdentityTypes.Contains(SelectedIdentityType) &&
+            IdentityTypes.Count > 0)
+        {
+            SelectedIdentityType = IdentityTypes[0];
+        }
+
+        AddIdentityCommand.NotifyCanExecuteChanged();
+        AuthorizeDirectoryReadCommand.NotifyCanExecuteChanged();
+        DiscoverManagedIdentitiesCommand.NotifyCanExecuteChanged();
+        DiscoverServicePrincipalsCommand.NotifyCanExecuteChanged();
+        AssessWorkloadIdentityPermissionsCommand.NotifyCanExecuteChanged();
+        PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
+        PreviewServicePrincipalCommand.NotifyCanExecuteChanged();
+        SynchronizeCommand.NotifyCanExecuteChanged();
+        CopyCommand.NotifyCanExecuteChanged();
+        CacheSelectedCommand.NotifyCanExecuteChanged();
+        OpenOfflineCommand.NotifyCanExecuteChanged();
+        NotifyCyberArkCommands();
+    }
 
     private static string? NullIfWhiteSpace(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
@@ -1317,17 +1460,8 @@ public sealed partial class MainViewModel(
         }
 
         ManagedIdentityAvailabilityText = status.SafeReason;
-        if (status.IsSupported)
-        {
-            if (!IdentityTypes.Contains(IdentityType.ManagedIdentity))
-                IdentityTypes.Insert(1, IdentityType.ManagedIdentity);
-        }
-        else
-        {
-            IdentityTypes.Remove(IdentityType.ManagedIdentity);
-            if (SelectedIdentityType == IdentityType.ManagedIdentity)
-                SelectedIdentityType = IdentityType.InteractiveUser;
-        }
+        _managedIdentityHostSupported = status.IsSupported;
+        ApplyEnterprisePolicyToPreferences();
     }
 
     private static bool IsProtectedLocalDataFailure(Exception exception) =>
@@ -1364,6 +1498,7 @@ public sealed partial class MainViewModel(
     private async Task RunAsync(Func<CancellationToken, Task> action)
     {
         if (IsBusy) return;
+        ApplyEnterprisePolicyToPreferences();
         ClearActionableError();
         IsBusy = true;
         using var operation = new CancellationTokenSource();

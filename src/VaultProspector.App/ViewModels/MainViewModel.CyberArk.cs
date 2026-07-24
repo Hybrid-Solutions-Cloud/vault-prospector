@@ -79,7 +79,7 @@ public sealed partial class MainViewModel
         StatusText = $"Connected CyberArk profile {connected.DisplayName}.";
     });
 
-    [RelayCommand(CanExecute = nameof(CanManageCyberArk))]
+    [RelayCommand(CanExecute = nameof(CanUseCyberArkProviderProfile))]
     private Task SynchronizeCyberArkAsync() => RunAsync(async cancellationToken =>
     {
         if (cyberArkService is null || SelectedCyberArkProfile is null)
@@ -93,7 +93,7 @@ public sealed partial class MainViewModel
         StatusText = "CyberArk metadata synchronization completed.";
     });
 
-    [RelayCommand(CanExecute = nameof(CanUseCyberArkProfile))]
+    [RelayCommand(CanExecute = nameof(CanUseCyberArkProviderProfile))]
     private Task SearchCyberArkAsync() => RunAsync(async cancellationToken =>
     {
         await ReloadCyberArkAccountsAsync(cancellationToken);
@@ -325,6 +325,7 @@ public sealed partial class MainViewModel
 
     private bool CanConnectCyberArk() =>
         cyberArkService is not null &&
+        IsProviderAllowed(EnterpriseProvider.CyberArkPrivilegeCloud) &&
         !IsBusy &&
         IsApplicationReady &&
         !string.IsNullOrWhiteSpace(CyberArkProfileName) &&
@@ -338,13 +339,17 @@ public sealed partial class MainViewModel
         CanManageCyberArk() &&
         SelectedCyberArkProfile is not null;
 
+    private bool CanUseCyberArkProviderProfile() =>
+        CanUseCyberArkProfile() &&
+        IsProviderAllowed(EnterpriseProvider.CyberArkPrivilegeCloud);
+
     private bool CanManageCyberArk() =>
         cyberArkService is not null &&
         !IsBusy &&
         IsApplicationReady;
 
     private bool CanUseCyberArkAccount() =>
-        CanUseCyberArkProfile() &&
+        CanUseCyberArkProviderProfile() &&
         SelectedCyberArkProfile is
         {
             IsEnabled: true,

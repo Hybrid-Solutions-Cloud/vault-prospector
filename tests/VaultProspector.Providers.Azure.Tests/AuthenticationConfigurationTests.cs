@@ -311,6 +311,61 @@ public sealed class AuthenticationConfigurationTests
     }
 
     [Fact]
+    public async Task EnterprisePolicyDeniesWorkloadDiscoveryAndPlansBeforeNetwork()
+    {
+        var handler = new GraphSequenceHandler("""{ "value": [] }""");
+        var credential = new StaticTokenCredential();
+        IWorkloadIdentityAdministrationService service =
+            new WorkloadIdentityDiscoveryService(
+                credential,
+                new HttpClient(handler),
+                enterprisePolicy: new FixedEnterprisePolicy(
+                    new EnterprisePolicySnapshot(
+                        true,
+                        allowedTenantIds:
+                            ["33333333-3333-3333-3333-333333333333"])));
+
+        await Assert.ThrowsAsync<EnterprisePolicyDeniedException>(
+            () => service.ListServicePrincipalsAsync(
+                InteractiveAdministrator(),
+                TestContext.Current.CancellationToken));
+        Assert.Throws<EnterprisePolicyDeniedException>(
+            () => service.BuildServicePrincipalDryRun(
+                "22222222-2222-2222-2222-222222222222",
+                "automation"));
+
+        Assert.Equal(0, handler.Calls);
+    }
+
+    [Fact]
+    public async Task EnterprisePolicyDeniesWorkloadAssessmentByCandidateTypeBeforeNetwork()
+    {
+        var handler = new AuthorizationEvidenceHandler();
+        var service = new WorkloadIdentityDiscoveryService(
+            new StaticTokenCredential(),
+            authorizationClient: new HttpClient(handler),
+            enterprisePolicy: new FixedEnterprisePolicy(
+                new EnterprisePolicySnapshot(
+                    true,
+                    allowedTenantIds:
+                        ["22222222-2222-2222-2222-222222222222"],
+                    allowedIdentityTypes:
+                        [
+                            IdentityType.InteractiveUser,
+                            IdentityType.ServicePrincipal,
+                        ])));
+
+        await Assert.ThrowsAsync<EnterprisePolicyDeniedException>(
+            () => service.AssessPermissionsAsync(
+                InteractiveAdministrator(),
+                ManagedIdentityCandidate(),
+                VaultScope,
+                TestContext.Current.CancellationToken));
+
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
     public async Task PermissionAssessmentUsesExactCallerAndCandidateEvidenceWithoutMutations()
     {
         var handler = new AuthorizationEvidenceHandler();
@@ -790,6 +845,13 @@ public sealed class AuthenticationConfigurationTests
         HttpMethod Method,
         Uri Uri,
         string? AuthorizationScheme);
+
+    private sealed class FixedEnterprisePolicy(
+        EnterprisePolicySnapshot snapshot)
+        : IEnterprisePolicy
+    {
+        public EnterprisePolicySnapshot GetSnapshot() => snapshot;
+    }
 
     private sealed class RecordingHandler(HttpStatusCode statusCode) : HttpMessageHandler
     {

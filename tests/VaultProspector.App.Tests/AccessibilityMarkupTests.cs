@@ -65,6 +65,27 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void EnterprisePolicyStatusIsAnAccessiblePoliteLiveRegion()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var policy = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Machine-managed enterprise policy status");
+
+        Assert.Contains(
+            policy.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                    "{Binding EnterprisePolicyStatus}" &&
+                Attribute(
+                    element,
+                    "AutomationProperties.LiveSetting")?.Value ==
+                    "Polite");
+    }
+
+    [Fact]
     public void CyberArkWorkflowKeepsSourceVerificationAndAuditVisible()
     {
         var document = XDocument.Load(FindMainWindowMarkup());
