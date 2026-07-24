@@ -89,32 +89,38 @@ try {
     }
 
     if ($Platform -in @('All', 'iOS')) {
-        Invoke-DotNet @(
+        $iosRuntimeIdentifier = if ($IsMacOS) {
+            'iossimulator-arm64'
+        }
+        else {
+            'ios-arm64'
+        }
+        $iosProperties = @("-p:MobileRuntimeIdentifier=$iosRuntimeIdentifier")
+
+        Invoke-DotNet (@(
             'restore',
             'VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj',
             '--locked-mode'
-        )
+        ) + $iosProperties)
         & $vulnerabilityScript `
             -Solution 'VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj'
         if ($IsMacOS) {
-            Invoke-DotNet @(
+            Invoke-DotNet (@(
                 'build',
                 'VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj',
                 '--configuration',
                 $Configuration,
                 '--no-restore',
-                '-p:RuntimeIdentifier=iossimulator-arm64',
                 '-p:CodesignKey='
-            )
+            ) + $iosProperties)
         }
         else {
-            Invoke-DotNet @(
+            Invoke-DotNet (@(
                 'msbuild',
                 'VaultProspector.Mobile.iOS/VaultProspector.Mobile.iOS.csproj',
                 '-t:Compile',
-                "-p:Configuration=$Configuration",
-                '-p:RuntimeIdentifier=ios-arm64'
-            )
+                "-p:Configuration=$Configuration"
+            ) + $iosProperties)
         }
     }
 }
