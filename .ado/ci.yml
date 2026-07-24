@@ -86,6 +86,16 @@ stages:
               if ($LASTEXITCODE -notin @(0, 2)) {
                 throw "WinGet installation failed with exit code $LASTEXITCODE."
               }
+              $wingetPackage = Get-ChildItem `
+                -LiteralPath 'C:\Program Files\WindowsApps' `
+                -Directory `
+                -Filter 'Microsoft.DesktopAppInstaller_*_x64__8wekyb3d8bbwe' |
+                Sort-Object Name -Descending |
+                Select-Object -First 1
+              if (-not $wingetPackage) {
+                throw 'The WinGet package directory was not found after installation.'
+              }
+              $winget = Join-Path $wingetPackage.FullName 'winget.exe'
 
               ./scripts/PackageInstaller.ps1 -Version $env:CI_CANDIDATE_VERSION
               ./scripts/Test-InstallerUpgradeSchedule.ps1 `
@@ -96,7 +106,7 @@ stages:
                 -InstallerPath "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi" `
                 -PublishDirectory "./artifacts/publish-win-x64"
               ./scripts/PackageDistribution.ps1 -Version $env:CI_CANDIDATE_VERSION
-              winget validate `
+              & $winget validate `
                 --manifest "./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/$env:CI_CANDIDATE_VERSION"
 
               $installer = Get-Item `
@@ -239,13 +249,11 @@ stages:
               version: 10.0.302
 
           - pwsh: |
-              $xcode = Get-ChildItem /Applications -Directory -Filter 'Xcode_26*.app' |
-                Sort-Object Name -Descending |
-                Select-Object -First 1
+              $xcode = Get-Item /Applications/Xcode_26.0.1.app -ErrorAction SilentlyContinue
               if (-not $xcode) {
                 Get-ChildItem /Applications -Directory -Filter 'Xcode*.app' |
                   Select-Object -ExpandProperty Name
-                throw 'An Xcode 26 installation was not found on the hosted macOS agent.'
+                throw 'Xcode 26.0.1 was not found on the hosted macOS agent.'
               }
               sudo xcode-select --switch "$($xcode.FullName)/Contents/Developer"
               xcodebuild -version
