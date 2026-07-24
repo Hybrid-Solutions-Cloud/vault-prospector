@@ -55,6 +55,31 @@ Queue a pull-request workflow and confirm that its Linux jobs report all four HC
 The Container Apps execution history and Log Analytics workspace
 `log-hcs-gh-runners-eus2-01` provide the infrastructure-side audit trail.
 
+## Tier 4 Windows fallback
+
+Use Tier 4 only when the HCS Tier 3 `bld-01` runner is unavailable:
+
+```powershell
+pwsh ./scripts/Deploy-HcsWindowsFallback.ps1
+pwsh ./scripts/Deploy-HcsWindowsFallback.ps1 -Deploy
+```
+
+The deployment creates only `rg-hcs-vp-winbuild-eus2-01`. Its Windows Server 2025 VM has no
+public IP, uses a system-assigned managed identity to read the runner-registration credential,
+and registers for one job with `self-hosted, windows, hcs, vault-prospector`. The temporary
+local-administrator username and password are paired Key Vault secrets with a 30-day expiry.
+
+After the Windows workflow job reaches a terminal state, validate and remove the fallback:
+
+```powershell
+pwsh ./scripts/Remove-HcsWindowsFallback.ps1
+pwsh ./scripts/Remove-HcsWindowsFallback.ps1 -Remove
+```
+
+Cleanup first removes the VM identity's Key Vault assignment, then starts deletion of the exact
+tag-validated resource group and soft-deletes the temporary credential pair. The secrets remain
+recoverable under Key Vault soft-delete policy.
+
 ## Recovery and retirement
 
 Redeploy the committed Bicep to repair configuration drift. If the job must be retired,

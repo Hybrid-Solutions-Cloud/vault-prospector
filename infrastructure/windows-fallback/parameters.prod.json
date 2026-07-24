@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus2"
+    },
+    "adminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "{{HCS_KEY_VAULT_ID}}"
+        },
+        "secretName": "hcs-vault-prospector-windows-build-password"
+      }
+    },
+    "keyVaultName": {
+      "value": "kv-hcs-vault-01"
+    },
+    "keyVaultResourceGroupName": {
+      "value": "rg-hcs-kv-mgmt-eus-01"
+    }
+  }
+}
