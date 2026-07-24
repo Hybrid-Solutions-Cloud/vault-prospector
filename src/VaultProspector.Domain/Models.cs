@@ -196,3 +196,108 @@ public sealed record DiscoverySnapshot(
     IReadOnlyList<VaultAccess> AccessPaths,
     IReadOnlyList<VaultItem> Items,
     IReadOnlyList<ProviderError> Errors);
+
+public enum CyberArkAuthenticationState
+{
+    Unknown,
+    Ready,
+    Disabled,
+    Revoked,
+    Failed,
+}
+
+public enum CyberArkSecretType
+{
+    Password,
+    Key,
+    Unknown,
+}
+
+public enum CyberArkAuditResult
+{
+    Succeeded,
+    Denied,
+    Failed,
+}
+
+public sealed record CyberArkProfile(
+    Guid Id,
+    string DisplayName,
+    Uri IdentityUrl,
+    Uri PrivilegeCloudUrl,
+    string ServiceUserName,
+    string ApplicationName,
+    CyberArkAuthenticationState AuthenticationState,
+    bool IsEnabled,
+    DateTimeOffset CredentialUpdatedAt,
+    DateTimeOffset? LastValidatedAt);
+
+public sealed record CyberArkSafe(
+    Guid ProfileId,
+    string SafeId,
+    string Name,
+    string Description,
+    string Location,
+    int? RetentionDays,
+    int? RetentionVersions,
+    bool ObjectLevelAccessControlEnabled,
+    DateTimeOffset? CreatedAt,
+    DateTimeOffset? UpdatedAt);
+
+public sealed record CyberArkAccount(
+    Guid ProfileId,
+    string AccountId,
+    string SafeName,
+    string Name,
+    string? UserName,
+    string? Address,
+    string? PlatformId,
+    CyberArkSecretType SecretType,
+    string? Status,
+    DateTimeOffset? CreatedAt,
+    DateTimeOffset? UpdatedAt,
+    string MetadataFingerprint,
+    DateTimeOffset LastIndexedAt,
+    bool IsDeletedOrUnavailable = false);
+
+public sealed record CyberArkSecretVersion(
+    Guid ProfileId,
+    string AccountId,
+    int VersionId,
+    bool IsTemporary,
+    DateTimeOffset ModifiedAt,
+    string ModifiedBy);
+
+public sealed record CyberArkSafePermissionEvidence(
+    Guid ProfileId,
+    string SafeId,
+    string MemberName,
+    string MemberType,
+    bool ListAccounts,
+    bool UseAccounts,
+    bool RetrieveAccounts,
+    bool ViewAuditLog,
+    bool AccessWithoutConfirmation,
+    bool RequestsAuthorizationLevel1,
+    bool RequestsAuthorizationLevel2,
+    DateTimeOffset ObservedAt,
+    string EvidenceState);
+
+public sealed record CyberArkDiscoverySnapshot(
+    IReadOnlyList<CyberArkSafe> Safes,
+    IReadOnlyList<CyberArkAccount> Accounts,
+    IReadOnlyList<CyberArkSecretVersion> Versions,
+    IReadOnlyList<CyberArkSafePermissionEvidence> Permissions,
+    IReadOnlyList<ProviderError> Errors,
+    DateTimeOffset CompletedAt);
+
+public sealed record CyberArkAuditEvent(
+    Guid Id,
+    Guid ProfileId,
+    string? AccountId,
+    string? SafeName,
+    int? VersionId,
+    string Operation,
+    CyberArkAuditResult Result,
+    string SafeMessage,
+    DateTimeOffset OccurredAt);

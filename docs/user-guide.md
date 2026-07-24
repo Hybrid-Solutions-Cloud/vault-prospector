@@ -179,6 +179,26 @@ Vault Prospector never scans saved browser passwords and does not fill in the ba
 [Browser integration](browser-integration.md) for setup, policy format, limitations, and release
 status.
 
+## CyberArk Privilege Cloud (unreleased)
+
+The source build includes a separate **CyberArk** destination for Privilege Cloud Shared Services.
+Create or select a profile, enter its Identity and Privilege Cloud root URLs, service user,
+authorization application, and client credential, then choose **Validate and protect credential**.
+The credential is validated before it replaces an existing credential and is stored in a
+profile-specific Windows DPAPI file, not SQLCipher metadata.
+
+Choose **Sync metadata** to index visible safes, accounts, direct member-permission evidence, and
+secret versions. Sync never retrieves values. Search is local and remains separate from Azure.
+
+To retrieve, select the exact account and optional version, enter a non-sensitive business reason,
+and choose **Verify and reveal** or **Verify and copy**. Every request requires fresh Windows
+verification; reveal lasts ten seconds and copy follows the configured owner-aware clipboard clear
+interval. Direct member evidence is not a complete effective-permission claim—CyberArk group,
+role, confirmation, ticketing, and platform policy remain authoritative.
+
+See [CyberArk integration](cyberark-integration.md) for configuration, rotation, revocation,
+removal, limitations, and release status.
+
 ## Remove local data
 
 - Remove an identity from **Identities** to purge its MSAL token-cache account and local access mapping.

@@ -3,6 +3,7 @@ using VaultProspector.App;
 using VaultProspector.App.ViewModels;
 using VaultProspector.Application;
 using VaultProspector.Domain;
+using VaultProspector.Providers.CyberArk;
 
 namespace VaultProspector.App.Tests;
 
@@ -133,6 +134,33 @@ public sealed class OnboardingTests : IDisposable
         Assert.DoesNotContain(sensitiveMessage, error.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(sensitiveMessage, error.Recovery, StringComparison.Ordinal);
         Assert.NotEmpty(error.Recovery);
+    }
+
+    [Fact]
+    public void CyberArkFailureMappingDoesNotEchoProviderBody()
+    {
+        const string sensitiveMessage =
+            "synthetic-client-credential-and-provider-body";
+        var error = UserFacingErrorMapper.From(
+            new CyberArkProviderException(
+                "permission_denied",
+                sensitiveMessage,
+                System.Net.HttpStatusCode.Forbidden));
+
+        var combined =
+            $"{error.Title}|{error.Message}|{error.Recovery}";
+        Assert.Contains(
+            "CyberArk",
+            combined,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "least-privilege",
+            combined,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            sensitiveMessage,
+            combined,
+            StringComparison.Ordinal);
     }
 
     [Fact]

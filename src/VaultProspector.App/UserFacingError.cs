@@ -5,6 +5,7 @@ using Azure;
 using Azure.Identity;
 using Microsoft.Identity.Client;
 using VaultProspector.Application;
+using VaultProspector.Providers.CyberArk;
 
 namespace VaultProspector.App;
 
@@ -98,6 +99,30 @@ public static class UserFacingErrorMapper
             "Azure authorization evidence is unavailable",
             "Azure did not return the role-assignment or resource evidence required for this assessment.",
             "Verify the exact Key Vault resource ID and Azure availability, then retry without changing any roles."),
+        CyberArkProviderException { Category: "authentication_required" } => new(
+            "CyberArk authentication is required",
+            "CyberArk rejected the selected profile credential without returning a value.",
+            "Validate the complete profile again with a current service-user credential. Revoke or rotate the credential in CyberArk Identity if compromise is suspected."),
+        CyberArkProviderException { Category: "permission_denied" } => new(
+            "CyberArk access is not permitted",
+            "The selected CyberArk service user lacks permission for this safe, account, version, or operation.",
+            "Ask a CyberArk administrator to review least-privilege safe membership, confirmation, ticketing, and platform policy; Vault Prospector does not grant access."),
+        CyberArkProviderException { Category: "throttled" } => new(
+            "CyberArk is throttling requests",
+            "CyberArk temporarily limited this operation without returning a value.",
+            "Wait before trying again. Value retrieval is never retried automatically."),
+        CyberArkProviderException { Category: "service_unavailable" } => new(
+            "CyberArk is unavailable",
+            "The configured CyberArk service could not complete this operation.",
+            "Confirm service health and network access, then retry once."),
+        CyberArkProviderException => new(
+            "CyberArk operation failed safely",
+            "CyberArk did not complete the requested validation, synchronization, or retrieval.",
+            "Review the selected profile and local redacted status. A CyberArk administrator may need to inspect the authoritative audit and policy."),
+        CyberArkConfigurationException => new(
+            "CyberArk settings need attention",
+            "The CyberArk profile, endpoint, service user, application, credential, or retrieval reason is incomplete or invalid.",
+            "Use the supported CyberArk cloud root URLs and complete every required field. Keep the retrieval reason non-sensitive."),
         ArgumentException argumentException when IsWorkloadAdministrationParameter(argumentException.ParamName) => new(
             "Workload administration scope needs attention",
             "The subscription, resource name, Key Vault scope, or role definition is incomplete or invalid.",

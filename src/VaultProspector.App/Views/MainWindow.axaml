@@ -658,6 +658,231 @@
         </ScrollViewer>
       </TabItem>
 
+      <TabItem Header="CyberArk">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+          <StackPanel Margin="4,14" Spacing="14">
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Text="CyberArk Privilege Cloud"
+                           FontSize="{StaticResource VaultFontSize22}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="CyberArk is an independent source. Its service-user credential is protected with Windows DPAPI, its metadata is encrypted locally, and it is never merged into an Azure identity or permission model."
+                           TextWrapping="Wrap" />
+                <TextBlock Text="{Binding CyberArkStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+              </StackPanel>
+            </Border>
+
+            <Grid ColumnDefinitions="0.85*,1.15*" ColumnSpacing="14">
+              <Border Classes="card">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Profiles"
+                             FontSize="{StaticResource VaultFontSize20}"
+                             FontWeight="SemiBold" />
+                  <ListBox ItemsSource="{Binding CyberArkProfiles}"
+                           SelectedItem="{Binding SelectedCyberArkProfile}"
+                           MinHeight="150"
+                           AutomationProperties.Name="CyberArk profiles">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <StackPanel Margin="6" Spacing="2">
+                          <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                          <TextBlock Text="{Binding PrivilegeCloudUrl}" FontSize="{StaticResource VaultFontSize11}" />
+                          <TextBlock Text="{Binding AuthenticationState, StringFormat='State: {0}'}" />
+                        </StackPanel>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                  <WrapPanel>
+                    <Button Content="New profile"
+                            Command="{Binding NewCyberArkProfileCommand}"
+                            Margin="0,0,8,8" />
+                    <Button Content="Sync metadata"
+                            Command="{Binding SynchronizeCyberArkCommand}"
+                            Margin="0,0,8,8" />
+                    <Button Content="Enable or disable"
+                            Command="{Binding ToggleCyberArkProfileCommand}"
+                            Margin="0,0,8,8" />
+                  </WrapPanel>
+                  <Separator />
+                  <TextBlock Text="Revoke or permanently remove"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="Type REVOKE CYBERARK to fail closed and delete the local protected credential while retaining metadata, or REMOVE CYBERARK to also remove the profile and synchronized metadata. Value-free audit history is retained. External service-user revocation remains a CyberArk administrator action."
+                             TextWrapping="Wrap"
+                             Foreground="#FCA5A5" />
+                  <TextBox Text="{Binding CyberArkRemoveConfirmation}"
+                           PlaceholderText="REVOKE CYBERARK or REMOVE CYBERARK"
+                           AutomationProperties.Name="CyberArk profile destructive action confirmation" />
+                  <WrapPanel>
+                    <Button Content="Revoke local CyberArk access"
+                            Command="{Binding RevokeCyberArkProfileCommand}"
+                            Background="#B45309"
+                            Foreground="White"
+                            Margin="0,0,8,8" />
+                    <Button Content="Remove selected CyberArk profile"
+                            Command="{Binding RemoveCyberArkProfileCommand}"
+                            Background="#DC2626"
+                            Foreground="White"
+                            Margin="0,0,8,8" />
+                  </WrapPanel>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="1" Classes="card">
+                <StackPanel Spacing="9">
+                  <TextBlock Text="Connect or rotate a service-user credential"
+                             FontSize="{StaticResource VaultFontSize20}"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="Profile name" />
+                  <TextBox Text="{Binding CyberArkProfileName}"
+                           AutomationProperties.Name="CyberArk profile name" />
+                  <TextBlock Text="CyberArk Identity root URL" />
+                  <TextBox Text="{Binding CyberArkIdentityUrl}"
+                           PlaceholderText="https://tenant.id.cyberark.cloud/"
+                           AutomationProperties.Name="CyberArk Identity root URL" />
+                  <TextBlock Text="Privilege Cloud root URL" />
+                  <TextBox Text="{Binding CyberArkPrivilegeCloudUrl}"
+                           PlaceholderText="https://tenant.privilegecloud.cyberark.cloud/"
+                           AutomationProperties.Name="CyberArk Privilege Cloud root URL" />
+                  <TextBlock Text="Identity service user" />
+                  <TextBox Text="{Binding CyberArkServiceUserName}"
+                           PlaceholderText="service-user@example.com"
+                           AutomationProperties.Name="CyberArk Identity service user" />
+                  <TextBlock Text="Identity application name" />
+                  <TextBox Text="{Binding CyberArkApplicationName}"
+                           AutomationProperties.Name="CyberArk Identity application name" />
+                  <TextBlock Text="Client credential" />
+                  <TextBox Text="{Binding CyberArkClientCredential}"
+                           PasswordChar="●"
+                           AutomationProperties.Name="CyberArk client credential" />
+                  <TextBlock Text="The credential is validated before replacement. It is cleared from this form and is never written to SQLCipher metadata or logs."
+                             TextWrapping="Wrap"
+                             Opacity="0.75" />
+                  <Button Classes="primary"
+                          Content="Validate and protect credential"
+                          Command="{Binding ConnectCyberArkCommand}"
+                          HorizontalAlignment="Left" />
+                </StackPanel>
+              </Border>
+            </Grid>
+
+            <Grid ColumnDefinitions="1*,1*" ColumnSpacing="14">
+              <Border Classes="card">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Encrypted local account index"
+                             FontSize="{StaticResource VaultFontSize20}"
+                             FontWeight="SemiBold" />
+                  <TextBox Text="{Binding CyberArkSearchText}"
+                           PlaceholderText="Search account, safe, username, or address"
+                           AutomationProperties.Name="Search CyberArk account metadata" />
+                  <Button Content="Search local CyberArk metadata"
+                          Command="{Binding SearchCyberArkCommand}"
+                          HorizontalAlignment="Left" />
+                  <ListBox ItemsSource="{Binding CyberArkAccounts}"
+                           SelectedItem="{Binding SelectedCyberArkAccount}"
+                           MinHeight="220"
+                           AutomationProperties.Name="CyberArk accounts">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Summary}"
+                                   Margin="6"
+                                   TextWrapping="Wrap" />
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="1" Classes="card">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Explicit verified retrieval"
+                             FontSize="{StaticResource VaultFontSize20}"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding SelectedCyberArkAccount.Summary, FallbackValue='Select an account.'}"
+                             TextWrapping="Wrap"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding CyberArkPermissionSummary}"
+                             TextWrapping="Wrap" />
+                  <TextBlock Text="Secret version" />
+                  <ComboBox ItemsSource="{Binding CyberArkVersions}"
+                            SelectedItem="{Binding SelectedCyberArkVersion}"
+                            AutomationProperties.Name="CyberArk secret version">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Summary}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                  <TextBlock Text="Non-sensitive business reason (sent to CyberArk audit)" />
+                  <TextBox Text="{Binding CyberArkRetrievalReason}"
+                           MaxLength="1000"
+                           AcceptsReturn="True"
+                           MinHeight="64"
+                           AutomationProperties.Name="CyberArk retrieval reason" />
+                  <TextBlock Text="{Binding CyberArkValuePreview}"
+                             FontFamily="Consolas"
+                             TextWrapping="Wrap"
+                             AutomationProperties.Name="CyberArk protected value preview"
+                             AutomationProperties.LiveSetting="Assertive" />
+                  <WrapPanel>
+                    <Button Classes="primary"
+                            Content="Verify and reveal"
+                            Command="{Binding RevealCyberArkCommand}"
+                            Margin="0,0,8,8" />
+                    <Button Content="Verify and copy"
+                            Command="{Binding CopyCyberArkCommand}"
+                            Margin="0,0,8,8" />
+                  </WrapPanel>
+                </StackPanel>
+              </Border>
+            </Grid>
+
+            <Grid ColumnDefinitions="1*,1*" ColumnSpacing="14">
+              <Border Classes="card">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Safes"
+                             FontSize="{StaticResource VaultFontSize20}"
+                             FontWeight="SemiBold" />
+                  <ListBox ItemsSource="{Binding CyberArkSafes}"
+                           MinHeight="140"
+                           AutomationProperties.Name="CyberArk safes">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Summary}"
+                                   Margin="6"
+                                   TextWrapping="Wrap" />
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </StackPanel>
+              </Border>
+              <Border Grid.Column="1" Classes="card">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Value-free local audit"
+                             FontSize="{StaticResource VaultFontSize20}"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="CyberArk remains the authoritative server-side audit source. Local entries record verification, operation, profile/account context, version, and result—never credentials, tokens, reasons, or values."
+                             TextWrapping="Wrap" />
+                  <ListBox ItemsSource="{Binding CyberArkAudit}"
+                           MinHeight="140"
+                           AutomationProperties.Name="CyberArk local audit events">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Summary}"
+                                   Margin="6"
+                                   TextWrapping="Wrap" />
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </StackPanel>
+              </Border>
+            </Grid>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
       <TabItem Header="Settings">
         <ScrollViewer Margin="4,14"><Border Classes="card" MaxWidth="700" HorizontalAlignment="Left">
           <StackPanel Spacing="12">

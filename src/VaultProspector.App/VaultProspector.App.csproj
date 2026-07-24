@@ -36,5 +36,6 @@
     <ProjectReference Include="..\VaultProspector.Infrastructure\VaultProspector.Infrastructure.csproj" />
     <ProjectReference Include="..\VaultProspector.Platform\VaultProspector.Platform.csproj" />
     <ProjectReference Include="..\VaultProspector.Providers.Azure\VaultProspector.Providers.Azure.csproj" />
+    <ProjectReference Include="..\VaultProspector.Providers.CyberArk\VaultProspector.Providers.CyberArk.csproj" />
   </ItemGroup>
 </Project>

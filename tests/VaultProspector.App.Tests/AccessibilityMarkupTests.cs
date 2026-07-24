@@ -65,6 +65,39 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void CyberArkWorkflowKeepsSourceVerificationAndAuditVisible()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var tab = document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "TabItem" &&
+                Attribute(element, "Header")?.Value == "CyberArk");
+        var automationNames = tab
+            .Descendants()
+            .Select(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value)
+            .Where(value => value is not null)
+            .Cast<string>()
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains("CyberArk profiles", automationNames);
+        Assert.Contains("CyberArk accounts", automationNames);
+        Assert.Contains("CyberArk retrieval reason", automationNames);
+        Assert.Contains("CyberArk protected value preview", automationNames);
+        Assert.Contains("CyberArk local audit events", automationNames);
+        Assert.Contains(
+            tab.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                    "{Binding CyberArkValuePreview}" &&
+                Attribute(
+                    element,
+                    "AutomationProperties.LiveSetting")?.Value ==
+                    "Assertive");
+    }
+
+    [Fact]
     public void ActionableErrorIsAnAccessibleAssertiveLiveRegion()
     {
         var document = XDocument.Load(FindMainWindowMarkup());

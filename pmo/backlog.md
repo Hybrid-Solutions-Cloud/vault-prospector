@@ -31,12 +31,12 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | Notification-area/background operation | Implemented locally, unreleased | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power | Live tray/sleep/session-lock/network/token-expiry matrix and independent validation |
 | Password-manager UI research/redesign | In progress locally | Primary-source research, four interactive concepts, sixteen automated concept/task states, narrow-viewport and console validation | Participant usability sessions, concept selection, production implementation, accessibility validation |
 | Browser autofill/password-vault integration | Implemented locally, validation open | Toolbar-only Chromium/Firefox extension source, strict protocol, authenticated native host/broker, exact mappings, protected machine policy, desktop confirmation, fresh Windows verification, audit, MSI registration, tests | Signed extension distribution, independent review, live installed-browser/compromise/revocation/usability/AT evidence |
-| CyberArk source | Not implemented | Provider requirements only | Product/API decision, authentication, provider adapter, tests, UI |
+| CyberArk source | Implemented locally, validation open | Privilege Cloud ADR/threat model, isolated provider and DPAPI credential store, SQLCipher metadata, verified retrieval, fail-closed local revoke/remove controls, explicit UI, automated tests | Governed live tenant, independent review, signed exact-artifact validation |
 | iPhone/iOS and Android/Google apps | Not implemented | Roadmap and store/security requirements only | Mobile applications, platform secure storage, testing, signing, store submission |
 
 ## Story status and plan mapping
 
-Status snapshot: 2026-07-23. **Delivered** means present in the current public Preview unless the
+Status snapshot: 2026-07-24. **Delivered** means present in the current public Preview unless the
 note explicitly limits it to policy/process delivery. See [`plan.md`](plan.md) for phase scope and
 exit criteria.
 
@@ -84,7 +84,7 @@ exit criteria.
 | 12.1 | Research password-manager interface patterns | In progress; research and 4 concepts complete | Phase 9 participant validation |
 | 13.1 | Browser extension and native messaging feasibility | Implemented locally, validation open | Phase 11 |
 | 13.2 | Browser password-vault interoperability | Research complete; private-store access prohibited | Phase 11 |
-| 14.1 | CyberArk source integration | On hold | On hold |
+| 14.1 | CyberArk source integration | Implemented locally, validation open | Phase 12 |
 | 15.1 | Consent-based Preview feedback | Delivered as process | Phase 15 operation |
 | 15.2 | Evidence-based GA feedback gate | In progress | Phase 15 |
 
@@ -139,7 +139,7 @@ not implementation.
 | 12.1 | `docs/design` research, four-concept React prototype, usability protocol | Representative participants, assistive-technology results, recorded selection, production implementation, exact-candidate validation. |
 | 13.1 | `browser-extension`, BrowserProtocol/BrowserHost/Platform broker source, encrypted mapping/audit service and UI, MSI native-host registration, ADR-0014 and browser threat model | Signed extension/native host candidate, installed Chrome/Edge/Firefox matrix, independent review, update/compromise/revocation exercise, usability/AT evidence, and exact-release browser review. |
 | 13.2 | Feasibility spike documents supported public extension/native-messaging APIs and prohibits browser credential-database access; no import/export/sync source exists | Explicit-consent product decision for any future supported handoff, live tests, privacy review, and browser distribution approval. |
-| 14.1 | Provider contract plus Phase 12 product/API decision requirements; no CyberArk adapter exists | Accepted ADR/threat model, isolated credential/provider/UI implementation, permission/failure/redaction/live tests. |
+| 14.1 | ADR-0015, CyberArk threat model, dedicated provider/contracts/UI, DPAPI credential store, SQLCipher schema v6, verified retrieval, fail-closed local revoke/remove, and value-free audit | Automated provider/application/platform/persistence/accessibility evidence; governed live tenant permission/failure/audit matrix; independent review; exact signed release. |
 | 15.1 | `preview-feedback.md`, privacy notice, HCS-governed intake and triage process | Sanitized operational records proving notice, consent, privacy boundary, response targets, and escalation. |
 | 15.2 | Readiness G-01 thresholds and go/no-go process | Required evaluator/task/build/install/upgrade coverage, completion rate, blocker closure, 14-day stability, named approval. |
 
@@ -503,7 +503,11 @@ Acceptance criteria:
 - Apple-specific platform security protections are implemented.
 - Security review validates Keychain and LocalAuthentication compliance.
 
-Implementation status: On hold.
+Implementation status: Implemented locally with a dedicated Privilege Cloud provider, Identity
+service-user authentication flow, DPAPI-isolated credentials, SQLCipher schema v6 metadata,
+provider-specific safes/accounts/permissions/versions/audit, explicit verified reveal/copy UI, and
+automated contract, redaction, persistence, security, and accessibility coverage. Governed live
+tenant evidence, independent security review, and exact signed-artifact validation remain open.
 
 ### Story: iPhone/iOS application and App Store release (coming soon)
 

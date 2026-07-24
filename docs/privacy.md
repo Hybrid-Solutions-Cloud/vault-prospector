@@ -1,6 +1,6 @@
 # Privacy and Local Data Handling
 
-**Effective date:** 2026-07-16
+**Effective date:** 2026-07-24
 
 Vault Prospector is a local-first Windows application. The Preview does not operate a Vault
 Prospector cloud service and does not send project-controlled analytics or telemetry.
@@ -18,6 +18,9 @@ Vault Prospector processes the minimum data needed for the selected user workflo
 | Public-client application ID and identity account metadata | Reconnect the selected Microsoft Entra identity and show its access context | SQLCipher-encrypted local metadata database | Until the identity or all local data is removed |
 | Microsoft Entra access and refresh tokens | Authenticate to Azure Resource Manager and Azure Key Vault | App-specific MSAL token cache protected by supported Windows mechanisms | Controlled by MSAL, Entra policy, sign-out, and identity removal |
 | Tenant, subscription, vault, key, certificate, and secret metadata | Offline discovery and search | SQLCipher-encrypted local metadata database | Until refreshed, removed, or all local data is deleted |
+| CyberArk profile, safe, account, version, direct permission, and value-free audit metadata | Operate the separately configured Privilege Cloud source | SQLCipher-encrypted local metadata database | Synchronized metadata is removed with its profile; local audit is retained until all local data is deleted |
+| CyberArk Identity service-user client credential | Authenticate an explicitly configured CyberArk profile | Separate per-profile DPAPI `CurrentUser` file with profile-specific entropy | Until rotated, locally revoked, the profile is removed, or all local data is deleted |
+| CyberArk Identity and platform tokens | Authenticate one validate, sync, or retrieve operation | Process memory only; not cached by Vault Prospector | Scoped to the operation |
 | Secret value selected for reveal or copy | Perform the explicit user action | Process memory; optionally the Windows clipboard | UI reveal is masked after ten seconds; clipboard clearing uses the configured interval if unchanged |
 | Optional offline secret value | Allow an explicit offline workflow | Separate AES-GCM envelope with authenticated descriptor metadata and a DPAPI-protected key for the current Windows user | Disabled by default; expires by policy, is invalidated after an incompatible security upgrade, or is purged by the user |
 | Allow-listed diagnostic events | Troubleshoot counts, status categories, and exception types | Local newline-delimited JSON log with identifiers pseudonymized | Until the user deletes local data; automatic log retention is not yet implemented |
@@ -32,6 +35,13 @@ never expanded by the application. Metadata synchronization does not retrieve se
 
 A secret value is requested from Azure Key Vault only after the user explicitly chooses a reveal,
 copy, or cache operation and completes required local verification.
+
+For an explicitly configured unreleased CyberArk profile, validate, sync, or retrieval contacts the
+configured CyberArk Identity and Privilege Cloud production endpoints. CyberArk metadata sync lists
+safes, direct member evidence, accounts, and versions but does not retrieve values. A CyberArk
+value is requested only after exact account/version selection, a non-sensitive reason, and fresh
+Windows verification. The reason is sent to CyberArk for its authoritative audit but is not stored
+in the local audit.
 
 If the user explicitly enables notification-area background synchronization, the application may
 contact Microsoft identity endpoints, Azure Resource Manager, and Azure Key Vault metadata
@@ -81,6 +91,12 @@ explicit publication action. Suspected vulnerabilities use the private channel i
 Removing an identity removes its MSAL account entry and local access mapping. Use application
 controls to purge item, vault, workspace, or all offline values.
 
+Local revocation first persists a disabled/revoked state and then deletes the DPAPI-protected
+credential while retaining encrypted metadata. Removing a CyberArk profile also deletes its
+synchronized safe/account/version/permission metadata. Value-free local audit is retained for
+investigation. Neither local action revokes the service user in CyberArk Identity; an administrator
+must rotate or revoke it there when compromise is suspected.
+
 Uninstall intentionally retains `%LOCALAPPDATA%\VaultProspector` to avoid silently deleting user
 state. To remove all Vault Prospector data, close the application, uninstall it, and delete that
 directory. DPAPI-protected keys are bound to the Windows user; copying the directory to another
@@ -114,6 +130,17 @@ Local browser mappings and value-free audit events are stored in the encrypted m
 The audit records include time, result, canonical origins, field purpose, and local identifiers but
 not the secret value. Vault Prospector does not send browser activity to project-controlled
 telemetry.
+
+## CyberArk integration
+
+The unreleased CyberArk provider is separate from Azure identities, token caches, objects, browser
+mappings, and offline-value caching. SQLCipher does not store the client credential, Identity
+access token, platform token, retrieval reason, or account value. The protected credential file is
+bound to the current Windows account and profile identifier.
+
+Local CyberArk audit records operation, result, profile/account identifier, safe, version, time,
+and a fixed safe message. They do not store the credential, tokens, business reason, or account
+value. CyberArk remains authoritative for server-side access and audit records.
 
 ## Security and privacy contact
 

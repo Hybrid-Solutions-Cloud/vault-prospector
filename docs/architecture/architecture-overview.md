@@ -68,6 +68,20 @@ Responsibilities:
 - Azure-specific error mapping.
 - Throttling and retry behavior.
 
+### CyberArk Privilege Cloud provider
+
+Responsibilities:
+
+- Dedicated CyberArk Identity service-user authentication with operation-scoped tokens.
+- Privilege Cloud safe, account, direct permission, and version metadata enumeration.
+- Explicit account/version value retrieval only after application authorization.
+- CyberArk-specific response, pagination, endpoint, status, and size validation.
+- Provider-specific error categories without response-body disclosure.
+
+CyberArk models are not normalized into Azure identities, subscriptions, vaults, RBAC, or object
+types. SQLCipher schema v6 and the desktop CyberArk destination preserve the provider boundary.
+The service-user client credential is stored separately in a per-profile DPAPI file.
+
 ### Local index
 
 Responsibilities:
@@ -133,11 +147,34 @@ Dynamic third-party plugins may be postponed until a safe trust and signing mode
 7. The UI clears displayed content and application buffers as soon as practical.
 8. The value is not persisted unless the user explicitly enables offline caching.
 
+## Data flow: CyberArk metadata synchronization
+
+1. The user selects an enabled CyberArk profile and explicitly starts sync.
+2. The application unprotects that profile's DPAPI credential for the operation.
+3. The CyberArk provider obtains an operation-scoped Identity/platform token.
+4. The provider lists visible safes, direct service-user member evidence, accounts, and versions
+   through bounded same-origin Privilege Cloud endpoints.
+5. SQLCipher atomically replaces only that profile's CyberArk metadata.
+6. The credential and tokens are disposed/scoped without entering SQLCipher or diagnostics.
+7. No password-retrieval endpoint participates in this flow.
+
+## Data flow: CyberArk value retrieval
+
+1. The user selects the exact profile, account, optional version, action, and non-sensitive reason.
+2. The application rehydrates an enabled `Ready` profile and requires fresh Windows verification.
+3. A value-free authorization audit commits before the provider request.
+4. The provider authenticates for this operation and posts to the exact account retrieval endpoint.
+5. The value is revealed for ten seconds or copied through owner-aware timed clipboard clearing.
+6. A value-free result audit commits. If it cannot commit, the returned value is disposed and not
+   presented.
+7. The initial CyberArk provider never writes the value to the offline-value cache.
+
 ## Trust assumptions
 
 - The operating system and signed application package are trusted.
 - The local user account may be compromised; platform unlock reduces but does not eliminate this risk.
 - Azure remains the source of truth.
+- CyberArk remains the source of truth for its accounts, effective permissions, and server audit.
 - Connected identities are authorized only for their existing Azure permissions.
 - Plugins are untrusted until a formal trust model exists.
 - Clipboard consumers and screen-capture utilities are outside the app's full control.

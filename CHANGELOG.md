@@ -33,6 +33,10 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Add an unreleased Chromium/Firefox browser-fill implementation with toolbar-only activation,
   exact origin/frame/purpose mappings, authenticated native messaging, protected fail-closed
   machine policy, one-time desktop confirmation, fresh Windows verification, and value-free audit.
+- Add an unreleased CyberArk Privilege Cloud provider with explicit service-user profiles, safes,
+  accounts, versions, direct safe-member evidence, SQLCipher schema v6 metadata, DPAPI-isolated
+  credentials, bounded metadata sync, fresh-verified reveal/copy, fail-closed local revocation,
+  explicit removal, and value-free audit.
 
 ### Security
 

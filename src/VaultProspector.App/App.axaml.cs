@@ -14,6 +14,7 @@ using VaultProspector.Domain;
 using VaultProspector.Infrastructure;
 using VaultProspector.Platform;
 using VaultProspector.Providers.Azure;
+using VaultProspector.Providers.CyberArk;
 
 namespace VaultProspector.App;
 
@@ -85,6 +86,24 @@ public partial class App : Avalonia.Application
             {
                 Timeout = TimeSpan.FromSeconds(30),
             };
+            var cyberArkHttpClient = new HttpClient(new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+            })
+            {
+                Timeout = TimeSpan.FromSeconds(30),
+            };
+            var cyberArkProvider = new CyberArkPrivilegeCloudProvider(
+                cyberArkHttpClient,
+                clock);
+            var cyberArkService = new CyberArkService(
+                cyberArkProvider,
+                new WindowsCyberArkCredentialStore(
+                    VaultProspectorPaths.CyberArkCredentialDirectory),
+                repository,
+                verification,
+                clipboard,
+                clock);
             var viewModel = new MainViewModel(
                 repository,
                 new IdentityService(
@@ -112,7 +131,8 @@ public partial class App : Avalonia.Application
                     keyProvider,
                     clock),
                 localRecoveryArchiveService,
-                browserFillService);
+                browserFillService,
+                cyberArkService);
             var window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()
