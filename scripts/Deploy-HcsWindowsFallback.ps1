@@ -111,6 +111,38 @@ try {
     }
 
     if ($PSCmdlet.ShouldProcess('Vault Prospector HCS Tier 4 Windows runner', 'Deploy')) {
+        $existingVm = az vm show `
+            --resource-group 'rg-hcs-vp-winbuild-eus2-01' `
+            --name 'vm-hcs-vp-winbuild-eus2-01' `
+            --output json 2>$null | ConvertFrom-Json
+        if ($existingVm) {
+            $existingGroup = az group show `
+                --name 'rg-hcs-vp-winbuild-eus2-01' `
+                --output json | ConvertFrom-Json
+            if (
+                $existingGroup.tags.Project -ne 'vault-prospector' -or
+                $existingGroup.tags.Lifecycle -ne 'ephemeral' -or
+                $existingGroup.tags.Workload -ne 'windows-build-fallback'
+            ) {
+                throw 'Refusing to start the existing VM because its resource-group tags do not match the HCS fallback contract.'
+            }
+
+            $powerState = (az vm get-instance-view `
+                --resource-group 'rg-hcs-vp-winbuild-eus2-01' `
+                --name 'vm-hcs-vp-winbuild-eus2-01' `
+                --query 'instanceView.statuses[1].code' `
+                --output tsv).Trim()
+            if ($powerState -ne 'PowerState/running') {
+                az vm start `
+                    --resource-group 'rg-hcs-vp-winbuild-eus2-01' `
+                    --name 'vm-hcs-vp-winbuild-eus2-01' `
+                    --only-show-errors
+                if ($LASTEXITCODE -ne 0) {
+                    throw 'The existing ephemeral Windows runner VM could not be started.'
+                }
+            }
+        }
+
         az deployment sub create @commonArguments --only-show-errors
         if ($LASTEXITCODE -ne 0) {
             throw 'The HCS Tier 4 deployment failed.'

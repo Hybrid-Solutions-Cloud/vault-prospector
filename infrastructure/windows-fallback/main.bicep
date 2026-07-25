@@ -63,6 +63,7 @@ module runnerBootstrap 'modules/windows-runner-bootstrap.bicep' = {
     location: location
     vmName: buildVm.outputs.vmName
     keyVaultName: keyVaultName
+    runId: deployment().name
   }
 }
 

@@ -1,6 +1,7 @@
 param location string
 param vmName string
 param keyVaultName string
+param runId string
 
 var bootstrapScript = loadTextContent('../scripts/Initialize-WindowsRunner.ps1')
 
@@ -46,6 +47,10 @@ resource runnerBootstrap 'Microsoft.Compute/virtualMachines/runCommands@2024-03-
       {
         name: 'KeyVaultName'
         value: keyVaultName
+      }
+      {
+        name: 'RunId'
+        value: runId
       }
     ]
     asyncExecution: true
