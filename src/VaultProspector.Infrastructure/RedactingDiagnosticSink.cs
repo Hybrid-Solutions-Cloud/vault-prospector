@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -13,6 +12,28 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
     {
         "identity_id", "identity_type", "vault_count", "item_count", "error_count", "duration_ms", "status",
     };
+    private static readonly HashSet<string> AllowedIdentityTypes =
+        new(
+            [
+                "InteractiveUser",
+                "ManagedIdentity",
+                "ServicePrincipal",
+                "FederatedServicePrincipal",
+            ],
+            StringComparer.Ordinal);
+    private static readonly HashSet<string> AllowedStatuses =
+        new(
+            [
+                "authorized",
+                "deleted",
+                "disabled",
+                "failed",
+                "purged",
+                "ready",
+                "removed",
+                "revoked",
+            ],
+            StringComparer.Ordinal);
     private readonly object _gate = new();
 
     public void Information(string eventName, IReadOnlyDictionary<string, object?> fields) => Write("information", eventName, null, fields);
@@ -35,10 +56,10 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
             foreach (var field in fields.Where(field =>
                          AllowedFields.Contains(field.Key)))
             {
-                if (field.Key.EndsWith("_id", StringComparison.Ordinal))
-                    writer.WriteString(field.Key, Pseudonymize(field.Value));
-                else
-                    WriteSafeValue(writer, field.Key, field.Value);
+                WriteAllowedField(
+                    writer,
+                    field.Key,
+                    field.Value);
             }
             writer.WriteEndObject();
             writer.WriteEndObject();
@@ -57,22 +78,54 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
         return Convert.ToHexString(hash.AsSpan(0, 8));
     }
 
-    private static void WriteSafeValue(
+    private static void WriteAllowedField(
         Utf8JsonWriter writer,
         string fieldName,
         object? value)
     {
+        if (string.Equals(
+                fieldName,
+                "identity_id",
+                StringComparison.Ordinal))
+        {
+            writer.WriteString(
+                fieldName,
+                Pseudonymize(value));
+            return;
+        }
+
+        if (string.Equals(
+                fieldName,
+                "identity_type",
+                StringComparison.Ordinal))
+        {
+            var identityType = value as string;
+            writer.WriteString(
+                fieldName,
+                identityType is not null &&
+                AllowedIdentityTypes.Contains(identityType)
+                    ? identityType
+                    : "Unknown");
+            return;
+        }
+
+        if (string.Equals(
+                fieldName,
+                "status",
+                StringComparison.Ordinal))
+        {
+            var status = value as string;
+            writer.WriteString(
+                fieldName,
+                status is not null &&
+                AllowedStatuses.Contains(status)
+                    ? status
+                    : "unknown");
+            return;
+        }
+
         switch (value)
         {
-            case null:
-                writer.WriteNull(fieldName);
-                break;
-            case string text:
-                writer.WriteString(fieldName, text);
-                break;
-            case bool boolean:
-                writer.WriteBoolean(fieldName, boolean);
-                break;
             case byte number:
                 writer.WriteNumber(fieldName, number);
                 break;
@@ -106,16 +159,8 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
             case decimal number:
                 writer.WriteNumber(fieldName, number);
                 break;
-            case DateTime timestamp:
-                writer.WriteString(fieldName, timestamp);
-                break;
-            case DateTimeOffset timestamp:
-                writer.WriteString(fieldName, timestamp);
-                break;
             default:
-                writer.WriteString(
-                    fieldName,
-                    Convert.ToString(value, CultureInfo.InvariantCulture));
+                writer.WriteNull(fieldName);
                 break;
         }
     }

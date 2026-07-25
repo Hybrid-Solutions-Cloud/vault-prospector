@@ -485,6 +485,9 @@
             <Border Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Text="Discover workload identities" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
+                <TextBlock Text="A workload identity is a non-human Azure identity used by an application, automation job, or Azure resource. This page helps an administrator inspect eligible customer-managed identities; it does not change Azure."
+                           TextWrapping="Wrap"
+                           FontWeight="SemiBold" />
                 <TextBlock Text="Select an enabled interactive identity on the Identities tab. Discovery uses only that explicit account; it never inherits Azure CLI, PowerShell, IDE, or terminal context." TextWrapping="Wrap" Opacity="0.75" />
                 <Button Content="Authorize Microsoft Graph directory read"
                         Command="{Binding AuthorizeDirectoryReadCommand}"
@@ -611,6 +614,9 @@
         <Grid x:Name="WorkspaceGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
           <Border Classes="card">
             <StackPanel Spacing="10"><TextBlock Text="Workspaces" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
+              <TextBlock Text="A workspace is a local view that groups customer, project, or environment sources. It does not create, copy, move, or change anything in Azure."
+                         TextWrapping="Wrap"
+                         FontWeight="SemiBold" />
               <ListBox ItemsSource="{Binding Workspaces}" SelectedItem="{Binding SelectedWorkspace}" MinHeight="300" AutomationProperties.Name="Vault Prospector workspaces"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Margin="6" /></DataTemplate></ListBox.ItemTemplate></ListBox>
               <WrapPanel>
                 <Button Content="Add selected vault" Command="{Binding AddSelectedVaultToWorkspaceCommand}" Margin="0,0,8,8" />
@@ -1054,6 +1060,39 @@
                 <TextBlock Text="This path remains available when the application cannot open. Support may ask you to collect it using the documented procedure."
                            TextWrapping="Wrap"
                            Opacity="0.75" />
+                <Button Content="Refresh diagnostics"
+                        Command="{Binding RefreshDiagnosticsCommand}"
+                        HorizontalAlignment="Left"
+                        AutomationProperties.Name="Refresh recent privacy-safe diagnostic events" />
+                <TextBlock Text="{Binding DiagnosticViewerStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <ListBox ItemsSource="{Binding DiagnosticEvents}"
+                         MinHeight="220"
+                         MaxHeight="440"
+                         AutomationProperties.Name="Recent privacy-safe diagnostic events">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DiagnosticEventRow">
+                      <Border BorderBrush="{DynamicResource VaultColorLine}"
+                              BorderThickness="0,0,0,1"
+                              Padding="4,8">
+                        <StackPanel Spacing="3">
+                          <TextBlock Text="{Binding Category}"
+                                     FontWeight="SemiBold" />
+                          <TextBlock Text="{Binding Timestamp}"
+                                     FontSize="{StaticResource VaultFontSize11}" />
+                          <TextBlock Text="{Binding Scope}"
+                                     TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Summary}"
+                                     TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Recovery}"
+                                     TextWrapping="Wrap"
+                                     Opacity="0.75" />
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
               </StackPanel>
             </Border>
             <Border Grid.Column="1" Classes="card">

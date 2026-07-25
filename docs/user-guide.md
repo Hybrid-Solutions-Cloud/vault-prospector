@@ -80,6 +80,11 @@ or managed-identity assignments at their external issuer.
 
 ## Discover and preview workload identities
 
+In Vault Prospector, a **workload identity** is a non-human Azure identity used by an application,
+automation job, or Azure resource. It is different from the interactive Microsoft Entra user who
+operates the desktop application. Administration lists only eligible customer-managed candidates
+and remains read-only; it does not create an identity or grant Azure access.
+
 `0.2.0-preview.1` includes a read-only **Administration** tab:
 
 1. Select an enabled, ready interactive identity on **Identities**.
@@ -149,6 +154,24 @@ workspace** in Search to apply that scope.
 The Workspaces tab also edits the selected workspace's offline-cache enablement, maximum lifetime,
 and clipboard permission. Save the workspace policy before using it. Windows verification cannot
 be disabled: it remains mandatory for reveal, copy, caching, and reopening an offline value.
+
+## Diagnostics and support bundles
+
+Open **Activity & support** and choose **Refresh diagnostics** to display the newest privacy-safe
+events. Each row provides a timestamp, fixed category, pseudonymous scope when available, safe
+status summary, and a recovery action. The viewer and external JSON-lines log exclude secret
+values, tokens, credentials, usernames, vault names, and object names.
+
+If the application cannot open or unlock, collect the external log from the exact path displayed
+on that page—normally
+`%LOCALAPPDATA%\VaultProspector\logs\vault-prospector.log`. Do not attach the encrypted database,
+settings, token cache, offline-value files, crash dumps, or screenshots containing customer
+information.
+
+Choose **Create support bundle** to produce a local ZIP containing only its manifest and at most
+the latest 4 MiB of the already-redacted log. Nothing is uploaded automatically. Open and inspect
+the ZIP before sending it through an approved support channel. If export fails, the source log is
+left unchanged and its external collection path remains available.
 
 ## Machine-managed policy (Preview)
 

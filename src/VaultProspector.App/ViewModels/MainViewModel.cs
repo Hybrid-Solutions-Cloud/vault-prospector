@@ -53,6 +53,7 @@ public sealed partial class MainViewModel(
     public ObservableCollection<WorkloadIdentityCandidateRow> WorkloadIdentityCandidates { get; } = [];
     public ObservableCollection<SearchResultRow> Results { get; } = [];
     public ObservableCollection<SyncErrorRow> SyncErrors { get; } = [];
+    public ObservableCollection<DiagnosticEventRow> DiagnosticEvents { get; } = [];
     public ObservableCollection<Workspace> Workspaces { get; } = [];
     public ObservableCollection<LocalRecoveryArchiveRow> RecoveryArchives { get; } = [];
     public ObservableCollection<SearchFilterOption> TenantFilterOptions { get; } =
@@ -201,6 +202,9 @@ public sealed partial class MainViewModel(
     private string _supportBundleStatus =
         "No support bundle has been created in this session.";
     [ObservableProperty] private string _latestSupportBundlePath = string.Empty;
+    [ObservableProperty]
+    private string _diagnosticViewerStatus =
+        "Select Refresh diagnostics to display recent privacy-safe events.";
 
     public bool HasSelectedIdentity => SelectedIdentity is not null;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
@@ -738,6 +742,30 @@ public sealed partial class MainViewModel(
             StatusText = "Privacy-safe support bundle created locally.";
         },
         "Creating a privacy-safe support bundle");
+
+    [RelayCommand(CanExecute = nameof(CanCreateSupportBundle))]
+    private Task RefreshDiagnosticsAsync() => RunAsync(
+        async cancellationToken =>
+        {
+            if (supportBundleService is null)
+                return;
+            var events =
+                await supportBundleService.ReadRecentAsync(
+                    100,
+                    cancellationToken);
+            DiagnosticEvents.Clear();
+            foreach (var diagnosticEvent in events)
+            {
+                DiagnosticEvents.Add(
+                    new DiagnosticEventRow(
+                        diagnosticEvent));
+            }
+
+            DiagnosticViewerStatus = events.Count == 0
+                ? "No privacy-safe diagnostic events are available."
+                : $"Showing {events.Count} most recent privacy-safe diagnostic events, newest first.";
+        },
+        "Loading privacy-safe diagnostics");
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedResult))]
     private Task ToggleFavoriteAsync() => RunAsync(async cancellationToken =>
@@ -1415,6 +1443,7 @@ public sealed partial class MainViewModel(
         IncludeVaultCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
         CreateSupportBundleCommand.NotifyCanExecuteChanged();
+        RefreshDiagnosticsCommand.NotifyCanExecuteChanged();
         ToggleFavoriteCommand.NotifyCanExecuteChanged();
         RevealCommand.NotifyCanExecuteChanged();
         CopyCommand.NotifyCanExecuteChanged();
@@ -1833,6 +1862,27 @@ public sealed class SyncErrorRow(SyncErrorDetail detail)
     public string Category { get; } = detail.Category;
     public string Message { get; } = detail.Message;
     public string Recovery { get; } = detail.Recovery;
+}
+
+public sealed class DiagnosticEventRow(
+    DiagnosticEvent diagnosticEvent)
+{
+    public string Timestamp { get; } =
+        diagnosticEvent.Timestamp.ToLocalTime()
+            .ToString(
+                "yyyy-MM-dd HH:mm:ss zzz",
+                System.Globalization.CultureInfo
+                    .InvariantCulture);
+    public string Level { get; } =
+        diagnosticEvent.Level;
+    public string Category { get; } =
+        diagnosticEvent.Category;
+    public string Scope { get; } =
+        diagnosticEvent.Scope;
+    public string Summary { get; } =
+        diagnosticEvent.Summary;
+    public string Recovery { get; } =
+        diagnosticEvent.Recovery;
 }
 
 public sealed class SubscriptionSelectionRow(SubscriptionAccess subscription)

@@ -464,8 +464,19 @@ public interface IDiagnosticSink
 public interface ISupportBundleService
 {
     string DiagnosticLogPath { get; }
+    Task<IReadOnlyList<DiagnosticEvent>> ReadRecentAsync(
+        int maximumEvents,
+        CancellationToken cancellationToken);
     Task<string> CreateAsync(CancellationToken cancellationToken);
 }
+
+public sealed record DiagnosticEvent(
+    DateTimeOffset Timestamp,
+    string Level,
+    string Category,
+    string Scope,
+    string Summary,
+    string Recovery);
 
 public sealed record BrowserFillApproval(
     Guid ApprovalId,
