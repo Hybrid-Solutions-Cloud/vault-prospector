@@ -1182,6 +1182,9 @@
                         Command="{Binding RefreshDiagnosticsCommand}"
                         HorizontalAlignment="Left"
                         AutomationProperties.Name="Refresh recent privacy-safe diagnostic events" />
+                <TextBox Text="{Binding DiagnosticSearchText}"
+                         PlaceholderText="Filter by category, safe scope, status, or recovery action"
+                         AutomationProperties.Name="Filter recent privacy-safe diagnostic events" />
                 <TextBlock Text="{Binding DiagnosticViewerStatus}"
                            TextWrapping="Wrap"
                            AutomationProperties.LiveSetting="Polite" />

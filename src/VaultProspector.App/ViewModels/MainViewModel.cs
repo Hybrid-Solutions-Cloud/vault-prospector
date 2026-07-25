@@ -47,6 +47,8 @@ public sealed partial class MainViewModel(
     private int _sensitivePresentationEpoch;
     private readonly List<WorkloadIdentityCandidate>
         _allWorkloadIdentityCandidates = [];
+    private readonly List<DiagnosticEvent>
+        _allDiagnosticEvents = [];
 
     public ObservableCollection<ConnectedIdentity> Identities { get; } = [];
     public ObservableCollection<TenantAccess> Tenants { get; } = [];
@@ -224,6 +226,8 @@ public sealed partial class MainViewModel(
     [ObservableProperty]
     private string _diagnosticViewerStatus =
         "Select Refresh diagnostics to display recent privacy-safe events.";
+    [ObservableProperty]
+    private string _diagnosticSearchText = string.Empty;
 
     public bool HasSelectedIdentity => SelectedIdentity is not null;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
@@ -784,17 +788,9 @@ public sealed partial class MainViewModel(
                 await supportBundleService.ReadRecentAsync(
                     100,
                     cancellationToken);
-            DiagnosticEvents.Clear();
-            foreach (var diagnosticEvent in events)
-            {
-                DiagnosticEvents.Add(
-                    new DiagnosticEventRow(
-                        diagnosticEvent));
-            }
-
-            DiagnosticViewerStatus = events.Count == 0
-                ? "No privacy-safe diagnostic events are available."
-                : $"Showing {events.Count} most recent privacy-safe diagnostic events, newest first.";
+            _allDiagnosticEvents.Clear();
+            _allDiagnosticEvents.AddRange(events);
+            ApplyDiagnosticFilter();
         },
         "Loading privacy-safe diagnostics");
 
@@ -1459,6 +1455,10 @@ public sealed partial class MainViewModel(
         string value) =>
         ApplyWorkloadIdentityFilter();
 
+    partial void OnDiagnosticSearchTextChanged(
+        string value) =>
+        ApplyDiagnosticFilter();
+
     partial void OnIsBusyChanged(bool value)
     {
         AddIdentityCommand.NotifyCanExecuteChanged();
@@ -1726,6 +1726,49 @@ public sealed partial class MainViewModel(
             search,
             StringComparison.OrdinalIgnoreCase) ||
         candidate.PrincipalId.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase);
+
+    private void ApplyDiagnosticFilter()
+    {
+        var search = DiagnosticSearchText.Trim();
+        var filtered = _allDiagnosticEvents
+            .Where(diagnosticEvent =>
+                search.Length == 0 ||
+                DiagnosticContains(
+                    diagnosticEvent,
+                    search))
+            .ToArray();
+        DiagnosticEvents.Clear();
+        foreach (var diagnosticEvent in filtered)
+        {
+            DiagnosticEvents.Add(
+                new DiagnosticEventRow(
+                    diagnosticEvent));
+        }
+
+        DiagnosticViewerStatus =
+            _allDiagnosticEvents.Count == 0
+                ? "No privacy-safe diagnostic events are available."
+                : $"Showing {filtered.Length} of {_allDiagnosticEvents.Count} recent privacy-safe diagnostic events, newest first.";
+    }
+
+    private static bool DiagnosticContains(
+        DiagnosticEvent diagnosticEvent,
+        string search) =>
+        diagnosticEvent.Level.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        diagnosticEvent.Category.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        diagnosticEvent.Scope.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        diagnosticEvent.Summary.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        diagnosticEvent.Recovery.Contains(
             search,
             StringComparison.OrdinalIgnoreCase);
 
