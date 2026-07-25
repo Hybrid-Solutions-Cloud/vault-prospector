@@ -28,7 +28,7 @@ device to this RDP session. Repeating the request cannot produce a prompt in tha
 - The application does not bypass local verification or initialize encrypted metadata in the
   affected remote session.
 
-## Verification
+## Diagnostic verification
 
 - `VaultProspector.Platform.Tests`: 64/64 passed, including HWND-bound request, missing-HWND, and
   remote-session cases.
@@ -39,6 +39,24 @@ device to this RDP session. Repeating the request cannot produce a prompt in tha
 These local checks are diagnostic only and are not release evidence. The authoritative build,
 complete test suite, packaging, and publication must run on HCS-managed runners. Local-console
 Windows Hello success and cancellation remain required before AB#5539 closes.
+
+## Authoritative HCS verification and release
+
+- [PR #33](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/33) merged the correction
+  as source commit `e84d0f0e47605d9575a3306721adf3b50764c4d2`.
+- Exact-main [run 30158989872](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30158989872)
+  passed all three jobs on HCS-managed runners, including the zero-warning 375-test Windows build,
+  packaging, installer/browser contracts, and readiness gates.
+- Immutable-tag [run 30159321059](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30159321059)
+  repeated the zero-warning Windows build and all 375 tests, produced five packages and their
+  Sigstore bundles plus the SPDX SBOM, and published
+  [`0.2.0-preview.4`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.4)
+  through the HCS GitHub App.
+- Independent public verification matched all five package checksum files and verified all five
+  Sigstore bundles against the exact tag-workflow identity.
+
+The authoritative build, tests, packaging, and publication did not run on the operator
+workstation. See the complete [`0.2.0-preview.4` release evidence](0.2.0-preview.4.md).
 
 ## Source
 

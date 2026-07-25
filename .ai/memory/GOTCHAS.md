@@ -1,8 +1,8 @@
 # Repository gotchas
 
-- HCS governance currently returns `Path not found` for this checkout and has no repo profile for
-  `vault-prospector`. Do not report a drift pass; use the applicable HCS hard rules and record the
-  unresolved registry/work-item mapping.
+- HCS governance resolves `vault-prospector` as an HCS-scoped `app` profile, but deterministic drift
+  validation still returns `Path not found` for the registered checkout and temporary worktrees.
+  Do not report a drift pass until the MCP server can see the repository path.
 - Pushing to the `Hybrid-Solutions-Cloud` GitHub organization requires an HCS-governance-minted
   GitHub App installation token. Never use a personal PAT.
 - The full infrastructure test project intentionally takes about 90 seconds; allow at least five
@@ -14,4 +14,3 @@
   key or IDs casually, and never commit a private extension signing key.
 - Existing security, signing, live-service, usability, accessibility, and store gates must remain
   visibly open until their exact evidence exists.
-

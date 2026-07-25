@@ -2,7 +2,7 @@
 
 ## Install on Windows
 
-Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.3), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
+Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.4), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
 
 After this exact Preview is approved by the community repositories, Windows users can also install with:
 
@@ -41,7 +41,7 @@ Open **Identities**, optionally enter a friendly label, keep the recommended Vau
 
 If the tenant blocks the product registration or requires an administrator-controlled application, enable **Use my organization's own public-client registration** and enter its Application (client) ID. See [Authentication setup](authentication.md) for consent and registration requirements. Vault Prospector never asks for an Entra password or client secret.
 
-`0.2.0-preview.3` also exposes advanced workload profiles:
+The current Preview also exposes advanced workload profiles:
 
 - **Managed identity** appears only when Vault Prospector detects an Azure host managed-identity
   endpoint or Azure Instance Metadata Service. A system-assigned identity needs no client ID; a
@@ -198,25 +198,15 @@ Vault Prospector never scans saved browser passwords and does not fill in the ba
 [Browser integration](browser-integration.md) for setup, policy format, limitations, and release
 status.
 
-## CyberArk Privilege Cloud (Preview)
+## CyberArk Privilege Cloud (future roadmap)
 
-The current Preview includes a separate **CyberArk** destination for Privilege Cloud Shared Services.
-Create or select a profile, enter its Identity and Privilege Cloud root URLs, service user,
-authorization application, and client credential, then choose **Validate and protect credential**.
-The credential is validated before it replaces an existing credential and is stored in a
-profile-specific Windows DPAPI file, not SQLCipher metadata.
+CyberArk Privilege Cloud is not enabled or supported in the current Windows Preview. Its private
+source and automated tests remain future-roadmap work until live-tenant validation, independent
+security review, and a separate release decision are complete.
 
-Choose **Sync metadata** to index visible safes, accounts, direct member-permission evidence, and
-secret versions. Sync never retrieves values. Search is local and remains separate from Azure.
-
-To retrieve, select the exact account and optional version, enter a non-sensitive business reason,
-and choose **Verify and reveal** or **Verify and copy**. Every request requires fresh Windows
-verification; reveal lasts ten seconds and copy follows the configured owner-aware clipboard clear
-interval. Direct member evidence is not a complete effective-permission claim—CyberArk group,
-role, confirmation, ticketing, and platform policy remain authoritative.
-
-See [CyberArk integration](cyberark-integration.md) for configuration, rotation, revocation,
-removal, limitations, and release status.
+See [CyberArk integration](cyberark-integration.md) for the future design, security boundaries, and
+remaining release evidence. Do not rely on that document as a supported configuration guide for
+the current Windows release.
 
 ## Remove local data
 
