@@ -4,6 +4,14 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+## [0.2.0-preview.5] - 2026-07-25
+
+### Fixed
+
+- Preserve the bound identity-type collection while applying enterprise policy so a clean
+  first-run profile selects `InteractiveUser` without a transient null conversion error.
+- Add a regression assertion that the default selection remains valid without a collection reset.
+
 ## [0.2.0-preview.4] - 2026-07-25
 
 ### Fixed
@@ -175,6 +183,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.2.0-preview.5]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.5
 [0.2.0-preview.4]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.4
 [0.2.0-preview.3]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.3
 [0.2.0-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.1

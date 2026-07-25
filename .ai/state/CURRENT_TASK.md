@@ -1,78 +1,59 @@
 # Current task
 
-Complete the remaining Windows GA evidence without treating future products, paid signing,
-or an unavailable preferred build host as release blockers.
+Complete the remaining Windows General Availability (GA) evidence without treating future
+products, paid signing, or an unavailable preferred build host as release blockers.
 
 Confirmed on 2026-07-25:
 
 - CyberArk and native mobile applications are future-roadmap work, not Windows GA blockers.
-- The repo-specific Azure Container Apps GitHub runner is healthy with labels
-  `self-hosted,linux,ubuntu-22.04,hcs`.
-- Windows-only packaging uses the HCS Tier-4 ephemeral Azure VM with labels
-  `self-hosted,windows,hcs,vault-prospector`.
 - GitHub Actions owns CI/release execution; Azure DevOps remains the governed hierarchy for epics,
   features, user stories, and tasks.
-- The free trusted Windows path is Microsoft Store–signed MSIX. Direct MSI/ZIP downloads remain
+- Portable validation uses the HCS Linux runner. Windows-only validation and packaging use the
+  one-shot HCS Tier-4 ephemeral Azure VM.
+- The operator workstation does not perform authoritative builds, tests, packaging, or
+  publication. It may orchestrate workflows and host isolated Hyper-V acceptance-test guests.
+- The free trusted Windows path is Microsoft Store-signed MSIX. Direct MSI/ZIP downloads remain
   explicitly unsigned with checksums, SBOM, and Sigstore evidence.
-- ADO builds 284, 287, 290, and 295 and the 27/27 clean-Windows run remain historical evidence; they
-  do not justify continuing ADO pipelines.
-- Installed `0.2.0-preview.3` exposed a Windows desktop verification defect: it used the UWP-only
-  request API. AB#5539 tracks the HWND-bound correction, explicit RDP diagnosis, HCS-runner
-  validation, replacement Preview, and local-console Windows Hello evidence.
 
 Validated:
 
-- PR #33 corrected Windows desktop verification and merged as
-  `e84d0f0e47605d9575a3306721adf3b50764c4d2`. Exact-main run `30158989872` passed all
-  three jobs on HCS-managed runners, including the zero-warning 375-test Windows build and
-  packaging gates.
-- Immutable tag `v0.2.0-preview.4` points to that exact merge commit. Release run `30159321059`
+- PR #33 corrected the unpackaged desktop verification path and merged as
+  `e84d0f0e47605d9575a3306721adf3b50764c4d2`.
+- The exact public Preview.4 MSI passed Windows Hello success, cancellation, button re-entry, and
+  button-initiated success in a dedicated Windows 11 Hyper-V basic-console session, completing
+  AB#5539.
+- That clean first-run test found a separate null Identity Type binding defect. PR #36 corrected
+  it by preserving and incrementally synchronizing the bound collection, with regression coverage
+  that rejects a collection reset.
+- PR #36 merged as `542be4679006c2a34ef1df3b58722ae8a844b1ae`. Exact-main run
+  `30162673459` passed all three jobs on HCS-managed runners, including the zero-warning 375-test
+  Windows build and packaging/readiness gates.
+- Immutable tag `v0.2.0-preview.5` points to that exact merge commit. Release run `30163007720`
   repeated the zero-warning Windows build and all 375 tests, created packages/SBOM/Sigstore
-  evidence, and published the replacement Preview through the HCS GitHub App.
-- The public `0.2.0-preview.4` prerelease has exactly 16 assets. Independent downloads matched all
+  evidence, and published through the HCS GitHub App.
+- The public `0.2.0-preview.5` prerelease has exactly 16 assets. Independent downloads matched all
   five package checksum files; Cosign `v3.0.6` verified all five bundles against the exact
   tag-workflow identity.
-- The active RDP session returns `DeviceNotPresent` even through the correct HWND-bound desktop
-  interop API. The corrected app remains locked and explains that a local Windows or Hyper-V
-  console is required.
-- The exact public Preview.4 MSI passed Windows Hello success, cancellation, button re-entry, and
-  button-initiated success in a dedicated Windows 11 Hyper-V basic-console session. This completes
-  AB#5539's final condition.
-- The same clean first-run session found an unrelated null Identity Type binding error. Selecting
-  `InteractiveUser` clears it; AB#5542 tracks the correction and replacement-package evidence.
-- `0.2.0-preview.3` is published from immutable source
-  `f0ff8e7fc6190953620b4cf7d8aae4447875dfe2` in the public binary repository. Release run
-  `30150472368` attempt 2 passed, all 16 assets are present, all five adjacent hashes matched
-  independent downloads, and all five keyless Sigstore bundles verified.
-- PR #29 corrected the performance metric without changing its two-second limit. PR #30 repaired
-  the one-shot Windows runner's Git Bash path. Exact-main runs `30149406966` and `30150138832`
-  passed all three jobs.
-- Failed immutable tag `v0.2.0-preview.2` has no public release or assets and was not moved or
-  reused.
-- PRs #26 and #27 merged as `c6748ccc87ad62fb9c6f3ac46c067360972acce4` and
-  `a0370c3163e4389ac5fbf61b81f2921051533546`.
-- PR runs `30146345649` and `30146846301` passed portable validation and full-history secret
-  scanning on the HCS Tier-2 runner.
-- Exact-main runs `30146470563` and `30146971143` passed all three jobs, including the Windows
-  candidate on the governed Tier-4 fallback.
-- HCS Windows CI passed 371 tests plus MSI, MSIX, performance, legal/privacy, enterprise, browser,
-  and operational gates for the prior release.
-- The Tier-4 deployment succeeded twice, the final VM was stopped, and
-  `rg-hcs-vp-winbuild-eus2-01` was deleted.
-- ADO pipeline definitions 5, 6, and 7 were retired after replacement validation; historical
-  build records remain.
-- All 137 ADO work items were audited. No item lacks formal acceptance criteria, tags, or priority,
-  and no closed parent has an open child or New parent has only terminal children.
-- AB#5095 and AB#5332 are closed with evidence. CyberArk, mobile, and Store signing are Priority 4
-  `future-roadmap` work. Every other open User Story has a recorded acceptance-evidence gap.
+- The exact public Preview.5 MSI passed a fresh Windows 11 first-run test: Windows Hello unlocked
+  the application, `InteractiveUser` was selected, and no null conversion error appeared. The
+  retained evidence SHA-256 is
+  `FDB6AA4A12C3EC683BBDBDC11EADC56DB5A9AFE175EA2187A5DA79A795A6D35E` and is attached to AB#5542.
+- AB#5542 is Closed. Parent AB#5348 remains open because its separate live Microsoft Entra,
+  keyboard/screen-reader, independent-review, and exact-release Acceptance Criteria are not all
+  complete.
+- The public Preview.4 record is marked withdrawn and points to Preview.5; immutable historical
+  tags and assets were not changed.
 
 Next:
 
-1. Correct AB#5542's clean first-run Identity Type default and repeat the exact-package test.
-2. Complete current-Windows live matrices, independent security/accessibility review, enterprise
-   policy deployment, operational exercise, and legal/privacy approval.
-3. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
+1. Merge and validate the Preview.5 documentation, release-evidence, support, and operational
+   contract update.
+2. Remove the one-shot Azure Windows fallback and restore/remove the disposable Hyper-V test
+   checkpoint, credentials, PIN, tasks, and test account.
+3. Complete current-Windows live identity/provider matrices, independent security/accessibility
+   review, enterprise-policy deployment, operational exercise, and legal/privacy approval.
+4. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
    Microsoft-signed Store package.
-4. Implement governed Azure mutations only after the required design/security gate; the current
+5. Implement governed Azure mutations only after the required design/security gate; the current
    product remains intentionally read-only.
-5. Keep CyberArk and mobile in their separate future-roadmap releases.
+6. Keep CyberArk and mobile in their separate future-roadmap releases.
