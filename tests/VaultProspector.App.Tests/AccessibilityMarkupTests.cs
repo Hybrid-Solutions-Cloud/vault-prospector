@@ -166,6 +166,29 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void IsolatedSynchronizationErrorsAreAccessibleAndActionable()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var panel = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Actionable isolated synchronization errors");
+        var list = panel
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Synchronization error details");
+
+        Assert.Equal("{Binding HasSyncErrors}", Attribute(panel, "IsVisible")?.Value);
+        Assert.Equal("Polite", Attribute(panel, "AutomationProperties.LiveSetting")?.Value);
+        Assert.Equal("{Binding SyncErrors}", Attribute(list, "ItemsSource")?.Value);
+        Assert.Contains(
+            panel.Descendants(),
+            element => Attribute(element, "Text")?.Value == "{Binding Recovery}");
+    }
+
+    [Fact]
     public void NvdaFocusBridgeMatchesPinnedAvaloniaInternals()
     {
         var document = XDocument.Load(FindMainWindowMarkup());

@@ -502,7 +502,16 @@ public sealed class SynchronizationService(
                 };
             }
             var status = snapshot.Errors.Count == 0 ? SyncStatus.Completed : SyncStatus.CompletedWithErrors;
-            var run = new SyncRun(Guid.NewGuid(), identity.DisplayName, started, clock.UtcNow, status, snapshot.Vaults.Count, snapshot.Items.Count, snapshot.Errors.Select(x => x.SafeMessage).ToArray());
+            var run = new SyncRun(
+                Guid.NewGuid(),
+                identity.DisplayName,
+                started,
+                clock.UtcNow,
+                status,
+                snapshot.Vaults.Count,
+                snapshot.Items.Count,
+                snapshot.Errors.Select(error => error.SafeMessage).ToArray(),
+                ErrorDetails: snapshot.Errors.Select(ToSyncErrorDetail).ToArray());
             await repository.ApplyDiscoveryAsync(identity.Id, snapshot, run, cancellationToken);
             diagnostics.Information("sync_completed", new Dictionary<string, object?> { ["identity_id"] = identity.Id, ["vault_count"] = run.VaultCount, ["item_count"] = run.ItemCount, ["error_count"] = run.NonSensitiveErrors.Count });
             return run;
@@ -538,6 +547,28 @@ public sealed class SynchronizationService(
     {
         if (!identity.IsEnabled || identity.AuthenticationState != AuthenticationState.Ready)
             throw new InvalidOperationException("The selected identity is disabled, revoked, or requires authentication.");
+    }
+
+    private static SyncErrorDetail ToSyncErrorDetail(ProviderError error)
+    {
+        var recovery = error.Category switch
+        {
+            "AuthenticationFailedException" or "MsalUiRequiredException" =>
+                "Reauthenticate the affected identity, then retry synchronization.",
+            "RequestFailedException" when error.SafeMessage.Contains("403", StringComparison.Ordinal) =>
+                "Review metadata-list access for this scope. Other synchronized results remain available.",
+            "RequestFailedException" when error.SafeMessage.Contains("429", StringComparison.Ordinal) =>
+                "Azure throttled this scope. Wait briefly, then retry synchronization.",
+            "RequestFailedException" =>
+                "Verify network, private-endpoint, and Azure service availability for this scope, then retry.",
+            _ =>
+                "Use the safe category shown here to correct the affected scope, then retry synchronization.",
+        };
+        return new SyncErrorDetail(
+            error.Scope,
+            error.Category,
+            error.SafeMessage,
+            recovery);
     }
 
     private static DiscoverySnapshot ApplyTenantConstraints(

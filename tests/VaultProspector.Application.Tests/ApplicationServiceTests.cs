@@ -571,6 +571,10 @@ public sealed class ApplicationServiceTests
         Assert.Equal(SyncStatus.CompletedWithErrors, run.Status);
         Assert.NotNull(repository.AppliedSnapshot);
         Assert.Single(run.NonSensitiveErrors);
+        var error = Assert.Single(run.ErrorDetails!);
+        Assert.Equal("scope", error.Scope);
+        Assert.Equal("Forbidden", error.Category);
+        Assert.Contains("safe category", error.Recovery, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

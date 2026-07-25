@@ -49,6 +49,7 @@ public sealed partial class MainViewModel(
     public ObservableCollection<VaultAccessRow> VaultAccessPaths { get; } = [];
     public ObservableCollection<WorkloadIdentityCandidateRow> WorkloadIdentityCandidates { get; } = [];
     public ObservableCollection<SearchResultRow> Results { get; } = [];
+    public ObservableCollection<SyncErrorRow> SyncErrors { get; } = [];
     public ObservableCollection<Workspace> Workspaces { get; } = [];
     public ObservableCollection<LocalRecoveryArchiveRow> RecoveryArchives { get; } = [];
     public ObservableCollection<SearchFilterOption> TenantFilterOptions { get; } =
@@ -186,6 +187,7 @@ public sealed partial class MainViewModel(
 
     public bool HasSelectedIdentity => SelectedIdentity is not null;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
+    public bool HasSyncErrors => SyncErrors.Count > 0;
     public bool IsEnterpriseOfflineCacheAllowed =>
         EnterprisePolicy().AllowOfflineCache;
     public bool IsEnterpriseClipboardAllowed =>
@@ -540,6 +542,7 @@ public sealed partial class MainViewModel(
         await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
         await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
+        ReplaceSyncErrors(run);
         StatusText = $"{run.Status}: {run.VaultCount} vaults and {run.ItemCount} objects; {run.NonSensitiveErrors.Count} isolated errors.";
     }, $"Synchronizing {SelectedIdentity?.DisplayName ?? "the selected identity"}");
 
@@ -878,6 +881,22 @@ public sealed partial class MainViewModel(
         Results.Clear();
         foreach (var result in results) Results.Add(new SearchResultRow(result));
         StatusText = $"{Results.Count} indexed objects. Values were not retrieved.";
+    }
+
+    private void ReplaceSyncErrors(SyncRun run)
+    {
+        SyncErrors.Clear();
+        var details = run.ErrorDetails ??
+            run.NonSensitiveErrors
+                .Select((message, index) => new SyncErrorDetail(
+                    $"Affected scope {index + 1}",
+                    "Unavailable",
+                    message,
+                    "Use the safe category shown here to correct the affected scope, then retry synchronization."))
+                .ToArray();
+        foreach (var detail in details)
+            SyncErrors.Add(new SyncErrorRow(detail));
+        OnPropertyChanged(nameof(HasSyncErrors));
     }
 
     private async Task RefreshSearchFilterOptionsAsync(CancellationToken cancellationToken)
@@ -1706,6 +1725,14 @@ public sealed class SearchResultRow(SearchResult result)
 public sealed record SearchFilterOption(string Value, string Label)
 {
     public static SearchFilterOption All(string label) => new(string.Empty, label);
+}
+
+public sealed class SyncErrorRow(SyncErrorDetail detail)
+{
+    public string Scope { get; } = detail.Scope;
+    public string Category { get; } = detail.Category;
+    public string Message { get; } = detail.Message;
+    public string Recovery { get; } = detail.Recovery;
 }
 
 public sealed class SubscriptionSelectionRow(SubscriptionAccess subscription)

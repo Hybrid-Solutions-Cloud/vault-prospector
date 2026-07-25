@@ -251,6 +251,35 @@
                 <Button Content="Revoke local access" Command="{Binding RevokeIdentityAccessCommand}" Margin="0,0,8,8" />
                 <Button Content="Remove identity" Command="{Binding RemoveIdentityCommand}" Margin="0,0,8,8" />
               </WrapPanel>
+              <Border IsVisible="{Binding HasSyncErrors}"
+                      Background="#FFF0D8"
+                      BorderBrush="#D49342"
+                      BorderThickness="1"
+                      CornerRadius="6"
+                      Padding="12"
+                      AutomationProperties.Name="Actionable isolated synchronization errors"
+                      AutomationProperties.LiveSetting="Polite">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="{Binding SyncErrors.Count, StringFormat={}{0} synchronized scopes need attention}"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="Usable results were preserved. Correct only the affected scope, then retry synchronization."
+                             TextWrapping="Wrap" />
+                  <ListBox ItemsSource="{Binding SyncErrors}"
+                           MaxHeight="220"
+                           AutomationProperties.Name="Synchronization error details">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:SyncErrorRow">
+                        <StackPanel Margin="4,6" Spacing="2">
+                          <TextBlock Text="{Binding Scope}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Category}" Opacity="0.75" />
+                          <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Recovery}" TextWrapping="Wrap" FontWeight="SemiBold" />
+                        </StackPanel>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </StackPanel>
+              </Border>
               <Border IsVisible="{Binding SelectedIdentitySupportsCredentialRotation}"
                       BorderBrush="#344B43"
                       BorderThickness="1"
