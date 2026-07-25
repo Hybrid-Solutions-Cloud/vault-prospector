@@ -962,6 +962,56 @@
         </ScrollViewer>
       </TabItem>
 
+      <TabItem Header="Activity &amp; support">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+          <Grid ColumnDefinitions="1.15*,0.85*" Margin="4,14" ColumnSpacing="14">
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Privacy-safe diagnostics"
+                           FontSize="{StaticResource VaultFontSize20}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="Vault Prospector records event types, timestamps, pseudonymous identifiers, counts, and safe status categories. It does not record secret values, access tokens, user names, vault names, or object names."
+                           TextWrapping="Wrap" />
+                <TextBlock Text="External diagnostic log"
+                           FontWeight="SemiBold" />
+                <TextBox Text="{Binding DiagnosticLogPath, Mode=OneWay}"
+                         IsReadOnly="True"
+                         TextWrapping="Wrap"
+                         AutomationProperties.Name="External privacy-safe diagnostic log path" />
+                <TextBlock Text="This path remains available when the application cannot open. Support may ask you to collect it using the documented procedure."
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
+              </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Create a support bundle"
+                           FontSize="{StaticResource VaultFontSize20}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="The bundle contains a manifest and at most the latest 4 MiB of the already-redacted diagnostic log. It excludes settings, databases, tokens, cached values, identities, vault names, and object names."
+                           TextWrapping="Wrap" />
+                <Button Classes="primary"
+                        Content="Create support bundle"
+                        Command="{Binding CreateSupportBundleCommand}"
+                        HorizontalAlignment="Left"
+                        AutomationProperties.Name="Create a privacy-safe local support bundle" />
+                <TextBlock Text="{Binding SupportBundleStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <TextBox Text="{Binding LatestSupportBundlePath, Mode=OneWay}"
+                         IsReadOnly="True"
+                         TextWrapping="Wrap"
+                         AutomationProperties.Name="Latest local support bundle path" />
+                <TextBlock Text="Nothing is uploaded automatically. Inspect the ZIP before sharing it."
+                           TextWrapping="Wrap"
+                           FontWeight="SemiBold" />
+              </StackPanel>
+            </Border>
+          </Grid>
+        </ScrollViewer>
+      </TabItem>
+
       <TabItem Header="Settings">
         <ScrollViewer Margin="4,14"><Border Classes="card" MaxWidth="700" HorizontalAlignment="Left">
           <StackPanel Spacing="12">

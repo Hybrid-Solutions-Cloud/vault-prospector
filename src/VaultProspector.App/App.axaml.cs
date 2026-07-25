@@ -147,7 +147,15 @@ public partial class App : Avalonia.Application
                 localRecoveryArchiveService,
                 browserFillService,
                 cyberArkService,
-                enterprisePolicy);
+                enterprisePolicy,
+                new FileSystemSupportBundleService(
+                    VaultProspectorPaths.LogPath,
+                    Path.Combine(
+                        VaultProspectorPaths.DataDirectory,
+                        "support"),
+                    typeof(App).Assembly.GetName().Version?.ToString() ??
+                    "unknown",
+                    clock));
             window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()

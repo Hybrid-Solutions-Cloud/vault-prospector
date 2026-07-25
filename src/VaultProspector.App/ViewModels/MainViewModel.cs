@@ -25,7 +25,8 @@ public sealed partial class MainViewModel(
     LocalRecoveryArchiveService? localRecoveryArchiveService = null,
     BrowserFillService? browserFillService = null,
     CyberArkService? cyberArkService = null,
-    IEnterprisePolicy? enterprisePolicy = null) : ViewModelBase
+    IEnterprisePolicy? enterprisePolicy = null,
+    ISupportBundleService? supportBundleService = null) : ViewModelBase
 {
     private static readonly IdentityType[] SupportedIdentityTypes =
     [
@@ -63,6 +64,9 @@ public sealed partial class MainViewModel(
         [CloseBehavior.Ask, CloseBehavior.Exit, CloseBehavior.LockToNotificationArea];
     public string VersionLabel { get; } = $"Vault Prospector {GetVersion()}";
     public bool IsCyberArkPreviewEnabled => _isCyberArkPreviewEnabled;
+    public string DiagnosticLogPath =>
+        supportBundleService?.DiagnosticLogPath ??
+        "Diagnostic log path is unavailable in this build.";
 
     [ObservableProperty] private IdentityType _selectedIdentityType = IdentityType.InteractiveUser;
     [ObservableProperty] private string _credentialData = string.Empty;
@@ -185,6 +189,10 @@ public sealed partial class MainViewModel(
     [ObservableProperty]
     private string _enterprisePolicyStatus =
         "No machine-managed enterprise policy is configured.";
+    [ObservableProperty]
+    private string _supportBundleStatus =
+        "No support bundle has been created in this session.";
+    [ObservableProperty] private string _latestSupportBundlePath = string.Empty;
 
     public bool HasSelectedIdentity => SelectedIdentity is not null;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
@@ -670,6 +678,19 @@ public sealed partial class MainViewModel(
     [RelayCommand(CanExecute = nameof(CanStartOperation))]
     private Task SearchAsync() => RunAsync(SearchCoreAsync);
 
+    [RelayCommand(CanExecute = nameof(CanCreateSupportBundle))]
+    private Task CreateSupportBundleAsync() => RunAsync(
+        async cancellationToken =>
+        {
+            if (supportBundleService is null)
+                return;
+            LatestSupportBundlePath = await supportBundleService.CreateAsync(cancellationToken);
+            SupportBundleStatus =
+                "Support bundle created locally. Review the ZIP contents before sharing it.";
+            StatusText = "Privacy-safe support bundle created locally.";
+        },
+        "Creating a privacy-safe support bundle");
+
     [RelayCommand(CanExecute = nameof(CanUseSelectedResult))]
     private Task ToggleFavoriteAsync() => RunAsync(async cancellationToken =>
     {
@@ -1116,6 +1137,9 @@ public sealed partial class MainViewModel(
     private string EffectiveClientId() => UseCustomClientId ? ClientId.Trim() : ProductIdentity.DefaultClientId;
 
     private bool CanStartOperation() => !IsBusy;
+    private bool CanCreateSupportBundle() =>
+        supportBundleService is not null &&
+        !IsBusy;
     private bool CanAddIdentity() =>
         !IsBusy &&
         IsProviderAllowed(EnterpriseProvider.AzureKeyVault) &&
@@ -1327,6 +1351,7 @@ public sealed partial class MainViewModel(
         ExcludeVaultCommand.NotifyCanExecuteChanged();
         IncludeVaultCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
+        CreateSupportBundleCommand.NotifyCanExecuteChanged();
         ToggleFavoriteCommand.NotifyCanExecuteChanged();
         RevealCommand.NotifyCanExecuteChanged();
         CopyCommand.NotifyCanExecuteChanged();

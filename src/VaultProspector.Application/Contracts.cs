@@ -459,6 +459,12 @@ public interface IDiagnosticSink
     void WriteError(string eventName, Exception exception, IReadOnlyDictionary<string, object?> fields);
 }
 
+public interface ISupportBundleService
+{
+    string DiagnosticLogPath { get; }
+    Task<string> CreateAsync(CancellationToken cancellationToken);
+}
+
 public sealed record BrowserFillApproval(
     Guid ApprovalId,
     ValidatedBrowserFillRequest Request,

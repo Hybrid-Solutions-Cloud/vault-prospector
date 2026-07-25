@@ -189,6 +189,34 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void ActivitySurfaceExposesExternalLogAndLocalBundleWithoutAutomaticUpload()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var activity = document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "TabItem" &&
+                Attribute(element, "Header")?.Value == "Activity & support");
+
+        Assert.Contains(
+            activity.Descendants(),
+            element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "External privacy-safe diagnostic log path");
+        Assert.Contains(
+            activity.Descendants(),
+            element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Create a privacy-safe local support bundle");
+        Assert.Contains(
+            activity.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value?.Contains(
+                    "Nothing is uploaded automatically",
+                    StringComparison.Ordinal) is true);
+    }
+
+    [Fact]
     public void NvdaFocusBridgeMatchesPinnedAvaloniaInternals()
     {
         var document = XDocument.Load(FindMainWindowMarkup());
