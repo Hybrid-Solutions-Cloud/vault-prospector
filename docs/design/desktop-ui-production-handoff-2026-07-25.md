@@ -80,3 +80,19 @@ and interaction reference only.
    data/recovery surfaces.
 6. Visual baselines, keyboard/assistive-technology evidence, exact-package walkthrough, and
    product-owner approval.
+
+## Installer implementation
+
+The MSI uses the WiX `WixUI_InstallDir` interaction model so installation, upgrade, repair, and
+removal retain native Windows Installer keyboard and accessibility behavior. Atlas dialog and
+banner artwork carry the selected palette into setup. The completion screen explains same-account
+local-state retention and offers an explicit, user-controlled launch action. Silent enterprise
+installation remains supported and continues to create the Start menu shortcut.
+
+## Automated visual baseline
+
+`tests/VaultProspector.App.Tests/Baselines/atlas.visual-baseline.json` pins the approved Atlas
+application resources, production window markup, reference screenshots, and installer artwork by
+SHA-256. CI fails whenever one of those visual sources changes without an intentional baseline
+review. Semantic accessibility tests separately verify automation names, live regions, keyboard
+focus support, responsive layout, text scaling, and high-contrast resources.
