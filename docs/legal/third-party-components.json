@@ -4225,6 +4225,27 @@
     },
     {
       "ecosystem": "nuget",
+      "id": "WixToolset.UI.wixext",
+      "version": "5.0.2",
+      "scopes": [
+        "build"
+      ],
+      "dependencyTypes": [
+        "direct"
+      ],
+      "sourceFiles": [
+        "installer/packages.lock.json"
+      ],
+      "license": "MS-RL",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/wixtoolset/wix",
+      "packageUrl": "https://www.nuget.org/packages/WixToolset.UI.wixext/5.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
       "id": "Xamarin.AndroidX.Activity",
       "version": "1.12.4.1",
       "scopes": [
