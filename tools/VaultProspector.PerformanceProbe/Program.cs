@@ -45,6 +45,10 @@ internal static class PerformanceProbe
 
         try
         {
+            await WarmUpRepositoryRuntimeAsync();
+            Console.Error.WriteLine(
+                "Warmed SQLCipher and encrypted-repository runtime paths.");
+
             var databasePath = Path.Combine(workingDirectory, "metadata.db");
             using var keyProvider = new EphemeralKeyProvider();
             var metrics = new List<PerformanceMetric>();
@@ -149,6 +153,7 @@ internal static class PerformanceProbe
                 metrics.All(metric => metric.Passed),
                 [
                     "Synthetic metadata contains no provider values, tokens, credentials, or live identifiers.",
+                    "Empty repository initialization is measured after one isolated in-process SQLCipher and repository warmup; clean process-to-window startup remains a release-candidate live test.",
                     "Synchronization excludes provider network latency and measures the production service and encrypted repository.",
                     "Repository reopen is a core-startup measure; exact packaged UI startup remains a release-candidate live test.",
                     "Working set is measured after seeding, forced collection, warm searches, and cancellation in this probe process.",
@@ -182,6 +187,30 @@ internal static class PerformanceProbe
             if (Directory.Exists(workingDirectory))
             {
                 Directory.Delete(workingDirectory, true);
+            }
+        }
+    }
+
+    private static async Task WarmUpRepositoryRuntimeAsync()
+    {
+        var warmupDirectory = Path.Combine(
+            Path.GetTempPath(),
+            $"vault-prospector-performance-warmup-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(warmupDirectory);
+
+        try
+        {
+            using var keyProvider = new EphemeralKeyProvider();
+            using var repository = new EncryptedSqliteMetadataRepository(
+                Path.Combine(warmupDirectory, "metadata.db"),
+                keyProvider);
+            await repository.InitializeAsync(CancellationToken.None);
+        }
+        finally
+        {
+            if (Directory.Exists(warmupDirectory))
+            {
+                Directory.Delete(warmupDirectory, true);
             }
         }
     }

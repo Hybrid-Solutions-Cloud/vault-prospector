@@ -23,6 +23,11 @@ The generated estate contains no provider values, credentials, tokens, tenant da
 data, or other live identifiers. Provider network time is excluded so the result isolates local
 application and encrypted-storage behavior.
 
+The empty-repository metric performs one isolated, unmeasured initialization first so that
+first-use .NET JIT, SQLCipher native loading, and cryptographic-provider activation are not
+mistaken for repository work. Clean process-to-usable-window startup remains a separate
+exact-package live gate and is not claimed by this metric.
+
 ## Environment
 
 | Property | Observed value |
