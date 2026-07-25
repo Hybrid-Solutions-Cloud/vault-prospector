@@ -1380,7 +1380,7 @@ public sealed partial class MainViewModel(
     {
         // Preserve a valid selection while policy and host availability are refreshed.
         // Clearing the bound collection makes Avalonia push null into the enum property.
-        for (var index = 0; index < availableIdentityTypes.Count; index++)
+        for (var index = 0; index < availableIdentityTypes.Length; index++)
         {
             var identityType = availableIdentityTypes[index];
             if (index < IdentityTypes.Count &&
@@ -1400,7 +1400,7 @@ public sealed partial class MainViewModel(
             }
         }
 
-        while (IdentityTypes.Count > availableIdentityTypes.Count)
+        while (IdentityTypes.Count > availableIdentityTypes.Length)
         {
             IdentityTypes.RemoveAt(IdentityTypes.Count - 1);
         }
