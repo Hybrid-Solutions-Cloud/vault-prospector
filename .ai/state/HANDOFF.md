@@ -1,5 +1,29 @@
 # Session handoff
 
+## HCS runner and ADO reconciliation completed — 2026-07-25
+
+- PR #26 merged as `c6748ccc87ad62fb9c6f3ac46c067360972acce4`; PR #27 merged as
+  `a0370c3163e4389ac5fbf61b81f2921051533546`.
+- HCS Tier-2 PR runs `30146345649` and `30146846301` passed. Exact-main runs `30146470563` and
+  `30146971143` passed portable validation, full-history secret scanning, and the Windows
+  candidate.
+- The approved Tier-4 Windows fallback deployed successfully twice, including restart/reuse of
+  the stopped VM. The final VM was stopped, cleanup completed, and
+  `rg-hcs-vp-winbuild-eus2-01` no longer exists.
+- ADO pipeline definitions 5, 6, and 7 were deleted only after replacement exact-main validation.
+  Historical builds 284, 287, 290, and 295 remain evidence.
+- All 137 ADO work items were audited against the HCS work-item standard. Formal Acceptance
+  Criteria now exists on every non-Task item; every item has tags and priority; and the hierarchy
+  has no terminal-state contradiction.
+- AB#5095 and its children are terminal: four Tasks Closed, bld-01 repair Removed from product
+  scope, and the User Story Closed. AB#5332/5333 also closed after current dependency and
+  full-history secret-scan evidence was verified.
+- Every remaining open User Story received a dated acceptance audit. CyberArk, native mobile, and
+  Microsoft Store signing are Priority 4 `future-roadmap`; they do not block the unsigned Windows
+  Preview. Governed Azure writes remain genuinely unimplemented and gated by design/security
+  review. Other Windows stories remain open only for their named live, independent, Store,
+  operational, or legal evidence.
+
 ## Release-scope and runner correction — 2026-07-25
 
 - CyberArk and native mobile were moved to future-roadmap status and removed from Windows GA

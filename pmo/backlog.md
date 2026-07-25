@@ -38,7 +38,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 
 ## Story status and plan mapping
 
-Status snapshot: 2026-07-24. **Delivered** means present in the current public Preview unless the
+Status snapshot: 2026-07-25. **Delivered** means present in the current public Preview unless the
 note explicitly limits it to policy/process delivery. See [`plan.md`](plan.md) for phase scope and
 exit criteria.
 

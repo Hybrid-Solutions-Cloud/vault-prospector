@@ -16,15 +16,28 @@
 - Resource group: `rg-hcs-gh-runners-eus2-01`
 - Labels: `self-hosted,linux,ubuntu-22.04,hcs`
 - Pull request: [#26](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/26)
-- Exact HCS validation:
-  [GitHub Actions run 30146204363](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30146204363)
-- Result: portable source validation passed; full-history secret scan passed.
+- Final PR #26 validation:
+  [GitHub Actions run 30146345649](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30146345649)
+- Repeatability PR #27 validation:
+  [GitHub Actions run 30146846301](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30146846301)
+- Exact-main validation:
+  [run 30146470563](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30146470563)
+  at `c6748ccc87ad62fb9c6f3ac46c067360972acce4` and
+  [run 30146971143](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/actions/runs/30146971143)
+  at `a0370c3163e4389ac5fbf61b81f2921051533546`.
+- Result: portable source validation, full-history secret scan, and the Windows candidate passed.
 - Azure job executions `caj-hcs-vp-gh-runner-eus2-01-8f2dx` and
   `caj-hcs-vp-gh-runner-eus2-01-zz682` completed the two ephemeral jobs.
 
 The initial workflow attempt correctly failed because the minimal HCS runner image did not contain
 Node. The workflow now installs pinned Node 24 with `actions/setup-node`; the replacement run
 passed. This is retained as proof that the workflow depends only on declared toolchain setup.
+
+The HCS Tier-4 fallback deployed as
+`vault-prospector-windows-fallback-20260725055129` and then repeated as
+`vault-prospector-windows-fallback-20260725060836`. The second deployment recovered the stopped VM,
+used a unique managed RunCommand, and completed the exact-main job. The VM was stopped after use,
+the cleanup script ran, and Azure now reports that `rg-hcs-vp-winbuild-eus2-01` does not exist.
 
 ## Local Windows evidence
 
@@ -57,3 +70,17 @@ Development candidate `0.3.0-ci.1`:
 The default MSIX development identity is not a Store identity. P-13 and G-07 remain open until the
 exact Partner Center identity values are reserved, Microsoft certifies/signs the package, and the
 Store-delivered package passes clean-machine install, launch, upgrade, and uninstall.
+
+## Delivery and work-item cleanup
+
+- GitHub `main` is `a0370c3163e4389ac5fbf61b81f2921051533546`.
+- The private source repository has no open pull requests.
+- Azure DevOps pipeline definitions 5, 6, and 7 were deleted after the replacement workflows
+  passed. Their historical build records were retained.
+- The ADO project contains 137 work items. Every non-Task item has formal Acceptance Criteria;
+  every item has tags and priority; and there are no parent/child terminal-state contradictions.
+- AB#5095 and AB#5332 are closed with current evidence. CyberArk, mobile, and Store signing are
+  Priority 4 `future-roadmap` items. All other open stories have a dated, specific evidence-gap
+  audit and remain open.
+
+See [ADO backlog reconciliation](ado-backlog-reconciliation-2026-07-25.md).

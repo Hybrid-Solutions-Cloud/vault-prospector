@@ -1,7 +1,7 @@
 # Current task
 
-Correct release scope and delivery governance, validate the exact result, and reconcile Azure
-DevOps Boards with implementation evidence.
+Complete the remaining Windows GA evidence without treating future products, paid signing,
+or an unavailable preferred build host as release blockers.
 
 Confirmed on 2026-07-25:
 
@@ -19,15 +19,31 @@ Confirmed on 2026-07-25:
 
 Validated:
 
-- PR #26 HCS run `30146204363` passed portable validation and full-history secret scanning.
+- PRs #26 and #27 merged as `c6748ccc87ad62fb9c6f3ac46c067360972acce4` and
+  `a0370c3163e4389ac5fbf61b81f2921051533546`.
+- PR runs `30146345649` and `30146846301` passed portable validation and full-history secret
+  scanning on the HCS Tier-2 runner.
+- Exact-main runs `30146470563` and `30146971143` passed all three jobs, including the Windows
+  candidate on the governed Tier-4 fallback.
 - Local Windows build passed 371 tests plus MSI, MSIX, performance, legal/privacy, enterprise,
   browser, and operational gates.
+- The Tier-4 deployment succeeded twice, the final VM was stopped, and
+  `rg-hcs-vp-winbuild-eus2-01` was deleted.
+- ADO pipeline definitions 5, 6, and 7 were retired after replacement validation; historical
+  build records remain.
+- All 137 ADO work items were audited. No item lacks formal acceptance criteria, tags, or priority,
+  and no closed parent has an open child or New parent has only terminal children.
+- AB#5095 and AB#5332 are closed with evidence. CyberArk, mobile, and Store signing are Priority 4
+  `future-roadmap` work. Every other open User Story has a recorded acceptance-evidence gap.
 
 Next:
 
-1. merge PR #26;
-2. provision the Tier-4 Windows runner for the queued exact-`main` Windows candidate;
-3. validate `main` and remove the ephemeral Azure resources;
-4. retire the live ADO pipeline definitions; and
-5. reconcile every affected ADO work item, closing only items whose tasks and acceptance criteria
-   are fully evidenced.
+1. Publish the corrected source as a new immutable unsigned Preview through the restored GitHub
+   release workflow and verify every public asset.
+2. Complete current-Windows live matrices, independent security/accessibility review, enterprise
+   policy deployment, operational exercise, and legal/privacy approval.
+3. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
+   Microsoft-signed Store package.
+4. Implement governed Azure mutations only after the required design/security gate; the current
+   product remains intentionally read-only.
+5. Keep CyberArk and mobile in their separate future-roadmap releases.
