@@ -196,8 +196,9 @@ public sealed class EnterprisePolicySnapshot
     public TimeSpan ConstrainRevealVerificationGracePeriod(
         TimeSpan requested)
     {
-        if (requested < TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(requested));
+        ArgumentOutOfRangeException.ThrowIfLessThan(
+            requested,
+            TimeSpan.Zero);
         if (!IsValid)
             return TimeSpan.Zero;
 
