@@ -127,9 +127,10 @@ internal sealed class RemoteWindowsCredentialInterop :
             if (string.IsNullOrWhiteSpace(userName))
                 return UserVerificationResult.RemoteCredentialFailed;
 
+            var logonName = NormalizeLogonName(userName, domain);
             var loggedOn = LogonUser(
-                    userName,
-                    string.IsNullOrWhiteSpace(domain) ? null : domain,
+                    logonName.UserName,
+                    logonName.Domain,
                     passwordBuffer,
                     Logon32LogonNetwork,
                     Logon32ProviderDefault,
@@ -177,6 +178,27 @@ internal sealed class RemoteWindowsCredentialInterop :
                     ? 0
                     : checked((int)authenticationBufferSize));
         }
+    }
+
+    internal static (string UserName, string? Domain) NormalizeLogonName(
+        string userName,
+        string? domain)
+    {
+        var normalizedDomain =
+            string.IsNullOrWhiteSpace(domain) ? null : domain;
+        if (normalizedDomain is not null)
+            return (userName, normalizedDomain);
+
+        var separatorIndex = userName.IndexOf('\\');
+        if (separatorIndex <= 0 ||
+            separatorIndex == userName.Length - 1)
+        {
+            return (userName, null);
+        }
+
+        return (
+            userName[(separatorIndex + 1)..],
+            userName[..separatorIndex]);
     }
 
     private static nint AllocateCharacters(int characterCount) =>
