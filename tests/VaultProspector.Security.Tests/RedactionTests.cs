@@ -14,7 +14,6 @@ public sealed class RedactionTests
             sink.Information("test", new Dictionary<string, object?>
             {
                 ["identity_id"] = "known-identity",
-                ["identity_type"] = "FederatedServicePrincipal",
                 ["item_count"] = 4,
                 ["error_count"] = "sensitive-count-canary",
                 ["status"] = "sensitive-status-canary",

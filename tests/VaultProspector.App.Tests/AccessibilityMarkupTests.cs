@@ -401,6 +401,23 @@ public sealed class AccessibilityMarkupTests
             element =>
                 Attribute(element, "Text")?.Value ==
                 "ACTIVE WORKSPACE");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                "Unlock this installation");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(
+                    element,
+                    "AutomationProperties.Name")?.Value ==
+                "Verify and unlock Vault Prospector");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                "{Binding ActiveWorkspaceContext}");
     }
 
     [Fact]

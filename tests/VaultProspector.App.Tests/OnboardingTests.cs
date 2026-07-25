@@ -691,6 +691,65 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public async Task WorkloadIdentityFilterIsDeterministicAndSearchable()
+    {
+        var candidates = new[]
+        {
+            WorkloadCandidate(
+                "Zulu automation",
+                "33333333-3333-3333-3333-333333333333"),
+            WorkloadCandidate(
+                "Alpha deployment",
+                "11111111-1111-1111-1111-111111111111"),
+            WorkloadCandidate(
+                "Beta reporting",
+                "22222222-2222-2222-2222-222222222222"),
+        };
+        var administration =
+            new FakeWorkloadAdministrationService
+            {
+                ServicePrincipals = candidates,
+            };
+        var viewModel = new MainViewModel(
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!,
+            administration)
+        {
+            SelectedIdentity = CreateIdentity(),
+        };
+
+        await viewModel.DiscoverServicePrincipalsCommand
+            .ExecuteAsync(null);
+
+        Assert.Equal(
+            ["Alpha deployment", "Beta reporting", "Zulu automation"],
+            viewModel.WorkloadIdentityCandidates
+                .Select(row => row.DisplayName)
+                .ToArray());
+
+        viewModel.WorkloadIdentitySearchText = "report";
+
+        var candidate = Assert.Single(
+            viewModel.WorkloadIdentityCandidates);
+        Assert.Equal(
+            "Beta reporting",
+            candidate.DisplayName);
+        Assert.Contains(
+            "1 of 3",
+            viewModel.WorkloadIdentityFilterStatus,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task InterruptedRotationRecoveryRunsOnlyAfterLocalVerification()
     {
         var engine = new FakeRotationEngine
@@ -1477,6 +1536,8 @@ public sealed class OnboardingTests : IDisposable
     private sealed class FakeWorkloadAdministrationService : IWorkloadIdentityAdministrationService
     {
         public WorkloadIdentityCandidate? AssessedCandidate { get; private set; }
+        public IReadOnlyList<WorkloadIdentityCandidate>
+            ServicePrincipals { get; init; } = [];
 
         public Task<IReadOnlyList<WorkloadIdentityCandidate>> ListManagedIdentitiesAsync(
             ConnectedIdentity administrator,
@@ -1487,7 +1548,7 @@ public sealed class OnboardingTests : IDisposable
         public Task<IReadOnlyList<WorkloadIdentityCandidate>> ListServicePrincipalsAsync(
             ConnectedIdentity administrator,
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<WorkloadIdentityCandidate>>([]);
+            Task.FromResult(ServicePrincipals);
 
         public Task<WorkloadIdentityCandidate> AssessPermissionsAsync(
             ConnectedIdentity administrator,
@@ -1544,6 +1605,27 @@ public sealed class OnboardingTests : IDisposable
                 identityName,
                 []);
     }
+
+    private static WorkloadIdentityCandidate WorkloadCandidate(
+        string displayName,
+        string principalId) =>
+        new(
+            "Service principal (Application)",
+            "tenant",
+            string.Empty,
+            string.Empty,
+            displayName,
+            $"/tenants/tenant/servicePrincipals/{principalId}",
+            Guid.NewGuid().ToString("D"),
+            principalId,
+            string.Empty,
+            true,
+            new WorkloadPermissionAssessment(
+                "Confirmed",
+                "Not proven",
+                "Not proven",
+                "Not proven",
+                "Not proven"));
 
     private sealed class FakeRotationEngine :
         ILocalEncryptionRotationEngine

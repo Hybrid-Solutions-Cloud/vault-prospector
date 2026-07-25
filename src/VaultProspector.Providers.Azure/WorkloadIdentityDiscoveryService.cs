@@ -143,7 +143,9 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
 
             foreach (var value in values.EnumerateArray())
             {
-                if (IsMicrosoftFirstParty(value))
+                if (!IsEligibleServicePrincipal(
+                        value,
+                        administrator.HomeTenantId))
                     continue;
                 if (candidates.Count >= MaximumGraphCandidates)
                     throw new InvalidDataException(
@@ -160,11 +162,45 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         return candidates;
     }
 
-    private static bool IsMicrosoftFirstParty(JsonElement servicePrincipal) =>
-        string.Equals(
-            OptionalString(servicePrincipal, "appOwnerOrganizationId"),
-            MicrosoftFirstPartyTenantId,
-            StringComparison.OrdinalIgnoreCase);
+    private static bool IsEligibleServicePrincipal(
+        JsonElement servicePrincipal,
+        string customerTenantId)
+    {
+        var ownerTenantId = OptionalString(
+            servicePrincipal,
+            "appOwnerOrganizationId");
+        if (string.IsNullOrWhiteSpace(ownerTenantId) ||
+            string.Equals(
+                ownerTenantId,
+                MicrosoftFirstPartyTenantId,
+                StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(
+                ownerTenantId,
+                customerTenantId,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var principalType = OptionalString(
+            servicePrincipal,
+            "servicePrincipalType");
+        if (!string.Equals(
+                principalType,
+                "Application",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return !servicePrincipal.TryGetProperty(
+                   "accountEnabled",
+                   out var enabledElement) ||
+               enabledElement.ValueKind ==
+               JsonValueKind.Null ||
+               enabledElement.ValueKind ==
+               JsonValueKind.True;
+    }
 
     public async Task<WorkloadIdentityCandidate> AssessPermissionsAsync(
         ConnectedIdentity administrator,
@@ -449,6 +485,8 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         var servicePrincipalType = OptionalString(value, "servicePrincipalType");
         var permissions = ReadOnlyDiscoveryAssessment() with
         {
+            IdentityManagement =
+                "Customer-owned application registration in the selected home tenant; local credential ownership is not proven.",
             AttachOrUse = enabled
                 ? "Not proven — credential ownership and target attachment were not evaluated."
                 : "Unavailable — Microsoft Graph reports this service principal disabled.",

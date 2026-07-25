@@ -45,6 +45,8 @@ public sealed partial class MainViewModel(
     private bool _managedIdentityHostSupported;
     private int _subscriptionLoadVersion;
     private int _sensitivePresentationEpoch;
+    private readonly List<WorkloadIdentityCandidate>
+        _allWorkloadIdentityCandidates = [];
 
     public ObservableCollection<ConnectedIdentity> Identities { get; } = [];
     public ObservableCollection<TenantAccess> Tenants { get; } = [];
@@ -72,6 +74,19 @@ public sealed partial class MainViewModel(
     public string DiagnosticLogPath =>
         supportBundleService?.DiagnosticLogPath ??
         "Diagnostic log path is unavailable in this build.";
+    public string ActiveWorkspaceContext =>
+        SelectedWorkspace?.Name ??
+        "All discovered sources";
+    public string ActiveIdentityContext =>
+        SelectedIdentity is null
+            ? "No identity selected"
+            : string.IsNullOrWhiteSpace(
+                SelectedIdentity.DisplayName)
+                ? SelectedIdentity.UsernameHint
+                : SelectedIdentity.DisplayName;
+    public string ActiveSubscriptionContext =>
+        SelectedSubscription?.DisplayName ??
+        "All subscriptions";
 
     [ObservableProperty] private IdentityType _selectedIdentityType = IdentityType.InteractiveUser;
     [ObservableProperty] private string _credentialData = string.Empty;
@@ -80,6 +95,10 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _administrationSubscriptionId = string.Empty;
     [ObservableProperty] private string _administrationResourceGroup = string.Empty;
     [ObservableProperty] private string _administrationIdentityName = string.Empty;
+    [ObservableProperty] private string _workloadIdentitySearchText = string.Empty;
+    [ObservableProperty]
+    private string _workloadIdentityFilterStatus =
+        "Run a discovery action to list eligible customer-managed identities.";
     [ObservableProperty] private string _administrationVaultResourceId = string.Empty;
     [ObservableProperty] private string _administrationRoleDefinitionId = string.Empty;
     [ObservableProperty]
@@ -530,13 +549,25 @@ public sealed partial class MainViewModel(
                     selectedRow.Candidate,
                     AdministrationVaultResourceId,
                     cancellationToken);
-            var index = WorkloadIdentityCandidates.IndexOf(selectedRow);
-            var assessedRow = new WorkloadIdentityCandidateRow(assessed);
-            if (index >= 0)
-                WorkloadIdentityCandidates[index] = assessedRow;
+            var sourceIndex =
+                _allWorkloadIdentityCandidates.FindIndex(
+                    candidate =>
+                        string.Equals(
+                            candidate.PrincipalId,
+                            assessed.PrincipalId,
+                            StringComparison.OrdinalIgnoreCase));
+            if (sourceIndex >= 0)
+            {
+                _allWorkloadIdentityCandidates[sourceIndex] =
+                    assessed;
+            }
             else
-                WorkloadIdentityCandidates.Add(assessedRow);
-            SelectedWorkloadIdentityCandidate = assessedRow;
+            {
+                _allWorkloadIdentityCandidates.Add(assessed);
+            }
+
+            ApplyWorkloadIdentityFilter(
+                assessed.PrincipalId);
             StatusText =
                 $"Read-only authorization evidence refreshed for {assessed.DisplayName} at the exact Key Vault. No Azure resources or values were changed.";
         });
@@ -1303,6 +1334,7 @@ public sealed partial class MainViewModel(
     {
         revealVerificationSession?.Invalidate();
         OnPropertyChanged(nameof(HasSelectedIdentity));
+        OnPropertyChanged(nameof(ActiveIdentityContext));
         OnPropertyChanged(nameof(BrowserSelectedSource));
         OnPropertyChanged(nameof(SelectedIdentitySupportsCredentialRotation));
         OnPropertyChanged(nameof(CredentialRotationLabel));
@@ -1342,6 +1374,7 @@ public sealed partial class MainViewModel(
 
     partial void OnSelectedSubscriptionChanged(SubscriptionSelectionRow? value)
     {
+        OnPropertyChanged(nameof(ActiveSubscriptionContext));
         ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
         IncludeSubscriptionCommand.NotifyCanExecuteChanged();
         AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
@@ -1374,6 +1407,7 @@ public sealed partial class MainViewModel(
     {
         revealVerificationSession?.Invalidate();
         OnPropertyChanged(nameof(HasSelectedWorkspace));
+        OnPropertyChanged(nameof(ActiveWorkspaceContext));
         if (value is null) FilterSelectedWorkspace = false;
         PurgeSelectedWorkspaceCacheCommand.NotifyCanExecuteChanged();
         AddSelectedVaultToWorkspaceCommand.NotifyCanExecuteChanged();
@@ -1420,6 +1454,10 @@ public sealed partial class MainViewModel(
     {
         CreateWorkspaceCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnWorkloadIdentitySearchTextChanged(
+        string value) =>
+        ApplyWorkloadIdentityFilter();
 
     partial void OnIsBusyChanged(bool value)
     {
@@ -1622,9 +1660,74 @@ public sealed partial class MainViewModel(
     {
         SelectedWorkloadIdentityCandidate = null;
         WorkloadIdentityCandidates.Clear();
-        foreach (var candidate in candidates)
-            WorkloadIdentityCandidates.Add(new WorkloadIdentityCandidateRow(candidate));
+        _allWorkloadIdentityCandidates.Clear();
+        _allWorkloadIdentityCandidates.AddRange(
+            candidates);
+        ApplyWorkloadIdentityFilter();
     }
+
+    private void ApplyWorkloadIdentityFilter(
+        string? selectPrincipalId = null)
+    {
+        var search = WorkloadIdentitySearchText.Trim();
+        var source =
+            _allWorkloadIdentityCandidates.Count > 0
+                ? _allWorkloadIdentityCandidates
+                : WorkloadIdentityCandidates
+                    .Select(row => row.Candidate)
+                    .ToList();
+        var filtered = source
+            .Where(candidate =>
+                search.Length == 0 ||
+                CandidateContains(
+                    candidate,
+                    search))
+            .OrderBy(
+                candidate => candidate.DisplayName,
+                StringComparer.OrdinalIgnoreCase)
+            .ThenBy(
+                candidate => candidate.ClientId,
+                StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        SelectedWorkloadIdentityCandidate = null;
+        WorkloadIdentityCandidates.Clear();
+        foreach (var candidate in filtered)
+        {
+            WorkloadIdentityCandidates.Add(
+                new WorkloadIdentityCandidateRow(
+                    candidate));
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectPrincipalId))
+        {
+            SelectedWorkloadIdentityCandidate =
+                WorkloadIdentityCandidates.FirstOrDefault(
+                    row =>
+                        string.Equals(
+                            row.Candidate.PrincipalId,
+                            selectPrincipalId,
+                            StringComparison.OrdinalIgnoreCase));
+        }
+
+        WorkloadIdentityFilterStatus =
+            $"{filtered.Length} of {source.Count} eligible identities shown. Microsoft first-party infrastructure is excluded.";
+    }
+
+    private static bool CandidateContains(
+        WorkloadIdentityCandidate candidate,
+        string search) =>
+        candidate.DisplayName.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        candidate.IdentityType.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        candidate.ClientId.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        candidate.PrincipalId.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase);
 
     private static string FormatPlan(WorkloadIdentityProvisioningPlan plan)
     {

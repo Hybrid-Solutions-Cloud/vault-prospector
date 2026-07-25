@@ -31,31 +31,40 @@
           </StackPanel>
         </Grid>
         <Border Grid.Row="1" Background="{DynamicResource VaultColorContext}" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="22,8">
-          <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto" ColumnSpacing="16">
-            <TextBlock Text="ACTIVE WORKSPACE"
+          <Grid x:Name="ActiveContextGrid"
+                ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto"
+                RowDefinitions="Auto"
+                ColumnSpacing="16"
+                RowSpacing="6">
+            <TextBlock x:Name="ActiveContextLabel"
+                       Text="ACTIVE WORKSPACE"
                        Foreground="{DynamicResource VaultColorMuted}"
                        FontSize="{StaticResource VaultFontSize11}"
                        FontWeight="Bold"
                        VerticalAlignment="Center" />
-            <Border Grid.Column="1"
+            <Border x:Name="ActiveWorkspaceBadge"
+                    Grid.Column="1"
                     Background="{DynamicResource VaultColorSurface}"
                     BorderBrush="{DynamicResource VaultColorLineStrong}"
                     BorderThickness="1"
                     Padding="10,6">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Border Width="7" Background="#1A9B83" />
-                <TextBlock Text="{Binding SelectedWorkspace.Name, FallbackValue=All discovered sources}"
+                <TextBlock Text="{Binding ActiveWorkspaceContext}"
                            FontWeight="SemiBold"
                            VerticalAlignment="Center" />
               </StackPanel>
             </Border>
-            <TextBlock Grid.Column="2"
-                       Text="{Binding SelectedIdentity.UsernameHint, FallbackValue=No identity selected}"
+            <TextBlock x:Name="ActiveIdentityText"
+                       Grid.Column="2"
+                       Text="{Binding ActiveIdentityContext}"
                        VerticalAlignment="Center" />
-            <TextBlock Grid.Column="3"
-                       Text="{Binding SelectedSubscription.DisplayName, FallbackValue=All subscriptions}"
+            <TextBlock x:Name="ActiveSubscriptionText"
+                       Grid.Column="3"
+                       Text="{Binding ActiveSubscriptionContext}"
                        VerticalAlignment="Center" />
-            <Border Grid.Column="5"
+            <Border x:Name="ActiveReadyBadge"
+                    Grid.Column="5"
                     IsVisible="{Binding IsApplicationReady}"
                     Background="{DynamicResource VaultColorGoodSoft}"
                     BorderBrush="{DynamicResource VaultColorGood}"
@@ -105,13 +114,93 @@
       </StackPanel>
     </Border>
 
-    <Border Grid.Row="2" Margin="18" Classes="card" IsVisible="{Binding !IsUnlocked}" MaxWidth="500" HorizontalAlignment="Center" VerticalAlignment="Center">
-      <StackPanel Spacing="16">
-        <TextBlock Text="Application Locked" FontSize="{StaticResource VaultFontSize24}" FontWeight="Bold" />
-        <TextBlock Text="{Binding UnlockMessage}" TextWrapping="Wrap" />
-        <TextBlock Text="{Binding UnlockRecovery}" TextWrapping="Wrap" Opacity="0.8" />
-        <Button Classes="primary" Content="Unlock Vault Prospector" Command="{Binding InitializeCommand}" HorizontalAlignment="Left" />
-      </StackPanel>
+    <Border Grid.Row="2"
+            Margin="18"
+            IsVisible="{Binding !IsUnlocked}"
+            MaxWidth="900"
+            BorderBrush="{DynamicResource VaultColorLine}"
+            BorderThickness="1"
+            Background="{DynamicResource VaultColorSurface}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+      <Grid x:Name="UnlockExperienceGrid"
+            ColumnDefinitions="1.05*,0.95*"
+            RowDefinitions="*">
+        <Border Background="{DynamicResource VaultColorHeader}"
+                Padding="30">
+          <StackPanel Spacing="16"
+                      VerticalAlignment="Center">
+            <Border Width="64"
+                    Height="64"
+                    Background="{DynamicResource VaultColorAccent}"
+                    HorizontalAlignment="Left">
+              <TextBlock Text="VP"
+                         Foreground="White"
+                         FontSize="{StaticResource VaultFontSize22}"
+                         FontWeight="Bold"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center" />
+            </Border>
+            <TextBlock Text="Local protection"
+                       Foreground="#D4DDD9"
+                       FontSize="{StaticResource VaultFontSize11}"
+                       FontWeight="Bold" />
+            <TextBlock Text="Your Azure identities are separate"
+                       Foreground="White"
+                       FontSize="{StaticResource VaultFontSize24}"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="Unlocking opens encrypted data for this Windows account. It does not sign you into Azure, and you can connect multiple Microsoft Entra identities afterward."
+                       Foreground="#D4DDD9"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="Remote sessions never bypass verification. AVD and Remote Desktop use only the policy-controlled Windows credential fallback when Windows Hello is unavailable."
+                       Foreground="#D4DDD9"
+                       TextWrapping="Wrap"
+                       FontSize="{StaticResource VaultFontSize12}" />
+          </StackPanel>
+        </Border>
+        <Border x:Name="UnlockVerificationCard"
+                Grid.Column="1"
+                Padding="30"
+                Background="{DynamicResource VaultColorSurface}">
+          <StackPanel Spacing="16"
+                      VerticalAlignment="Center">
+            <Border Background="{DynamicResource VaultColorAccentSoft}"
+                    BorderBrush="{DynamicResource VaultColorAccent}"
+                    BorderThickness="1"
+                    Padding="9,5"
+                    HorizontalAlignment="Left">
+              <TextBlock Text="APPLICATION LOCKED"
+                         Foreground="{DynamicResource VaultColorAccentStrong}"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         FontWeight="Bold" />
+            </Border>
+            <TextBlock Text="Unlock this installation"
+                       FontSize="{StaticResource VaultFontSize24}"
+                       FontWeight="Bold"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="{Binding UnlockMessage}"
+                       TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite" />
+            <Border Background="{DynamicResource VaultColorSurfaceAlt}"
+                    BorderBrush="{DynamicResource VaultColorLine}"
+                    BorderThickness="1"
+                    Padding="12">
+              <TextBlock Text="{Binding UnlockRecovery}"
+                         TextWrapping="Wrap" />
+            </Border>
+            <Button Classes="primary"
+                    Content="Verify and continue"
+                    Command="{Binding InitializeCommand}"
+                    HorizontalAlignment="Left"
+                    AutomationProperties.Name="Verify and unlock Vault Prospector" />
+            <TextBlock Text="Windows controls the verification prompt. Vault Prospector never receives your Windows password, PIN, face, or fingerprint."
+                       TextWrapping="Wrap"
+                       FontSize="{StaticResource VaultFontSize11}"
+                       Opacity="0.72" />
+          </StackPanel>
+        </Border>
+      </Grid>
     </Border>
 
     <Border Grid.Row="2"
@@ -413,7 +502,12 @@
           </Border>
           <Border x:Name="ConnectIdentityCard" Grid.Column="1" Classes="card">
             <StackPanel Spacing="10">
-              <Border IsVisible="{Binding IsFirstRun}" Background="#123F36" BorderBrush="#2D8A76" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,6">
+              <Border IsVisible="{Binding IsFirstRun}"
+                      Background="{DynamicResource VaultColorHeader}"
+                      BorderBrush="{DynamicResource VaultColorAccent}"
+                      BorderThickness="1"
+                      Padding="14"
+                      Margin="0,0,0,6">
                 <StackPanel Spacing="5">
                   <TextBlock Text="Set up Vault Prospector" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Foreground="White" />
                   <TextBlock Text="1. Local unlock is complete. Windows verified you so Vault Prospector can open its encrypted local data. This is separate from Azure sign-in." TextWrapping="Wrap" Foreground="White" />
@@ -481,7 +575,12 @@
 
       <TabItem Header="Administration">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-          <Grid ColumnDefinitions="1*,1*" Margin="4,14" ColumnSpacing="14">
+          <Grid x:Name="AdministrationGrid"
+                ColumnDefinitions="1*,1*"
+                RowDefinitions="*"
+                Margin="4,14"
+                ColumnSpacing="14"
+                RowSpacing="14">
             <Border Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Text="Discover workload identities" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
@@ -519,6 +618,12 @@
                         AutomationProperties.Name="Assess selected workload identity permissions at exact Key Vault" />
                 <TextBlock Text="Assessment is read-only. It evaluates the selected administrator at exact resources and the workload identity's observable RBAC grants, inheritance, deny assignments, and conditions. Conditional or incomplete evidence never appears as allowed." TextWrapping="Wrap" Opacity="0.75" />
                 <TextBlock Text="Visible workload identities" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" />
+                <TextBox Text="{Binding WorkloadIdentitySearchText}"
+                         PlaceholderText="Filter by name, type, client ID, or principal ID"
+                         AutomationProperties.Name="Filter eligible workload identities" />
+                <TextBlock Text="{Binding WorkloadIdentityFilterStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
                 <ListBox ItemsSource="{Binding WorkloadIdentityCandidates}"
                          SelectedItem="{Binding SelectedWorkloadIdentityCandidate}"
                          MinHeight="360"
@@ -570,7 +675,9 @@
               </StackPanel>
             </Border>
 
-            <Border Grid.Column="1" Classes="card">
+            <Border x:Name="AdministrationPreviewCard"
+                    Grid.Column="1"
+                    Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Text="Preview workload provisioning" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
                 <Border Background="#3A2510" BorderBrush="#C98A2E" BorderThickness="1" CornerRadius="6" Padding="10">
@@ -717,7 +824,11 @@
               </StackPanel>
             </Border>
 
-            <Grid ColumnDefinitions="1*,1*" ColumnSpacing="14">
+            <Grid x:Name="BrowserMappingGrid"
+                  ColumnDefinitions="1*,1*"
+                  RowDefinitions="*"
+                  ColumnSpacing="14"
+                  RowSpacing="14">
               <Border Classes="card">
                 <StackPanel Spacing="10">
                   <TextBlock Text="Origin-to-secret mappings"
@@ -748,7 +859,9 @@
                 </StackPanel>
               </Border>
 
-              <Border Grid.Column="1" Classes="card">
+              <Border x:Name="BrowserGuidedMappingCard"
+                      Grid.Column="1"
+                      Classes="card">
                 <StackPanel Spacing="10">
                   <TextBlock Text="Guided destination mapping"
                              FontSize="{StaticResource VaultFontSize20}"
@@ -1043,7 +1156,12 @@
       <TabItem Header="Activity &amp; support">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
-          <Grid ColumnDefinitions="1.15*,0.85*" Margin="4,14" ColumnSpacing="14">
+          <Grid x:Name="ActivitySupportGrid"
+                ColumnDefinitions="1.15*,0.85*"
+                RowDefinitions="*"
+                Margin="4,14"
+                ColumnSpacing="14"
+                RowSpacing="14">
             <Border Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Text="Privacy-safe diagnostics"
@@ -1095,7 +1213,9 @@
                 </ListBox>
               </StackPanel>
             </Border>
-            <Border Grid.Column="1" Classes="card">
+            <Border x:Name="SupportBundleCard"
+                    Grid.Column="1"
+                    Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Text="Create a support bundle"
                            FontSize="{StaticResource VaultFontSize20}"
