@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is intentionally capability-based. The published `0.2.0-preview.4` Windows evaluation
+The roadmap is intentionally capability-based. The published `0.2.0-preview.5` Windows evaluation
 release includes the integrated Phase 0–13 implementation; live-provider, independent-review,
 trusted-signing, mobile/store, and GA acceptance evidence remains open as named below.
 

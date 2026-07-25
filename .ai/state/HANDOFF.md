@@ -1,5 +1,32 @@
 # Session handoff
 
+## 0.2.0-preview.5 first-run replacement — 2026-07-25
+
+- PR #36 corrected the clean first-run Identity Type null conversion defect and merged as
+  `542be4679006c2a34ef1df3b58722ae8a844b1ae`.
+- Exact-main run `30162673459` passed all three jobs on HCS-managed runners, including the
+  zero-warning 375-test Windows build and packaging/readiness gates.
+- Immutable tag `v0.2.0-preview.5` points to the exact merge commit. Release run `30163007720`
+  passed and published 16 binary-only assets through the HCS GitHub App.
+- Independent public downloads matched all five adjacent checksums. Cosign `v3.0.6` verified all
+  five bundles against
+  `release.yml@refs/tags/v0.2.0-preview.5`.
+- The exact public MSI SHA-256 is
+  `FDFF5FB0458012B558E1B0C51AA6BBD6A39FD3BBCFABBC44870795075C8B567B`.
+- A fresh Windows 11 Enterprise 25H2 Hyper-V guest installed that exact MSI, enrolled Windows
+  Hello, unlocked the application, and opened the first-run Identities workflow with
+  `InteractiveUser` selected and no `InvalidCastException`.
+- The retained acceptance screenshot SHA-256 is
+  `FDB6AA4A12C3EC683BBDBDC11EADC56DB5A9AFE175EA2187A5DA79A795A6D35E`
+  and is attached to AB#5542. AB#5542 is Closed.
+- Parent AB#5348 remains open because its separate live Microsoft Entra,
+  keyboard/screen-reader, independent-review, and exact-release Acceptance Criteria remain open.
+- The public Preview.4 release is marked withdrawn and points to Preview.5. Historical tags and
+  assets remain immutable.
+- No authoritative build, test, package, or publication step ran on the operator workstation.
+  HCS Linux and ephemeral Azure Windows runners performed those operations; the workstation only
+  orchestrated them and hosted the isolated acceptance-test guest.
+
 ## 0.2.0-preview.4 desktop verification replacement — 2026-07-25
 
 - Installed `0.2.0-preview.3` exposed a release defect: the unpackaged desktop application called
