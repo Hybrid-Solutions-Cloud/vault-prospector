@@ -44,6 +44,47 @@ public sealed class RemoteWindowsCredentialVerificationServiceTests
         Assert.Equal("Unlock Vault Prospector", interop.Reason);
     }
 
+    [Theory]
+    [InlineData(
+        "WORKSTATION\\local-user",
+        null,
+        "local-user",
+        "WORKSTATION")]
+    [InlineData(
+        ".\\local-user",
+        "",
+        "local-user",
+        ".")]
+    [InlineData(
+        "AzureAD\\person@example.com",
+        " ",
+        "person@example.com",
+        "AzureAD")]
+    [InlineData(
+        "person@example.com",
+        null,
+        "person@example.com",
+        null)]
+    [InlineData(
+        "provided-user",
+        "PROVIDED-DOMAIN",
+        "provided-user",
+        "PROVIDED-DOMAIN")]
+    public void NormalizesQualifiedAccountNamesForLogonUser(
+        string userName,
+        string? domain,
+        string expectedUserName,
+        string? expectedDomain)
+    {
+        var actual =
+            RemoteWindowsCredentialInterop.NormalizeLogonName(
+                userName,
+                domain);
+
+        Assert.Equal(expectedUserName, actual.UserName);
+        Assert.Equal(expectedDomain, actual.Domain);
+    }
+
     private sealed class FakeInterop(UserVerificationResult result) :
         IRemoteWindowsCredentialInterop
     {
