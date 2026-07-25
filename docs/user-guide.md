@@ -41,10 +41,12 @@ After a successful local unlock, a new profile opens directly on **Identities**:
 If Windows verification is canceled, unavailable, not configured, disabled by policy, or fails,
 Vault Prospector remains locked and does not initialize the metadata repository.
 
-Windows can report the verification device as unavailable inside a Remote Desktop session even
-when Windows Hello is configured on the computer. Vault Prospector remains fail-closed in that
-case. Reconnect to the Windows console or a Hyper-V console before retrying; repeating the command
-in the same affected RDP session cannot open the Windows verification prompt.
+Windows can report the Windows Hello verification device as unavailable inside AVD or Remote
+Desktop even when it is configured on the computer. In that case Vault Prospector uses the
+Windows Security credential dialog for the current Windows account, if enterprise policy permits
+it. Enter the credential into the Windows-controlled dialog; Vault Prospector does not receive or
+store the password. Cancellation, failure, another account, or a policy denial leaves the
+application locked with an actionable status. A local console continues to use Windows Hello.
 
 ## Connect an identity
 
@@ -150,7 +152,17 @@ Select a secret result, then choose:
 - **Reveal** to show the value for ten seconds;
 - **Copy securely** to place it on the clipboard for the configured interval.
 
-Both actions require Windows Hello. Keys and certificate private keys are never exported. Clipboard clearing cannot revoke content already captured by clipboard history, remote clipboard synchronization, or another process.
+Both actions require Windows verification. Settings can optionally reuse one successful
+verification for consecutive explicit **Reveal** actions for Off, 30, 60, or 120 seconds.
+Enterprise policy may shorten that period or force Off. Each value is still retrieved only after
+selection, remains visible for no more than ten seconds, and is not prefetched or persisted by
+Reveal. The grace period ends immediately on lock, minimize/background transition, Windows
+session change, suspend/resume, identity or workspace change, policy change, timeout, or
+verification failure. It never applies to Copy, offline access, recovery, administrative actions,
+or browser fill.
+
+Keys and certificate private keys are never exported. Clipboard clearing cannot revoke content
+already captured by clipboard history, remote clipboard synchronization, or another process.
 
 ## Favorites and workspaces
 

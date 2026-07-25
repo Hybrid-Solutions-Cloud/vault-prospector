@@ -36,7 +36,7 @@ Status terms used in PMO reporting:
 
 ## Current product state
 
-- Current public version: `0.2.0-preview.3`, unsigned and restricted to non-production evaluation.
+- Current public version: `0.2.0-preview.5`, unsigned and restricted to non-production evaluation.
 - Core implemented path: interactive Entra sign-in, multiple app-owned MSAL identities,
   subscription and Key Vault discovery, secret/key/certificate metadata indexing, search, explicit
   value retrieval, verified copy, encrypted optional offline access, workspaces, and read-only Azure
@@ -49,10 +49,12 @@ Status terms used in PMO reporting:
   notification-area operation, enterprise policy, browser/CyberArk validation paths, and four
   desktop concepts. Their named live, independent, usability, accessibility, and GA evidence
   remains open.
-- Major unimplemented product work: governed Azure mutations and the selected production desktop
-  redesign. Mobile source/prototypes are implemented but are not distributed; browser and CyberArk
-  are included as non-production Preview paths while live, usability, accessibility,
-  physical-device/store, and independent-review gates remain open.
+- Major unimplemented product work: governed Azure mutations. The product owner selected Atlas and
+  its production installer, first-run, and desktop experience are implemented in exact candidate
+  `0.3.0-ci.190`; public-release, live-provider, usability, accessibility, and independent-review
+  evidence remains open. Mobile source/prototypes are implemented but are not distributed.
+  CyberArk remains future-roadmap work, while browser integration remains a non-production path
+  pending installed-browser validation and distribution review.
 - Major GA work: signing, independent security review, complete live identity/accessibility test
   matrices, public package catalogs, feedback thresholds, and stability evidence.
 

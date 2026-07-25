@@ -1,5 +1,27 @@
 # Session handoff
 
+## Atlas exact-candidate acceptance — 2026-07-25
+
+- Active branch `feature/desktop-ui-redesign`; draft PR #46; exact implementation head
+  `01c2b820c01b64a4ddb2d83d917ea385c7d3a74a`.
+- HCS run `30175377767` passed all three jobs, including all 432 Windows tests, the performance
+  gate, package/readiness checks, and 27 Windows Installer lifecycle checks.
+- Candidate `0.3.0-ci.190` MSI SHA-256:
+  `506B43A01D91A0C6437D60B04852EDD00031723C73DD76675B410131AEC80A8B`.
+- The exact MSI passed the Atlas installer UI, local fail-closed behavior without a verification
+  device, actual RDP current-account credential verification, Atlas shell, updater, diagnostics,
+  support-bundle export, minimize-to-notification-area, and locked restore from the tray icon.
+- Support bundle SHA-256:
+  `2B590E49BB18C4BBA74C936C69295D150C857D300E217BD7547495CD7433411D`;
+  it contained only the privacy manifest in the fresh test profile.
+- Candidate evidence is being recorded in
+  `docs/release-evidence/atlas-windows-candidate-2026-07-25.md`.
+- Do not close parent items requiring an exact public package until PR #46 merges, an immutable
+  release is published, and that public package is rechecked.
+- Still-open live matrices include two real Entra identities, isolated Azure sync failures,
+  consecutive real reveals, installed Chrome/Edge/Firefox fill, tenant-scale service-principal
+  discovery, and populated discovered-source filters.
+
 ## 0.2.0-preview.5 first-run replacement — 2026-07-25
 
 - PR #36 corrected the clean first-run Identity Type null conversion defect and merged as

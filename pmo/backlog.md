@@ -2,7 +2,7 @@
 
 ## Current delivery state
 
-`0.2.0-preview.3` is the current public, unsigned Windows Preview for non-production evaluation.
+`0.2.0-preview.5` is the current public, unsigned Windows Preview for non-production evaluation.
 The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
 in the 0.2 Preview line and remain subject to the live, independent, Store, and GA validation
 gates recorded below.
@@ -30,8 +30,8 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | Machine-managed enterprise access policy | Implemented locally, validation open | HKLM/ADMX policy for allowed tenants, providers, and identity types plus clipboard/offline-cache boundaries; service-layer enforcement, safe Settings status, package templates, and automated fail-closed tests | Governed Group Policy/Intune deployment, live Azure administrator matrix, diagnostics review, independent review, exact Store candidate |
 | Read-only default | Implemented | No Key Vault mutation or Azure role-assignment operations exist; UI states observed list access, unprobed value read, and policy-disabled writes | Independent policy/security validation |
 | Optional governed write mode | Not implemented | Requirements only | All mutation commands, policy/verification/authorization/audit controls |
-| Notification-area/background operation | Included in 0.2 Preview; validation open | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power | Live tray/sleep/session-lock/network/token-expiry matrix and independent validation |
-| Password-manager UI research/redesign | In progress locally | Primary-source research, four interactive concepts, sixteen automated concept/task states, narrow-viewport and console validation | Participant usability sessions, concept selection, production implementation, accessibility validation |
+| Notification-area/background operation | Implemented in Atlas candidate; validation open | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power; exact candidate minimize/restore passed in RDP | Live sleep/session-lock/network/token-expiry matrix, exact public release, and independent validation |
+| Password-manager UI research/redesign | Implemented in Atlas candidate; validation open | Three complete lifecycle directions, product-owner selection of Atlas, production installer/first-run/desktop implementation, deterministic visual baseline, and exact candidate walkthrough | Complete assistive-technology/usability matrix, exact public release, and independent validation |
 | Browser autofill/password-vault integration | Implemented locally, validation open | Toolbar-only Chromium/Firefox extension source, strict protocol, authenticated native host/broker, exact mappings, protected machine policy, desktop confirmation, fresh Windows verification, audit, MSI registration, tests | Signed extension distribution, independent review, live installed-browser/compromise/revocation/usability/AT evidence |
 | CyberArk source | Future roadmap; unsupported source prototype | Privilege Cloud ADR/threat model, isolated provider and automated tests remain in private source; the Windows release UI is disabled | Governed live tenant, product approval, independent review, and separate release evidence |
 | iPhone/iOS and Android/Google apps | Future roadmap; source prototypes only | Shared search/retrieval and native-security source remains in the private repository | Separate mobile release plan, physical-device/accessibility matrices, signing, closed testing, privacy/data-safety, and store acceptance |
