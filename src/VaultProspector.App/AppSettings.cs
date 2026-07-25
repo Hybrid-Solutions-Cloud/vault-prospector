@@ -16,7 +16,8 @@ public sealed record AppSettings(
     int MaximumCacheHours = 8,
     bool UseCustomClientId = false,
     CloseBehavior CloseBehavior = CloseBehavior.Ask,
-    bool BackgroundMetadataSyncEnabled = false)
+    bool BackgroundMetadataSyncEnabled = false,
+    bool MinimizeToNotificationArea = true)
 {
     public static AppSettings Default { get; } = new(ProductIdentity.DefaultClientId);
 }

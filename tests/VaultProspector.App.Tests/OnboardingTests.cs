@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using System.Text.Json;
+using Avalonia.Controls;
 using VaultProspector.App;
 using VaultProspector.App.ViewModels;
 using VaultProspector.Application;
@@ -81,6 +82,7 @@ public sealed class OnboardingTests : IDisposable
         {
             CloseBehavior = CloseBehavior.LockToNotificationArea,
             BackgroundMetadataSyncEnabled = true,
+            MinimizeToNotificationArea = false,
         };
 
         await store.SaveAsync(expected, TestContext.Current.CancellationToken);
@@ -88,7 +90,21 @@ public sealed class OnboardingTests : IDisposable
 
         Assert.Equal(CloseBehavior.LockToNotificationArea, restored.CloseBehavior);
         Assert.True(restored.BackgroundMetadataSyncEnabled);
+        Assert.False(restored.MinimizeToNotificationArea);
     }
+
+    [Theory]
+    [InlineData(true, WindowState.Minimized, true)]
+    [InlineData(false, WindowState.Minimized, false)]
+    [InlineData(true, WindowState.Normal, false)]
+    [InlineData(true, WindowState.Maximized, false)]
+    public void MinimizePolicyHidesOnlyConfiguredMinimizedWindows(
+        bool enabled,
+        WindowState state,
+        bool expected) =>
+        Assert.Equal(
+            expected,
+            WindowLifecyclePolicy.ShouldHideOnMinimize(enabled, state));
 
     [Theory]
     [InlineData(false, false, false, false, false, "Locked — offline")]

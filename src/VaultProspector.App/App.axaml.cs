@@ -307,6 +307,22 @@ public partial class App : Avalonia.Application
                 window.Hide();
             }
 
+            void HandleWindowStateChanged(
+                object? sender,
+                AvaloniaPropertyChangedEventArgs args)
+            {
+                if (allowShutdown ||
+                    args.Property != Window.WindowStateProperty ||
+                    !WindowLifecyclePolicy.ShouldHideOnMinimize(
+                        viewModel.MinimizeToNotificationArea,
+                        window.WindowState))
+                {
+                    return;
+                }
+
+                ContinueInBackground();
+            }
+
             void RefreshTrayState(object? sender = null, PropertyChangedEventArgs? args = null)
             {
                 var state = TrayStatusPolicy.Describe(
@@ -327,6 +343,7 @@ public partial class App : Avalonia.Application
             viewModel.ContinueInBackgroundRequested += (_, _) => ContinueInBackground();
             viewModel.BrowserFillConfirmationRequested += (_, _) => ShowWindow();
             viewModel.PropertyChanged += RefreshTrayState;
+            window.PropertyChanged += HandleWindowStateChanged;
             NetworkAvailabilityChangedEventHandler networkAvailabilityChanged = (_, _) =>
                 Dispatcher.UIThread.Post(() => RefreshTrayState());
             NetworkChange.NetworkAvailabilityChanged += networkAvailabilityChanged;
@@ -389,6 +406,7 @@ public partial class App : Avalonia.Application
             {
                 backgroundTimer.Stop();
                 viewModel.PropertyChanged -= RefreshTrayState;
+                window.PropertyChanged -= HandleWindowStateChanged;
                 NetworkChange.NetworkAvailabilityChanged -= networkAvailabilityChanged;
                 if (securityBoundaryMonitor is not null)
                 {

@@ -996,6 +996,12 @@
             <CheckBox Content="Allow metadata-only background synchronization every 15 minutes"
                       IsChecked="{Binding BackgroundMetadataSyncEnabled}"
                       AutomationProperties.Name="Allow metadata-only synchronization while locked in notification area" />
+            <CheckBox Content="Hide in the notification area when minimized"
+                      IsChecked="{Binding MinimizeToNotificationArea}"
+                      AutomationProperties.Name="Hide Vault Prospector in the notification area when minimized" />
+            <TextBlock Text="Minimizing immediately hides sensitive presentation, cancels unsafe foreground work, removes the taskbar entry, and requires secure unlock after restoration."
+                       TextWrapping="Wrap"
+                       Opacity="0.75" />
             <TextBlock Text="Background synchronization is opt-in, never retrieves values, runs only while the window is hidden, network is available, and Windows confirms external power, and stops or reports interaction-required when Azure cannot authenticate silently." TextWrapping="Wrap" Opacity="0.75" />
             <WrapPanel><Button Classes="primary" Content="Save settings" Command="{Binding SaveSettingsCommand}" Margin="0,0,8,8" /><Button Content="Purge selected vault" Command="{Binding PurgeSelectedVaultCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge selected workspace" Command="{Binding PurgeSelectedWorkspaceCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge all offline values" Command="{Binding PurgeAllCachedValuesCommand}" Margin="0,0,8,8" /></WrapPanel>
             <Separator Margin="0,8" />

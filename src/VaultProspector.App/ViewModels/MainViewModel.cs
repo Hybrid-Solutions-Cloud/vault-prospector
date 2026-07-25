@@ -153,6 +153,7 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private bool _workspaceAllowClipboard = true;
     [ObservableProperty] private CloseBehavior _selectedCloseBehavior = CloseBehavior.Ask;
     [ObservableProperty] private bool _backgroundMetadataSyncEnabled;
+    [ObservableProperty] private bool _minimizeToNotificationArea = true;
     [ObservableProperty] private bool _isCloseChoiceVisible;
     [ObservableProperty] private SearchResultRow? _selectedResult;
     [ObservableProperty] private string _secretPreview = "Select a secret to reveal or copy.";
@@ -252,6 +253,7 @@ public sealed partial class MainViewModel(
             ClipboardClearSeconds = settings.ClipboardClearSeconds;
             SelectedCloseBehavior = settings.CloseBehavior;
             BackgroundMetadataSyncEnabled = settings.BackgroundMetadataSyncEnabled;
+            MinimizeToNotificationArea = settings.MinimizeToNotificationArea;
             ApplyEnterprisePolicyToPreferences();
             await ConfigureManagedIdentityAvailabilityAsync(cancellationToken);
 
@@ -1072,7 +1074,8 @@ public sealed partial class MainViewModel(
             Math.Clamp(MaximumCacheHours, 1, 168),
             UseCustomClientId,
             SelectedCloseBehavior,
-            BackgroundMetadataSyncEnabled), cancellationToken);
+            BackgroundMetadataSyncEnabled,
+            MinimizeToNotificationArea), cancellationToken);
     }
 
     private async Task ReloadRecoveryArchivesCoreAsync(
