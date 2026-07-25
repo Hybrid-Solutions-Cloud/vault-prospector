@@ -843,6 +843,37 @@ public sealed class BrowserFillService(
         Task.FromResult(
             "Browser fill is disabled because no machine policy provider is configured.");
 
+    public async Task<BrowserDestinationAssessment> AssessDestinationAsync(
+        ValidatedBrowserFillRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var fieldPurpose = ToDomainPurpose(
+            request.Request.FieldPurpose);
+        var policyDecision = policy is null
+            ? new BrowserFillPolicyDecision(
+                false,
+                "Browser fill is disabled because no machine policy provider is configured.")
+            : await policy.EvaluateAsync(
+                request.Request.BrowserFamily,
+                request.TopOrigin,
+                request.FrameOrigin,
+                fieldPurpose,
+                cancellationToken);
+        var mapping = policyDecision.IsAllowed
+            ? await repository.FindBrowserFillMappingAsync(
+                request.TopOrigin.SerializedOrigin,
+                request.FrameOrigin.SerializedOrigin,
+                fieldPurpose,
+                cancellationToken)
+            : null;
+        return new BrowserDestinationAssessment(
+            request,
+            fieldPurpose,
+            policyDecision,
+            mapping);
+    }
+
     public async Task<BrowserFillMapping> SaveMappingAsync(
         Guid? expectedMappingId,
         Guid itemId,
@@ -915,29 +946,15 @@ public sealed class BrowserFillService(
         ValidatedBrowserFillRequest request,
         CancellationToken cancellationToken)
     {
-        var fieldPurpose = ToDomainPurpose(request.Request.FieldPurpose);
-        if (policy is null)
+        var assessment = await AssessDestinationAsync(
+            request,
+            cancellationToken);
+        if (!assessment.PolicyDecision.IsAllowed)
         {
             await RecordAuditAsync(request, null, "DeniedPolicy", cancellationToken);
             return null;
         }
-        var policyDecision = await policy.EvaluateAsync(
-            request.Request.BrowserFamily,
-            request.TopOrigin,
-            request.FrameOrigin,
-            fieldPurpose,
-            cancellationToken);
-        if (!policyDecision.IsAllowed)
-        {
-            await RecordAuditAsync(request, null, "DeniedPolicy", cancellationToken);
-            return null;
-        }
-
-        var mapping = await repository.FindBrowserFillMappingAsync(
-            request.TopOrigin.SerializedOrigin,
-            request.FrameOrigin.SerializedOrigin,
-            fieldPurpose,
-            cancellationToken);
+        var mapping = assessment.ExistingMapping;
         if (mapping is null)
         {
             await RecordAuditAsync(request, null, "DeniedUnmapped", cancellationToken);

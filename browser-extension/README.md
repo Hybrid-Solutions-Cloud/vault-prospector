@@ -11,6 +11,8 @@ The extension:
 - inspects only the focused eligible field in the active tab;
 - sends browser-derived tab, frame, document, origin, and field-purpose context to the registered
   Vault Prospector native host;
+- opens the desktop guided-mapping flow when that exact destination does not yet have a mapping,
+  without asking the user to type or copy an origin;
 - fills one approved value after the desktop app confirms the exact mapping and completes Windows
   verification; and
 - stores no values, mappings, history, cookies, or page content.
@@ -31,4 +33,3 @@ ignored and are not signed release packages.
 Store identities, signed packages, installed-browser testing, and independent security review are
 required before distribution. See the
 [threat model](../docs/security/browser-integration-threat-model.md).
-

@@ -512,6 +512,34 @@
               </StackPanel>
             </Border>
 
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Setup check"
+                           FontSize="{StaticResource VaultFontSize20}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="1. Browser extension"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserExtensionStatus}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="2. Native host"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserNativeHostStatus}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="3. Desktop broker"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserBrokerStatus}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="4. Exact destination policy"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserDestinationPolicyStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <TextBlock Text="Focus a username, current-password, or one-time-code field on an HTTPS page, then choose the Vault Prospector extension. A successful click fills this checklist and opens the guided mapping below."
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
+              </StackPanel>
+            </Border>
+
             <Border Grid.Column="1" Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Text="Preview workload provisioning" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
@@ -689,31 +717,42 @@
 
               <Border Grid.Column="1" Classes="card">
                 <StackPanel Spacing="10">
-                  <TextBlock Text="Map the selected secret"
+                  <TextBlock Text="Guided destination mapping"
                              FontSize="{StaticResource VaultFontSize20}"
                              FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding BrowserCapturedDestination}"
+                             TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding BrowserDestinationPolicyStatus}"
+                             TextWrapping="Wrap"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding BrowserMappingReadinessStatus}"
+                             TextWrapping="Wrap" />
+                  <TextBlock Text="Eligible secret and identity" />
+                  <ComboBox ItemsSource="{Binding BrowserEligibleSources}"
+                            SelectedItem="{Binding SelectedBrowserSourceOption}"
+                            IsEnabled="{Binding HasCapturedBrowserDestination}"
+                            AutomationProperties.Name="Eligible secret and identity for captured browser destination">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Summary}"
+                                   TextWrapping="Wrap" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
                   <TextBlock Text="{Binding BrowserSelectedSource}"
                              TextWrapping="Wrap" />
-                  <TextBlock Text="Top-frame HTTPS origin" />
-                  <TextBox Text="{Binding BrowserTopOrigin}"
-                           PlaceholderText="https://login.example.com"
-                           AutomationProperties.Name="Approved browser top-frame HTTPS origin" />
-                  <TextBlock Text="Target-frame HTTPS origin" />
-                  <TextBox Text="{Binding BrowserFrameOrigin}"
-                           PlaceholderText="https://login.example.com"
-                           AutomationProperties.Name="Approved browser target-frame HTTPS origin" />
-                  <TextBlock Text="Field purpose" />
-                  <ComboBox ItemsSource="{Binding BrowserFieldPurposes}"
-                            SelectedItem="{Binding SelectedBrowserFieldPurpose}"
-                            AutomationProperties.Name="Approved browser field purpose" />
                   <CheckBox Content="Enable this exact mapping"
                             IsChecked="{Binding BrowserMappingEnabled}"
+                            IsEnabled="{Binding HasCapturedBrowserDestination}"
                             AutomationProperties.Name="Enable this exact browser mapping" />
                   <Button Classes="primary"
-                          Content="Save selected secret mapping"
+                          Content="Create mapping for captured destination"
                           Command="{Binding SaveBrowserMappingCommand}"
-                          AutomationProperties.Name="Save the selected secret and identity as this exact browser mapping"
+                          AutomationProperties.Name="Create or update the selected source mapping for the browser-captured destination"
                           HorizontalAlignment="Left" />
+                  <TextBlock Text="You never type or copy an origin. Saving does not retrieve a value. Return to the same browser field and invoke the extension again for the one-time fill."
+                             TextWrapping="Wrap"
+                             Opacity="0.75" />
                 </StackPanel>
               </Border>
             </Grid>

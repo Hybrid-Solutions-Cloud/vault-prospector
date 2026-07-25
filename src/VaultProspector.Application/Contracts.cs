@@ -480,6 +480,12 @@ public sealed record BrowserFillPolicyDecision(
     bool IsAllowed,
     string SafeReason);
 
+public sealed record BrowserDestinationAssessment(
+    ValidatedBrowserFillRequest Request,
+    BrowserMappingFieldPurpose FieldPurpose,
+    BrowserFillPolicyDecision PolicyDecision,
+    BrowserFillMapping? ExistingMapping);
+
 public interface IBrowserFillPolicy
 {
     Task<BrowserFillPolicyDecision> EvaluateAsync(

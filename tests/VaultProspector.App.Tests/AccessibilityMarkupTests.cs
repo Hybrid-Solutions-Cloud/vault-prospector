@@ -92,6 +92,36 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void BrowserMappingUsesCapturedDestinationAndGuidedSourceSelectors()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var automationNames = document
+            .Descendants()
+            .Select(element =>
+                Attribute(
+                    element,
+                    "AutomationProperties.Name")?.Value)
+            .Where(value => value is not null)
+            .Cast<string>()
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains(
+            "Eligible secret and identity for captured browser destination",
+            automationNames);
+        Assert.DoesNotContain(
+            "Approved browser top-frame HTTPS origin",
+            automationNames);
+        Assert.DoesNotContain(
+            "Approved browser target-frame HTTPS origin",
+            automationNames);
+        Assert.Contains(
+            document.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                "{Binding BrowserCapturedDestination}");
+    }
+
+    [Fact]
     public void EnterprisePolicyStatusIsAnAccessiblePoliteLiveRegion()
     {
         var document = XDocument.Load(FindMainWindowMarkup());

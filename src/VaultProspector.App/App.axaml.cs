@@ -192,9 +192,11 @@ public partial class App : Avalonia.Application
                                 "VaultProspector.BrowserHost.exe")).IsAllowed,
                         HandleBrowserFillAsync);
                     browserBrokerServer.Start();
+                    viewModel.SetBrowserBrokerAvailability(true);
                 }
                 catch (Exception exception)
                 {
+                    viewModel.SetBrowserBrokerAvailability(false);
                     diagnostics.WriteError(
                         "browser_broker_start_failed",
                         exception,

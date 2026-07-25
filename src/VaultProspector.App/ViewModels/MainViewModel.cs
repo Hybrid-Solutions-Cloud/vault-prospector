@@ -63,8 +63,7 @@ public sealed partial class MainViewModel(
     public IReadOnlyList<string> ObjectTypes { get; } = ["All", "Secret", "Key", "Certificate"];
     public IReadOnlyList<CloseBehavior> CloseBehaviors { get; } =
         [CloseBehavior.Ask, CloseBehavior.Exit, CloseBehavior.LockToNotificationArea];
-    public IReadOnlyList<RevealVerificationGraceOption>
-        RevealVerificationGraceOptions { get; } =
+    public IReadOnlyList<RevealVerificationGraceOption> RevealVerificationGraceOptions { get; } =
         RevealVerificationGraceOption.All;
     public string VersionLabel { get; } = $"Vault Prospector {GetVersion()}";
     public bool IsCyberArkPreviewEnabled => _isCyberArkPreviewEnabled;
@@ -663,6 +662,7 @@ public sealed partial class MainViewModel(
     private void LockNow()
     {
         revealVerificationSession?.Invalidate();
+        ClearBrowserDestinationCapture();
         CancelPendingBrowserFill(
             "Browser fill was cancelled because Vault Prospector was locked.");
         _sensitivePresentationEpoch++;
@@ -677,6 +677,7 @@ public sealed partial class MainViewModel(
     public void LockForBackground()
     {
         revealVerificationSession?.Invalidate();
+        ClearBrowserDestinationCapture();
         CancelPendingBrowserFill("Browser fill was cancelled because Vault Prospector moved to the notification area.");
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
@@ -690,6 +691,7 @@ public sealed partial class MainViewModel(
     public void LockForSystemBoundary()
     {
         revealVerificationSession?.Invalidate();
+        ClearBrowserDestinationCapture();
         CancelPendingBrowserFill("Browser fill was cancelled by a Windows security boundary.");
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();

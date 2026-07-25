@@ -71,16 +71,24 @@ oversized, reparse-point, or out-of-installation policy fails closed.
 
 ## User workflow
 
-1. Select an enabled secret on **Search** and its exact connected identity on **Identities**.
-2. Open **Browser**.
-3. Enter the exact top-frame and target-frame HTTPS origins and choose the field purpose.
-4. Save the mapping. Saving a mapping does not retrieve its value and does not override machine
-   policy.
-5. On an allowed page, focus the intended input and invoke the Vault Prospector extension.
-6. Review the desktop confirmation and choose **Verify and fill once**, or deny it.
+1. On the intended HTTPS page, focus a supported username, current-password, or one-time-code
+   field and invoke the Vault Prospector extension.
+2. The extension supplies the canonical top-frame origin, target-frame origin, browser family,
+   frame, and focused-field purpose. The desktop application opens **Browser fill**; the user never
+   types or copies an origin.
+3. Review the setup check. It shows whether the extension/native-host/broker path reached the
+   desktop and whether protected machine policy permits the exact destination.
+4. If no mapping exists, select one eligible secret and one connected identity in the guided
+   desktop card, review the exact destination, and create the mapping. Saving retrieves no value
+   and cannot override machine policy.
+5. Return to the same browser field and invoke the extension again.
+6. Review the exact destination, purpose, and source in the desktop confirmation and choose
+   **Verify and fill once**, or deny it.
 
 Mappings are encrypted in local metadata. Removing an identity or item removes its mappings while
-retaining value-free audit history.
+retaining value-free audit history. A capture that creates a mapping is deliberately denied in the
+browser; a new explicit browser gesture is required for the first fill, so setup cannot become an
+implicit fill.
 
 ## Development and release validation
 
