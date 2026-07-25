@@ -16,6 +16,9 @@ Confirmed on 2026-07-25:
   explicitly unsigned with checksums, SBOM, and Sigstore evidence.
 - ADO builds 284, 287, 290, and 295 and the 27/27 clean-Windows run remain historical evidence; they
   do not justify continuing ADO pipelines.
+- Installed `0.2.0-preview.3` exposed a Windows desktop verification defect: it used the UWP-only
+  request API. AB#5539 tracks the HWND-bound correction, explicit RDP diagnosis, HCS-runner
+  validation, replacement Preview, and local-console Windows Hello evidence.
 
 Validated:
 
@@ -34,8 +37,8 @@ Validated:
   scanning on the HCS Tier-2 runner.
 - Exact-main runs `30146470563` and `30146971143` passed all three jobs, including the Windows
   candidate on the governed Tier-4 fallback.
-- Local Windows build passed 371 tests plus MSI, MSIX, performance, legal/privacy, enterprise,
-  browser, and operational gates.
+- HCS Windows CI passed 371 tests plus MSI, MSIX, performance, legal/privacy, enterprise, browser,
+  and operational gates for the prior release.
 - The Tier-4 deployment succeeded twice, the final VM was stopped, and
   `rg-hcs-vp-winbuild-eus2-01` was deleted.
 - ADO pipeline definitions 5, 6, and 7 were retired after replacement validation; historical
@@ -47,10 +50,12 @@ Validated:
 
 Next:
 
-1. Complete current-Windows live matrices, independent security/accessibility review, enterprise
+1. Complete AB#5539 on HCS runners and replace `0.2.0-preview.3`; record local-console Windows Hello
+   success and cancellation before closing the Task.
+2. Complete current-Windows live matrices, independent security/accessibility review, enterprise
    policy deployment, operational exercise, and legal/privacy approval.
-2. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
+3. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
    Microsoft-signed Store package.
-3. Implement governed Azure mutations only after the required design/security gate; the current
+4. Implement governed Azure mutations only after the required design/security gate; the current
    product remains intentionally read-only.
-4. Keep CyberArk and mobile in their separate future-roadmap releases.
+5. Keep CyberArk and mobile in their separate future-roadmap releases.

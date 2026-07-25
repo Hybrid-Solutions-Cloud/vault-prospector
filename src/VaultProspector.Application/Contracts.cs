@@ -287,6 +287,7 @@ public enum UserVerificationResult
     Verified,
     Canceled,
     Unavailable,
+    RemoteSessionUnavailable,
     NotConfigured,
     DisabledByPolicy,
     Failed,
