@@ -203,6 +203,28 @@ previous and current immutable MSI paths and their independently obtained publis
 Archive its structured result and verbose MSI logs with the release evidence. The harness must begin
 without an installed copy; it is not authorized to replace or remove a user's existing installation.
 
+### 8. In-app update verification
+
+On the exact installed candidate, open **Settings > Product updates** and record these separate
+user-controlled transitions:
+
+1. Check while online and confirm that current version, latest trusted version, and bounded release
+   notes match the immutable public release.
+2. Check while offline and with malformed test metadata; confirm that the operation fails safely
+   without blocking normal application use or displaying untrusted notes.
+3. Download and verify the exact MSI. Confirm its retained SHA-256 matches the GitHub asset digest
+   and adjacent checksum, and that an incomplete or tampered download is not launchable.
+4. Change the retained MSI after verification and confirm that the launch-time rehash blocks it.
+5. Launch the unchanged verified MSI and confirm that Vault Prospector locks and exits only after
+   Windows Installer starts.
+6. Exercise same-account upgrade and reinstall with retained data, supported downgrade behavior,
+   deliberately incompatible local data, failed upgrade recovery, and uninstall/reinstall. Record
+   the account boundary and verify that copied cross-account or cross-device data is not presented
+   as recoverable.
+
+The implementation trust boundary and failure modes are documented in the
+[in-app update threat model](security/in-app-update-threat-model.md).
+
 ## Failed update and rollback
 
 1. Stop the rollout when a rollback trigger in the readiness matrix occurs.

@@ -27,7 +27,8 @@ public sealed partial class MainViewModel(
     CyberArkService? cyberArkService = null,
     IEnterprisePolicy? enterprisePolicy = null,
     ISupportBundleService? supportBundleService = null,
-    IRevealVerificationSession? revealVerificationSession = null) : ViewModelBase
+    IRevealVerificationSession? revealVerificationSession = null,
+    IReleaseUpdateService? releaseUpdateService = null) : ViewModelBase
 {
     private static readonly IdentityType[] SupportedIdentityTypes =
     [

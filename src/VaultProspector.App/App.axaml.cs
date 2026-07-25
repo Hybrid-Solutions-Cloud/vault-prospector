@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Security.Cryptography;
 using Avalonia;
 using Avalonia.Controls;
@@ -113,6 +114,31 @@ public partial class App : Avalonia.Application
             var cyberArkProvider = new CyberArkPrivilegeCloudProvider(
                 cyberArkHttpClient,
                 clock);
+            var currentVersion =
+                typeof(App).Assembly
+                    .GetCustomAttribute<
+                        AssemblyInformationalVersionAttribute>()?
+                    .InformationalVersion?
+                    .Split(
+                        '+',
+                        2)[0] ??
+                "development";
+            var updateHttpClient = new HttpClient(
+                new SocketsHttpHandler
+                {
+                    AllowAutoRedirect = true,
+                    AutomaticDecompression =
+                        System.Net.DecompressionMethods.All,
+                })
+            {
+                Timeout = TimeSpan.FromMinutes(10),
+            };
+            var releaseUpdateService =
+                new GitHubReleaseUpdateService(
+                    updateHttpClient,
+                    VaultProspectorPaths.UpdateDirectory,
+                    currentVersion,
+                    new WindowsUpdateInstallerLauncher());
             var cyberArkService = new CyberArkService(
                 cyberArkProvider,
                 new WindowsCyberArkCredentialStore(
@@ -167,7 +193,8 @@ public partial class App : Avalonia.Application
                     typeof(App).Assembly.GetName().Version?.ToString() ??
                     "unknown",
                     clock),
-                revealVerificationSession);
+                revealVerificationSession,
+                releaseUpdateService);
             window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()

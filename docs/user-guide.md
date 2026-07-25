@@ -4,6 +4,17 @@
 
 Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.5), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
 
+After installation, **Settings > Product updates** can check the authenticated public binary-release
+repository. Checking, downloading and verifying, and launching Windows Installer are separate
+actions; Vault Prospector never updates silently. The application rechecks the exact MSI immediately
+before launch, then locks and exits only after Windows Installer starts.
+
+An upgrade or reinstall under the same Windows account retains encrypted settings and discovered
+metadata in `%LOCALAPPDATA%\VaultProspector`. Moving that data to another account or device is not
+supported because its encryption is bound to the original Windows account. See
+[In-app update threat model](security/in-app-update-threat-model.md) for the complete trust and
+failure behavior.
+
 After this exact Preview is approved by the community repositories, Windows users can also install with:
 
 ```powershell

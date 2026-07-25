@@ -1087,6 +1087,76 @@
       <TabItem Header="Settings">
         <ScrollViewer Margin="4,14"><Border Classes="card" MaxWidth="700" HorizontalAlignment="Left">
           <StackPanel Spacing="12">
+            <TextBlock Text="Product updates"
+                       FontSize="{StaticResource VaultFontSize22}"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="Updates are user controlled. Vault Prospector reads trusted release metadata, then downloads and verifies the exact Windows installer before Windows Installer can be started."
+                       TextWrapping="Wrap"
+                       Opacity="0.8" />
+            <Grid ColumnDefinitions="Auto,*"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="14"
+                  RowSpacing="6">
+              <TextBlock Grid.Row="0"
+                         Grid.Column="0"
+                         Text="Installed"
+                         FontWeight="SemiBold" />
+              <TextBlock Grid.Row="0"
+                         Grid.Column="1"
+                         Text="{Binding UpdateCurrentVersion}"
+                         AutomationProperties.Name="Installed Vault Prospector version" />
+              <TextBlock Grid.Row="1"
+                         Grid.Column="0"
+                         Text="Latest"
+                         FontWeight="SemiBold" />
+              <TextBlock Grid.Row="1"
+                         Grid.Column="1"
+                         Text="{Binding UpdateLatestVersion}"
+                         AutomationProperties.Name="Latest trusted Vault Prospector version" />
+            </Grid>
+            <TextBlock Text="{Binding UpdateStatus}"
+                       TextWrapping="Wrap"
+                       AutomationProperties.Name="Product update status"
+                       AutomationProperties.LiveSetting="Polite" />
+            <Border Background="{DynamicResource VaultColorSurfaceAlt}"
+                    BorderBrush="{DynamicResource VaultColorLine}"
+                    BorderThickness="1"
+                    Padding="12">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Release notes"
+                           FontWeight="SemiBold" />
+                <ScrollViewer MaxHeight="180"
+                              VerticalScrollBarVisibility="Auto">
+                  <TextBlock Text="{Binding UpdateReleaseNotes}"
+                             TextWrapping="Wrap"
+                             AutomationProperties.Name="Trusted release notes" />
+                </ScrollViewer>
+              </StackPanel>
+            </Border>
+            <TextBlock Text="{Binding UpdateVerificationStatus}"
+                       TextWrapping="Wrap"
+                       AutomationProperties.Name="Update package verification status"
+                       AutomationProperties.LiveSetting="Polite" />
+            <WrapPanel>
+              <Button Content="Check for updates"
+                      Command="{Binding CheckForUpdatesCommand}"
+                      Margin="0,0,8,8"
+                      AutomationProperties.Name="Check for trusted Vault Prospector updates" />
+              <Button Content="Download and verify"
+                      Command="{Binding DownloadUpdateCommand}"
+                      Margin="0,0,8,8"
+                      AutomationProperties.Name="Download and verify the selected Vault Prospector update" />
+              <Button Classes="primary"
+                      Content="Launch verified installer"
+                      Command="{Binding LaunchVerifiedUpdateCommand}"
+                      Margin="0,0,8,8"
+                      AutomationProperties.Name="Launch the verified Vault Prospector Windows installer" />
+            </WrapPanel>
+            <TextBlock Text="The same Windows account retains encrypted local settings and metadata during an in-place upgrade or reinstall. Moving data to another account or device is unsupported. Windows may request administrator approval; the application locks and exits only after a verified installer starts."
+                       TextWrapping="Wrap"
+                       FontSize="{StaticResource VaultFontSize11}"
+                       Opacity="0.72" />
+            <Separator Margin="0,8" />
             <TextBlock Text="Security settings" FontSize="{StaticResource VaultFontSize22}" FontWeight="SemiBold" />
             <Border Background="#10243A"
                     BorderBrush="#4B84B8"
