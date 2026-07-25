@@ -139,6 +139,7 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private bool _recentlyAccessedFirst;
     [ObservableProperty] private string _statusText = "Starting securely…";
     [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private string _activeOperationText = string.Empty;
     [ObservableProperty] private ConnectedIdentity? _selectedIdentity;
     [ObservableProperty] private TenantAccess? _selectedTenant;
     [ObservableProperty] private SubscriptionSelectionRow? _selectedSubscription;
@@ -345,7 +346,7 @@ public sealed partial class MainViewModel(
         CredentialData = string.Empty;
         TenantId = string.Empty;
         StatusText = $"Connected {identity.DisplayName}. Select Sync to discover resources.";
-    });
+    }, "Connecting an identity");
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task RemoveIdentityAsync() => RunAsync(async cancellationToken =>
@@ -540,7 +541,7 @@ public sealed partial class MainViewModel(
         await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
         StatusText = $"{run.Status}: {run.VaultCount} vaults and {run.ItemCount} objects; {run.NonSensitiveErrors.Count} isolated errors.";
-    });
+    }, $"Synchronizing {SelectedIdentity?.DisplayName ?? "the selected identity"}");
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task RefreshSubscriptionsAsync() => RunAsync(async cancellationToken =>
@@ -592,7 +593,7 @@ public sealed partial class MainViewModel(
     private void CancelOperation()
     {
         _activeOperation?.Cancel();
-        StatusText = "Cancelling the active operation…";
+        StatusText = $"Cancelling {ActiveOperationText}…";
     }
 
     public event EventHandler? ExitRequested;
@@ -1601,11 +1602,14 @@ public sealed partial class MainViewModel(
         };
     }
 
-    private async Task RunAsync(Func<CancellationToken, Task> action)
+    private async Task RunAsync(
+        Func<CancellationToken, Task> action,
+        string operationText = "the active operation")
     {
         if (IsBusy) return;
         ApplyEnterprisePolicyToPreferences();
         ClearActionableError();
+        ActiveOperationText = operationText;
         IsBusy = true;
         using var operation = new CancellationTokenSource();
         _activeOperation = operation;
@@ -1628,7 +1632,12 @@ public sealed partial class MainViewModel(
             SecretPreview = "Secret hidden.";
             HideCyberArkValue();
         }
-        finally { _activeOperation = null; IsBusy = false; }
+        finally
+        {
+            _activeOperation = null;
+            IsBusy = false;
+            ActiveOperationText = string.Empty;
+        }
     }
 
     private void ClearActionableError()

@@ -197,12 +197,51 @@ public sealed class OnboardingTests : IDisposable
         Assert.Contains(viewModel.ErrorTitle, viewModel.ErrorAnnouncement, StringComparison.Ordinal);
         Assert.Contains(viewModel.ErrorMessage, viewModel.ErrorAnnouncement, StringComparison.Ordinal);
         Assert.Contains(viewModel.RecoveryText, viewModel.ErrorAnnouncement, StringComparison.Ordinal);
+        Assert.False(viewModel.IsBusy);
+        Assert.Empty(viewModel.ActiveOperationText);
 
         viewModel.UseCustomClientId = false;
         await viewModel.SaveSettingsCommand.ExecuteAsync(null);
 
         Assert.False(viewModel.HasActionableError);
         Assert.Equal("Settings saved locally. No client secret is stored.", viewModel.StatusText);
+    }
+
+    [Fact]
+    public async Task ConnectingTwoReadyIdentitiesClearsBusyStateAndEnablesSynchronization()
+    {
+        var repository = new EmptyRepository();
+        var identityService = new IdentityService(
+            new SequentialIdentityProvider(),
+            repository);
+        var viewModel = new MainViewModel(
+            repository,
+            identityService,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new AppSettingsStore(Path.Combine(_directory, "settings.json")),
+            new UnavailableVerificationService(),
+            null!,
+            null!);
+
+        viewModel.IdentityLabel = "First operator";
+        await viewModel.AddIdentityCommand.ExecuteAsync(null);
+
+        Assert.False(viewModel.IsBusy);
+        Assert.Empty(viewModel.ActiveOperationText);
+        Assert.True(viewModel.SynchronizeCommand.CanExecute(null));
+
+        viewModel.IdentityLabel = "Second operator";
+        await viewModel.AddIdentityCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, viewModel.Identities.Count);
+        Assert.Equal("Second operator", viewModel.SelectedIdentity?.DisplayName);
+        Assert.False(viewModel.IsBusy);
+        Assert.Empty(viewModel.ActiveOperationText);
+        Assert.True(viewModel.SynchronizeCommand.CanExecute(null));
     }
 
     [Fact]
@@ -1183,27 +1222,41 @@ public sealed class OnboardingTests : IDisposable
 
     private sealed class EmptyRepository : IMetadataRepository
     {
+        public List<ConnectedIdentity> Identities { get; } = [];
+
         public Task InitializeAsync(CancellationToken cancellationToken) =>
             Task.CompletedTask;
 
         public Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<ConnectedIdentity>>([]);
+            Task.FromResult<IReadOnlyList<ConnectedIdentity>>(
+                Identities.ToArray());
 
         public Task<ConnectedIdentity?> GetIdentityAsync(
             Guid id,
             CancellationToken cancellationToken) =>
-            Task.FromResult<ConnectedIdentity?>(null);
+            Task.FromResult(
+                Identities.FirstOrDefault(identity => identity.Id == id));
 
         public Task UpsertIdentityAsync(
             ConnectedIdentity identity,
-            CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+            CancellationToken cancellationToken)
+        {
+            var index = Identities.FindIndex(existing => existing.Id == identity.Id);
+            if (index < 0)
+                Identities.Add(identity);
+            else
+                Identities[index] = identity;
+            return Task.CompletedTask;
+        }
 
         public Task RemoveIdentityAsync(
             Guid id,
-            CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+            CancellationToken cancellationToken)
+        {
+            Identities.RemoveAll(identity => identity.Id == id);
+            return Task.CompletedTask;
+        }
 
         public Task<IReadOnlyList<TenantAccess>> GetTenantsAsync(
             Guid identityId,
@@ -1292,6 +1345,38 @@ public sealed class OnboardingTests : IDisposable
             Guid workspaceId,
             ResourceLinkType resourceType,
             string resourceId,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
+
+    private sealed class SequentialIdentityProvider : IIdentityProvider
+    {
+        public Task<ConnectedIdentity> SignInAsync(
+            string clientId,
+            string displayName,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new ConnectedIdentity(
+                Guid.NewGuid(),
+                clientId,
+                Guid.NewGuid().ToString("D"),
+                $"{displayName.Replace(' ', '.').ToLowerInvariant()}@example.invalid",
+                displayName,
+                "11111111-1111-1111-1111-111111111111",
+                AuthenticationState.Ready,
+                DateTimeOffset.UtcNow));
+
+        public Task<ConnectedIdentity> ReauthenticateAsync(
+            ConnectedIdentity identity,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(identity);
+
+        public Task<ConnectedIdentity> AuthorizeDirectoryReadAsync(
+            ConnectedIdentity identity,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(identity);
+
+        public Task RemoveAsync(
+            ConnectedIdentity identity,
             CancellationToken cancellationToken) =>
             Task.CompletedTask;
     }
