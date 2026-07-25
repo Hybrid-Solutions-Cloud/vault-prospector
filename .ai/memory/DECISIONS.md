@@ -14,6 +14,8 @@
   evidence; internal preference is not a substitute.
 - Cross-device local encrypted-state migration is unsupported; resynchronization is the current
   recovery decision.
+- The product owner selected **Atlas** on 2026-07-25 as the production desktop direction.
+  Workspace and source context lead the shell; Compass and Command Center remain comparison
+  studies only.
 
 Detailed architectural decisions live under `docs/adr/`.
-

@@ -342,6 +342,68 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void AtlasProductionTokensMatchApprovedDesignHandoff()
+    {
+        var application = XDocument.Load(
+            FindMarkup("src/VaultProspector.App/App.axaml"));
+        var expectedColors = new Dictionary<string, string>(
+            StringComparer.Ordinal)
+        {
+            ["VaultColorCanvas"] = "#F4F1EA",
+            ["VaultColorSurface"] = "#FFFDF8",
+            ["VaultColorSurfaceAlt"] = "#EEE9DF",
+            ["VaultColorInk"] = "#25231F",
+            ["VaultColorMuted"] = "#6F6A61",
+            ["VaultColorLine"] = "#D4CDC0",
+            ["VaultColorLineStrong"] = "#A99E8D",
+            ["VaultColorAccent"] = "#9A412B",
+            ["VaultColorAccentStrong"] = "#7B3020",
+            ["VaultColorAccentSoft"] = "#F2DFD8",
+            ["VaultColorGood"] = "#27715B",
+            ["VaultColorGoodSoft"] = "#DEEEE8",
+            ["VaultColorWarning"] = "#A26118",
+            ["VaultColorNavigation"] = "#EEE8DD",
+            ["VaultColorContext"] = "#E7DFD2",
+            ["VaultColorHeader"] = "#2C3737",
+        };
+        var actualColors = application
+            .Descendants()
+            .Where(element =>
+                element.Name.LocalName == "SolidColorBrush")
+            .Select(element => (
+                Key: Attribute(element, "Key")?.Value,
+                Value: element.Value))
+            .Where(token => token.Key is not null)
+            .ToDictionary(
+                token => token.Key!,
+                token => token.Value,
+                StringComparer.Ordinal);
+
+        Assert.All(
+            expectedColors,
+            token => Assert.Equal(
+                token.Value,
+                actualColors[token.Key]));
+
+        var window = XDocument.Load(FindMainWindowMarkup());
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Background")?.Value ==
+                "{DynamicResource VaultColorHeader}");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Background")?.Value ==
+                "{DynamicResource VaultColorContext}");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                "ACTIVE WORKSPACE");
+    }
+
+    [Fact]
     public void NumericControlsProvideMinimumSizedTemplateButtons()
     {
         var document = XDocument.Load(FindMarkup("src/VaultProspector.App/App.axaml"));

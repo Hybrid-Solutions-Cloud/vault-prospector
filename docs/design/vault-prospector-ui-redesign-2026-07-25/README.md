@@ -17,6 +17,8 @@ Node.js or a local server.
 
 The direction picker changes the complete product shell. The lifecycle picker keeps the selected
 direction and opens the equivalent screen, allowing direct layout and interaction comparisons.
+The product owner selected **C · Atlas** on 2026-07-25; the review bundle now opens on Atlas by
+default while retaining Compass and Command Center for comparison.
 
 ## Lifecycle coverage
 

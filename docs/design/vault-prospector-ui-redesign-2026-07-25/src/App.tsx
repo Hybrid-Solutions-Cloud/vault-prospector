@@ -1032,7 +1032,7 @@ function ProductShell({
 }
 
 export default function App() {
-  const [direction, setDirection] = useState<Direction>('compass')
+  const [direction, setDirection] = useState<Direction>('atlas')
   const [screen, setScreen] = useState<Screen>('install')
   const selectedDirection = directions[direction]
   return (

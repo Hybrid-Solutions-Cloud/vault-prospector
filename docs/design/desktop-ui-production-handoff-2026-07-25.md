@@ -2,9 +2,9 @@
 
 ## Direction
 
-Use **Compass** as the production baseline: calm, guided, and progressively disclosed. Borrow the
-persistent workspace/source context from **Atlas**. Command Center remains a future optional compact
-density, not a separate product shell.
+The product owner selected **Atlas** on 2026-07-25. Atlas is the production baseline: persistent
+workspace and source context leads every screen for multi-tenant and customer-environment work.
+Compass and Command Center remain comparison studies, not competing runtime shells.
 
 The implementation must reuse existing Avalonia commands, verification boundaries, cancellation,
 redaction, encrypted persistence, and enterprise-policy enforcement. The React study is a visual
@@ -14,15 +14,22 @@ and interaction reference only.
 
 | Token | Value | Usage |
 |---|---:|---|
-| `VaultColorCanvas` | `#EEF1EF` | Window and page canvas |
-| `VaultColorSurface` | `#FFFFFF` | Cards and navigation surface |
-| `VaultColorInk` | `#17201D` | Primary text |
-| `VaultColorMuted` | `#63706A` | Secondary text |
-| `VaultColorLine` | `#CBD5D0` | Dividers and control borders |
-| `VaultColorAccent` | `#0B6957` | Primary actions and selected navigation |
-| `VaultColorAccentStrong` | `#084E42` | Hover/pressed primary actions |
-| `VaultColorAccentSoft` | `#DCEEE8` | Selected rows and contextual emphasis |
-| `VaultColorWarning` | `#A25C10` | Isolated errors and action-required state |
+| `VaultColorCanvas` | `#F4F1EA` | Window and page canvas |
+| `VaultColorSurface` | `#FFFDF8` | Cards and content surfaces |
+| `VaultColorSurfaceAlt` | `#EEE9DF` | Secondary panels and grouped context |
+| `VaultColorInk` | `#25231F` | Primary text |
+| `VaultColorMuted` | `#6F6A61` | Secondary text |
+| `VaultColorLine` | `#D4CDC0` | Dividers and control borders |
+| `VaultColorLineStrong` | `#A99E8D` | Emphasized control borders |
+| `VaultColorAccent` | `#9A412B` | Primary actions and selected navigation |
+| `VaultColorAccentStrong` | `#7B3020` | Hover/pressed primary actions |
+| `VaultColorAccentSoft` | `#F2DFD8` | Selected rows and contextual emphasis |
+| `VaultColorGood` | `#27715B` | Ready and healthy states |
+| `VaultColorGoodSoft` | `#DEEEE8` | Ready-state surfaces |
+| `VaultColorWarning` | `#A26118` | Isolated errors and action-required state |
+| `VaultColorNavigation` | `#EEE8DD` | Workspace tool navigation |
+| `VaultColorContext` | `#E7DFD2` | Active workspace strip |
+| `VaultColorHeader` | `#2C3737` | Product header |
 | `VaultSpaceSm` | `8` | Inline control spacing |
 | `VaultSpaceMd` | `16` | Card padding and section spacing |
 | `VaultSpaceLg` | `24` | Page gutters and section separation |

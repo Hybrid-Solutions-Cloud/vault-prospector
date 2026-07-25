@@ -8,21 +8,21 @@
         Icon="/Assets/vault-prospector.ico"
         Title="Vault Prospector">
   <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource VaultColorCanvas}">
-    <Border Grid.Row="0" Background="#143E35">
+    <Border Grid.Row="0" Background="{DynamicResource VaultColorHeader}">
       <Grid RowDefinitions="Auto,Auto">
         <Grid ColumnDefinitions="*,Auto" Margin="22,12">
           <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-            <Border Width="38" Height="38" Background="#DCEEE8" CornerRadius="4">
-              <TextBlock Text="VP" Foreground="#084E42" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <Border Width="38" Height="38" Background="#AD543C" CornerRadius="0">
+              <TextBlock Text="VP" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <StackPanel>
               <TextBlock Text="Vault Prospector" Foreground="White" FontSize="{StaticResource VaultFontSize18}" FontWeight="SemiBold" />
-              <TextBlock Text="Secure Azure retrieval" Foreground="#BED1CA" FontSize="{StaticResource VaultFontSize11}" />
+              <TextBlock Text="Secure Azure retrieval" Foreground="#AEB9B5" FontSize="{StaticResource VaultFontSize11}" />
             </StackPanel>
           </StackPanel>
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-            <Border x:Name="HeaderContextBadge" Background="#24584D" CornerRadius="4" Padding="12,7">
-              <TextBlock Text="LOCAL-FIRST · READ-ONLY BY DEFAULT" Foreground="#D1FAE5" FontSize="{StaticResource VaultFontSize11}" />
+            <Border x:Name="HeaderContextBadge" BorderBrush="#667170" BorderThickness="1" Padding="12,7">
+              <TextBlock Text="LOCAL-FIRST · READ-ONLY BY DEFAULT" Foreground="#E7ECEA" FontSize="{StaticResource VaultFontSize11}" />
             </Border>
             <Button Content="Lock now"
                     Command="{Binding LockNowCommand}"
@@ -30,15 +30,42 @@
                     AutomationProperties.Name="Lock Vault Prospector now" />
           </StackPanel>
         </Grid>
-        <Border Grid.Row="1" Background="#EFF3F0" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="22,8">
-          <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="20">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBlock Text="Workspace" Foreground="{DynamicResource VaultColorMuted}" />
-              <TextBlock Text="{Binding SelectedWorkspace.Name, FallbackValue=All discovered sources}" FontWeight="SemiBold" />
-            </StackPanel>
-            <TextBlock Grid.Column="1" Text="{Binding Identities.Count, StringFormat={}{0} identities}" />
-            <TextBlock Grid.Column="2" Text="{Binding Results.Count, StringFormat={}{0} indexed objects}" />
-            <TextBlock Grid.Column="4" Text="Values stay protected until an explicit reveal." Foreground="{DynamicResource VaultColorMuted}" />
+        <Border Grid.Row="1" Background="{DynamicResource VaultColorContext}" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="22,8">
+          <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto" ColumnSpacing="16">
+            <TextBlock Text="ACTIVE WORKSPACE"
+                       Foreground="{DynamicResource VaultColorMuted}"
+                       FontSize="{StaticResource VaultFontSize11}"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center" />
+            <Border Grid.Column="1"
+                    Background="{DynamicResource VaultColorSurface}"
+                    BorderBrush="{DynamicResource VaultColorLineStrong}"
+                    BorderThickness="1"
+                    Padding="10,6">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Width="7" Background="#1A9B83" />
+                <TextBlock Text="{Binding SelectedWorkspace.Name, FallbackValue=All discovered sources}"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+              </StackPanel>
+            </Border>
+            <TextBlock Grid.Column="2"
+                       Text="{Binding SelectedIdentity.UsernameHint, FallbackValue=No identity selected}"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="3"
+                       Text="{Binding SelectedSubscription.DisplayName, FallbackValue=All subscriptions}"
+                       VerticalAlignment="Center" />
+            <Border Grid.Column="5"
+                    IsVisible="{Binding IsApplicationReady}"
+                    Background="{DynamicResource VaultColorGoodSoft}"
+                    BorderBrush="{DynamicResource VaultColorGood}"
+                    BorderThickness="1"
+                    Padding="10,5">
+              <TextBlock Text="READY"
+                         Foreground="{DynamicResource VaultColorGood}"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         FontWeight="Bold" />
+            </Border>
           </Grid>
         </Border>
       </Grid>
