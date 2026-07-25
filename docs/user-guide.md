@@ -178,9 +178,11 @@ settings, token cache, offline-value files, crash dumps, or screenshots containi
 information.
 
 Choose **Create support bundle** to produce a local ZIP containing only its manifest and at most
-the latest 4 MiB of the already-redacted log. Nothing is uploaded automatically. Open and inspect
-the ZIP before sending it through an approved support channel. If export fails, the source log is
-left unchanged and its external collection path remains available.
+the latest 4 MiB of diagnostic events. Export parses and re-sanitizes every event through the fixed
+diagnostic allowlist instead of copying the source log blindly; malformed records and unknown
+fields are omitted. Nothing is uploaded automatically. Open and inspect the ZIP before sending it
+through an approved support channel. If export fails, the source log is left unchanged and its
+external collection path remains available.
 
 ## Machine-managed policy (Preview)
 

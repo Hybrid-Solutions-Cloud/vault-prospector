@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using VaultProspector.Application;
@@ -8,32 +7,6 @@ namespace VaultProspector.Infrastructure;
 
 public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
 {
-    private static readonly HashSet<string> AllowedFields = new(StringComparer.Ordinal)
-    {
-        "identity_id", "identity_type", "vault_count", "item_count", "error_count", "duration_ms", "status",
-    };
-    private static readonly HashSet<string> AllowedIdentityTypes =
-        new(
-            [
-                "InteractiveUser",
-                "ManagedIdentity",
-                "ServicePrincipal",
-                "FederatedServicePrincipal",
-            ],
-            StringComparer.Ordinal);
-    private static readonly HashSet<string> AllowedStatuses =
-        new(
-            [
-                "authorized",
-                "deleted",
-                "disabled",
-                "failed",
-                "purged",
-                "ready",
-                "removed",
-                "revoked",
-            ],
-            StringComparer.Ordinal);
     private readonly object _gate = new();
 
     public void Information(string eventName, IReadOnlyDictionary<string, object?> fields) => Write("information", eventName, null, fields);
@@ -46,15 +19,19 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
         {
             writer.WriteStartObject();
             writer.WriteString("timestamp", DateTimeOffset.UtcNow);
-            writer.WriteString("level", level);
-            writer.WriteString("event_name", eventName);
+            writer.WriteString(
+                "level",
+                DiagnosticPrivacy.NormalizeLevel(level));
+            writer.WriteString(
+                "event_name",
+                DiagnosticPrivacy.NormalizeEventName(eventName));
             if (exceptionType is null)
                 writer.WriteNull("exception_type");
             else
-                writer.WriteString("exception_type", exceptionType);
+                writer.WriteString("exception_type", "Exception");
             writer.WriteStartObject("fields");
             foreach (var field in fields.Where(field =>
-                         AllowedFields.Contains(field.Key)))
+                         DiagnosticPrivacy.IsAllowedFieldName(field.Key)))
             {
                 WriteAllowedField(
                     writer,
@@ -72,12 +49,6 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
         }
     }
 
-    private static string Pseudonymize(object? value)
-    {
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(value?.ToString() ?? ""));
-        return Convert.ToHexString(hash.AsSpan(0, 8));
-    }
-
     private static void WriteAllowedField(
         Utf8JsonWriter writer,
         string fieldName,
@@ -90,7 +61,7 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
         {
             writer.WriteString(
                 fieldName,
-                Pseudonymize(value));
+                DiagnosticPrivacy.Pseudonymize(value));
             return;
         }
 
@@ -99,13 +70,10 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
                 "identity_type",
                 StringComparison.Ordinal))
         {
-            var identityType = value as string;
             writer.WriteString(
                 fieldName,
-                identityType is not null &&
-                AllowedIdentityTypes.Contains(identityType)
-                    ? identityType
-                    : "Unknown");
+                DiagnosticPrivacy.NormalizeIdentityType(
+                    value as string));
             return;
         }
 
@@ -114,13 +82,10 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
                 "status",
                 StringComparison.Ordinal))
         {
-            var status = value as string;
             writer.WriteString(
                 fieldName,
-                status is not null &&
-                AllowedStatuses.Contains(status)
-                    ? status
-                    : "unknown");
+                DiagnosticPrivacy.NormalizeStatus(
+                    value as string));
             return;
         }
 

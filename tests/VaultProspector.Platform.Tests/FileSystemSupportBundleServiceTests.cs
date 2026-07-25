@@ -14,6 +14,25 @@ public sealed class FileSystemSupportBundleServiceTests : IDisposable
         Path.GetTempPath(),
         $"vault-prospector-support-tests-{Guid.NewGuid():N}");
 
+    private static readonly string[] ProhibitedCanaries =
+    [
+        "secret-value-canary",
+        "access-token-canary",
+        "private-key-canary",
+        "certificate-payload-canary",
+        "decrypted-cache-canary",
+        "tenant-id-canary",
+        "subscription-id-canary",
+        "vault-name-canary",
+        "object-name-canary",
+        "username-canary",
+        "client-credential-canary",
+        "http-header-canary",
+        "http-body-canary",
+        "business-reason-canary",
+        "diagnostic-path-canary",
+    ];
+
     [Fact]
     public async Task BundleContainsOnlyManifestAndExistingRedactedLog()
     {
@@ -128,6 +147,115 @@ public sealed class FileSystemSupportBundleServiceTests : IDisposable
             () => service.ReadRecentAsync(
                 0,
                 TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task BundleAndViewerResanitizeEveryProhibitedDataClass()
+    {
+        Directory.CreateDirectory(_root);
+        var logPath = Path.Combine(
+            _root,
+            "logs",
+            "vault-prospector.log");
+        Directory.CreateDirectory(
+            Path.GetDirectoryName(logPath)!);
+        var maliciousFields = ProhibitedCanaries
+            .Select(
+                (canary, index) =>
+                    new KeyValuePair<string, object?>(
+                        $"prohibited_{index}",
+                        canary))
+            .ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value);
+        maliciousFields["identity_id"] =
+            string.Join('|', ProhibitedCanaries);
+        maliciousFields["identity_type"] =
+            ProhibitedCanaries[0];
+        maliciousFields["status"] =
+            ProhibitedCanaries[1];
+        maliciousFields["item_count"] =
+            ProhibitedCanaries[2];
+        var maliciousEvent = JsonSerializer.Serialize(
+            new Dictionary<string, object?>
+            {
+                ["timestamp"] =
+                    "2026-07-25T19:00:00Z",
+                ["level"] =
+                    ProhibitedCanaries[3],
+                ["event_name"] =
+                    ProhibitedCanaries[4],
+                ["exception_type"] =
+                    ProhibitedCanaries[5],
+                ["fields"] =
+                    maliciousFields,
+            });
+        await File.WriteAllLinesAsync(
+            logPath,
+            [
+                maliciousEvent,
+                string.Join('|', ProhibitedCanaries),
+            ],
+            TestContext.Current.CancellationToken);
+        var service = new FileSystemSupportBundleService(
+            logPath,
+            Path.Combine(_root, "support"),
+            "test-version",
+            new FixedClock());
+
+        var events = await service.ReadRecentAsync(
+            100,
+            TestContext.Current.CancellationToken);
+        var diagnosticEvent = Assert.Single(events);
+        var viewerText = string.Join(
+            '|',
+            diagnosticEvent.Level,
+            diagnosticEvent.Category,
+            diagnosticEvent.Scope,
+            diagnosticEvent.Summary,
+            diagnosticEvent.Recovery);
+        foreach (var canary in ProhibitedCanaries)
+        {
+            Assert.DoesNotContain(
+                canary,
+                viewerText,
+                StringComparison.Ordinal);
+        }
+
+        var bundlePath = await service.CreateAsync(
+            TestContext.Current.CancellationToken);
+        using var archive = ZipFile.OpenRead(bundlePath);
+        var bundleText = string.Join(
+            Environment.NewLine,
+            await Task.WhenAll(
+                archive.Entries.Select(
+                    entry => ReadEntryAsync(
+                        entry,
+                        TestContext.Current.CancellationToken))));
+        foreach (var canary in ProhibitedCanaries)
+        {
+            Assert.DoesNotContain(
+                canary,
+                bundleText,
+                StringComparison.Ordinal);
+        }
+
+        Assert.Contains(
+            "\"event_name\":\"application_event\"",
+            bundleText,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"identity_type\":\"Unknown\"",
+            bundleText,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"status\":\"unknown\"",
+            bundleText,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"item_count\":null",
+            bundleText,
+            StringComparison.Ordinal);
     }
 
     public void Dispose()
