@@ -234,60 +234,63 @@ public sealed class GitHubReleaseUpdateService(
                     "The downloaded installer size did not match authenticated release metadata.");
             }
 
-            await using var source =
-                await response.Content.ReadAsStreamAsync(
-                    cancellationToken);
-            await using var target = new FileStream(
-                partialPath,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None,
-                131_072,
-                FileOptions.Asynchronous |
-                FileOptions.SequentialScan |
-                FileOptions.WriteThrough);
-            using var hash = IncrementalHash.CreateHash(
-                HashAlgorithmName.SHA256);
-            var buffer = new byte[131_072];
-            long totalBytes = 0;
-            while (true)
+            string actualHash;
+            await using (var source =
+                         await response.Content.ReadAsStreamAsync(
+                             cancellationToken))
+            await using (var target = new FileStream(
+                             partialPath,
+                             FileMode.CreateNew,
+                             FileAccess.Write,
+                             FileShare.None,
+                             131_072,
+                             FileOptions.Asynchronous |
+                             FileOptions.SequentialScan |
+                             FileOptions.WriteThrough))
+            using (var hash = IncrementalHash.CreateHash(
+                       HashAlgorithmName.SHA256))
             {
-                var bytesRead = await source.ReadAsync(
-                    buffer,
-                    cancellationToken);
-                if (bytesRead == 0)
-                    break;
-                totalBytes += bytesRead;
-                if (totalBytes > release.PackageSize)
+                var buffer = new byte[131_072];
+                long totalBytes = 0;
+                while (true)
                 {
-                    throw new InvalidDataException(
-                        "The downloaded installer exceeded its authenticated size.");
+                    var bytesRead = await source.ReadAsync(
+                        buffer,
+                        cancellationToken);
+                    if (bytesRead == 0)
+                        break;
+                    totalBytes += bytesRead;
+                    if (totalBytes > release.PackageSize)
+                    {
+                        throw new InvalidDataException(
+                            "The downloaded installer exceeded its authenticated size.");
+                    }
+
+                    hash.AppendData(
+                        buffer,
+                        0,
+                        bytesRead);
+                    await target.WriteAsync(
+                        buffer.AsMemory(0, bytesRead),
+                        cancellationToken);
                 }
 
-                hash.AppendData(
-                    buffer,
-                    0,
-                    bytesRead);
-                await target.WriteAsync(
-                    buffer.AsMemory(0, bytesRead),
-                    cancellationToken);
-            }
+                await target.FlushAsync(cancellationToken);
+                if (totalBytes != release.PackageSize)
+                {
+                    throw new InvalidDataException(
+                        "The downloaded installer was incomplete.");
+                }
 
-            await target.FlushAsync(cancellationToken);
-            if (totalBytes != release.PackageSize)
-            {
-                throw new InvalidDataException(
-                    "The downloaded installer was incomplete.");
-            }
-
-            var actualHash = Convert.ToHexString(
-                hash.GetHashAndReset());
-            if (!CryptographicOperations.FixedTimeEquals(
-                    Convert.FromHexString(actualHash),
-                    Convert.FromHexString(checksum)))
-            {
-                throw new InvalidDataException(
-                    "The downloaded installer failed SHA-256 verification.");
+                actualHash = Convert.ToHexString(
+                    hash.GetHashAndReset());
+                if (!CryptographicOperations.FixedTimeEquals(
+                        Convert.FromHexString(actualHash),
+                        Convert.FromHexString(checksum)))
+                {
+                    throw new InvalidDataException(
+                        "The downloaded installer failed SHA-256 verification.");
+                }
             }
 
             File.Move(

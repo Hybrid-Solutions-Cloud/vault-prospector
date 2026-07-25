@@ -123,7 +123,7 @@ public sealed class FileSystemSupportBundleServiceTests : IDisposable
             "Synchronization",
             events[0].Category);
         Assert.Equal(
-            "Identity 11223344",
+            $"Identity {DiagnosticPrivacy.Pseudonymize("11223344")}",
             events[0].Scope);
         Assert.Contains(
             "partial",
@@ -182,11 +182,11 @@ public sealed class FileSystemSupportBundleServiceTests : IDisposable
                 ["timestamp"] =
                     "2026-07-25T19:00:00Z",
                 ["level"] =
-                    ProhibitedCanaries[3],
+                    ProhibitedCanaries[2],
                 ["event_name"] =
-                    ProhibitedCanaries[4],
+                    ProhibitedCanaries[3],
                 ["exception_type"] =
-                    ProhibitedCanaries[5],
+                    ProhibitedCanaries[4],
                 ["fields"] =
                     maliciousFields,
             });

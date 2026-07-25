@@ -288,7 +288,14 @@ public sealed class AccessibilityMarkupTests
         var document = XDocument.Load(FindMainWindowMarkup());
         var panel = document
             .Descendants()
-            .Single(element => Attribute(element, "Background")?.Value == "#123F36");
+            .Single(element =>
+                element.Name.LocalName == "Border" &&
+                Attribute(element, "IsVisible")?.Value ==
+                "{Binding IsFirstRun}");
+
+        Assert.Equal(
+            "{DynamicResource VaultColorHeader}",
+            Attribute(panel, "Background")?.Value);
 
         var guidance = panel.Descendants().Where(element => element.Name.LocalName == "TextBlock").ToArray();
         Assert.NotEmpty(guidance);
