@@ -26,7 +26,8 @@ public sealed partial class MainViewModel(
     BrowserFillService? browserFillService = null,
     CyberArkService? cyberArkService = null,
     IEnterprisePolicy? enterprisePolicy = null,
-    ISupportBundleService? supportBundleService = null) : ViewModelBase
+    ISupportBundleService? supportBundleService = null,
+    IRevealVerificationSession? revealVerificationSession = null) : ViewModelBase
 {
     private static readonly IdentityType[] SupportedIdentityTypes =
     [
@@ -62,6 +63,9 @@ public sealed partial class MainViewModel(
     public IReadOnlyList<string> ObjectTypes { get; } = ["All", "Secret", "Key", "Certificate"];
     public IReadOnlyList<CloseBehavior> CloseBehaviors { get; } =
         [CloseBehavior.Ask, CloseBehavior.Exit, CloseBehavior.LockToNotificationArea];
+    public IReadOnlyList<RevealVerificationGraceOption>
+        RevealVerificationGraceOptions { get; } =
+        RevealVerificationGraceOption.All;
     public string VersionLabel { get; } = $"Vault Prospector {GetVersion()}";
     public bool IsCyberArkPreviewEnabled => _isCyberArkPreviewEnabled;
     public string DiagnosticLogPath =>
@@ -158,6 +162,10 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private CloseBehavior _selectedCloseBehavior = CloseBehavior.Ask;
     [ObservableProperty] private bool _backgroundMetadataSyncEnabled;
     [ObservableProperty] private bool _minimizeToNotificationArea = true;
+    [ObservableProperty]
+    private RevealVerificationGraceOption
+        _selectedRevealVerificationGrace =
+            RevealVerificationGraceOption.Off;
     [ObservableProperty] private bool _isCloseChoiceVisible;
     [ObservableProperty] private SearchResultRow? _selectedResult;
     [ObservableProperty] private string _secretPreview = "Select a secret to reveal or copy.";
@@ -201,6 +209,20 @@ public sealed partial class MainViewModel(
         EnterprisePolicy().AllowOfflineCache;
     public bool IsEnterpriseClipboardAllowed =>
         EnterprisePolicy().AllowClipboard;
+    public string RevealVerificationGraceStatus
+    {
+        get
+        {
+            var requested = TimeSpan.FromSeconds(
+                SelectedRevealVerificationGrace.Seconds);
+            var effective = EnterprisePolicy()
+                .ConstrainRevealVerificationGracePeriod(requested);
+            return effective <= TimeSpan.Zero
+                ? "Off. Every explicit reveal requires Windows verification."
+                : $"Up to {(int)effective.TotalSeconds} seconds after a successful verification. " +
+                  "Every secret still requires an explicit Reveal action and remains visible for at most 10 seconds.";
+        }
+    }
 
     [RelayCommand]
     public async Task InitializeAsync()
@@ -262,6 +284,12 @@ public sealed partial class MainViewModel(
             SelectedCloseBehavior = settings.CloseBehavior;
             BackgroundMetadataSyncEnabled = settings.BackgroundMetadataSyncEnabled;
             MinimizeToNotificationArea = settings.MinimizeToNotificationArea;
+            SelectedRevealVerificationGrace =
+                RevealVerificationGraceOptions.FirstOrDefault(
+                    option =>
+                        option.Seconds ==
+                        settings.RevealVerificationGraceSeconds) ??
+                RevealVerificationGraceOption.Off;
             ApplyEnterprisePolicyToPreferences();
             await ConfigureManagedIdentityAvailabilityAsync(cancellationToken);
 
@@ -631,8 +659,24 @@ public sealed partial class MainViewModel(
 
     public void RequestCloseChoice() => IsCloseChoiceVisible = true;
 
+    [RelayCommand]
+    private void LockNow()
+    {
+        revealVerificationSession?.Invalidate();
+        CancelPendingBrowserFill(
+            "Browser fill was cancelled because Vault Prospector was locked.");
+        _sensitivePresentationEpoch++;
+        _activeOperation?.Cancel();
+        SecretPreview = "Secret hidden.";
+        HideCyberArkValue();
+        IsUnlocked = false;
+        IsApplicationReady = false;
+        StatusText = "Application locked manually.";
+    }
+
     public void LockForBackground()
     {
+        revealVerificationSession?.Invalidate();
         CancelPendingBrowserFill("Browser fill was cancelled because Vault Prospector moved to the notification area.");
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
@@ -645,6 +689,7 @@ public sealed partial class MainViewModel(
 
     public void LockForSystemBoundary()
     {
+        revealVerificationSession?.Invalidate();
         CancelPendingBrowserFill("Browser fill was cancelled by a Windows security boundary.");
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
@@ -704,12 +749,17 @@ public sealed partial class MainViewModel(
     {
         if (SelectedResult is null) return;
         var presentationEpoch = ++_sensitivePresentationEpoch;
-        using var value = await secretAccessService.RetrieveAsync(SelectedResult.Id, cancellationToken);
+        using var value = await secretAccessService.RetrieveAsync(
+            SelectedResult.Id,
+            TimeSpan.FromSeconds(
+                SelectedRevealVerificationGrace.Seconds),
+            cancellationToken);
         if (presentationEpoch != _sensitivePresentationEpoch || !IsApplicationReady)
             return;
         SecretPreview = value.Reveal();
         _ = HideSecretLaterAsync(value.Mask(), presentationEpoch);
-        StatusText = "Secret revealed for 10 seconds after Windows Hello verification.";
+        StatusText =
+            $"Secret revealed for 10 seconds. {RevealVerificationGraceStatus}";
     });
 
     [RelayCommand(CanExecute = nameof(CanCopySelectedSecret))]
@@ -1096,7 +1146,8 @@ public sealed partial class MainViewModel(
             UseCustomClientId,
             SelectedCloseBehavior,
             BackgroundMetadataSyncEnabled,
-            MinimizeToNotificationArea), cancellationToken);
+            MinimizeToNotificationArea,
+            SelectedRevealVerificationGrace.Seconds), cancellationToken);
     }
 
     private async Task ReloadRecoveryArchivesCoreAsync(
@@ -1219,6 +1270,7 @@ public sealed partial class MainViewModel(
 
     partial void OnSelectedIdentityChanged(ConnectedIdentity? value)
     {
+        revealVerificationSession?.Invalidate();
         OnPropertyChanged(nameof(HasSelectedIdentity));
         OnPropertyChanged(nameof(BrowserSelectedSource));
         OnPropertyChanged(nameof(SelectedIdentitySupportsCredentialRotation));
@@ -1289,6 +1341,7 @@ public sealed partial class MainViewModel(
 
     partial void OnSelectedWorkspaceChanged(Workspace? value)
     {
+        revealVerificationSession?.Invalidate();
         OnPropertyChanged(nameof(HasSelectedWorkspace));
         if (value is null) FilterSelectedWorkspace = false;
         PurgeSelectedWorkspaceCacheCommand.NotifyCanExecuteChanged();
@@ -1323,6 +1376,13 @@ public sealed partial class MainViewModel(
     {
         CacheSelectedCommand.NotifyCanExecuteChanged();
         OpenOfflineCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedRevealVerificationGraceChanged(
+        RevealVerificationGraceOption value)
+    {
+        revealVerificationSession?.Invalidate();
+        OnPropertyChanged(nameof(RevealVerificationGraceStatus));
     }
 
     partial void OnWorkspaceNameChanged(string value)
@@ -1455,6 +1515,7 @@ public sealed partial class MainViewModel(
         EnterprisePolicyStatus = policy.SafeStatus;
         OnPropertyChanged(nameof(IsEnterpriseOfflineCacheAllowed));
         OnPropertyChanged(nameof(IsEnterpriseClipboardAllowed));
+        OnPropertyChanged(nameof(RevealVerificationGraceStatus));
         OfflineCacheEnabled &= policy.AllowOfflineCache;
         if (policy.MaximumOfflineCacheLifetime is { } maximum)
         {

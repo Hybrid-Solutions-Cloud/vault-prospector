@@ -36,6 +36,7 @@ public sealed class WindowsRegistryEnterprisePolicyTests
                 ["DisableOfflineCache"] = 0,
                 ["DisableRemoteCredentialVerification"] = 1,
                 ["MaximumOfflineCacheMinutes"] = 90,
+                ["MaximumRevealVerificationGraceSeconds"] = 30,
             });
 
         Assert.True(policy.IsManaged);
@@ -53,6 +54,13 @@ public sealed class WindowsRegistryEnterprisePolicyTests
         Assert.Equal(
             TimeSpan.FromMinutes(90),
             policy.MaximumOfflineCacheLifetime);
+        Assert.Equal(
+            TimeSpan.FromSeconds(30),
+            policy.MaximumRevealVerificationGracePeriod);
+        Assert.Equal(
+            TimeSpan.FromSeconds(30),
+            policy.ConstrainRevealVerificationGracePeriod(
+                TimeSpan.FromSeconds(120)));
         Assert.DoesNotContain(
             AllowedTenant,
             policy.SafeStatus,
@@ -161,6 +169,12 @@ public sealed class WindowsRegistryEnterprisePolicyTests
                 ["PolicyVersion"] = 1,
                 ["Enabled"] = 1,
                 ["MaximumOfflineCacheMinutes"] = 10_081,
+            },
+            new Dictionary<string, object?>
+            {
+                ["PolicyVersion"] = 1,
+                ["Enabled"] = 1,
+                ["MaximumRevealVerificationGraceSeconds"] = 121,
             },
         };
 }

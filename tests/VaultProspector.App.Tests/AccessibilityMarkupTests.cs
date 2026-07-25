@@ -113,6 +113,32 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void RevealGraceControlAndStatusAreAccessible()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var selector = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Consecutive reveal verification grace period");
+        var status = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "Text")?.Value ==
+                "{Binding RevealVerificationGraceStatus}");
+
+        Assert.Equal("ComboBox", selector.Name.LocalName);
+        Assert.Equal(
+            "{Binding RevealVerificationGraceOptions}",
+            Attribute(selector, "ItemsSource")?.Value);
+        Assert.Equal(
+            "Polite",
+            Attribute(
+                status,
+                "AutomationProperties.LiveSetting")?.Value);
+    }
+
+    [Fact]
     public void CyberArkWorkflowKeepsSourceVerificationAndAuditVisible()
     {
         var document = XDocument.Load(FindMainWindowMarkup());

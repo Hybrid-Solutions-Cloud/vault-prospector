@@ -20,9 +20,15 @@
               <TextBlock Text="Secure Azure retrieval" Foreground="#BED1CA" FontSize="{StaticResource VaultFontSize11}" />
             </StackPanel>
           </StackPanel>
-          <Border x:Name="HeaderContextBadge" Grid.Column="1" Background="#24584D" CornerRadius="4" Padding="12,7" VerticalAlignment="Center">
-            <TextBlock Text="LOCAL-FIRST · READ-ONLY BY DEFAULT" Foreground="#D1FAE5" FontSize="{StaticResource VaultFontSize11}" />
-          </Border>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Border x:Name="HeaderContextBadge" Background="#24584D" CornerRadius="4" Padding="12,7">
+              <TextBlock Text="LOCAL-FIRST · READ-ONLY BY DEFAULT" Foreground="#D1FAE5" FontSize="{StaticResource VaultFontSize11}" />
+            </Border>
+            <Button Content="Lock now"
+                    Command="{Binding LockNowCommand}"
+                    IsVisible="{Binding IsUnlocked}"
+                    AutomationProperties.Name="Lock Vault Prospector now" />
+          </StackPanel>
         </Grid>
         <Border Grid.Row="1" Background="#EFF3F0" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="22,8">
           <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="20">
@@ -1033,10 +1039,19 @@
                            Opacity="0.75" />
               </StackPanel>
             </Border>
+            <TextBlock Text="Consecutive Reveal verification"
+                       FontWeight="SemiBold" />
+            <ComboBox ItemsSource="{Binding RevealVerificationGraceOptions}"
+                      SelectedItem="{Binding SelectedRevealVerificationGrace}"
+                      AutomationProperties.Name="Consecutive reveal verification grace period" />
+            <TextBlock Text="{Binding RevealVerificationGraceStatus}"
+                       TextWrapping="Wrap"
+                       Opacity="0.75"
+                       AutomationProperties.LiveSetting="Polite" />
             <CheckBox Content="Enable encrypted offline value cache"
                       IsChecked="{Binding OfflineCacheEnabled}"
                       IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}" />
-            <TextBlock Text="Offline values are disabled by default, encrypted separately, and require Windows Hello." TextWrapping="Wrap" Opacity="0.75" />
+            <TextBlock Text="Offline values are disabled by default, encrypted separately, and always require independent Windows verification. Reveal grace never applies to cache, copy, recovery, browser fill, or administration." TextWrapping="Wrap" Opacity="0.75" />
             <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}" AutomationProperties.Name="Maximum offline cache lifetime in hours" />
             <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" IsEnabled="{Binding IsEnterpriseClipboardAllowed}" AutomationProperties.Name="Clipboard clear delay in seconds" />
             <TextBlock Text="When the main window closes" FontWeight="SemiBold" />

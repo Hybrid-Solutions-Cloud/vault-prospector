@@ -760,6 +760,52 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task RevealGraceIsUsedOnlyByExplicitReveal()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity)
+        {
+            Resolved = (item, Vault(), identity),
+        };
+        var provider = new FakeProvider();
+        var clipboard = new FakeClipboard();
+        var verification = new CountingVerify();
+        var revealSession = new TrackingRevealVerificationSession();
+        var service = new SecretAccessService(
+            provider,
+            repository,
+            new FakeValueStore(),
+            clipboard,
+            verification,
+            new FixedClock(),
+            revealVerificationSession: revealSession);
+
+        {
+            using var revealed = await service.RetrieveAsync(
+                item.Id,
+                TimeSpan.FromSeconds(60),
+                TestContext.Current.CancellationToken);
+            Assert.False(revealed.IsDisposed);
+        }
+        await service.RetrieveAndCopyAsync(
+            item.Id,
+            TimeSpan.FromSeconds(30),
+            new CachePolicy(
+                false,
+                TimeSpan.FromHours(8),
+                true,
+                true),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, revealSession.CallCount);
+        Assert.Equal(TimeSpan.FromSeconds(60), revealSession.RequestedGrace);
+        Assert.Equal(1, verification.Calls);
+        Assert.Equal(2, provider.RetrieveCalls);
+        Assert.Equal(1, clipboard.CopyCalls);
+    }
+
+    [Fact]
     public async Task SecretRetrievalDisposesValueWhenAccessHistoryCannotBeRecorded()
     {
         var identity = Identity();
@@ -1453,6 +1499,26 @@ public sealed class ApplicationServiceTests
         public bool IsAvailable => true;
         public int Calls { get; private set; }
         public Task<UserVerificationResult> VerifyAsync(string r, CancellationToken c) { Calls++; return Task.FromResult(UserVerificationResult.Verified); }
+    }
+    private sealed class TrackingRevealVerificationSession :
+        IRevealVerificationSession
+    {
+        public int CallCount { get; private set; }
+        public TimeSpan RequestedGrace { get; private set; }
+
+        public Task<bool> EnsureVerifiedAsync(
+            TimeSpan requestedGracePeriod,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CallCount++;
+            RequestedGrace = requestedGracePeriod;
+            return Task.FromResult(true);
+        }
+
+        public void Invalidate()
+        {
+        }
     }
     private sealed class FakeClipboard : IClipboardService
     {

@@ -17,9 +17,28 @@ public sealed record AppSettings(
     bool UseCustomClientId = false,
     CloseBehavior CloseBehavior = CloseBehavior.Ask,
     bool BackgroundMetadataSyncEnabled = false,
-    bool MinimizeToNotificationArea = true)
+    bool MinimizeToNotificationArea = true,
+    int RevealVerificationGraceSeconds = 0)
 {
     public static AppSettings Default { get; } = new(ProductIdentity.DefaultClientId);
+}
+
+public sealed record RevealVerificationGraceOption(
+    int Seconds,
+    string Label)
+{
+    public static RevealVerificationGraceOption Off { get; } =
+        new(0, "Off — verify every reveal");
+
+    public static IReadOnlyList<RevealVerificationGraceOption> All { get; } =
+    [
+        Off,
+        new(30, "30 seconds"),
+        new(60, "60 seconds"),
+        new(120, "120 seconds"),
+    ];
+
+    public override string ToString() => Label;
 }
 
 public sealed class AppSettingsStore(string path)
@@ -51,6 +70,10 @@ public sealed class AppSettingsStore(string path)
         {
             ClientId = useCustomClientId ? normalizedClientId : ProductIdentity.DefaultClientId,
             UseCustomClientId = useCustomClientId,
+            RevealVerificationGraceSeconds =
+                loaded.RevealVerificationGraceSeconds is 0 or 30 or 60 or 120
+                    ? loaded.RevealVerificationGraceSeconds
+                    : 0,
         };
     }
 

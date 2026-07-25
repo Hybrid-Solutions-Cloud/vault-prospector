@@ -656,15 +656,34 @@ public sealed class SecretAccessService(
     IClipboardService clipboard,
     IUserVerificationService verification,
     IClock clock,
-    IEnterprisePolicy? enterprisePolicy = null)
+    IEnterprisePolicy? enterprisePolicy = null,
+    IRevealVerificationSession? revealVerificationSession = null)
 {
-    public async Task<SensitiveValue> RetrieveAsync(Guid itemId, CancellationToken cancellationToken)
+    public Task<SensitiveValue> RetrieveAsync(
+        Guid itemId,
+        CancellationToken cancellationToken) =>
+        RetrieveAsync(itemId, TimeSpan.Zero, cancellationToken);
+
+    public async Task<SensitiveValue> RetrieveAsync(
+        Guid itemId,
+        TimeSpan revealVerificationGracePeriod,
+        CancellationToken cancellationToken)
     {
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be retrieved. Key material and certificate private keys are never exported.");
         EnsureSourceAllowed(source);
         EnsureOnlineIdentityIsUsable(source.Identity);
-        if (!verification.IsAvailable || await verification.VerifyAsync("Reveal an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified) throw new UnauthorizedAccessException("Local verification was not completed.");
+        var verified = revealVerificationSession is not null
+            ? await revealVerificationSession.EnsureVerifiedAsync(
+                revealVerificationGracePeriod,
+                cancellationToken)
+            : verification.IsAvailable &&
+              await verification.VerifyAsync(
+                  "Reveal an Azure Key Vault secret",
+                  cancellationToken) ==
+              UserVerificationResult.Verified;
+        if (!verified)
+            throw new UnauthorizedAccessException("Local verification was not completed.");
         var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
         try
         {

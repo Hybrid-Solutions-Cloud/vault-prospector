@@ -52,6 +52,10 @@ public partial class App : Avalonia.Application
                         () =>
                             window?.TryGetPlatformHandle()?.Handle ?? 0),
                     enterprisePolicy);
+            var revealVerificationSession =
+                new RevealVerificationSession(
+                    verification,
+                    enterprisePolicy);
             var secretAccessService = new SecretAccessService(
                 azureProvider,
                 repository,
@@ -59,7 +63,8 @@ public partial class App : Avalonia.Application
                 clipboard,
                 verification,
                 clock,
-                enterprisePolicy);
+                enterprisePolicy,
+                revealVerificationSession);
             var browserFillService = new BrowserFillService(
                 repository,
                 secretAccessService,
@@ -161,7 +166,8 @@ public partial class App : Avalonia.Application
                         "support"),
                     typeof(App).Assembly.GetName().Version?.ToString() ??
                     "unknown",
-                    clock));
+                    clock),
+                revealVerificationSession);
             window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()

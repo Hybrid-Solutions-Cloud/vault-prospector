@@ -77,6 +77,10 @@
                  valueName="MaximumOfflineCacheMinutes"
                  minValue="1"
                  maxValue="10080" />
+        <decimal id="MaximumRevealVerificationGraceSeconds"
+                 valueName="MaximumRevealVerificationGraceSeconds"
+                 minValue="0"
+                 maxValue="120" />
       </elements>
     </policy>
   </policies>

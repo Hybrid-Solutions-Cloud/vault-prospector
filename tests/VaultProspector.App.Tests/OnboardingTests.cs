@@ -30,6 +30,7 @@ public sealed class OnboardingTests : IDisposable
 
         Assert.Equal(ProductIdentity.DefaultClientId, settings.ClientId);
         Assert.False(settings.UseCustomClientId);
+        Assert.Equal(0, settings.RevealVerificationGraceSeconds);
     }
 
     [Fact]
@@ -83,6 +84,7 @@ public sealed class OnboardingTests : IDisposable
             CloseBehavior = CloseBehavior.LockToNotificationArea,
             BackgroundMetadataSyncEnabled = true,
             MinimizeToNotificationArea = false,
+            RevealVerificationGraceSeconds = 60,
         };
 
         await store.SaveAsync(expected, TestContext.Current.CancellationToken);
@@ -91,6 +93,7 @@ public sealed class OnboardingTests : IDisposable
         Assert.Equal(CloseBehavior.LockToNotificationArea, restored.CloseBehavior);
         Assert.True(restored.BackgroundMetadataSyncEnabled);
         Assert.False(restored.MinimizeToNotificationArea);
+        Assert.Equal(60, restored.RevealVerificationGraceSeconds);
     }
 
     [Theory]
@@ -858,7 +861,8 @@ public sealed class OnboardingTests : IDisposable
     [Fact]
     public void BackgroundingImmediatelyLocksAndHidesSensitivePresentation()
     {
-        var viewModel = CreateViewModel();
+        var revealSession = new TrackingRevealVerificationSession();
+        var viewModel = CreateViewModel(revealSession);
         viewModel.IsUnlocked = true;
         viewModel.IsApplicationReady = true;
         viewModel.SecretPreview = "sensitive-value";
@@ -869,12 +873,14 @@ public sealed class OnboardingTests : IDisposable
         Assert.False(viewModel.IsApplicationReady);
         Assert.Equal("Secret hidden.", viewModel.SecretPreview);
         Assert.Contains("Locked", viewModel.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(1, revealSession.InvalidationCount);
     }
 
     [Fact]
     public void WindowsSecurityBoundaryImmediatelyLocksAndHidesSensitivePresentation()
     {
-        var viewModel = CreateViewModel();
+        var revealSession = new TrackingRevealVerificationSession();
+        var viewModel = CreateViewModel(revealSession);
         viewModel.IsUnlocked = true;
         viewModel.IsApplicationReady = true;
         viewModel.IsCloseChoiceVisible = true;
@@ -887,6 +893,32 @@ public sealed class OnboardingTests : IDisposable
         Assert.False(viewModel.IsCloseChoiceVisible);
         Assert.Equal("Secret hidden.", viewModel.SecretPreview);
         Assert.Contains("Windows", viewModel.StatusText, StringComparison.Ordinal);
+        Assert.Equal(1, revealSession.InvalidationCount);
+    }
+
+    [Fact]
+    public void RevealGraceInvalidatesOnSettingIdentityWorkspaceAndManualLock()
+    {
+        var revealSession = new TrackingRevealVerificationSession();
+        var viewModel = CreateViewModel(revealSession);
+
+        viewModel.SelectedRevealVerificationGrace =
+            RevealVerificationGraceOption.All.Single(
+                option => option.Seconds == 60);
+        viewModel.SelectedIdentity = CreateIdentity();
+        viewModel.SelectedWorkspace = new Workspace(
+            Guid.NewGuid(),
+            "Operations",
+            string.Empty,
+            0);
+        viewModel.IsUnlocked = true;
+        viewModel.IsApplicationReady = true;
+        viewModel.SecretPreview = "sensitive-value";
+        viewModel.LockNowCommand.Execute(null);
+
+        Assert.Equal(4, revealSession.InvalidationCount);
+        Assert.False(viewModel.IsUnlocked);
+        Assert.Equal("Secret hidden.", viewModel.SecretPreview);
     }
 
     [Fact]
@@ -1151,8 +1183,22 @@ public sealed class OnboardingTests : IDisposable
             viewModel.RecoveryArchiveDeleteConfirmation);
     }
 
-    private static MainViewModel CreateViewModel() =>
-        new(null!, null!, null!, null!, null!, null!, null!, null!, new UnavailableVerificationService(), null!, null!);
+    private static MainViewModel CreateViewModel(
+        IRevealVerificationSession? revealVerificationSession = null) =>
+        new(
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!,
+            revealVerificationSession:
+                revealVerificationSession);
 
     private sealed class UnavailableVerificationService : IUserVerificationService
     {
@@ -1168,6 +1214,19 @@ public sealed class OnboardingTests : IDisposable
 
         public Task<UserVerificationResult> VerifyAsync(string reason, CancellationToken cancellationToken) =>
             Task.FromResult(result);
+    }
+
+    private sealed class TrackingRevealVerificationSession :
+        IRevealVerificationSession
+    {
+        public int InvalidationCount { get; private set; }
+
+        public Task<bool> EnsureVerifiedAsync(
+            TimeSpan requestedGracePeriod,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(true);
+
+        public void Invalidate() => InvalidationCount++;
     }
 
     private sealed class SubscriptionRepository(
