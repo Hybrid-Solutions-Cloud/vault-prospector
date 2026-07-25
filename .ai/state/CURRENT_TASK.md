@@ -34,8 +34,12 @@ Validated:
   tag-workflow identity.
 - The active RDP session returns `DeviceNotPresent` even through the correct HWND-bound desktop
   interop API. The corrected app remains locked and explains that a local Windows or Hyper-V
-  console is required. AB#5539 remains open because real local-console success and cancellation
-  are not yet recorded.
+  console is required.
+- The exact public Preview.4 MSI passed Windows Hello success, cancellation, button re-entry, and
+  button-initiated success in a dedicated Windows 11 Hyper-V basic-console session. This completes
+  AB#5539's final condition.
+- The same clean first-run session found an unrelated null Identity Type binding error. Selecting
+  `InteractiveUser` clears it; AB#5542 tracks the correction and replacement-package evidence.
 - `0.2.0-preview.3` is published from immutable source
   `f0ff8e7fc6190953620b4cf7d8aae4447875dfe2` in the public binary repository. Release run
   `30150472368` attempt 2 passed, all 16 assets are present, all five adjacent hashes matched
@@ -64,8 +68,7 @@ Validated:
 
 Next:
 
-1. Record local-console Windows Hello success and cancellation for `0.2.0-preview.4` before
-   closing AB#5539. Do not treat the Remote Desktop `DeviceNotPresent` result as positive evidence.
+1. Correct AB#5542's clean first-run Identity Type default and repeat the exact-package test.
 2. Complete current-Windows live matrices, independent security/accessibility review, enterprise
    policy deployment, operational exercise, and legal/privacy approval.
 3. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the

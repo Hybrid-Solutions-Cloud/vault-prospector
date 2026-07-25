@@ -9,8 +9,13 @@
 - Windows returned `DeviceNotPresent` for both the availability probe and the correct HWND-bound
   desktop interop request in the active RDP session. Retrying in that session cannot open the
   Windows verification prompt.
-- AB#5539 tracks the correction under parent User Story AB#5348. It remains New because a local
-  Windows or Hyper-V console must still record real Windows Hello success and cancellation.
+- AB#5539 tracks the correction under parent User Story AB#5348. The exact public Preview.4 MSI
+  passed real Windows Hello success, cancellation, locked-screen button re-entry, and
+  button-initiated success in a dedicated Windows 11 Hyper-V basic-console session.
+- The same session found a separate first-run null Identity Type binding error. Selecting
+  `InteractiveUser` clears it; AB#5542 tracks the no-workaround correction and exact-package
+  repetition. Parent AB#5348 remains open for that task and its broader live Entra,
+  keyboard/screen-reader, independent-review, and exact-release evidence.
 - PR #33 merged the HWND-bound interop correction and explicit Remote Desktop diagnosis as
   `e84d0f0e47605d9575a3306721adf3b50764c4d2`.
 - Exact-main run `30158989872` passed all three jobs on HCS-managed runners, including the
