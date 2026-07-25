@@ -221,21 +221,36 @@ public partial class MainWindow : Window
             narrow ? 1 : 0,
             narrow ? 0 : 1);
 
-        SearchCommandGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "*,150,Auto");
-        SearchCommandGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto,Auto" : "Auto");
-        Place(ObjectTypeComboBox, narrow ? 1 : 0, narrow ? 0 : 1);
-        Place(SearchButton, narrow ? 2 : 0, narrow ? 0 : 2);
+        SearchCommandGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "*,Auto");
+        SearchCommandGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto" : "Auto");
+        Place(SearchButton, narrow ? 1 : 0, narrow ? 0 : 1);
 
-        SearchFilterGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "*,*,*");
-        SearchFilterGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto,Auto" : "Auto");
-        Place(SubscriptionFilterComboBox, narrow ? 1 : 0, narrow ? 0 : 1);
-        Place(VaultFilterComboBox, narrow ? 2 : 0, narrow ? 0 : 2);
+        SearchFilterGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "150,*,*,*,*");
+        SearchFilterGrid.RowDefinitions = new RowDefinitions(
+            narrow
+                ? "Auto,Auto,Auto,Auto,Auto"
+                : "Auto");
+        Place(ObjectTypeFilterPanel, 0, 0);
+        Place(TenantFilterPanel, narrow ? 1 : 0, narrow ? 0 : 1);
+        Place(SubscriptionFilterPanel, narrow ? 2 : 0, narrow ? 0 : 2);
+        Place(VaultFilterPanel, narrow ? 3 : 0, narrow ? 0 : 3);
+        Place(ScopeFilterPanel, narrow ? 4 : 0, narrow ? 0 : 4);
 
-        SearchResultsGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "2*,1*");
+        SearchResultsGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "2.2*,1*");
         SearchResultsGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto" : "*");
         Place(SelectedObjectCard, narrow ? 1 : 0, narrow ? 0 : 1);
 
-        IdentityGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "1*,1*");
+        SetupStepperGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "*,*,*,*");
+        SetupStepperGrid.RowDefinitions = new RowDefinitions(
+            narrow
+                ? "Auto,Auto,Auto,Auto"
+                : "Auto");
+        Place(SetupProtectionStep, 0, 0);
+        Place(SetupConnectionsStep, narrow ? 1 : 0, narrow ? 0 : 1);
+        Place(SetupScopeStep, narrow ? 2 : 0, narrow ? 0 : 2);
+        Place(SetupSyncStep, narrow ? 3 : 0, narrow ? 0 : 3);
+
+        IdentityGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "2.2*,1*");
         IdentityGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto" : "*");
         Place(ConnectIdentityCard, narrow ? 1 : 0, narrow ? 0 : 1);
 

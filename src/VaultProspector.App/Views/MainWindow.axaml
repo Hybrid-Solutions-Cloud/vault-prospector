@@ -3,17 +3,17 @@
         xmlns:vm="using:VaultProspector.App.ViewModels"
         x:Class="VaultProspector.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Width="1180" Height="760" MinWidth="320" MinHeight="300"
+        Width="1440" Height="860" MinWidth="320" MinHeight="300"
         WindowStartupLocation="CenterScreen"
         Icon="/Assets/vault-prospector.ico"
         Title="Vault Prospector">
   <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource VaultColorCanvas}">
     <Border Grid.Row="0" Background="{DynamicResource VaultColorHeader}">
       <Grid RowDefinitions="Auto,Auto">
-        <Grid ColumnDefinitions="*,Auto" Margin="22,12">
+        <Grid ColumnDefinitions="*,Auto" Margin="18,10">
           <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-            <Border Width="38" Height="38" Background="#AD543C" CornerRadius="0">
-              <TextBlock Text="VP" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <Border Width="34" Height="34" Background="#AD543C" CornerRadius="0">
+              <TextBlock Text="◇" Foreground="White" FontSize="{StaticResource VaultFontSize20}" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <StackPanel>
               <TextBlock Text="Vault Prospector" Foreground="White" FontSize="{StaticResource VaultFontSize18}" FontWeight="SemiBold" />
@@ -22,7 +22,7 @@
           </StackPanel>
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
             <Border x:Name="HeaderContextBadge" BorderBrush="#667170" BorderThickness="1" Padding="12,7">
-              <TextBlock Text="LOCAL-FIRST · READ-ONLY BY DEFAULT" Foreground="#E7ECEA" FontSize="{StaticResource VaultFontSize11}" />
+              <TextBlock Text="LOCAL-FIRST · READ-ONLY BY DEFAULT" Foreground="#E7ECEA" FontSize="{StaticResource VaultFontSize11}" FontWeight="SemiBold" />
             </Border>
             <Button Content="Lock now"
                     Command="{Binding LockNowCommand}"
@@ -30,7 +30,7 @@
                     AutomationProperties.Name="Lock Vault Prospector now" />
           </StackPanel>
         </Grid>
-        <Border Grid.Row="1" Background="{DynamicResource VaultColorContext}" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="22,8">
+        <Border Grid.Row="1" Background="{DynamicResource VaultColorContext}" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="20,9">
           <Grid x:Name="ActiveContextGrid"
                 ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto"
                 RowDefinitions="Auto"
@@ -236,18 +236,45 @@
                 Grid.Row="2"
                 Classes="product-shell"
                 TabStripPlacement="Left"
-                Margin="18,14"
+                Margin="0"
                 IsVisible="{Binding IsApplicationReady}"
                 SelectedIndex="{Binding SelectedMainTabIndex}">
-      <TabItem Header="Find secrets">
+      <TabItem Header="⌕  Find secrets">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <Grid RowDefinitions="Auto,*,Auto" Margin="4,14,4,4">
-          <Border Classes="card">
+        <StackPanel Margin="38,30,38,24" Spacing="14">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="screen-eyebrow" Text="ENCRYPTED LOCAL INDEX" />
+              <TextBlock Classes="screen-title" Text="Find a vault object" />
+              <TextBlock Classes="screen-description"
+                         Text="Search synchronized metadata across your identities and workspaces. Values are retrieved only when requested." />
+            </StackPanel>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+              <TextBlock Text="⌁  Index current"
+                         Foreground="{DynamicResource VaultColorGood}"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         FontWeight="Bold" />
+              <TextBlock Text="{Binding Results.Count, StringFormat={}{0} objects available}"
+                         Foreground="{DynamicResource VaultColorMuted}"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         HorizontalAlignment="Right" />
+            </StackPanel>
+          </Grid>
+          <Border Classes="atlas-panel">
             <StackPanel Spacing="10">
-              <Grid x:Name="SearchCommandGrid" ColumnDefinitions="*,150,Auto" ColumnSpacing="10" RowSpacing="8">
-                <TextBox x:Name="SearchTextBox" PlaceholderText="Search names, tags, and metadata" Text="{Binding SearchText}" KeyUp="SearchBox_OnKeyUp" AutomationProperties.Name="Search vault metadata" />
-                <ComboBox x:Name="ObjectTypeComboBox" Grid.Column="1" ItemsSource="{Binding ObjectTypes}" SelectedItem="{Binding SelectedObjectType}" AutomationProperties.Name="Object type filter" />
-                <Button x:Name="SearchButton" Grid.Column="2" Classes="primary" Content="Search" Command="{Binding SearchCommand}" AutomationProperties.Name="Search vault metadata" />
+              <Grid x:Name="SearchCommandGrid" ColumnDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="8">
+                <TextBox x:Name="SearchTextBox"
+                         Classes="atlas-search"
+                         PlaceholderText="Search names, tags, vaults, or subscriptions"
+                         Text="{Binding SearchText}"
+                         KeyUp="SearchBox_OnKeyUp"
+                         AutomationProperties.Name="Search vault metadata" />
+                <Button x:Name="SearchButton"
+                        Grid.Column="1"
+                        Classes="primary"
+                        Content="Search"
+                        Command="{Binding SearchCommand}"
+                        AutomationProperties.Name="Search vault metadata" />
               </Grid>
               <WrapPanel Orientation="Horizontal">
                 <CheckBox Content="Favorites" IsChecked="{Binding FavoritesOnly}" Margin="0,0,14,6" />
@@ -258,47 +285,90 @@
                 <CheckBox Content="Selected workspace" IsChecked="{Binding FilterSelectedWorkspace}" IsEnabled="{Binding HasSelectedWorkspace}" Margin="0,0,14,6" />
                 <CheckBox Content="Recent first" IsChecked="{Binding RecentlyAccessedFirst}" Margin="0,0,14,6" />
               </WrapPanel>
-              <Grid x:Name="SearchFilterGrid" ColumnDefinitions="*,*,*" ColumnSpacing="10" RowSpacing="8">
-                <ComboBox x:Name="TenantFilterComboBox"
-                          ItemsSource="{Binding TenantFilterOptions}"
-                          SelectedItem="{Binding SelectedTenantFilterOption}"
-                          AutomationProperties.Name="Tenant filter">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
-                <ComboBox x:Name="SubscriptionFilterComboBox"
-                          Grid.Column="1"
-                          ItemsSource="{Binding SubscriptionFilterOptions}"
-                          SelectedItem="{Binding SelectedSubscriptionFilterOption}"
-                          AutomationProperties.Name="Subscription filter">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
-                <ComboBox x:Name="VaultFilterComboBox"
-                          Grid.Column="2"
-                          ItemsSource="{Binding VaultFilterOptions}"
-                          SelectedItem="{Binding SelectedVaultFilterOption}"
-                          AutomationProperties.Name="Vault filter">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
+              <Grid x:Name="SearchFilterGrid" ColumnDefinitions="150,*,*,*,*" ColumnSpacing="10" RowSpacing="8">
+                <StackPanel x:Name="ObjectTypeFilterPanel" Spacing="4">
+                  <TextBlock Classes="field-label" Text="Object type" />
+                  <ComboBox x:Name="ObjectTypeComboBox"
+                            Classes="atlas-filter"
+                            ItemsSource="{Binding ObjectTypes}"
+                            SelectedItem="{Binding SelectedObjectType}"
+                            AutomationProperties.Name="Object type filter" />
+                </StackPanel>
+                <StackPanel x:Name="TenantFilterPanel" Grid.Column="1" Spacing="4">
+                  <TextBlock Classes="field-label" Text="Tenant" />
+                  <ComboBox x:Name="TenantFilterComboBox"
+                            Classes="atlas-filter"
+                            ItemsSource="{Binding TenantFilterOptions}"
+                            SelectedItem="{Binding SelectedTenantFilterOption}"
+                            AutomationProperties.Name="Tenant filter">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+                <StackPanel x:Name="SubscriptionFilterPanel" Grid.Column="2" Spacing="4">
+                  <TextBlock Classes="field-label" Text="Subscription" />
+                  <ComboBox x:Name="SubscriptionFilterComboBox"
+                            Classes="atlas-filter"
+                            ItemsSource="{Binding SubscriptionFilterOptions}"
+                            SelectedItem="{Binding SelectedSubscriptionFilterOption}"
+                            AutomationProperties.Name="Subscription filter">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+                <StackPanel x:Name="VaultFilterPanel" Grid.Column="3" Spacing="4">
+                  <TextBlock Classes="field-label" Text="Vault" />
+                  <ComboBox x:Name="VaultFilterComboBox"
+                            Classes="atlas-filter"
+                            ItemsSource="{Binding VaultFilterOptions}"
+                            SelectedItem="{Binding SelectedVaultFilterOption}"
+                            AutomationProperties.Name="Vault filter">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+                <StackPanel x:Name="ScopeFilterPanel" Grid.Column="4" Spacing="4">
+                  <TextBlock Classes="field-label" Text="Scope" />
+                  <Button Content="Reset filters"
+                          MinHeight="40"
+                          Command="{Binding SearchCommand}" />
+                </StackPanel>
               </Grid>
             </StackPanel>
           </Border>
-          <Grid x:Name="SearchResultsGrid" Grid.Row="1" ColumnDefinitions="2*,1*" RowDefinitions="*" MinHeight="260" Margin="0,14,0,14" ColumnSpacing="14" RowSpacing="14">
-            <Border Classes="card">
+          <Grid x:Name="SearchResultsGrid" Grid.Row="1" ColumnDefinitions="2.2*,1*" RowDefinitions="*" MinHeight="360" ColumnSpacing="14" RowSpacing="14">
+            <Border Classes="atlas-panel" Padding="0">
               <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-              <Grid RowDefinitions="Auto,*" MinWidth="600">
-                <Grid ColumnDefinitions="36,2*,120,160,120" Margin="8,0,8,8">
+              <Grid RowDefinitions="Auto,Auto,*" MinWidth="650">
+                <Grid Margin="14,12" ColumnDefinitions="*,Auto">
+                  <StackPanel>
+                    <TextBlock Text="{Binding Results.Count, StringFormat={}{0} results}"
+                               FontSize="{StaticResource VaultFontSize16}"
+                               FontWeight="Bold" />
+                    <TextBlock Text="Workspace: all accessible sources"
+                               Foreground="{DynamicResource VaultColorMuted}"
+                               FontSize="{StaticResource VaultFontSize11}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="1"
+                             Text="Metadata only"
+                             Foreground="{DynamicResource VaultColorGood}"
+                             FontWeight="SemiBold"
+                             VerticalAlignment="Center" />
+                </Grid>
+                <Grid Grid.Row="1" ColumnDefinitions="36,2*,120,160,120" Margin="8,0,8,8" Background="{DynamicResource VaultColorSurfaceAlt}">
                   <TextBlock Text="" /><TextBlock Grid.Column="1" Text="NAME" FontWeight="Bold" FontSize="{StaticResource VaultFontSize11}" />
                   <TextBlock Grid.Column="2" Text="TYPE" FontWeight="Bold" FontSize="{StaticResource VaultFontSize11}" />
                   <TextBlock Grid.Column="3" Text="VAULT" FontWeight="Bold" FontSize="{StaticResource VaultFontSize11}" />
                   <TextBlock Grid.Column="4" Text="STATE" FontWeight="Bold" FontSize="{StaticResource VaultFontSize11}" />
                 </Grid>
-                <ListBox Grid.Row="1" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedResult}" AutomationProperties.Name="Vault search results">
+                <ListBox Grid.Row="2"
+                         Classes="atlas-list"
+                         ItemsSource="{Binding Results}"
+                         SelectedItem="{Binding SelectedResult}"
+                         AutomationProperties.Name="Vault search results">
                   <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:SearchResultRow">
                       <Grid ColumnDefinitions="36,2*,120,160,120" Margin="6,8">
@@ -314,52 +384,146 @@
               </Grid>
               </ScrollViewer>
             </Border>
-            <Border x:Name="SelectedObjectCard" Grid.Column="1" Classes="card">
+            <Border x:Name="SelectedObjectCard" Grid.Column="1" Classes="atlas-panel">
               <ScrollViewer VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="10">
-                <TextBlock Text="Selected object" FontSize="{StaticResource VaultFontSize18}" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding SelectedResult.Name, FallbackValue=Nothing selected}" FontSize="{StaticResource VaultFontSize16}" AutomationProperties.Name="Selected object name" />
-                <TextBlock Text="{Binding SelectedResult.Vault}" Opacity="0.75" AutomationProperties.Name="Selected object vault" />
-                <TextBlock Text="{Binding SelectedResult.Identity}" Opacity="0.75" AutomationProperties.Name="Selected object identity" />
-                <TextBlock Text="{Binding SelectedResult.Tenant}" Opacity="0.75" TextWrapping="Wrap" AutomationProperties.Name="Selected object tenant" />
+                <Border Width="42" Height="42" Background="{DynamicResource VaultColorAccentSoft}" HorizontalAlignment="Left">
+                  <TextBlock Text="⌘" Foreground="{DynamicResource VaultColorAccent}" FontSize="{StaticResource VaultFontSize22}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="SECRET" Classes="screen-eyebrow" />
+                <TextBlock Text="{Binding SelectedResult.Name, FallbackValue=Nothing selected}" FontSize="{StaticResource VaultFontSize20}" AutomationProperties.Name="Selected object name" />
+                <TextBlock Text="{Binding SelectedResult.Vault, StringFormat='Vault  {0}'}" Opacity="0.75" AutomationProperties.Name="Selected object vault" />
+                <TextBlock Text="{Binding SelectedResult.Identity, StringFormat='Identity  {0}'}" Opacity="0.75" AutomationProperties.Name="Selected object identity" />
+                <TextBlock Text="{Binding SelectedResult.Tenant, StringFormat='Tenant  {0}'}" Opacity="0.75" TextWrapping="Wrap" AutomationProperties.Name="Selected object tenant" />
                 <TextBlock Text="{Binding SelectedResult.AccessStatus}" Opacity="0.75" TextWrapping="Wrap" AutomationProperties.Name="Selected object effective permission assessment" />
-                <Border Background="#101D2B23" CornerRadius="6" Padding="12" Margin="0,8">
+                <Border Classes="atlas-callout" Margin="0,8">
                   <TextBlock Text="{Binding SecretPreview}" FontFamily="Consolas" TextWrapping="Wrap" AutomationProperties.Name="Masked secret value" />
                 </Border>
-                <WrapPanel Orientation="Horizontal">
-                  <Button Content="Reveal" Command="{Binding RevealCommand}" Margin="0,0,8,8" />
-                  <Button Content="Copy securely" Command="{Binding CopyCommand}" Margin="0,0,8,8" />
+                <StackPanel Spacing="8">
+                  <Button Classes="primary" Content="Reveal safely" Command="{Binding RevealCommand}" HorizontalAlignment="Stretch" />
+                  <Button Content="Copy securely" Command="{Binding CopyCommand}" HorizontalAlignment="Stretch" />
                   <Button Content="Favorite" Command="{Binding ToggleFavoriteCommand}" Margin="0,0,8,8" />
                   <Button Content="Cache offline" Command="{Binding CacheSelectedCommand}" Margin="0,0,8,8" />
                   <Button Content="Open offline" Command="{Binding OpenOfflineCommand}" Margin="0,0,8,8" />
                   <Button Content="Purge offline copy" Command="{Binding PurgeSelectedCachedValueCommand}" Margin="0,0,8,8" />
-                </WrapPanel>
+                </StackPanel>
                 <TextBlock Text="Values are retrieved only after explicit action and Windows Hello verification." FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" TextWrapping="Wrap" />
               </StackPanel>
               </ScrollViewer>
             </Border>
           </Grid>
-          <TextBlock Grid.Row="2" Text="{Binding Results.Count, StringFormat={}{0} indexed objects}" Opacity="0.7" />
-        </Grid>
+        </StackPanel>
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Connections">
+      <TabItem Header="◎  Connect identities">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <Grid x:Name="IdentityGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
-          <Border Classes="card">
+        <StackPanel Margin="38,30,38,24" Spacing="18">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="screen-eyebrow" Text="FIRST-RUN SETUP" />
+              <TextBlock Classes="screen-title" Text="Connect the accounts you use" />
+              <TextBlock Classes="screen-description"
+                         Text="Add each Microsoft Entra account once. Guest memberships and accessible tenants are discovered after sign-in." />
+            </StackPanel>
+            <Border Grid.Column="1"
+                    Background="{DynamicResource VaultColorGoodSoft}"
+                    BorderBrush="{DynamicResource VaultColorGood}"
+                    BorderThickness="1"
+                    Padding="10,6"
+                    VerticalAlignment="Top">
+              <TextBlock Text="Local protection complete"
+                         Foreground="{DynamicResource VaultColorGood}"
+                         FontWeight="Bold" />
+            </Border>
+          </Grid>
+
+          <Grid x:Name="SetupStepperGrid" ColumnDefinitions="*,*,*,*" ColumnSpacing="0">
+            <Border x:Name="SetupProtectionStep" BorderBrush="{DynamicResource VaultColorAccent}" BorderThickness="0,3,0,0" Padding="12,12">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <Border Width="26" Height="26" Background="{DynamicResource VaultColorAccent}" CornerRadius="13">
+                  <TextBlock Text="✓" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel>
+                  <TextBlock Text="Local protection" FontWeight="Bold" />
+                  <TextBlock Text="Complete" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+            <Border x:Name="SetupConnectionsStep" Grid.Column="1" Background="{DynamicResource VaultColorAccentSoft}" BorderBrush="{DynamicResource VaultColorAccent}" BorderThickness="0,3,0,0" Padding="12,12">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <Border Width="26" Height="26" Background="{DynamicResource VaultColorAccent}" CornerRadius="13">
+                  <TextBlock Text="2" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel>
+                  <TextBlock Text="Connect identities" FontWeight="Bold" />
+                  <TextBlock Text="Current step" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+            <Border x:Name="SetupScopeStep" Grid.Column="2" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,3,0,0" Padding="12,12">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <Border Width="26" Height="26" Background="{DynamicResource VaultColorSurfaceAlt}" CornerRadius="13">
+                  <TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel>
+                  <TextBlock Text="Choose discovery scope" FontWeight="Bold" Foreground="{DynamicResource VaultColorMuted}" />
+                  <TextBlock Text="Not started" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+            <Border x:Name="SetupSyncStep" Grid.Column="3" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,3,0,0" Padding="12,12">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <Border Width="26" Height="26" Background="{DynamicResource VaultColorSurfaceAlt}" CornerRadius="13">
+                  <TextBlock Text="4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel>
+                  <TextBlock Text="Synchronize metadata" FontWeight="Bold" Foreground="{DynamicResource VaultColorMuted}" />
+                  <TextBlock Text="Not started" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+          </Grid>
+
+        <Grid x:Name="IdentityGrid" ColumnDefinitions="2.2*,1*" RowDefinitions="*" ColumnSpacing="18" RowSpacing="14">
+          <Border Classes="atlas-panel">
             <StackPanel Spacing="10">
-              <TextBlock Text="Connected identities" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
-              <TextBlock Text="Each identity keeps an explicit tenant and vault access path." TextWrapping="Wrap" Opacity="0.75" />
-              <ListBox ItemsSource="{Binding Identities}" SelectedItem="{Binding SelectedIdentity}" MinHeight="300" AutomationProperties.Name="Connected Microsoft Entra identities">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="Connected identities" Classes="section-title" />
+                  <TextBlock Text="{Binding Identities.Count, StringFormat={}{0} accounts ready}"
+                             Foreground="{DynamicResource VaultColorMuted}"
+                             FontSize="{StaticResource VaultFontSize12}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1"
+                           Text="Select an account to manage its scope"
+                           Foreground="{DynamicResource VaultColorMuted}"
+                           VerticalAlignment="Center" />
+              </Grid>
+              <ListBox Classes="atlas-list"
+                       ItemsSource="{Binding Identities}"
+                       SelectedItem="{Binding SelectedIdentity}"
+                       MinHeight="170"
+                       AutomationProperties.Name="Connected Microsoft Entra identities">
                 <ListBox.ItemTemplate>
                   <DataTemplate>
-                    <StackPanel Margin="6">
-                      <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
-                      <TextBlock Text="{Binding UsernameHint}" Opacity="0.7" />
-                      <TextBlock Text="{Binding Type, StringFormat='Type: {0}'}" Opacity="0.75" />
-                      <TextBlock Text="{Binding AuthenticationState, StringFormat='State: {0}'}" Opacity="0.75" />
-                    </StackPanel>
+                    <Border BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="1" Padding="12" Margin="0,0,0,8">
+                      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                        <Border Width="38" Height="38" Background="{DynamicResource VaultColorGood}" CornerRadius="19">
+                          <TextBlock Text="ID" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Grid.Column="1">
+                          <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="{StaticResource VaultFontSize16}" />
+                          <TextBlock Text="{Binding UsernameHint}" Foreground="{DynamicResource VaultColorMuted}" />
+                          <TextBlock Text="{Binding Type, StringFormat='Microsoft Entra · {0}'}"
+                                     Foreground="{DynamicResource VaultColorMuted}"
+                                     FontSize="{StaticResource VaultFontSize11}" />
+                        </StackPanel>
+                        <Border Grid.Column="2" Background="{DynamicResource VaultColorGoodSoft}" BorderBrush="{DynamicResource VaultColorGood}" BorderThickness="1" Padding="8,4" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding AuthenticationState}" Foreground="{DynamicResource VaultColorGood}" FontWeight="Bold" />
+                        </Border>
+                      </Grid>
+                    </Border>
                   </DataTemplate>
                 </ListBox.ItemTemplate>
               </ListBox>
@@ -373,12 +537,12 @@
                 <Button Content="Revoke local access" Command="{Binding RevokeIdentityAccessCommand}" Margin="0,0,8,8" />
                 <Button Content="Remove identity" Command="{Binding RemoveIdentityCommand}" Margin="0,0,8,8" />
               </WrapPanel>
+              <Expander Classes="atlas-expander"
+                        Header="Connection details, errors, and discovery scope"
+                        IsExpanded="False">
+              <StackPanel Spacing="10" Margin="8">
               <Border IsVisible="{Binding HasSyncErrors}"
-                      Background="#FFF0D8"
-                      BorderBrush="#D49342"
-                      BorderThickness="1"
-                      CornerRadius="6"
-                      Padding="12"
+                      Classes="atlas-warning"
                       AutomationProperties.Name="Actionable isolated synchronization errors"
                       AutomationProperties.LiveSetting="Polite">
                 <StackPanel Spacing="8">
@@ -498,25 +662,37 @@
                         AutomationProperties.Name="Exclude selected vault from synchronization"
                         Margin="0,0,8,8" />
               </WrapPanel>
+              </StackPanel>
+              </Expander>
             </StackPanel>
           </Border>
-          <Border x:Name="ConnectIdentityCard" Grid.Column="1" Classes="card">
+          <Border x:Name="ConnectIdentityCard" Grid.Column="1" Classes="atlas-panel">
             <StackPanel Spacing="10">
-              <Border IsVisible="{Binding IsFirstRun}"
-                      Background="{DynamicResource VaultColorHeader}"
-                      BorderBrush="{DynamicResource VaultColorAccent}"
-                      BorderThickness="1"
-                      Padding="14"
-                      Margin="0,0,0,6">
-                <StackPanel Spacing="5">
-                  <TextBlock Text="Set up Vault Prospector" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Foreground="White" />
-                  <TextBlock Text="1. Local unlock is complete. Windows verified you so Vault Prospector can open its encrypted local data. This is separate from Azure sign-in." TextWrapping="Wrap" Foreground="White" />
-                  <TextBlock Text="2. Connect Microsoft Entra. Microsoft handles your password, passkey, MFA, and Conditional Access in the system browser; Vault Prospector never receives them." TextWrapping="Wrap" Foreground="White" />
-                  <TextBlock Text="3. Review the discovered scope, then choose Sync. Sync indexes metadata only; values stay in Key Vault until you explicitly request one and verify again." TextWrapping="Wrap" Foreground="White" />
-                </StackPanel>
+              <Border Width="62" Height="62" Background="#D7EFE8" HorizontalAlignment="Left">
+                <TextBlock Text="⇩" Foreground="{DynamicResource VaultColorGood}" FontSize="{StaticResource VaultFontSize24}" HorizontalAlignment="Center" VerticalAlignment="Center" />
               </Border>
-              <TextBlock Text="Connect Microsoft Entra identity" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
+              <TextBlock Text="Next: discover metadata" Classes="section-title" Margin="0,10,0,0" />
+              <TextBlock Text="Synchronization reads subscriptions, vaults, and object metadata. It does not retrieve secret values."
+                         Classes="screen-description" />
+              <TextBlock Text="✓  Names and tags" Foreground="{DynamicResource VaultColorGood}" />
+              <TextBlock Text="✓  Vault and subscription context" Foreground="{DynamicResource VaultColorGood}" />
+              <TextBlock Text="×  No secret values" Foreground="{DynamicResource VaultColorDanger}" />
+              <Button Classes="primary"
+                      Content="Review discovery scope"
+                      Command="{Binding SynchronizeCommand}"
+                      HorizontalAlignment="Stretch"
+                      Margin="0,8,0,0" />
+              <TextBlock Text="Select an identity first. You can connect as many interactive accounts as you need."
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VaultColorMuted}"
+                         FontSize="{StaticResource VaultFontSize12}" />
 
+              <Expander Classes="atlas-expander"
+                        Header="Add another account"
+                        IsExpanded="{Binding IsFirstRun}"
+                        Margin="0,10,0,0">
+              <StackPanel Spacing="10" Margin="8">
+              <TextBlock Text="Connect Microsoft Entra identity" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
               <TextBlock Text="Identity Type" FontWeight="SemiBold" />
               <ComboBox SelectedItem="{Binding SelectedIdentityType}"
                         ItemsSource="{Binding IdentityTypes}"
@@ -567,21 +743,30 @@
                       Command="{Binding AddIdentityCommand}"
                       AutomationProperties.Name="{Binding ConnectIdentityActionText}"
                       HorizontalAlignment="Left" />
+              </StackPanel>
+              </Expander>
             </StackPanel>
           </Border>
         </Grid>
+        </StackPanel>
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Administration">
+      <TabItem Header="⚙  Administration">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <StackPanel Margin="38,30,38,24" Spacing="18">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="screen-eyebrow" Text="ADVANCED ADMINISTRATION" />
+            <TextBlock Classes="screen-title" Text="Workload identities" />
+            <TextBlock Classes="screen-description"
+                       Text="Discover and assess non-human Azure identities used by applications and Azure resources. Nothing on this page changes Azure automatically." />
+          </StackPanel>
           <Grid x:Name="AdministrationGrid"
                 ColumnDefinitions="1*,1*"
                 RowDefinitions="*"
-                Margin="4,14"
                 ColumnSpacing="14"
                 RowSpacing="14">
-            <Border Classes="card">
+            <Border Classes="atlas-panel">
               <StackPanel Spacing="10">
                 <TextBlock Text="Discover workload identities" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
                 <TextBlock Text="A workload identity is a non-human Azure identity used by an application, automation job, or Azure resource. This page helps an administrator inspect eligible customer-managed identities; it does not change Azure."
@@ -647,7 +832,7 @@
               </StackPanel>
             </Border>
 
-            <Border Classes="card">
+            <Border Classes="atlas-panel">
               <StackPanel Spacing="8">
                 <TextBlock Text="Setup check"
                            FontSize="{StaticResource VaultFontSize20}"
@@ -713,14 +898,22 @@
               </StackPanel>
             </Border>
           </Grid>
+          </StackPanel>
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Workspaces">
+      <TabItem Header="▣  Workspaces">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <Grid x:Name="WorkspaceGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
-          <Border Classes="card">
-            <StackPanel Spacing="10"><TextBlock Text="Workspaces" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
+        <StackPanel Margin="38,30,38,24" Spacing="18">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="screen-eyebrow" Text="LOCAL ORGANIZATION" />
+          <TextBlock Classes="screen-title" Text="Workspaces" />
+          <TextBlock Classes="screen-description"
+                     Text="Group customer, project, or environment sources without copying or changing anything in Azure." />
+        </StackPanel>
+        <Grid x:Name="WorkspaceGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" ColumnSpacing="14" RowSpacing="14">
+          <Border Classes="atlas-panel">
+            <StackPanel Spacing="10"><TextBlock Text="Your workspaces" Classes="section-title" />
               <TextBlock Text="A workspace is a local view that groups customer, project, or environment sources. It does not create, copy, move, or change anything in Azure."
                          TextWrapping="Wrap"
                          FontWeight="SemiBold" />
@@ -734,8 +927,8 @@
               </WrapPanel>
             </StackPanel>
           </Border>
-          <Border x:Name="CreateWorkspaceCard" Grid.Column="1" Classes="card">
-            <StackPanel Spacing="10"><TextBlock Text="Create workspace" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
+          <Border x:Name="CreateWorkspaceCard" Grid.Column="1" Classes="atlas-panel">
+            <StackPanel Spacing="10"><TextBlock Text="Create workspace" Classes="section-title" />
               <TextBlock Text="Group identities, tenants, subscriptions, and vaults without duplicating indexed data." TextWrapping="Wrap" />
               <TextBox Text="{Binding WorkspaceName}" PlaceholderText="Workspace name" AutomationProperties.Name="New workspace name" />
               <Button Classes="primary" Content="Create" Command="{Binding CreateWorkspaceCommand}" HorizontalAlignment="Left" />
@@ -765,14 +958,21 @@
             </StackPanel>
           </Border>
         </Grid>
+        </StackPanel>
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Browser fill">
+      <TabItem Header="◎  Browser fill">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
-          <StackPanel Margin="4,14" Spacing="14">
-            <Border Classes="card"
+          <StackPanel Margin="38,30,38,24" Spacing="14">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="screen-eyebrow" Text="GUIDED ONE-TIME FILL" />
+              <TextBlock Classes="screen-title" Text="Fill the field you selected" />
+              <TextBlock Classes="screen-description"
+                         Text="The browser supplies the destination context. Choose a source, verify once, and fill only that exact field." />
+            </StackPanel>
+            <Border Classes="atlas-panel"
                     AutomationProperties.Name="Browser fill machine policy status">
               <StackPanel Spacing="8">
                 <TextBlock Text="Machine policy"
@@ -787,7 +987,7 @@
               </StackPanel>
             </Border>
 
-            <Border Classes="card"
+            <Border Classes="atlas-panel"
                     BorderBrush="#DC6B6B"
                     BorderThickness="2"
                     IsVisible="{Binding IsBrowserFillPending}"
@@ -829,7 +1029,7 @@
                   RowDefinitions="*"
                   ColumnSpacing="14"
                   RowSpacing="14">
-              <Border Classes="card">
+              <Border Classes="atlas-panel">
                 <StackPanel Spacing="10">
                   <TextBlock Text="Origin-to-secret mappings"
                              FontSize="{StaticResource VaultFontSize20}"
@@ -861,7 +1061,7 @@
 
               <Border x:Name="BrowserGuidedMappingCard"
                       Grid.Column="1"
-                      Classes="card">
+                      Classes="atlas-panel">
                 <StackPanel Spacing="10">
                   <TextBlock Text="Guided destination mapping"
                              FontSize="{StaticResource VaultFontSize20}"
@@ -927,7 +1127,7 @@
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="CyberArk"
+      <TabItem Header="CyberArk roadmap preview"
                IsVisible="{Binding IsCyberArkPreviewEnabled}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
@@ -1153,16 +1353,22 @@
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Activity &amp; support">
+      <TabItem Header="⌁  Activity and support">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
+          <StackPanel Margin="38,30,38,24" Spacing="18">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="screen-eyebrow" Text="ACTIVITY AND SUPPORT" />
+            <TextBlock Classes="screen-title" Text="Understand what happened" />
+            <TextBlock Classes="screen-description"
+                       Text="Review privacy-safe events, actionable errors, and a support bundle you can inspect before sharing." />
+          </StackPanel>
           <Grid x:Name="ActivitySupportGrid"
                 ColumnDefinitions="1.15*,0.85*"
                 RowDefinitions="*"
-                Margin="4,14"
                 ColumnSpacing="14"
                 RowSpacing="14">
-            <Border Classes="card">
+            <Border Classes="atlas-panel">
               <StackPanel Spacing="10">
                 <TextBlock Text="Privacy-safe diagnostics"
                            FontSize="{StaticResource VaultFontSize20}"
@@ -1218,7 +1424,7 @@
             </Border>
             <Border x:Name="SupportBundleCard"
                     Grid.Column="1"
-                    Classes="card">
+                    Classes="atlas-panel">
               <StackPanel Spacing="10">
                 <TextBlock Text="Create a support bundle"
                            FontSize="{StaticResource VaultFontSize20}"
@@ -1243,11 +1449,20 @@
               </StackPanel>
             </Border>
           </Grid>
+          </StackPanel>
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Settings">
-        <ScrollViewer Margin="4,14"><Border Classes="card" MaxWidth="700" HorizontalAlignment="Left">
+      <TabItem Header="⚙  Settings and updates">
+        <ScrollViewer>
+        <StackPanel Margin="38,30,38,24" Spacing="18">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="screen-eyebrow" Text="PREFERENCES AND LIFECYCLE" />
+            <TextBlock Classes="screen-title" Text="Settings" />
+            <TextBlock Classes="screen-description"
+                       Text="Your effective settings combine personal choices, workspace safeguards, and enterprise policy." />
+          </StackPanel>
+        <Border Classes="atlas-panel" MaxWidth="820" HorizontalAlignment="Left">
           <StackPanel Spacing="12">
             <TextBlock Text="Product updates"
                        FontSize="{StaticResource VaultFontSize22}"
@@ -1402,18 +1617,27 @@
             </StackPanel>
             <TextBlock Text="Telemetry is disabled. Logs contain no tokens, values, usernames, vault names, or object names." TextWrapping="Wrap" FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" />
           </StackPanel>
-        </Border></ScrollViewer>
+        </Border>
+        </StackPanel>
+        </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="About">
+      <TabItem Header="ⓘ  About">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <Border Classes="card" Margin="4,14" MaxWidth="700" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <StackPanel Margin="38,30,38,24" Spacing="18">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="screen-eyebrow" Text="PRODUCT INFORMATION" />
+          <TextBlock Classes="screen-title" Text="Vault Prospector" />
+          <TextBlock Classes="screen-description" Text="Secure Azure retrieval with clear tenant, workspace, and source boundaries." />
+        </StackPanel>
+        <Border Classes="atlas-panel" MaxWidth="820" HorizontalAlignment="Left" VerticalAlignment="Top">
           <StackPanel Spacing="10"><TextBlock Text="{Binding VersionLabel}" FontSize="{StaticResource VaultFontSize24}" FontWeight="SemiBold" />
             <TextBlock Text="A local-first Azure Key Vault discovery, search, and secure retrieval desktop application." TextWrapping="Wrap" />
             <TextBlock Text="This preview never creates role assignments, rotates secrets, or silently caches values. Azure remains the source of truth." TextWrapping="Wrap" />
             <TextBlock Text="Mobile apps are intentionally deferred and tracked on the roadmap." TextWrapping="Wrap" Opacity="0.75" />
           </StackPanel>
         </Border>
+        </StackPanel>
         </ScrollViewer>
       </TabItem>
     </TabControl>

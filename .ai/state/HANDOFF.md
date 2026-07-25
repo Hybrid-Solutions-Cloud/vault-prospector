@@ -1,6 +1,16 @@
 # Session handoff
 
-## Atlas exact-candidate acceptance — 2026-07-25
+## Atlas visual-parity correction — 2026-07-25
+
+- The product-owner review found that the exact installed candidate retained legacy-derived
+  content layouts beneath Atlas colors, navigation, and context chrome. It did not match the
+  approved C · Atlas screens.
+- Release run `30178225455` was cancelled before publication. No public
+  `v0.3.0-preview.1` release exists; the private source tag is immutable and must not be reused.
+- ADO Tasks AB#5589, AB#5591, AB#5592, AB#5600, and AB#5601 were reopened.
+- Correction work continues in the existing worktree on `fix/atlas-production-parity`.
+
+## Atlas exact-candidate functional acceptance — 2026-07-25
 
 - Active branch `feature/desktop-ui-redesign`; draft PR #46; exact implementation head
   `01c2b820c01b64a4ddb2d83d917ea385c7d3a74a`.

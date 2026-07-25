@@ -1,5 +1,12 @@
 # Atlas Windows candidate evidence — 2026-07-25
 
+> **Release-stopping result:** the exact installed candidate passed its security, installer,
+> updater, diagnostics, and notification-area checks, but failed product-owner visual review.
+> The production desktop retained a legacy-derived content layout with Atlas colors and shell
+> chrome instead of implementing the approved C · Atlas screens. Release run
+> `30178225455` was cancelled before publication. This record must not be used as evidence of
+> Atlas desktop parity.
+
 ## Candidate identity
 
 - Pull request:
@@ -11,7 +18,7 @@
 - Public release status: not released; this record covers an exact CI candidate.
 
 The product owner selected Atlas as the production desktop direction. This candidate implements
-the Atlas installer, first-run and desktop shell, trusted in-app update workflow, privacy-safe
+the Atlas installer and a partial Atlas-themed desktop shell, trusted in-app update workflow, privacy-safe
 diagnostics, Remote Desktop verification fallback, reveal-verification grace policy, discovered
 source selectors, guided browser setup, service-principal candidate filtering, and
 notification-area lifecycle.
@@ -50,7 +57,8 @@ The exact MSI was hash-verified on the host and again inside a disposable Window
 | Local console without an available verification device | Passed fail-closed with actionable status |
 | Actual RDP session detection | Passed |
 | Current-account Windows credential fallback in RDP | Passed; the application unlocked only after successful Windows verification |
-| Atlas shell after remote verification | Passed; the application reported **READY** |
+| Functional shell after remote verification | Passed; the application reported **READY** |
+| Visual parity with approved C · Atlas production screens | **Failed**; content remained legacy-derived |
 | Activity and Support page | Passed |
 | Settings update check against the public binary-only release repository | Passed |
 | Minimize to notification area | Passed; the taskbar entry disappeared while the process and Vault Prospector notification icon remained active |
@@ -79,9 +87,11 @@ The installed updater:
 
 ## Acceptance disposition
 
-This candidate is sufficient evidence for the implementation and exact-candidate portions of
-AB#5571, AB#5574, AB#5575, and AB#5611 and their completed child tasks. Parent items that require
-an exact **public** package remain open until the immutable release is published and rechecked.
+This candidate remains valid evidence for the RDP verification and notification-area portions of
+AB#5575 and AB#5611. It is not sufficient evidence for the Atlas implementation or visual-parity
+portions of AB#5571 and AB#5574. Tasks AB#5589, AB#5591, AB#5592, AB#5600, and AB#5601 were
+reopened. The next corrected package must use a new immutable version and pass a direct rendered
+comparison against the approved C · Atlas screens before any UI item is closed.
 
 The following separate live matrices are not claimed by this record and remain open:
 
@@ -91,4 +101,3 @@ The following separate live matrices are not claimed by this record and remain o
 - installed Chrome, Edge, and Firefox fill;
 - tenant-scale service-principal discovery; and
 - populated search selectors sourced from live discovery.
-

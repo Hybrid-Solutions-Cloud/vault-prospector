@@ -99,6 +99,95 @@ public sealed class AtlasVisualBaselineTests
             expectedHeight: 58);
     }
 
+    [Fact]
+    public void ApprovedAtlasPrimaryWorkflowsHaveProductionStructuralParity()
+    {
+        var productionPath = FindRepoFile(
+            "src/VaultProspector.App/Views/MainWindow.axaml");
+        var approvedPath = FindRepoFile(
+            "docs/design/vault-prospector-ui-redesign-2026-07-25/src/App.tsx");
+        var productionText = File.ReadAllText(productionPath);
+        var approvedText = File.ReadAllText(approvedPath);
+        var production = XDocument.Load(productionPath);
+
+        var approvedWorkflowCopy = new[]
+        {
+            "Find a vault object",
+            "Connect the accounts you use",
+            "Workload identities",
+            "Workspaces",
+            "Fill the field you selected",
+            "Understand what happened",
+            "PREFERENCES AND LIFECYCLE",
+        };
+        Assert.All(
+            approvedWorkflowCopy,
+            copy =>
+            {
+                Assert.Contains(copy, approvedText, StringComparison.Ordinal);
+                Assert.Contains(copy, productionText, StringComparison.Ordinal);
+            });
+
+        var window = production.Root;
+        Assert.NotNull(window);
+        Assert.Equal("1440", Attribute(window, "Width"));
+        Assert.Equal("860", Attribute(window, "Height"));
+
+        var titles = production
+            .Descendants()
+            .Where(element =>
+                element.Name.LocalName == "TextBlock" &&
+                HasClass(element, "screen-title"))
+            .Select(element => Attribute(element, "Text"))
+            .Where(value => value is not null)
+            .Cast<string>()
+            .ToArray();
+        Assert.Contains("Find a vault object", titles);
+        Assert.Contains("Connect the accounts you use", titles);
+        Assert.Contains("Workload identities", titles);
+        Assert.Contains("Workspaces", titles);
+        Assert.Contains("Fill the field you selected", titles);
+        Assert.Contains("Understand what happened", titles);
+        Assert.Contains("Settings", titles);
+
+        AssertNamedGridColumns(
+            production,
+            "SearchFilterGrid",
+            "150,*,*,*,*");
+        AssertNamedGridColumns(
+            production,
+            "SearchResultsGrid",
+            "2.2*,1*");
+        AssertNamedGridColumns(
+            production,
+            "IdentityGrid",
+            "2.2*,1*");
+        AssertNamedGridColumns(
+            production,
+            "SetupStepperGrid",
+            "*,*,*,*");
+
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "Expander" &&
+                Attribute(element, "Header") ==
+                    "Connection details, errors, and discovery scope" &&
+                Attribute(element, "IsExpanded") == "False");
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "TextBox" &&
+                Attribute(element, "Name") == "SearchTextBox" &&
+                HasClass(element, "atlas-search"));
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "Button" &&
+                Attribute(element, "Content") == "Reveal safely" &&
+                Attribute(element, "Command") == "{Binding RevealCommand}");
+    }
+
     private static void AssertBitmap(
         string path,
         int expectedWidth,
@@ -143,4 +232,29 @@ public sealed class AtlasVisualBaselineTests
     private sealed record AtlasBaselineFile(
         string Path,
         string Sha256);
+
+    private static void AssertNamedGridColumns(
+        XDocument document,
+        string name,
+        string expected)
+    {
+        var grid = document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "Grid" &&
+                Attribute(element, "Name") == name);
+        Assert.Equal(expected, Attribute(grid, "ColumnDefinitions"));
+    }
+
+    private static bool HasClass(XElement element, string value) =>
+        (Attribute(element, "Classes") ?? string.Empty)
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Contains(value, StringComparer.Ordinal);
+
+    private static string? Attribute(XElement element, string localName) =>
+        element
+            .Attributes()
+            .SingleOrDefault(attribute =>
+                attribute.Name.LocalName == localName)
+            ?.Value;
 }

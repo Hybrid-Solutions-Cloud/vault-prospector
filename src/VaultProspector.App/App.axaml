@@ -18,6 +18,9 @@
         <SolidColorBrush x:Key="VaultColorGood">#27715B</SolidColorBrush>
         <SolidColorBrush x:Key="VaultColorGoodSoft">#DEEEE8</SolidColorBrush>
         <SolidColorBrush x:Key="VaultColorWarning">#A26118</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorWarningSoft">#F7EAD5</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorDanger">#A33E3E</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorDangerSoft">#FBE5E5</SolidColorBrush>
         <SolidColorBrush x:Key="VaultColorNavigation">#EEE8DD</SolidColorBrush>
         <SolidColorBrush x:Key="VaultColorContext">#E7DFD2</SolidColorBrush>
         <SolidColorBrush x:Key="VaultColorHeader">#2C3737</SolidColorBrush>
@@ -41,6 +44,7 @@
         <FluentTheme DensityStyle="Compact" />
         <Style Selector="Window">
             <Setter Property="FontSize" Value="{DynamicResource VaultFontSize14}" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
             <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
         </Style>
         <Style Selector="NumericUpDown">
@@ -50,7 +54,9 @@
             <Setter Property="Background" Value="{DynamicResource VaultColorAccent}" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Padding" Value="18,9" />
+            <Setter Property="CornerRadius" Value="0" />
         </Style>
         <Style Selector="Button.primary:pointerover">
             <Setter Property="Background" Value="{DynamicResource VaultColorAccentStrong}" />
@@ -58,16 +64,20 @@
         <Style Selector="TabControl.product-shell">
             <Setter Property="TabStripPlacement" Value="Left" />
             <Setter Property="Background" Value="{DynamicResource VaultColorCanvas}" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
         </Style>
         <Style Selector="TabControl.product-shell TabItem">
             <Setter Property="MinWidth" Value="205" />
-            <Setter Property="MinHeight" Value="42" />
-            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="MaxWidth" Value="205" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Padding" Value="18,11" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="Foreground" Value="{DynamicResource VaultColorMuted}" />
             <Setter Property="Background" Value="{DynamicResource VaultColorNavigation}" />
-            <Setter Property="BorderThickness" Value="4,0,0,0" />
+            <Setter Property="BorderThickness" Value="5,0,0,0" />
             <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="FontSize" Value="{DynamicResource VaultFontSize16}" />
         </Style>
         <Style Selector="TabControl.product-shell TabItem:selected">
             <Setter Property="Background" Value="{DynamicResource VaultColorAccent}" />
@@ -96,6 +106,83 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="0" />
             <Setter Property="Padding" Value="{StaticResource VaultCardPadding}" />
+        </Style>
+        <Style Selector="Border.atlas-panel">
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorLine}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="18" />
+        </Style>
+        <Style Selector="Border.atlas-callout">
+            <Setter Property="Background" Value="#EEF4F1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorGood}" />
+            <Setter Property="BorderThickness" Value="4,0,0,0" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+        <Style Selector="Border.atlas-warning">
+            <Setter Property="Background" Value="{DynamicResource VaultColorWarningSoft}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorWarning}" />
+            <Setter Property="BorderThickness" Value="4,0,0,0" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+        <Style Selector="TextBlock.screen-eyebrow">
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorAccentStrong}" />
+            <Setter Property="FontSize" Value="{DynamicResource VaultFontSize11}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="LetterSpacing" Value="1.4" />
+        </Style>
+        <Style Selector="TextBlock.screen-title">
+            <Setter Property="FontFamily" Value="Georgia" />
+            <Setter Property="FontSize" Value="31" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#171612" />
+        </Style>
+        <Style Selector="TextBlock.screen-description">
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorMuted}" />
+            <Setter Property="FontSize" Value="{DynamicResource VaultFontSize16}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontSize" Value="{DynamicResource VaultFontSize18}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.field-label">
+            <Setter Property="FontSize" Value="{DynamicResource VaultFontSize12}" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.nav-caption">
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorMuted}" />
+            <Setter Property="FontSize" Value="{DynamicResource VaultFontSize11}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="LetterSpacing" Value="1.2" />
+        </Style>
+        <Style Selector="TextBox.atlas-search">
+            <Setter Property="MinHeight" Value="52" />
+            <Setter Property="FontSize" Value="{DynamicResource VaultFontSize16}" />
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorLineStrong}" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+        </Style>
+        <Style Selector="ComboBox.atlas-filter">
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+        </Style>
+        <Style Selector="ListBox.atlas-list">
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorLine}" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Expander.atlas-expander">
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorLine}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8" />
         </Style>
     </Application.Styles>
 </Application>
