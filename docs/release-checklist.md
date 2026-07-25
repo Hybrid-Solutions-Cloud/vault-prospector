@@ -75,6 +75,10 @@ Record the Windows version, package checksum, tester, and time with the release 
 
 Run this only from an elevated PowerShell 7 session on a Windows system that does not already have Vault Prospector installed. Supply hashes copied from the published checksum files; do not calculate an expected value from the MSI under test.
 
+The manually dispatched CI workflow runs this scenario on the HCS Tier-4 ephemeral Windows runner
+for every candidate, using the independently published Preview.5 checksum as the previous-version
+trust anchor and retaining the structured result with the candidate test evidence.
+
 ```powershell
 pwsh ./tests/scenario/windows-installer-lifecycle.scenario.ps1 `
   -PreviousMsiPath <previous.msi> `
