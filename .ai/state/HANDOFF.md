@@ -1,5 +1,27 @@
 # Session handoff
 
+## 0.2.0-preview.3 published and independently verified — 2026-07-25
+
+- PR #29 merged as `ea8b407707de7bb743ac27607f6bfa7b98df9801`; it isolates one-time
+  .NET/SQLCipher/cryptographic activation from the encrypted-repository initialization metric
+  while retaining the two-second limit. Exact-main run `30149406966` passed all three jobs.
+- Immutable tag `v0.2.0-preview.2` built and packaged successfully but stopped before publication
+  because Git Bash was absent from the one-shot runner `PATH`. It has no public release or assets
+  and was not moved or reused.
+- PR #30 merged as `f0ff8e7fc6190953620b4cf7d8aae4447875dfe2`; the Tier-4 bootstrap now
+  verifies and exposes `C:\Program Files\Git\bin\bash.exe`. Exact-main run `30150138832` passed all
+  three jobs.
+- GitHub Actions release configuration now has the HCS GitHub App ID variable and private-key
+  secret sourced from HCS Key Vault. Secret values were not committed.
+- Immutable tag `v0.2.0-preview.3` points to `f0ff8e7fc6190953620b4cf7d8aae4447875dfe2`.
+  Release run `30150472368`, attempt 2, passed the 371-test build, MSI/MSIX and distribution
+  packaging, unsigned-package boundary, SPDX SBOM, five keyless Sigstore bundles, GitHub App token
+  creation, and public publication.
+- The public prerelease has exactly 16 assets. Independent downloads matched all five adjacent
+  SHA-256 files; Cosign `v3.0.6` verified all five bundles against the exact tag-workflow identity.
+- CyberArk and native mobile remain separate future-roadmap scope. Direct downloads remain
+  explicitly unsigned; the no-cost trusted path remains Microsoft Store–signed MSIX.
+
 ## HCS runner and ADO reconciliation completed — 2026-07-25
 
 - PR #26 merged as `c6748ccc87ad62fb9c6f3ac46c067360972acce4`; PR #27 merged as

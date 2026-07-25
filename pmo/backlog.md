@@ -2,9 +2,9 @@
 
 ## Current delivery state
 
-`0.2.0-preview.1` is the current public, unsigned Windows Preview for non-production evaluation.
+`0.2.0-preview.3` is the current public, unsigned Windows Preview for non-production evaluation.
 The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
-in `0.2.0-preview.1` and remain subject to the live, independent, signing, store, and GA validation
+in the 0.2 Preview line and remain subject to the live, independent, Store, and GA validation
 gates recorded below.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
