@@ -4,7 +4,25 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
-No changes recorded after `0.2.0-preview.1`.
+No changes recorded after `0.2.0-preview.3`.
+
+## [0.2.0-preview.3] - 2026-07-25
+
+### Changed
+
+- Move CyberArk and native mobile delivery to separate future-roadmap releases and hide the
+  unsupported CyberArk Windows surface by default.
+- Replace Azure DevOps build definitions with GitHub Actions on the governed HCS Linux runner and
+  repeatable ephemeral Azure Windows fallback.
+- Add reproducible MSIX packaging and validation for the future free Microsoft Store–signed
+  distribution path while keeping direct Preview downloads explicitly unsigned.
+- Remove arbitrary evaluator-count and waiting-period quotas from GA promotion; retain
+  evidence-based workflow coverage, defect disposition, exact-candidate validation, and named
+  approval.
+- Isolate first-process .NET, SQLCipher, and cryptographic activation from the repository
+  initialization performance metric without changing its two-second limit.
+- Repair the one-shot Windows release environment so pinned Cosign tooling, Sigstore provenance,
+  and GitHub App publication run from a clean Tier-4 machine.
 
 ## [0.2.0-preview.1] - 2026-07-24
 
@@ -150,6 +168,7 @@ No changes recorded after `0.2.0-preview.1`.
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.2.0-preview.3]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.3
 [0.2.0-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.1
 [0.1.1-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1
 [0.1.0-preview.2]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector/releases/tag/v0.1.0-preview.2

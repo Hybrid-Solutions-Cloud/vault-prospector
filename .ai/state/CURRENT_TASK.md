@@ -19,6 +19,15 @@ Confirmed on 2026-07-25:
 
 Validated:
 
+- `0.2.0-preview.3` is published from immutable source
+  `f0ff8e7fc6190953620b4cf7d8aae4447875dfe2` in the public binary repository. Release run
+  `30150472368` attempt 2 passed, all 16 assets are present, all five adjacent hashes matched
+  independent downloads, and all five keyless Sigstore bundles verified.
+- PR #29 corrected the performance metric without changing its two-second limit. PR #30 repaired
+  the one-shot Windows runner's Git Bash path. Exact-main runs `30149406966` and `30150138832`
+  passed all three jobs.
+- Failed immutable tag `v0.2.0-preview.2` has no public release or assets and was not moved or
+  reused.
 - PRs #26 and #27 merged as `c6748ccc87ad62fb9c6f3ac46c067360972acce4` and
   `a0370c3163e4389ac5fbf61b81f2921051533546`.
 - PR runs `30146345649` and `30146846301` passed portable validation and full-history secret
@@ -38,12 +47,10 @@ Validated:
 
 Next:
 
-1. Publish the corrected source as a new immutable unsigned Preview through the restored GitHub
-   release workflow and verify every public asset.
-2. Complete current-Windows live matrices, independent security/accessibility review, enterprise
+1. Complete current-Windows live matrices, independent security/accessibility review, enterprise
    policy deployment, operational exercise, and legal/privacy approval.
-3. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
+2. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
    Microsoft-signed Store package.
-4. Implement governed Azure mutations only after the required design/security gate; the current
+3. Implement governed Azure mutations only after the required design/security gate; the current
    product remains intentionally read-only.
-5. Keep CyberArk and mobile in their separate future-roadmap releases.
+4. Keep CyberArk and mobile in their separate future-roadmap releases.
