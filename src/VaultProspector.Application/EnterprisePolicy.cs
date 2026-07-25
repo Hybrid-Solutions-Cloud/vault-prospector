@@ -34,6 +34,7 @@ public sealed class EnterprisePolicySnapshot
         bool allowClipboard = true,
         bool allowOfflineCache = true,
         TimeSpan? maximumOfflineCacheLifetime = null,
+        bool allowRemoteCredentialVerification = true,
         bool isValid = true,
         string safeStatus = "No machine-managed enterprise policy is configured.")
     {
@@ -47,6 +48,8 @@ public sealed class EnterprisePolicySnapshot
         IsValid = isValid;
         AllowClipboard = allowClipboard;
         AllowOfflineCache = allowOfflineCache;
+        AllowRemoteCredentialVerification =
+            allowRemoteCredentialVerification;
         MaximumOfflineCacheLifetime = maximumOfflineCacheLifetime;
         SafeStatus = string.IsNullOrWhiteSpace(safeStatus)
             ? "Enterprise policy status is unavailable."
@@ -67,6 +70,7 @@ public sealed class EnterprisePolicySnapshot
     public bool IsValid { get; }
     public bool AllowClipboard { get; }
     public bool AllowOfflineCache { get; }
+    public bool AllowRemoteCredentialVerification { get; }
     public TimeSpan? MaximumOfflineCacheLifetime { get; }
     public string SafeStatus { get; }
     public IReadOnlySet<string> AllowedTenantIds => _allowedTenantIds;
@@ -81,6 +85,7 @@ public sealed class EnterprisePolicySnapshot
             allowedIdentityTypes: [],
             allowClipboard: false,
             allowOfflineCache: false,
+            allowRemoteCredentialVerification: false,
             isValid: false,
             safeStatus:
                 $"Machine-managed enterprise policy is invalid and access is denied: {safeReason}");

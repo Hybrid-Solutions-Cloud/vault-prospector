@@ -10,12 +10,13 @@
     <stringTable>
       <string id="Category_VaultProspector">Vault Prospector</string>
       <string id="Policy_EnterpriseAccess">Configure enterprise access boundaries</string>
-      <string id="Policy_EnterpriseAccess_Help">Controls allowed Azure tenants, providers, identity types, clipboard use, and encrypted offline-value retention. Omitted allow-list values permit every currently supported value. Present but empty provider or identity-type lists deny all. Invalid or unreadable enabled policy fails closed. Changes are enforced at operation boundaries.</string>
+      <string id="Policy_EnterpriseAccess_Help">Controls allowed Azure tenants, providers, identity types, clipboard use, encrypted offline-value retention, and current-account Windows credential verification in remote sessions. Omitted allow-list values permit every currently supported value. Present but empty provider or identity-type lists deny all. Invalid or unreadable enabled policy fails closed. Changes are enforced at operation boundaries.</string>
       <string id="AllowedTenantIds">Allowed Microsoft Entra tenant IDs (one GUID per line; blank permits all tenants)</string>
       <string id="AllowedProviders">Allowed providers (one per line: AzureKeyVault, CyberArkPrivilegeCloud; blank permits both)</string>
       <string id="AllowedIdentityTypes">Allowed Azure identity types (one per line: InteractiveUser, ManagedIdentity, ServicePrincipal, FederatedServicePrincipal; blank permits all)</string>
       <string id="DisableClipboard">Disable clipboard operations</string>
       <string id="DisableOfflineCache">Disable encrypted offline-value storage and opening</string>
+      <string id="DisableRemoteCredentialVerification">Disable current-account Windows credential verification in Remote Desktop and Azure Virtual Desktop sessions</string>
       <string id="MaximumOfflineCacheMinutes">Maximum offline-value lifetime in minutes (1–10080)</string>
     </stringTable>
     <presentationTable>
@@ -28,6 +29,7 @@
         <multiTextBox refId="AllowedIdentityTypes" />
         <checkBox refId="DisableClipboard">$(string.DisableClipboard)</checkBox>
         <checkBox refId="DisableOfflineCache">$(string.DisableOfflineCache)</checkBox>
+        <checkBox refId="DisableRemoteCredentialVerification">$(string.DisableRemoteCredentialVerification)</checkBox>
         <decimalTextBox refId="MaximumOfflineCacheMinutes"
                         defaultValue="480"
                         spinStep="30">$(string.MaximumOfflineCacheMinutes)</decimalTextBox>

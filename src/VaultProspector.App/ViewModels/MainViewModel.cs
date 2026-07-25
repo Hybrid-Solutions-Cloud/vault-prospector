@@ -1586,8 +1586,16 @@ public sealed partial class MainViewModel(
                 "Application locked — verification unavailable."),
             UserVerificationResult.RemoteSessionUnavailable => (
                 "Vault Prospector remains locked because Windows verification is unavailable in this Remote Desktop session.",
-                "Reconnect at the Windows or Hyper-V console to complete Windows Hello verification. Repeating this retry in the current remote session will not open a prompt.",
+                "Your administrator may enable current-account Windows credential verification for supported remote sessions. Otherwise reconnect at the Windows or Hyper-V console.",
                 "Application locked — Windows verification unavailable in Remote Desktop."),
+            UserVerificationResult.RemoteCredentialUnavailable => (
+                "Vault Prospector remains locked because the Windows credential prompt is unavailable in this remote session.",
+                "Retry from an interactive AVD or Remote Desktop desktop. If the prompt remains unavailable, ask your administrator to review remote verification policy.",
+                "Application locked — remote Windows verification unavailable."),
+            UserVerificationResult.RemoteCredentialFailed => (
+                "Vault Prospector remains locked because the supplied Windows credential did not verify the current signed-in account.",
+                "Retry with the credential for this Windows session. Credentials for a different account cannot unlock this user's encrypted data.",
+                "Application locked — current Windows account not verified."),
             _ => (
                 "Vault Prospector remains locked because verification did not complete.",
                 "Retry Windows verification. If attempts are exhausted, follow your Windows Hello recovery process.",

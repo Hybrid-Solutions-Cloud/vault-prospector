@@ -81,6 +81,10 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
                 normalized,
                 "DisableOfflineCache",
                 false);
+            var disableRemoteCredentialVerification = ReadOptionalSwitch(
+                normalized,
+                "DisableRemoteCredentialVerification",
+                false);
             var maximumCacheMinutes = ReadOptionalDword(
                 normalized,
                 "MaximumOfflineCacheMinutes");
@@ -105,6 +109,10 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
             var clipboardStatus = disableClipboard
                 ? "clipboard disabled"
                 : "clipboard permitted subject to workspace policy";
+            var remoteVerificationStatus =
+                disableRemoteCredentialVerification
+                    ? "remote Windows credential verification disabled"
+                    : "remote Windows credential verification permitted";
 
             return new EnterprisePolicySnapshot(
                 true,
@@ -117,10 +125,13 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
                     maximumCacheMinutes is { } maximum
                         ? TimeSpan.FromMinutes(maximum)
                         : null,
+                allowRemoteCredentialVerification:
+                    !disableRemoteCredentialVerification,
                 safeStatus:
                     $"Machine-managed policy is active: {tenantScope}; " +
                     $"{providerCount} provider(s); {identityTypeCount} identity type(s); " +
-                    $"{clipboardStatus}; {cacheStatus}.");
+                    $"{clipboardStatus}; {cacheStatus}; " +
+                    $"{remoteVerificationStatus}.");
         }
         catch (EnterprisePolicyFormatException exception)
         {

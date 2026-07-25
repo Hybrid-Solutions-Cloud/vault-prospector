@@ -41,11 +41,17 @@ public partial class App : Avalonia.Application
             var valueStore = new EncryptedFileValueStore(VaultProspectorPaths.CacheDirectory, keyProvider, clock);
             var clipboard = new AvaloniaClipboardService();
             MainWindow? window = null;
-            IUserVerificationService verification =
-                new WindowsHelloVerificationService(
-                    () => window?.TryGetPlatformHandle()?.Handle ?? 0);
             IEnterprisePolicy enterprisePolicy =
                 new WindowsRegistryEnterprisePolicy();
+            IUserVerificationService verification =
+                new PolicyControlledWindowsVerificationService(
+                    new WindowsHelloVerificationService(
+                        () =>
+                            window?.TryGetPlatformHandle()?.Handle ?? 0),
+                    new RemoteWindowsCredentialVerificationService(
+                        () =>
+                            window?.TryGetPlatformHandle()?.Handle ?? 0),
+                    enterprisePolicy);
             var secretAccessService = new SecretAccessService(
                 azureProvider,
                 repository,

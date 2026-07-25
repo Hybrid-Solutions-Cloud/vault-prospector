@@ -288,6 +288,8 @@ public enum UserVerificationResult
     Canceled,
     Unavailable,
     RemoteSessionUnavailable,
+    RemoteCredentialUnavailable,
+    RemoteCredentialFailed,
     NotConfigured,
     DisabledByPolicy,
     Failed,

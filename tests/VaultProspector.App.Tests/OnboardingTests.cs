@@ -417,6 +417,8 @@ public sealed class OnboardingTests : IDisposable
     [InlineData(UserVerificationResult.DisabledByPolicy, "policy")]
     [InlineData(UserVerificationResult.Unavailable, "unavailable")]
     [InlineData(UserVerificationResult.RemoteSessionUnavailable, "Remote Desktop")]
+    [InlineData(UserVerificationResult.RemoteCredentialUnavailable, "remote")]
+    [InlineData(UserVerificationResult.RemoteCredentialFailed, "current Windows account")]
     [InlineData(UserVerificationResult.Failed, "failed")]
     public async Task IncompleteWindowsVerificationKeepsApplicationLocked(
         UserVerificationResult result,
