@@ -6,4 +6,8 @@
     <DefineConstants>ReleaseVersion=$(ReleaseVersion);MsiVersion=$(MsiVersion);PublishDirectory=$(PublishDirectory)</DefineConstants>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+  </ItemGroup>
 </Project>

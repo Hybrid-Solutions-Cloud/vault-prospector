@@ -5,6 +5,23 @@
              RequestedThemeVariant="Default">
 
     <Application.Resources>
+        <SolidColorBrush x:Key="VaultColorCanvas">#F4F1EA</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorSurface">#FFFDF8</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorSurfaceAlt">#EEE9DF</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorInk">#25231F</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorMuted">#6F6A61</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorLine">#D4CDC0</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorLineStrong">#A99E8D</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorAccent">#9A412B</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorAccentStrong">#7B3020</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorAccentSoft">#F2DFD8</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorGood">#27715B</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorGoodSoft">#DEEEE8</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorWarning">#A26118</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorNavigation">#EEE8DD</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorContext">#E7DFD2</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultColorHeader">#2C3737</SolidColorBrush>
+        <Thickness x:Key="VaultCardPadding">16</Thickness>
         <x:Double x:Key="VaultFontSize11">11</x:Double>
         <x:Double x:Key="VaultFontSize12">12</x:Double>
         <x:Double x:Key="VaultFontSize14">14</x:Double>
@@ -24,12 +41,37 @@
         <FluentTheme DensityStyle="Compact" />
         <Style Selector="Window">
             <Setter Property="FontSize" Value="{DynamicResource VaultFontSize14}" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
         </Style>
         <Style Selector="NumericUpDown">
             <Setter Property="MinHeight" Value="26" />
         </Style>
         <Style Selector="Button.primary">
-            <Setter Property="Background" Value="#0A6E57" />
+            <Setter Property="Background" Value="{DynamicResource VaultColorAccent}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="MinHeight" Value="36" />
+        </Style>
+        <Style Selector="Button.primary:pointerover">
+            <Setter Property="Background" Value="{DynamicResource VaultColorAccentStrong}" />
+        </Style>
+        <Style Selector="TabControl.product-shell">
+            <Setter Property="TabStripPlacement" Value="Left" />
+            <Setter Property="Background" Value="{DynamicResource VaultColorCanvas}" />
+        </Style>
+        <Style Selector="TabControl.product-shell TabItem">
+            <Setter Property="MinWidth" Value="205" />
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorMuted}" />
+            <Setter Property="Background" Value="{DynamicResource VaultColorNavigation}" />
+            <Setter Property="BorderThickness" Value="4,0,0,0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="TabControl.product-shell TabItem:selected">
+            <Setter Property="Background" Value="{DynamicResource VaultColorAccent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorAccentStrong}" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
@@ -49,9 +91,11 @@
             <Setter Property="Foreground" Value="{DynamicResource TextControlForeground}" />
         </Style>
         <Style Selector="Border.card">
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="16" />
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorLine}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="{StaticResource VaultCardPadding}" />
         </Style>
     </Application.Styles>
 </Application>

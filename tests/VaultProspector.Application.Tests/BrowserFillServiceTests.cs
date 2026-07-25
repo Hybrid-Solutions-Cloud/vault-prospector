@@ -62,6 +62,47 @@ public sealed class BrowserFillServiceTests
     }
 
     [Fact]
+    public async Task DestinationAssessmentExposesBrowserDerivedContextWithoutRetrieval()
+    {
+        var context = CreateContext();
+
+        var assessment = await context.Service.AssessDestinationAsync(
+            Request(),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(assessment.PolicyDecision.IsAllowed);
+        Assert.Equal(
+            "https://login.example.com",
+            assessment.Request.TopOrigin.SerializedOrigin);
+        Assert.Equal(
+            "https://login.example.com",
+            assessment.Request.FrameOrigin.SerializedOrigin);
+        Assert.Equal(
+            BrowserMappingFieldPurpose.Password,
+            assessment.FieldPurpose);
+        Assert.Null(assessment.ExistingMapping);
+        Assert.Equal(0, context.Provider.Calls);
+        Assert.Empty(context.Repository.Audit);
+    }
+
+    [Fact]
+    public async Task DestinationAssessmentReportsExactPolicyDenial()
+    {
+        var context = CreateContext();
+        context.Policy!.IsAllowed = false;
+
+        var assessment = await context.Service.AssessDestinationAsync(
+            Request(),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(assessment.PolicyDecision.IsAllowed);
+        Assert.Equal(
+            "Denied by test policy.",
+            assessment.PolicyDecision.SafeReason);
+        Assert.Equal(0, context.Provider.Calls);
+    }
+
+    [Fact]
     public async Task MappingChangeAfterConfirmationInvalidatesApproval()
     {
         var context = CreateContext();

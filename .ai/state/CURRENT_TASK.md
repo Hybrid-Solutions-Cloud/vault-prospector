@@ -1,61 +1,40 @@
 # Current task
 
-Complete the remaining Windows General Availability (GA) evidence without treating future
-products, paid signing, or an unavailable preferred build host as release blockers.
+Finish the product-owner walkthrough corrections on branch `feature/desktop-ui-redesign`, close
+acceptance-complete Azure DevOps items bottom-up, merge PR #46, publish an immutable binary-only
+Preview release, verify that exact public package, and clean temporary test/runner resources.
 
 Confirmed on 2026-07-25:
 
-- CyberArk and native mobile applications are future-roadmap work, not Windows GA blockers.
-- GitHub Actions owns CI/release execution; Azure DevOps remains the governed hierarchy for epics,
-  features, user stories, and tasks.
-- Portable validation uses the HCS Linux runner. Windows-only validation and packaging use the
-  one-shot HCS Tier-4 ephemeral Azure VM.
+- Atlas is the approved production UI direction.
+- CyberArk and native mobile applications remain future-roadmap work, not Windows release blockers.
+- GitHub Actions performs builds and releases on HCS-managed runners. Azure DevOps remains the
+  authoritative hierarchy for epics, features, user stories, and tasks.
+- Source remains private. Only release binaries are published to
+  `Hybrid-Solutions-Cloud/vault-prospector-releases`.
 - The operator workstation does not perform authoritative builds, tests, packaging, or
-  publication. It may orchestrate workflows and host isolated Hyper-V acceptance-test guests.
-- The free trusted Windows path is Microsoft Store-signed MSIX. Direct MSI/ZIP downloads remain
-  explicitly unsigned with checksums, SBOM, and Sigstore evidence.
+  publication. It may orchestrate workflows and host an isolated Hyper-V acceptance guest.
 
 Validated:
 
-- PR #33 corrected the unpackaged desktop verification path and merged as
-  `e84d0f0e47605d9575a3306721adf3b50764c4d2`.
-- The exact public Preview.4 MSI passed Windows Hello success, cancellation, button re-entry, and
-  button-initiated success in a dedicated Windows 11 Hyper-V basic-console session, completing
-  AB#5539.
-- That clean first-run test found a separate null Identity Type binding defect. PR #36 corrected
-  it by preserving and incrementally synchronizing the bound collection, with regression coverage
-  that rejects a collection reset.
-- PR #36 merged as `542be4679006c2a34ef1df3b58722ae8a844b1ae`. Exact-main run
-  `30162673459` passed all three jobs on HCS-managed runners, including the zero-warning 375-test
-  Windows build and packaging/readiness gates.
-- Immutable tag `v0.2.0-preview.5` points to that exact merge commit. Release run `30163007720`
-  repeated the zero-warning Windows build and all 375 tests, created packages/SBOM/Sigstore
-  evidence, and published through the HCS GitHub App.
-- The public `0.2.0-preview.5` prerelease has exactly 16 assets. Independent downloads matched all
-  five package checksum files; Cosign `v3.0.6` verified all five bundles against the exact
-  tag-workflow identity.
-- The exact public Preview.5 MSI passed a fresh Windows 11 first-run test: Windows Hello unlocked
-  the application, `InteractiveUser` was selected, and no null conversion error appeared. The
-  retained evidence SHA-256 is
-  `FDB6AA4A12C3EC683BBDBDC11EADC56DB5A9AFE175EA2187A5DA79A795A6D35E` and is attached to AB#5542.
-- AB#5542 is Closed. Parent AB#5348 remains open because its separate live Microsoft Entra,
-  keyboard/screen-reader, independent-review, and exact-release Acceptance Criteria are not all
-  complete.
-- The public Preview.4 record is marked withdrawn and points to Preview.5; immutable historical
-  tags and assets were not changed.
-- Release-record PR #37 merged as `29a957af86c022a8479ee46f39fab94d0f2377bb`.
-  Exact-main run `30164830620` passed all three HCS jobs.
-- The one-shot Azure Windows runner resource group was deleted, zero Windows runners remain, and
-  its temporary Key Vault credentials were soft-deleted.
-- The disposable Hyper-V guest is powered off at its clean baseline with zero snapshots.
-  Disposable credential/PIN files and transient captures were deleted.
+- PR #46 exact head is `01c2b820c01b64a4ddb2d83d917ea385c7d3a74a`.
+- HCS GitHub Actions run `30175377767` passed portable validation, full-history secret scanning,
+  and the Windows candidate, including all 432 Windows tests and 27 installer lifecycle checks.
+- Exact MSI `0.3.0-ci.190` SHA-256 is
+  `506B43A01D91A0C6437D60B04852EDD00031723C73DD76675B410131AEC80A8B`.
+- The exact MSI passed Atlas installer and first-run walkthrough, real RDP current-account Windows
+  verification, in-app update check, diagnostics/support bundle export, minimize-to-notification
+  area, and locked restore from the notification icon.
+- Support bundle SHA-256 is
+  `2B590E49BB18C4BBA74C936C69295D150C857D300E217BD7547495CD7433411D`.
 
 Next:
 
-1. Complete current-Windows live identity/provider matrices, independent security/accessibility
-   review, enterprise-policy deployment, operational exercise, and legal/privacy approval.
-2. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
-   Microsoft-signed Store package.
-3. Implement governed Azure mutations only after the required design/security gate; the current
-   product remains intentionally read-only.
-4. Keep CyberArk and mobile in their separate future-roadmap releases.
+1. Commit candidate evidence and user/PMO documentation, then repeat governed exact-head CI.
+2. Close only child items whose implementation, tests, and exact-candidate evidence are complete.
+3. Merge PR #46, run exact-main validation, create the immutable Preview release, and verify public
+   hashes/provenance plus the public MSI walkthrough.
+4. Close eligible parent stories/bugs only after every Acceptance Criterion is satisfied.
+5. Leave live identity, browser, service-principal-scale, independent review, Store signing,
+   enterprise deployment, legal/privacy, and operational approvals open where evidence is absent.
+6. Remove temporary runner/test access and stop the disposable VM without deleting it.

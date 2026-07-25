@@ -25,7 +25,10 @@ public sealed partial class MainViewModel(
     LocalRecoveryArchiveService? localRecoveryArchiveService = null,
     BrowserFillService? browserFillService = null,
     CyberArkService? cyberArkService = null,
-    IEnterprisePolicy? enterprisePolicy = null) : ViewModelBase
+    IEnterprisePolicy? enterprisePolicy = null,
+    ISupportBundleService? supportBundleService = null,
+    IRevealVerificationSession? revealVerificationSession = null,
+    IReleaseUpdateService? releaseUpdateService = null) : ViewModelBase
 {
     private static readonly IdentityType[] SupportedIdentityTypes =
     [
@@ -42,6 +45,10 @@ public sealed partial class MainViewModel(
     private bool _managedIdentityHostSupported;
     private int _subscriptionLoadVersion;
     private int _sensitivePresentationEpoch;
+    private readonly List<WorkloadIdentityCandidate>
+        _allWorkloadIdentityCandidates = [];
+    private readonly List<DiagnosticEvent>
+        _allDiagnosticEvents = [];
 
     public ObservableCollection<ConnectedIdentity> Identities { get; } = [];
     public ObservableCollection<TenantAccess> Tenants { get; } = [];
@@ -49,13 +56,39 @@ public sealed partial class MainViewModel(
     public ObservableCollection<VaultAccessRow> VaultAccessPaths { get; } = [];
     public ObservableCollection<WorkloadIdentityCandidateRow> WorkloadIdentityCandidates { get; } = [];
     public ObservableCollection<SearchResultRow> Results { get; } = [];
+    public ObservableCollection<SyncErrorRow> SyncErrors { get; } = [];
+    public ObservableCollection<DiagnosticEventRow> DiagnosticEvents { get; } = [];
     public ObservableCollection<Workspace> Workspaces { get; } = [];
     public ObservableCollection<LocalRecoveryArchiveRow> RecoveryArchives { get; } = [];
+    public ObservableCollection<SearchFilterOption> TenantFilterOptions { get; } =
+        [SearchFilterOption.All("All tenants")];
+    public ObservableCollection<SearchFilterOption> SubscriptionFilterOptions { get; } =
+        [SearchFilterOption.All("All subscriptions")];
+    public ObservableCollection<SearchFilterOption> VaultFilterOptions { get; } =
+        [SearchFilterOption.All("All vaults")];
     public IReadOnlyList<string> ObjectTypes { get; } = ["All", "Secret", "Key", "Certificate"];
     public IReadOnlyList<CloseBehavior> CloseBehaviors { get; } =
         [CloseBehavior.Ask, CloseBehavior.Exit, CloseBehavior.LockToNotificationArea];
+    public IReadOnlyList<RevealVerificationGraceOption> RevealVerificationGraceOptions { get; } =
+        RevealVerificationGraceOption.All;
     public string VersionLabel { get; } = $"Vault Prospector {GetVersion()}";
     public bool IsCyberArkPreviewEnabled => _isCyberArkPreviewEnabled;
+    public string DiagnosticLogPath =>
+        supportBundleService?.DiagnosticLogPath ??
+        "Diagnostic log path is unavailable in this build.";
+    public string ActiveWorkspaceContext =>
+        SelectedWorkspace?.Name ??
+        "All discovered sources";
+    public string ActiveIdentityContext =>
+        SelectedIdentity is null
+            ? "No identity selected"
+            : string.IsNullOrWhiteSpace(
+                SelectedIdentity.DisplayName)
+                ? SelectedIdentity.UsernameHint
+                : SelectedIdentity.DisplayName;
+    public string ActiveSubscriptionContext =>
+        SelectedSubscription?.DisplayName ??
+        "All subscriptions";
 
     [ObservableProperty] private IdentityType _selectedIdentityType = IdentityType.InteractiveUser;
     [ObservableProperty] private string _credentialData = string.Empty;
@@ -64,6 +97,10 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _administrationSubscriptionId = string.Empty;
     [ObservableProperty] private string _administrationResourceGroup = string.Empty;
     [ObservableProperty] private string _administrationIdentityName = string.Empty;
+    [ObservableProperty] private string _workloadIdentitySearchText = string.Empty;
+    [ObservableProperty]
+    private string _workloadIdentityFilterStatus =
+        "Run a discovery action to list eligible customer-managed identities.";
     [ObservableProperty] private string _administrationVaultResourceId = string.Empty;
     [ObservableProperty] private string _administrationRoleDefinitionId = string.Empty;
     [ObservableProperty]
@@ -120,6 +157,9 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _tenantFilter = string.Empty;
     [ObservableProperty] private string _subscriptionFilter = string.Empty;
     [ObservableProperty] private string _vaultFilter = string.Empty;
+    [ObservableProperty] private SearchFilterOption? _selectedTenantFilterOption;
+    [ObservableProperty] private SearchFilterOption? _selectedSubscriptionFilterOption;
+    [ObservableProperty] private SearchFilterOption? _selectedVaultFilterOption;
     [ObservableProperty] private string _selectedObjectType = "All";
     [ObservableProperty] private bool _favoritesOnly;
     [ObservableProperty] private bool _staleOnly;
@@ -130,6 +170,7 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private bool _recentlyAccessedFirst;
     [ObservableProperty] private string _statusText = "Starting securely…";
     [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private string _activeOperationText = string.Empty;
     [ObservableProperty] private ConnectedIdentity? _selectedIdentity;
     [ObservableProperty] private TenantAccess? _selectedTenant;
     [ObservableProperty] private SubscriptionSelectionRow? _selectedSubscription;
@@ -142,6 +183,11 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private bool _workspaceAllowClipboard = true;
     [ObservableProperty] private CloseBehavior _selectedCloseBehavior = CloseBehavior.Ask;
     [ObservableProperty] private bool _backgroundMetadataSyncEnabled;
+    [ObservableProperty] private bool _minimizeToNotificationArea = true;
+    [ObservableProperty]
+    private RevealVerificationGraceOption
+        _selectedRevealVerificationGrace =
+            RevealVerificationGraceOption.Off;
     [ObservableProperty] private bool _isCloseChoiceVisible;
     [ObservableProperty] private SearchResultRow? _selectedResult;
     [ObservableProperty] private string _secretPreview = "Select a secret to reveal or copy.";
@@ -173,13 +219,37 @@ public sealed partial class MainViewModel(
     [ObservableProperty]
     private string _enterprisePolicyStatus =
         "No machine-managed enterprise policy is configured.";
+    [ObservableProperty]
+    private string _supportBundleStatus =
+        "No support bundle has been created in this session.";
+    [ObservableProperty] private string _latestSupportBundlePath = string.Empty;
+    [ObservableProperty]
+    private string _diagnosticViewerStatus =
+        "Select Refresh diagnostics to display recent privacy-safe events.";
+    [ObservableProperty]
+    private string _diagnosticSearchText = string.Empty;
 
     public bool HasSelectedIdentity => SelectedIdentity is not null;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
+    public bool HasSyncErrors => SyncErrors.Count > 0;
     public bool IsEnterpriseOfflineCacheAllowed =>
         EnterprisePolicy().AllowOfflineCache;
     public bool IsEnterpriseClipboardAllowed =>
         EnterprisePolicy().AllowClipboard;
+    public string RevealVerificationGraceStatus
+    {
+        get
+        {
+            var requested = TimeSpan.FromSeconds(
+                SelectedRevealVerificationGrace.Seconds);
+            var effective = EnterprisePolicy()
+                .ConstrainRevealVerificationGracePeriod(requested);
+            return effective <= TimeSpan.Zero
+                ? "Off. Every explicit reveal requires Windows verification."
+                : $"Up to {(int)effective.TotalSeconds} seconds after a successful verification. " +
+                  "Every secret still requires an explicit Reveal action and remains visible for at most 10 seconds.";
+        }
+    }
 
     [RelayCommand]
     public async Task InitializeAsync()
@@ -240,6 +310,13 @@ public sealed partial class MainViewModel(
             ClipboardClearSeconds = settings.ClipboardClearSeconds;
             SelectedCloseBehavior = settings.CloseBehavior;
             BackgroundMetadataSyncEnabled = settings.BackgroundMetadataSyncEnabled;
+            MinimizeToNotificationArea = settings.MinimizeToNotificationArea;
+            SelectedRevealVerificationGrace =
+                RevealVerificationGraceOptions.FirstOrDefault(
+                    option =>
+                        option.Seconds ==
+                        settings.RevealVerificationGraceSeconds) ??
+                RevealVerificationGraceOption.Off;
             ApplyEnterprisePolicyToPreferences();
             await ConfigureManagedIdentityAvailabilityAsync(cancellationToken);
 
@@ -257,6 +334,7 @@ public sealed partial class MainViewModel(
             CanResetLocalData = false;
             await ReloadIdentitiesAsync(cancellationToken);
             await ReloadWorkspacesAsync(cancellationToken);
+            await RefreshSearchFilterOptionsAsync(cancellationToken);
             await SearchCoreAsync(cancellationToken);
             await ReloadBrowserIntegrationAsync(cancellationToken);
             await ReloadCyberArkProfilesAsync(cancellationToken);
@@ -335,7 +413,7 @@ public sealed partial class MainViewModel(
         CredentialData = string.Empty;
         TenantId = string.Empty;
         StatusText = $"Connected {identity.DisplayName}. Select Sync to discover resources.";
-    });
+    }, "Connecting an identity");
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task RemoveIdentityAsync() => RunAsync(async cancellationToken =>
@@ -454,7 +532,7 @@ public sealed partial class MainViewModel(
             SelectedIdentity,
             cancellationToken);
         ReplaceWorkloadCandidates(candidates);
-        StatusText = $"{candidates.Count} service principals are visible through explicitly consented Microsoft Graph access. No Azure resources were changed.";
+        StatusText = $"{candidates.Count} customer-manageable service-principal candidates are visible through explicitly consented Microsoft Graph access. Microsoft first-party infrastructure is excluded by default. No Azure resources were changed.";
     });
 
     [RelayCommand(CanExecute = nameof(CanAssessWorkloadIdentityPermissions))]
@@ -475,13 +553,25 @@ public sealed partial class MainViewModel(
                     selectedRow.Candidate,
                     AdministrationVaultResourceId,
                     cancellationToken);
-            var index = WorkloadIdentityCandidates.IndexOf(selectedRow);
-            var assessedRow = new WorkloadIdentityCandidateRow(assessed);
-            if (index >= 0)
-                WorkloadIdentityCandidates[index] = assessedRow;
+            var sourceIndex =
+                _allWorkloadIdentityCandidates.FindIndex(
+                    candidate =>
+                        string.Equals(
+                            candidate.PrincipalId,
+                            assessed.PrincipalId,
+                            StringComparison.OrdinalIgnoreCase));
+            if (sourceIndex >= 0)
+            {
+                _allWorkloadIdentityCandidates[sourceIndex] =
+                    assessed;
+            }
             else
-                WorkloadIdentityCandidates.Add(assessedRow);
-            SelectedWorkloadIdentityCandidate = assessedRow;
+            {
+                _allWorkloadIdentityCandidates.Add(assessed);
+            }
+
+            ApplyWorkloadIdentityFilter(
+                assessed.PrincipalId);
             StatusText =
                 $"Read-only authorization evidence refreshed for {assessed.DisplayName} at the exact Key Vault. No Azure resources or values were changed.";
         });
@@ -527,9 +617,11 @@ public sealed partial class MainViewModel(
         StatusText = $"Synchronizing {SelectedIdentity.DisplayName}…";
         var run = await synchronizationService.SynchronizeAsync(SelectedIdentity, cancellationToken);
         await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
+        ReplaceSyncErrors(run);
         StatusText = $"{run.Status}: {run.VaultCount} vaults and {run.ItemCount} objects; {run.NonSensitiveErrors.Count} isolated errors.";
-    });
+    }, $"Synchronizing {SelectedIdentity?.DisplayName ?? "the selected identity"}");
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task RefreshSubscriptionsAsync() => RunAsync(async cancellationToken =>
@@ -581,7 +673,7 @@ public sealed partial class MainViewModel(
     private void CancelOperation()
     {
         _activeOperation?.Cancel();
-        StatusText = "Cancelling the active operation…";
+        StatusText = $"Cancelling {ActiveOperationText}…";
     }
 
     public event EventHandler? ExitRequested;
@@ -606,8 +698,26 @@ public sealed partial class MainViewModel(
 
     public void RequestCloseChoice() => IsCloseChoiceVisible = true;
 
+    [RelayCommand]
+    private void LockNow()
+    {
+        revealVerificationSession?.Invalidate();
+        ClearBrowserDestinationCapture();
+        CancelPendingBrowserFill(
+            "Browser fill was cancelled because Vault Prospector was locked.");
+        _sensitivePresentationEpoch++;
+        _activeOperation?.Cancel();
+        SecretPreview = "Secret hidden.";
+        HideCyberArkValue();
+        IsUnlocked = false;
+        IsApplicationReady = false;
+        StatusText = "Application locked manually.";
+    }
+
     public void LockForBackground()
     {
+        revealVerificationSession?.Invalidate();
+        ClearBrowserDestinationCapture();
         CancelPendingBrowserFill("Browser fill was cancelled because Vault Prospector moved to the notification area.");
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
@@ -620,6 +730,8 @@ public sealed partial class MainViewModel(
 
     public void LockForSystemBoundary()
     {
+        revealVerificationSession?.Invalidate();
+        ClearBrowserDestinationCapture();
         CancelPendingBrowserFill("Browser fill was cancelled by a Windows security boundary.");
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
@@ -653,6 +765,35 @@ public sealed partial class MainViewModel(
     [RelayCommand(CanExecute = nameof(CanStartOperation))]
     private Task SearchAsync() => RunAsync(SearchCoreAsync);
 
+    [RelayCommand(CanExecute = nameof(CanCreateSupportBundle))]
+    private Task CreateSupportBundleAsync() => RunAsync(
+        async cancellationToken =>
+        {
+            if (supportBundleService is null)
+                return;
+            LatestSupportBundlePath = await supportBundleService.CreateAsync(cancellationToken);
+            SupportBundleStatus =
+                "Support bundle created locally. Review the ZIP contents before sharing it.";
+            StatusText = "Privacy-safe support bundle created locally.";
+        },
+        "Creating a privacy-safe support bundle");
+
+    [RelayCommand(CanExecute = nameof(CanCreateSupportBundle))]
+    private Task RefreshDiagnosticsAsync() => RunAsync(
+        async cancellationToken =>
+        {
+            if (supportBundleService is null)
+                return;
+            var events =
+                await supportBundleService.ReadRecentAsync(
+                    100,
+                    cancellationToken);
+            _allDiagnosticEvents.Clear();
+            _allDiagnosticEvents.AddRange(events);
+            ApplyDiagnosticFilter();
+        },
+        "Loading privacy-safe diagnostics");
+
     [RelayCommand(CanExecute = nameof(CanUseSelectedResult))]
     private Task ToggleFavoriteAsync() => RunAsync(async cancellationToken =>
     {
@@ -666,12 +807,17 @@ public sealed partial class MainViewModel(
     {
         if (SelectedResult is null) return;
         var presentationEpoch = ++_sensitivePresentationEpoch;
-        using var value = await secretAccessService.RetrieveAsync(SelectedResult.Id, cancellationToken);
+        using var value = await secretAccessService.RetrieveAsync(
+            SelectedResult.Id,
+            TimeSpan.FromSeconds(
+                SelectedRevealVerificationGrace.Seconds),
+            cancellationToken);
         if (presentationEpoch != _sensitivePresentationEpoch || !IsApplicationReady)
             return;
         SecretPreview = value.Reveal();
         _ = HideSecretLaterAsync(value.Mask(), presentationEpoch);
-        StatusText = "Secret revealed for 10 seconds after Windows Hello verification.";
+        StatusText =
+            $"Secret revealed for 10 seconds. {RevealVerificationGraceStatus}";
     });
 
     [RelayCommand(CanExecute = nameof(CanCopySelectedSecret))]
@@ -868,6 +1014,71 @@ public sealed partial class MainViewModel(
         StatusText = $"{Results.Count} indexed objects. Values were not retrieved.";
     }
 
+    private void ReplaceSyncErrors(SyncRun run)
+    {
+        SyncErrors.Clear();
+        var details = run.ErrorDetails ??
+            run.NonSensitiveErrors
+                .Select((message, index) => new SyncErrorDetail(
+                    $"Affected scope {index + 1}",
+                    "Unavailable",
+                    message,
+                    "Use the safe category shown here to correct the affected scope, then retry synchronization."))
+                .ToArray();
+        foreach (var detail in details)
+            SyncErrors.Add(new SyncErrorRow(detail));
+        OnPropertyChanged(nameof(HasSyncErrors));
+    }
+
+    private async Task RefreshSearchFilterOptionsAsync(CancellationToken cancellationToken)
+    {
+        var selectedTenant = SelectedTenantFilterOption?.Value;
+        var selectedSubscription = SelectedSubscriptionFilterOption?.Value;
+        var selectedVault = SelectedVaultFilterOption?.Value;
+        var tenants = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var subscriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var vaults = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var identity in Identities)
+        {
+            foreach (var tenant in await repository.GetTenantsAsync(identity.Id, cancellationToken))
+                tenants.TryAdd(tenant.TenantId, $"{tenant.DisplayName} · {tenant.TenantId}");
+            foreach (var subscription in await repository.GetSubscriptionsAsync(identity.Id, cancellationToken))
+                subscriptions.TryAdd(
+                    subscription.SubscriptionId,
+                    $"{subscription.DisplayName} · {subscription.SubscriptionId}");
+            foreach (var vault in await repository.GetVaultAccessSummariesAsync(identity.Id, cancellationToken))
+                vaults.TryAdd(vault.Vault.Name, vault.Vault.Name);
+        }
+
+        ReplaceFilterOptions(TenantFilterOptions, "All tenants", tenants);
+        ReplaceFilterOptions(SubscriptionFilterOptions, "All subscriptions", subscriptions);
+        ReplaceFilterOptions(VaultFilterOptions, "All vaults", vaults);
+        SelectedTenantFilterOption = FindFilterOption(TenantFilterOptions, selectedTenant);
+        SelectedSubscriptionFilterOption = FindFilterOption(SubscriptionFilterOptions, selectedSubscription);
+        SelectedVaultFilterOption = FindFilterOption(VaultFilterOptions, selectedVault);
+    }
+
+    private static void ReplaceFilterOptions(
+        ObservableCollection<SearchFilterOption> target,
+        string allLabel,
+        IReadOnlyDictionary<string, string> options)
+    {
+        target.Clear();
+        target.Add(SearchFilterOption.All(allLabel));
+        foreach (var option in options
+                     .Select(pair => new SearchFilterOption(pair.Key, pair.Value))
+                     .OrderBy(option => option.Label, StringComparer.CurrentCultureIgnoreCase))
+            target.Add(option);
+    }
+
+    private static SearchFilterOption FindFilterOption(
+        IEnumerable<SearchFilterOption> options,
+        string? value) =>
+        options.FirstOrDefault(option =>
+            string.Equals(option.Value, value, StringComparison.OrdinalIgnoreCase)) ??
+        options.First();
+
     private async Task ReloadIdentitiesAsync(CancellationToken cancellationToken)
     {
         var selectedIdentityId = SelectedIdentity?.Id;
@@ -992,7 +1203,9 @@ public sealed partial class MainViewModel(
             Math.Clamp(MaximumCacheHours, 1, 168),
             UseCustomClientId,
             SelectedCloseBehavior,
-            BackgroundMetadataSyncEnabled), cancellationToken);
+            BackgroundMetadataSyncEnabled,
+            MinimizeToNotificationArea,
+            SelectedRevealVerificationGrace.Seconds), cancellationToken);
     }
 
     private async Task ReloadRecoveryArchivesCoreAsync(
@@ -1033,6 +1246,9 @@ public sealed partial class MainViewModel(
     private string EffectiveClientId() => UseCustomClientId ? ClientId.Trim() : ProductIdentity.DefaultClientId;
 
     private bool CanStartOperation() => !IsBusy;
+    private bool CanCreateSupportBundle() =>
+        supportBundleService is not null &&
+        !IsBusy;
     private bool CanAddIdentity() =>
         !IsBusy &&
         IsProviderAllowed(EnterpriseProvider.AzureKeyVault) &&
@@ -1112,7 +1328,9 @@ public sealed partial class MainViewModel(
 
     partial void OnSelectedIdentityChanged(ConnectedIdentity? value)
     {
+        revealVerificationSession?.Invalidate();
         OnPropertyChanged(nameof(HasSelectedIdentity));
+        OnPropertyChanged(nameof(ActiveIdentityContext));
         OnPropertyChanged(nameof(BrowserSelectedSource));
         OnPropertyChanged(nameof(SelectedIdentitySupportsCredentialRotation));
         OnPropertyChanged(nameof(CredentialRotationLabel));
@@ -1152,6 +1370,7 @@ public sealed partial class MainViewModel(
 
     partial void OnSelectedSubscriptionChanged(SubscriptionSelectionRow? value)
     {
+        OnPropertyChanged(nameof(ActiveSubscriptionContext));
         ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
         IncludeSubscriptionCommand.NotifyCanExecuteChanged();
         AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
@@ -1182,7 +1401,9 @@ public sealed partial class MainViewModel(
 
     partial void OnSelectedWorkspaceChanged(Workspace? value)
     {
+        revealVerificationSession?.Invalidate();
         OnPropertyChanged(nameof(HasSelectedWorkspace));
+        OnPropertyChanged(nameof(ActiveWorkspaceContext));
         if (value is null) FilterSelectedWorkspace = false;
         PurgeSelectedWorkspaceCacheCommand.NotifyCanExecuteChanged();
         AddSelectedVaultToWorkspaceCommand.NotifyCanExecuteChanged();
@@ -1203,16 +1424,40 @@ public sealed partial class MainViewModel(
         CacheSelectedCommand.NotifyCanExecuteChanged();
     }
 
+    partial void OnSelectedTenantFilterOptionChanged(SearchFilterOption? value) =>
+        TenantFilter = value?.Value ?? string.Empty;
+
+    partial void OnSelectedSubscriptionFilterOptionChanged(SearchFilterOption? value) =>
+        SubscriptionFilter = value?.Value ?? string.Empty;
+
+    partial void OnSelectedVaultFilterOptionChanged(SearchFilterOption? value) =>
+        VaultFilter = value?.Value ?? string.Empty;
+
     partial void OnOfflineCacheEnabledChanged(bool value)
     {
         CacheSelectedCommand.NotifyCanExecuteChanged();
         OpenOfflineCommand.NotifyCanExecuteChanged();
     }
 
+    partial void OnSelectedRevealVerificationGraceChanged(
+        RevealVerificationGraceOption value)
+    {
+        revealVerificationSession?.Invalidate();
+        OnPropertyChanged(nameof(RevealVerificationGraceStatus));
+    }
+
     partial void OnWorkspaceNameChanged(string value)
     {
         CreateWorkspaceCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnWorkloadIdentitySearchTextChanged(
+        string value) =>
+        ApplyWorkloadIdentityFilter();
+
+    partial void OnDiagnosticSearchTextChanged(
+        string value) =>
+        ApplyDiagnosticFilter();
 
     partial void OnIsBusyChanged(bool value)
     {
@@ -1235,6 +1480,8 @@ public sealed partial class MainViewModel(
         ExcludeVaultCommand.NotifyCanExecuteChanged();
         IncludeVaultCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
+        CreateSupportBundleCommand.NotifyCanExecuteChanged();
+        RefreshDiagnosticsCommand.NotifyCanExecuteChanged();
         ToggleFavoriteCommand.NotifyCanExecuteChanged();
         RevealCommand.NotifyCanExecuteChanged();
         CopyCommand.NotifyCanExecuteChanged();
@@ -1338,6 +1585,7 @@ public sealed partial class MainViewModel(
         EnterprisePolicyStatus = policy.SafeStatus;
         OnPropertyChanged(nameof(IsEnterpriseOfflineCacheAllowed));
         OnPropertyChanged(nameof(IsEnterpriseClipboardAllowed));
+        OnPropertyChanged(nameof(RevealVerificationGraceStatus));
         OfflineCacheEnabled &= policy.AllowOfflineCache;
         if (policy.MaximumOfflineCacheLifetime is { } maximum)
         {
@@ -1412,9 +1660,117 @@ public sealed partial class MainViewModel(
     {
         SelectedWorkloadIdentityCandidate = null;
         WorkloadIdentityCandidates.Clear();
-        foreach (var candidate in candidates)
-            WorkloadIdentityCandidates.Add(new WorkloadIdentityCandidateRow(candidate));
+        _allWorkloadIdentityCandidates.Clear();
+        _allWorkloadIdentityCandidates.AddRange(
+            candidates);
+        ApplyWorkloadIdentityFilter();
     }
+
+    private void ApplyWorkloadIdentityFilter(
+        string? selectPrincipalId = null)
+    {
+        var search = WorkloadIdentitySearchText.Trim();
+        var source =
+            _allWorkloadIdentityCandidates.Count > 0
+                ? _allWorkloadIdentityCandidates
+                : WorkloadIdentityCandidates
+                    .Select(row => row.Candidate)
+                    .ToList();
+        var filtered = source
+            .Where(candidate =>
+                search.Length == 0 ||
+                CandidateContains(
+                    candidate,
+                    search))
+            .OrderBy(
+                candidate => candidate.DisplayName,
+                StringComparer.OrdinalIgnoreCase)
+            .ThenBy(
+                candidate => candidate.ClientId,
+                StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        SelectedWorkloadIdentityCandidate = null;
+        WorkloadIdentityCandidates.Clear();
+        foreach (var candidate in filtered)
+        {
+            WorkloadIdentityCandidates.Add(
+                new WorkloadIdentityCandidateRow(
+                    candidate));
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectPrincipalId))
+        {
+            SelectedWorkloadIdentityCandidate =
+                WorkloadIdentityCandidates.FirstOrDefault(
+                    row =>
+                        string.Equals(
+                            row.Candidate.PrincipalId,
+                            selectPrincipalId,
+                            StringComparison.OrdinalIgnoreCase));
+        }
+
+        WorkloadIdentityFilterStatus =
+            $"{filtered.Length} of {source.Count} eligible identities shown. Microsoft first-party infrastructure is excluded.";
+    }
+
+    private static bool CandidateContains(
+        WorkloadIdentityCandidate candidate,
+        string search) =>
+        candidate.DisplayName.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        candidate.IdentityType.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        candidate.ClientId.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        candidate.PrincipalId.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase);
+
+    private void ApplyDiagnosticFilter()
+    {
+        var search = DiagnosticSearchText.Trim();
+        var filtered = _allDiagnosticEvents
+            .Where(diagnosticEvent =>
+                search.Length == 0 ||
+                DiagnosticContains(
+                    diagnosticEvent,
+                    search))
+            .ToArray();
+        DiagnosticEvents.Clear();
+        foreach (var diagnosticEvent in filtered)
+        {
+            DiagnosticEvents.Add(
+                new DiagnosticEventRow(
+                    diagnosticEvent));
+        }
+
+        DiagnosticViewerStatus =
+            _allDiagnosticEvents.Count == 0
+                ? "No privacy-safe diagnostic events are available."
+                : $"Showing {filtered.Length} of {_allDiagnosticEvents.Count} recent privacy-safe diagnostic events, newest first.";
+    }
+
+    private static bool DiagnosticContains(
+        DiagnosticEvent diagnosticEvent,
+        string search) =>
+        diagnosticEvent.Level.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        diagnosticEvent.Category.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        diagnosticEvent.Scope.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        diagnosticEvent.Summary.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) ||
+        diagnosticEvent.Recovery.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase);
 
     private static string FormatPlan(WorkloadIdentityProvisioningPlan plan)
     {
@@ -1469,8 +1825,16 @@ public sealed partial class MainViewModel(
                 "Application locked — verification unavailable."),
             UserVerificationResult.RemoteSessionUnavailable => (
                 "Vault Prospector remains locked because Windows verification is unavailable in this Remote Desktop session.",
-                "Reconnect at the Windows or Hyper-V console to complete Windows Hello verification. Repeating this retry in the current remote session will not open a prompt.",
+                "Your administrator may enable current-account Windows credential verification for supported remote sessions. Otherwise reconnect at the Windows or Hyper-V console.",
                 "Application locked — Windows verification unavailable in Remote Desktop."),
+            UserVerificationResult.RemoteCredentialUnavailable => (
+                "Vault Prospector remains locked because the Windows credential prompt is unavailable in this remote session.",
+                "Retry from an interactive AVD or Remote Desktop desktop. If the prompt remains unavailable, ask your administrator to review remote verification policy.",
+                "Application locked — remote Windows verification unavailable."),
+            UserVerificationResult.RemoteCredentialFailed => (
+                "Vault Prospector remains locked because the supplied Windows credential did not verify the current signed-in account.",
+                "Retry with the credential for this Windows session. Credentials for a different account cannot unlock this user's encrypted data.",
+                "Application locked — current Windows account not verified."),
             _ => (
                 "Vault Prospector remains locked because verification did not complete.",
                 "Retry Windows verification. If attempts are exhausted, follow your Windows Hello recovery process.",
@@ -1532,11 +1896,14 @@ public sealed partial class MainViewModel(
         };
     }
 
-    private async Task RunAsync(Func<CancellationToken, Task> action)
+    private async Task RunAsync(
+        Func<CancellationToken, Task> action,
+        string operationText = "the active operation")
     {
         if (IsBusy) return;
         ApplyEnterprisePolicyToPreferences();
         ClearActionableError();
+        ActiveOperationText = operationText;
         IsBusy = true;
         using var operation = new CancellationTokenSource();
         _activeOperation = operation;
@@ -1559,7 +1926,12 @@ public sealed partial class MainViewModel(
             SecretPreview = "Secret hidden.";
             HideCyberArkValue();
         }
-        finally { _activeOperation = null; IsBusy = false; }
+        finally
+        {
+            _activeOperation = null;
+            IsBusy = false;
+            ActiveOperationText = string.Empty;
+        }
     }
 
     private void ClearActionableError()
@@ -1623,6 +1995,40 @@ public sealed class SearchResultRow(SearchResult result)
     public string AccessStatus => Result.AccessStatus;
     public bool IsFavorite => Result.IsFavorite;
     public string FavoriteMarker => IsFavorite ? "★" : "☆";
+}
+
+public sealed record SearchFilterOption(string Value, string Label)
+{
+    public static SearchFilterOption All(string label) => new(string.Empty, label);
+}
+
+public sealed class SyncErrorRow(SyncErrorDetail detail)
+{
+    public string Scope { get; } = detail.Scope;
+    public string Category { get; } = detail.Category;
+    public string Message { get; } = detail.Message;
+    public string Recovery { get; } = detail.Recovery;
+}
+
+public sealed class DiagnosticEventRow(
+    DiagnosticEvent diagnosticEvent)
+{
+    public string Timestamp { get; } =
+        diagnosticEvent.Timestamp.ToLocalTime()
+            .ToString(
+                "yyyy-MM-dd HH:mm:ss zzz",
+                System.Globalization.CultureInfo
+                    .InvariantCulture);
+    public string Level { get; } =
+        diagnosticEvent.Level;
+    public string Category { get; } =
+        diagnosticEvent.Category;
+    public string Scope { get; } =
+        diagnosticEvent.Scope;
+    public string Summary { get; } =
+        diagnosticEvent.Summary;
+    public string Recovery { get; } =
+        diagnosticEvent.Recovery;
 }
 
 public sealed class SubscriptionSelectionRow(SubscriptionAccess subscription)

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Security.Cryptography;
 using Avalonia;
 using Avalonia.Controls;
@@ -41,11 +42,21 @@ public partial class App : Avalonia.Application
             var valueStore = new EncryptedFileValueStore(VaultProspectorPaths.CacheDirectory, keyProvider, clock);
             var clipboard = new AvaloniaClipboardService();
             MainWindow? window = null;
-            IUserVerificationService verification =
-                new WindowsHelloVerificationService(
-                    () => window?.TryGetPlatformHandle()?.Handle ?? 0);
             IEnterprisePolicy enterprisePolicy =
                 new WindowsRegistryEnterprisePolicy();
+            IUserVerificationService verification =
+                new PolicyControlledWindowsVerificationService(
+                    new WindowsHelloVerificationService(
+                        () =>
+                            window?.TryGetPlatformHandle()?.Handle ?? 0),
+                    new RemoteWindowsCredentialVerificationService(
+                        () =>
+                            window?.TryGetPlatformHandle()?.Handle ?? 0),
+                    enterprisePolicy);
+            var revealVerificationSession =
+                new RevealVerificationSession(
+                    verification,
+                    enterprisePolicy);
             var secretAccessService = new SecretAccessService(
                 azureProvider,
                 repository,
@@ -53,7 +64,8 @@ public partial class App : Avalonia.Application
                 clipboard,
                 verification,
                 clock,
-                enterprisePolicy);
+                enterprisePolicy,
+                revealVerificationSession);
             var browserFillService = new BrowserFillService(
                 repository,
                 secretAccessService,
@@ -102,6 +114,31 @@ public partial class App : Avalonia.Application
             var cyberArkProvider = new CyberArkPrivilegeCloudProvider(
                 cyberArkHttpClient,
                 clock);
+            var currentVersion =
+                typeof(App).Assembly
+                    .GetCustomAttribute<
+                        AssemblyInformationalVersionAttribute>()?
+                    .InformationalVersion?
+                    .Split(
+                        '+',
+                        2)[0] ??
+                "development";
+            var updateHttpClient = new HttpClient(
+                new SocketsHttpHandler
+                {
+                    AllowAutoRedirect = true,
+                    AutomaticDecompression =
+                        System.Net.DecompressionMethods.All,
+                })
+            {
+                Timeout = TimeSpan.FromMinutes(10),
+            };
+            var releaseUpdateService =
+                new GitHubReleaseUpdateService(
+                    updateHttpClient,
+                    VaultProspectorPaths.UpdateDirectory,
+                    currentVersion,
+                    new WindowsUpdateInstallerLauncher());
             var cyberArkService = new CyberArkService(
                 cyberArkProvider,
                 new WindowsCyberArkCredentialStore(
@@ -147,7 +184,17 @@ public partial class App : Avalonia.Application
                 localRecoveryArchiveService,
                 browserFillService,
                 cyberArkService,
-                enterprisePolicy);
+                enterprisePolicy,
+                new FileSystemSupportBundleService(
+                    VaultProspectorPaths.LogPath,
+                    Path.Combine(
+                        VaultProspectorPaths.DataDirectory,
+                        "support"),
+                    typeof(App).Assembly.GetName().Version?.ToString() ??
+                    "unknown",
+                    clock),
+                revealVerificationSession,
+                releaseUpdateService);
             window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()
@@ -172,9 +219,11 @@ public partial class App : Avalonia.Application
                                 "VaultProspector.BrowserHost.exe")).IsAllowed,
                         HandleBrowserFillAsync);
                     browserBrokerServer.Start();
+                    viewModel.SetBrowserBrokerAvailability(true);
                 }
                 catch (Exception exception)
                 {
+                    viewModel.SetBrowserBrokerAvailability(false);
                     diagnostics.WriteError(
                         "browser_broker_start_failed",
                         exception,
@@ -307,6 +356,22 @@ public partial class App : Avalonia.Application
                 window.Hide();
             }
 
+            void HandleWindowStateChanged(
+                object? sender,
+                AvaloniaPropertyChangedEventArgs args)
+            {
+                if (allowShutdown ||
+                    args.Property != Window.WindowStateProperty ||
+                    !WindowLifecyclePolicy.ShouldHideOnMinimize(
+                        viewModel.MinimizeToNotificationArea,
+                        window.WindowState))
+                {
+                    return;
+                }
+
+                ContinueInBackground();
+            }
+
             void RefreshTrayState(object? sender = null, PropertyChangedEventArgs? args = null)
             {
                 var state = TrayStatusPolicy.Describe(
@@ -327,6 +392,7 @@ public partial class App : Avalonia.Application
             viewModel.ContinueInBackgroundRequested += (_, _) => ContinueInBackground();
             viewModel.BrowserFillConfirmationRequested += (_, _) => ShowWindow();
             viewModel.PropertyChanged += RefreshTrayState;
+            window.PropertyChanged += HandleWindowStateChanged;
             NetworkAvailabilityChangedEventHandler networkAvailabilityChanged = (_, _) =>
                 Dispatcher.UIThread.Post(() => RefreshTrayState());
             NetworkChange.NetworkAvailabilityChanged += networkAvailabilityChanged;
@@ -389,6 +455,7 @@ public partial class App : Avalonia.Application
             {
                 backgroundTimer.Stop();
                 viewModel.PropertyChanged -= RefreshTrayState;
+                window.PropertyChanged -= HandleWindowStateChanged;
                 NetworkChange.NetworkAvailabilityChanged -= networkAvailabilityChanged;
                 if (securityBoundaryMonitor is not null)
                 {

@@ -64,10 +64,23 @@
             <decimal value="0" />
           </falseValue>
         </boolean>
+        <boolean id="DisableRemoteCredentialVerification"
+                 valueName="DisableRemoteCredentialVerification">
+          <trueValue>
+            <decimal value="1" />
+          </trueValue>
+          <falseValue>
+            <decimal value="0" />
+          </falseValue>
+        </boolean>
         <decimal id="MaximumOfflineCacheMinutes"
                  valueName="MaximumOfflineCacheMinutes"
                  minValue="1"
                  maxValue="10080" />
+        <decimal id="MaximumRevealVerificationGraceSeconds"
+                 valueName="MaximumRevealVerificationGraceSeconds"
+                 minValue="0"
+                 maxValue="120" />
       </elements>
     </policy>
   </policies>

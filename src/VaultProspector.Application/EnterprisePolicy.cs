@@ -34,6 +34,8 @@ public sealed class EnterprisePolicySnapshot
         bool allowClipboard = true,
         bool allowOfflineCache = true,
         TimeSpan? maximumOfflineCacheLifetime = null,
+        bool allowRemoteCredentialVerification = true,
+        TimeSpan? maximumRevealVerificationGracePeriod = null,
         bool isValid = true,
         string safeStatus = "No machine-managed enterprise policy is configured.")
     {
@@ -42,12 +44,24 @@ public sealed class EnterprisePolicySnapshot
             throw new ArgumentOutOfRangeException(
                 nameof(maximumOfflineCacheLifetime),
                 "The enterprise offline-cache lifetime must be positive.");
+        if (maximumRevealVerificationGracePeriod is { } grace &&
+            (grace < TimeSpan.Zero ||
+             grace > TimeSpan.FromSeconds(120)))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maximumRevealVerificationGracePeriod),
+                "The enterprise reveal-verification grace period must be between zero and 120 seconds.");
+        }
 
         IsManaged = isManaged;
         IsValid = isValid;
         AllowClipboard = allowClipboard;
         AllowOfflineCache = allowOfflineCache;
+        AllowRemoteCredentialVerification =
+            allowRemoteCredentialVerification;
         MaximumOfflineCacheLifetime = maximumOfflineCacheLifetime;
+        MaximumRevealVerificationGracePeriod =
+            maximumRevealVerificationGracePeriod;
         SafeStatus = string.IsNullOrWhiteSpace(safeStatus)
             ? "Enterprise policy status is unavailable."
             : safeStatus.Trim();
@@ -67,7 +81,9 @@ public sealed class EnterprisePolicySnapshot
     public bool IsValid { get; }
     public bool AllowClipboard { get; }
     public bool AllowOfflineCache { get; }
+    public bool AllowRemoteCredentialVerification { get; }
     public TimeSpan? MaximumOfflineCacheLifetime { get; }
+    public TimeSpan? MaximumRevealVerificationGracePeriod { get; }
     public string SafeStatus { get; }
     public IReadOnlySet<string> AllowedTenantIds => _allowedTenantIds;
     public IReadOnlySet<EnterpriseProvider> AllowedProviders => _allowedProviders;
@@ -81,6 +97,8 @@ public sealed class EnterprisePolicySnapshot
             allowedIdentityTypes: [],
             allowClipboard: false,
             allowOfflineCache: false,
+            allowRemoteCredentialVerification: false,
+            maximumRevealVerificationGracePeriod: TimeSpan.Zero,
             isValid: false,
             safeStatus:
                 $"Machine-managed enterprise policy is invalid and access is denied: {safeReason}");
@@ -173,6 +191,26 @@ public sealed class EnterprisePolicySnapshot
             RequireLocalUnlock = true,
             AllowClipboard = requested.AllowClipboard && AllowClipboard,
         };
+    }
+
+    public TimeSpan ConstrainRevealVerificationGracePeriod(
+        TimeSpan requested)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(
+            requested,
+            TimeSpan.Zero);
+        if (!IsValid)
+            return TimeSpan.Zero;
+
+        var productMaximum = TimeSpan.FromSeconds(120);
+        var effective = requested <= productMaximum
+            ? requested
+            : productMaximum;
+        return MaximumRevealVerificationGracePeriod is { } enterpriseMaximum
+            ? TimeSpan.FromTicks(Math.Min(
+                effective.Ticks,
+                enterpriseMaximum.Ticks))
+            : effective;
     }
 
     private static string NormalizeTenantId(string value)

@@ -225,7 +225,9 @@ Mitigations:
 - Structured logging with allowlisted fields.
 - Disable object serialization for sensitive types.
 - Test that secret-bearing types cannot be logged.
-- Generate diagnostics through an explicit sanitization pipeline.
+- Generate diagnostics through an explicit sanitization pipeline. The viewer and support-bundle
+  export independently normalize fixed event, level, status, identity-type, identifier, and count
+  fields; export never copies an untrusted diagnostic line directly.
 
 ### Malicious plugin
 

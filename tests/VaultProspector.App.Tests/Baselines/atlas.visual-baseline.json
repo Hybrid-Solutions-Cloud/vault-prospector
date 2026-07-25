@@ -1,0 +1,33 @@
+{
+  "direction": "Atlas",
+  "files": [
+    {
+      "path": "src/VaultProspector.App/App.axaml",
+      "sha256": "3337AA4B232A4ED0A4E129866944FF1371852DC95BAF946524AA0D13823C6506"
+    },
+    {
+      "path": "src/VaultProspector.App/Views/MainWindow.axaml",
+      "sha256": "5F0E9ABC3A71FEA8B71C6A8C5C8A46065B991CA564BC0E04B461178FC25F3C47"
+    },
+    {
+      "path": "docs/design/vault-prospector-ui-redesign-2026-07-25/screenshots/atlas-install.png",
+      "sha256": "B6A9AA9360F88FFE8EFC068D83CD6465E6977EEE1342B371EEE39FA93E2DC11A"
+    },
+    {
+      "path": "docs/design/vault-prospector-ui-redesign-2026-07-25/screenshots/atlas-setup.png",
+      "sha256": "099E94725B31BEEB28CE8C6A4FB4DEAEDC4E4688227BB850FEC31C6AB2707760"
+    },
+    {
+      "path": "docs/design/vault-prospector-ui-redesign-2026-07-25/screenshots/atlas-daily-search.png",
+      "sha256": "F555DB2898950B674F1F193094D6F856CD8A859809326A68C4A1B91270F84B63"
+    },
+    {
+      "path": "installer/Assets/AtlasDialog.bmp",
+      "sha256": "968FE9A81B42C83BABA675CFAE13FA2C16B7FA5B02F1569FC18DAF237BB84411"
+    },
+    {
+      "path": "installer/Assets/AtlasBanner.bmp",
+      "sha256": "E45A6C6CF15C1B0996906588F2B58D953986B5E599A9BCBC6B98FC225270F488"
+    }
+  ]
+}

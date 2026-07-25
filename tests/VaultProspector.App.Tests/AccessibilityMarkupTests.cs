@@ -28,6 +28,33 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void SearchSourceFiltersUseDiscoveredChoiceCollections()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var expectedBindings = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Tenant filter"] = "{Binding TenantFilterOptions}",
+            ["Subscription filter"] = "{Binding SubscriptionFilterOptions}",
+            ["Vault filter"] = "{Binding VaultFilterOptions}",
+        };
+
+        var filters = document
+            .Descendants()
+            .Where(element =>
+                expectedBindings.ContainsKey(
+                    Attribute(element, "AutomationProperties.Name")?.Value ?? string.Empty))
+            .ToArray();
+
+        Assert.Equal(expectedBindings.Count, filters.Length);
+        Assert.All(filters, filter =>
+        {
+            Assert.Equal("ComboBox", filter.Name.LocalName);
+            var name = Attribute(filter, "AutomationProperties.Name")!.Value;
+            Assert.Equal(expectedBindings[name], Attribute(filter, "ItemsSource")?.Value);
+        });
+    }
+
+    [Fact]
     public void ApplicationStatusIsAnAccessiblePoliteLiveRegion()
     {
         var document = XDocument.Load(FindMainWindowMarkup());
@@ -65,6 +92,36 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void BrowserMappingUsesCapturedDestinationAndGuidedSourceSelectors()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var automationNames = document
+            .Descendants()
+            .Select(element =>
+                Attribute(
+                    element,
+                    "AutomationProperties.Name")?.Value)
+            .Where(value => value is not null)
+            .Cast<string>()
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains(
+            "Eligible secret and identity for captured browser destination",
+            automationNames);
+        Assert.DoesNotContain(
+            "Approved browser top-frame HTTPS origin",
+            automationNames);
+        Assert.DoesNotContain(
+            "Approved browser target-frame HTTPS origin",
+            automationNames);
+        Assert.Contains(
+            document.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                "{Binding BrowserCapturedDestination}");
+    }
+
+    [Fact]
     public void EnterprisePolicyStatusIsAnAccessiblePoliteLiveRegion()
     {
         var document = XDocument.Load(FindMainWindowMarkup());
@@ -83,6 +140,32 @@ public sealed class AccessibilityMarkupTests
                     element,
                     "AutomationProperties.LiveSetting")?.Value ==
                     "Polite");
+    }
+
+    [Fact]
+    public void RevealGraceControlAndStatusAreAccessible()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var selector = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Consecutive reveal verification grace period");
+        var status = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "Text")?.Value ==
+                "{Binding RevealVerificationGraceStatus}");
+
+        Assert.Equal("ComboBox", selector.Name.LocalName);
+        Assert.Equal(
+            "{Binding RevealVerificationGraceOptions}",
+            Attribute(selector, "ItemsSource")?.Value);
+        Assert.Equal(
+            "Polite",
+            Attribute(
+                status,
+                "AutomationProperties.LiveSetting")?.Value);
     }
 
     [Fact]
@@ -139,6 +222,57 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void IsolatedSynchronizationErrorsAreAccessibleAndActionable()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var panel = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Actionable isolated synchronization errors");
+        var list = panel
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Synchronization error details");
+
+        Assert.Equal("{Binding HasSyncErrors}", Attribute(panel, "IsVisible")?.Value);
+        Assert.Equal("Polite", Attribute(panel, "AutomationProperties.LiveSetting")?.Value);
+        Assert.Equal("{Binding SyncErrors}", Attribute(list, "ItemsSource")?.Value);
+        Assert.Contains(
+            panel.Descendants(),
+            element => Attribute(element, "Text")?.Value == "{Binding Recovery}");
+    }
+
+    [Fact]
+    public void ActivitySurfaceExposesExternalLogAndLocalBundleWithoutAutomaticUpload()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var activity = document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "TabItem" &&
+                Attribute(element, "Header")?.Value == "Activity & support");
+
+        Assert.Contains(
+            activity.Descendants(),
+            element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "External privacy-safe diagnostic log path");
+        Assert.Contains(
+            activity.Descendants(),
+            element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Create a privacy-safe local support bundle");
+        Assert.Contains(
+            activity.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value?.Contains(
+                    "Nothing is uploaded automatically",
+                    StringComparison.Ordinal) is true);
+    }
+
+    [Fact]
     public void NvdaFocusBridgeMatchesPinnedAvaloniaInternals()
     {
         var document = XDocument.Load(FindMainWindowMarkup());
@@ -154,7 +288,14 @@ public sealed class AccessibilityMarkupTests
         var document = XDocument.Load(FindMainWindowMarkup());
         var panel = document
             .Descendants()
-            .Single(element => Attribute(element, "Background")?.Value == "#123F36");
+            .Single(element =>
+                element.Name.LocalName == "Border" &&
+                Attribute(element, "IsVisible")?.Value ==
+                "{Binding IsFirstRun}");
+
+        Assert.Equal(
+            "{DynamicResource VaultColorHeader}",
+            Attribute(panel, "Background")?.Value);
 
         var guidance = panel.Descendants().Where(element => element.Name.LocalName == "TextBlock").ToArray();
         Assert.NotEmpty(guidance);
@@ -205,6 +346,85 @@ public sealed class AccessibilityMarkupTests
             Assert.Equal("Foreground", Attribute(setters[selector], "Property")?.Value);
             Assert.Equal("{DynamicResource TextControlForeground}", Attribute(setters[selector], "Value")?.Value);
         }
+    }
+
+    [Fact]
+    public void AtlasProductionTokensMatchApprovedDesignHandoff()
+    {
+        var application = XDocument.Load(
+            FindMarkup("src/VaultProspector.App/App.axaml"));
+        var expectedColors = new Dictionary<string, string>(
+            StringComparer.Ordinal)
+        {
+            ["VaultColorCanvas"] = "#F4F1EA",
+            ["VaultColorSurface"] = "#FFFDF8",
+            ["VaultColorSurfaceAlt"] = "#EEE9DF",
+            ["VaultColorInk"] = "#25231F",
+            ["VaultColorMuted"] = "#6F6A61",
+            ["VaultColorLine"] = "#D4CDC0",
+            ["VaultColorLineStrong"] = "#A99E8D",
+            ["VaultColorAccent"] = "#9A412B",
+            ["VaultColorAccentStrong"] = "#7B3020",
+            ["VaultColorAccentSoft"] = "#F2DFD8",
+            ["VaultColorGood"] = "#27715B",
+            ["VaultColorGoodSoft"] = "#DEEEE8",
+            ["VaultColorWarning"] = "#A26118",
+            ["VaultColorNavigation"] = "#EEE8DD",
+            ["VaultColorContext"] = "#E7DFD2",
+            ["VaultColorHeader"] = "#2C3737",
+        };
+        var actualColors = application
+            .Descendants()
+            .Where(element =>
+                element.Name.LocalName == "SolidColorBrush")
+            .Select(element => (
+                Key: Attribute(element, "Key")?.Value,
+                Value: element.Value))
+            .Where(token => token.Key is not null)
+            .ToDictionary(
+                token => token.Key!,
+                token => token.Value,
+                StringComparer.Ordinal);
+
+        Assert.All(
+            expectedColors,
+            token => Assert.Equal(
+                token.Value,
+                actualColors[token.Key]));
+
+        var window = XDocument.Load(FindMainWindowMarkup());
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Background")?.Value ==
+                "{DynamicResource VaultColorHeader}");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Background")?.Value ==
+                "{DynamicResource VaultColorContext}");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                "ACTIVE WORKSPACE");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                "Unlock this installation");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(
+                    element,
+                    "AutomationProperties.Name")?.Value ==
+                "Verify and unlock Vault Prospector");
+        Assert.Contains(
+            window.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value ==
+                "{Binding ActiveWorkspaceContext}");
     }
 
     [Fact]

@@ -12,9 +12,12 @@ public sealed partial class MainViewModel
     private BrowserFillApproval? _pendingBrowserFillApproval;
     private TaskCompletionSource<BrowserFillResponse>? _pendingBrowserFillCompletion;
     private CancellationTokenSource? _pendingBrowserFillCancellation;
+    private Guid? _capturedBrowserMappingId;
+    private bool _capturedBrowserPolicyAllowed;
 
     public ObservableCollection<BrowserFillMappingRow> BrowserFillMappings { get; } = [];
     public ObservableCollection<BrowserFillAuditRow> BrowserFillAudit { get; } = [];
+    public ObservableCollection<BrowserSourceOption> BrowserEligibleSources { get; } = [];
     public IReadOnlyList<BrowserMappingFieldPurpose> BrowserFieldPurposes { get; } =
         [
             BrowserMappingFieldPurpose.Username,
@@ -25,6 +28,7 @@ public sealed partial class MainViewModel
     public event EventHandler? BrowserFillConfirmationRequested;
 
     [ObservableProperty] private BrowserFillMappingRow? _selectedBrowserFillMapping;
+    [ObservableProperty] private BrowserSourceOption? _selectedBrowserSourceOption;
     [ObservableProperty] private string _browserTopOrigin = string.Empty;
     [ObservableProperty] private string _browserFrameOrigin = string.Empty;
     [ObservableProperty]
@@ -42,12 +46,38 @@ public sealed partial class MainViewModel
     [ObservableProperty] private string _browserFillDestination = string.Empty;
     [ObservableProperty] private string _browserFillSource = string.Empty;
     [ObservableProperty] private string _browserFillPurpose = string.Empty;
+    [ObservableProperty] private bool _hasCapturedBrowserDestination;
+    [ObservableProperty]
+    private string _browserCapturedDestination =
+        "No destination captured. Focus a supported sign-in field and choose the Vault Prospector browser extension.";
+    [ObservableProperty]
+    private string _browserExtensionStatus =
+        "Not yet confirmed. Invoke the extension from a supported HTTPS sign-in field.";
+    [ObservableProperty]
+    private string _browserNativeHostStatus =
+        "Not yet confirmed. A successful destination capture proves the native host path.";
+    [ObservableProperty]
+    private string _browserBrokerStatus =
+        "Desktop broker status has not been reported.";
+    [ObservableProperty]
+    private string _browserDestinationPolicyStatus =
+        "Capture a destination to evaluate its exact machine policy.";
+    [ObservableProperty]
+    private string _browserMappingReadinessStatus =
+        "Capture a destination to create or review its exact mapping.";
 
     public bool BrowserIntegrationAvailable => browserFillService is not null;
     public string BrowserSelectedSource =>
         SelectedResult is null || SelectedIdentity is null
             ? "Select one secret and its exact identity on Search and Identities first."
             : $"{SelectedResult.Name} from {SelectedResult.Vault} through {SelectedIdentity.DisplayName}";
+
+    public void SetBrowserBrokerAvailability(bool isAvailable)
+    {
+        BrowserBrokerStatus = isAvailable
+            ? "Ready. The current-user desktop broker is listening for the trusted native host."
+            : "Unavailable. Restart Vault Prospector; if this persists, collect a support bundle.";
+    }
 
     public async Task<BrowserFillResponse> RequestBrowserFillAsync(
         ValidatedBrowserFillRequest request,
@@ -64,11 +94,25 @@ public sealed partial class MainViewModel
                 BrowserFillResultCode.Unavailable);
         }
 
-        var approval = await browserFillService.PrepareAsync(request, cancellationToken);
+        var assessment = await browserFillService.AssessDestinationAsync(
+            request,
+            cancellationToken);
+        await CaptureBrowserDestinationAsync(
+            assessment,
+            cancellationToken);
+        SelectedMainTabIndex = 4;
+        BrowserFillConfirmationRequested?.Invoke(this, EventArgs.Empty);
+
+        var approval = await browserFillService.PrepareAsync(
+            request,
+            cancellationToken);
         if (approval is null)
         {
-            BrowserFillStatus =
-                "The request was denied. No enabled mapping matches that exact origin, frame, and field purpose.";
+            BrowserFillStatus = !assessment.PolicyDecision.IsAllowed
+                ? "Destination captured, but machine policy denies it. Ask an administrator to allow this exact browser, top frame, target frame, and field purpose."
+                : assessment.ExistingMapping is null
+                    ? "Destination captured. Select one eligible secret and identity below, review the destination, then create the mapping. Invoke the extension again to fill."
+                    : "Destination captured, but its mapping is disabled or its source is unavailable. Review the mapping and selected source before trying again.";
             return BrowserFillResponse.Failure(
                 request.Request.RequestId,
                 BrowserFillResultCode.Denied);
@@ -93,10 +137,8 @@ public sealed partial class MainViewModel
         BrowserFillStatus =
             "Review the exact source and destination. Approve requires a fresh Windows verification.";
         IsBrowserFillPending = true;
-        SelectedMainTabIndex = 4;
         ApproveBrowserFillCommand.NotifyCanExecuteChanged();
         DenyBrowserFillCommand.NotifyCanExecuteChanged();
-        BrowserFillConfirmationRequested?.Invoke(this, EventArgs.Empty);
 
         using var cancellationRegistration = _pendingBrowserFillCancellation.Token.Register(
             () => _pendingBrowserFillCompletion.TrySetResult(
@@ -125,7 +167,7 @@ public sealed partial class MainViewModel
         }
 
         var mapping = await browserFillService.SaveMappingAsync(
-            SelectedBrowserFillMapping?.Id,
+            _capturedBrowserMappingId,
             SelectedResult.Id,
             SelectedIdentity.Id,
             BrowserTopOrigin,
@@ -136,8 +178,11 @@ public sealed partial class MainViewModel
         await ReloadBrowserIntegrationAsync(cancellationToken);
         SelectedBrowserFillMapping =
             BrowserFillMappings.FirstOrDefault(row => row.Id == mapping.Id);
+        _capturedBrowserMappingId = mapping.Id;
+        BrowserMappingReadinessStatus =
+            "Ready. An enabled local mapping now binds this exact destination, field purpose, secret, and identity.";
         StatusText =
-            "Browser mapping saved in encrypted local metadata. No value was retrieved.";
+            "Browser mapping saved. Return to the focused browser field and invoke the extension again; no value was retrieved during setup.";
     });
 
     [RelayCommand(CanExecute = nameof(CanRemoveBrowserMapping))]
@@ -261,6 +306,119 @@ public sealed partial class MainViewModel
             BrowserFillAudit.Add(new BrowserFillAuditRow(audit));
     }
 
+    private async Task CaptureBrowserDestinationAsync(
+        BrowserDestinationAssessment assessment,
+        CancellationToken cancellationToken)
+    {
+        BrowserTopOrigin =
+            assessment.Request.TopOrigin.SerializedOrigin;
+        BrowserFrameOrigin =
+            assessment.Request.FrameOrigin.SerializedOrigin;
+        SelectedBrowserFieldPurpose = assessment.FieldPurpose;
+        BrowserMappingEnabled = true;
+        HasCapturedBrowserDestination = true;
+        BrowserCapturedDestination =
+            BrowserTopOrigin == BrowserFrameOrigin
+                ? $"{BrowserTopOrigin} · {assessment.FieldPurpose}"
+                : $"{BrowserFrameOrigin} inside {BrowserTopOrigin} · {assessment.FieldPurpose}";
+        BrowserExtensionStatus =
+            $"Connected from {assessment.Request.Request.BrowserFamily}. The extension supplied the active tab, frame, and focused-field purpose.";
+        BrowserNativeHostStatus =
+            "Connected. The browser extension reached the trusted native host and current-user desktop broker.";
+        _capturedBrowserPolicyAllowed =
+            assessment.PolicyDecision.IsAllowed;
+        BrowserDestinationPolicyStatus =
+            assessment.PolicyDecision.IsAllowed
+                ? $"Allowed. {assessment.PolicyDecision.SafeReason}"
+                : $"Denied. {assessment.PolicyDecision.SafeReason}";
+        _capturedBrowserMappingId =
+            assessment.ExistingMapping?.Id;
+        BrowserMappingReadinessStatus =
+            assessment.ExistingMapping is null
+                ? "No local mapping exists. Select an eligible secret and identity, then create this exact mapping."
+                : assessment.ExistingMapping.IsEnabled
+                    ? "An enabled mapping exists. Review its source before requesting a one-time fill."
+                    : "A mapping exists but is disabled. Review its source before enabling it.";
+        await ReloadBrowserEligibleSourcesAsync(cancellationToken);
+        if (assessment.ExistingMapping is { } existingMapping)
+        {
+            SelectedBrowserSourceOption =
+                BrowserEligibleSources.FirstOrDefault(option =>
+                    option.Result.Id == existingMapping.VaultItemId &&
+                    option.Identity.Id == existingMapping.ConnectedIdentityId);
+        }
+        await ReloadBrowserIntegrationAsync(cancellationToken);
+        SelectedBrowserFillMapping =
+            _capturedBrowserMappingId is { } mappingId
+                ? BrowserFillMappings.FirstOrDefault(
+                    row => row.Id == mappingId)
+                : null;
+        SaveBrowserMappingCommand.NotifyCanExecuteChanged();
+    }
+
+    private async Task ReloadBrowserEligibleSourcesAsync(
+        CancellationToken cancellationToken)
+    {
+        var previousItemId =
+            SelectedBrowserSourceOption?.Result.Id;
+        var previousIdentityId =
+            SelectedBrowserSourceOption?.Identity.Id;
+        BrowserEligibleSources.Clear();
+        var discoveredSources = new HashSet<(Guid ItemId, Guid IdentityId)>();
+        var results = await searchService.SearchAsync(
+            new SearchRequest(
+                ObjectType: VaultObjectType.Secret,
+                Enabled: true,
+                Limit: 1000),
+            cancellationToken);
+        foreach (var result in results)
+        {
+            foreach (var identity in Identities.Where(identity =>
+                         identity.IsEnabled &&
+                         identity.AuthenticationState ==
+                         AuthenticationState.Ready &&
+                         IsIdentityAllowed(identity)))
+            {
+                var resolved =
+                    await repository.ResolveItemForIdentityAsync(
+                        result.Item.Id,
+                        identity.Id,
+                        cancellationToken);
+                if (resolved is null)
+                    continue;
+                if (!discoveredSources.Add((result.Item.Id, identity.Id)))
+                    continue;
+                BrowserEligibleSources.Add(
+                    new BrowserSourceOption(
+                        new SearchResultRow(result),
+                        identity));
+            }
+        }
+
+        SelectedBrowserSourceOption =
+            BrowserEligibleSources.FirstOrDefault(option =>
+                option.Result.Id == previousItemId &&
+                option.Identity.Id == previousIdentityId);
+    }
+
+    private void ClearBrowserDestinationCapture()
+    {
+        _capturedBrowserMappingId = null;
+        _capturedBrowserPolicyAllowed = false;
+        HasCapturedBrowserDestination = false;
+        SelectedBrowserSourceOption = null;
+        BrowserEligibleSources.Clear();
+        BrowserTopOrigin = string.Empty;
+        BrowserFrameOrigin = string.Empty;
+        BrowserCapturedDestination =
+            "No destination captured. Focus a supported sign-in field and choose the Vault Prospector browser extension.";
+        BrowserDestinationPolicyStatus =
+            "Capture a destination to evaluate its exact machine policy.";
+        BrowserMappingReadinessStatus =
+            "Capture a destination to create or review its exact mapping.";
+        SaveBrowserMappingCommand.NotifyCanExecuteChanged();
+    }
+
     private void CancelPendingBrowserFill(string status)
     {
         var approval = _pendingBrowserFillApproval;
@@ -312,8 +470,8 @@ public sealed partial class MainViewModel
         browserFillService is not null &&
         SelectedResult?.Result.Item.ObjectType == VaultObjectType.Secret &&
         SelectedIdentity is not null &&
-        !string.IsNullOrWhiteSpace(BrowserTopOrigin) &&
-        !string.IsNullOrWhiteSpace(BrowserFrameOrigin) &&
+        HasCapturedBrowserDestination &&
+        _capturedBrowserPolicyAllowed &&
         !IsBusy;
 
     private bool CanRemoveBrowserMapping() =>
@@ -340,17 +498,29 @@ public sealed partial class MainViewModel
     partial void OnSelectedBrowserFillMappingChanged(BrowserFillMappingRow? value)
     {
         RemoveBrowserMappingCommand.NotifyCanExecuteChanged();
-        if (value is null)
-            return;
-        BrowserTopOrigin = value.Mapping.TopOrigin;
-        BrowserFrameOrigin = value.Mapping.FrameOrigin;
-        SelectedBrowserFieldPurpose = value.Mapping.FieldPurpose;
-        BrowserMappingEnabled = value.Mapping.IsEnabled;
     }
 
     partial void OnSelectedBrowserFieldPurposeChanged(
         BrowserMappingFieldPurpose value) =>
         SaveBrowserMappingCommand.NotifyCanExecuteChanged();
+
+    partial void OnSelectedBrowserSourceOptionChanged(
+        BrowserSourceOption? value)
+    {
+        SelectedResult = value?.Result;
+        SelectedIdentity = value?.Identity;
+        SaveBrowserMappingCommand.NotifyCanExecuteChanged();
+    }
+}
+
+public sealed class BrowserSourceOption(
+    SearchResultRow result,
+    ConnectedIdentity identity)
+{
+    public SearchResultRow Result { get; } = result;
+    public ConnectedIdentity Identity { get; } = identity;
+    public string Summary =>
+        $"{Result.Name} · {Result.Vault} · {Identity.DisplayName}";
 }
 
 public sealed class BrowserFillMappingRow(BrowserFillMapping mapping)

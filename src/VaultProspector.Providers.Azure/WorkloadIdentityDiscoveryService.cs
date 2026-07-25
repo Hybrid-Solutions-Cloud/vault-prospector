@@ -12,9 +12,11 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
 {
     private const int MaximumGraphPages = 10;
     private const int MaximumGraphCandidates = 1_000;
+    private const string MicrosoftFirstPartyTenantId =
+        "72f988bf-86f1-41af-91ab-2d7cd011db47";
     private static readonly Uri GraphServicePrincipalsUri = new(
         "https://graph.microsoft.com/v1.0/servicePrincipals" +
-        "?$select=id,appId,displayName,servicePrincipalType,accountEnabled&$top=100");
+        "?$select=id,appId,displayName,servicePrincipalType,accountEnabled,appOwnerOrganizationId&$top=100");
 
     private readonly Func<ConnectedIdentity, CancellationToken, Task<TokenCredential>> _credentialResolver;
     private readonly HttpClient _graphClient;
@@ -141,6 +143,10 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
 
             foreach (var value in values.EnumerateArray())
             {
+                if (!IsEligibleServicePrincipal(
+                        value,
+                        administrator.HomeTenantId))
+                    continue;
                 if (candidates.Count >= MaximumGraphCandidates)
                     throw new InvalidDataException(
                         "Microsoft Graph returned more service principals than the safe display limit.");
@@ -154,6 +160,46 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
             throw new InvalidDataException(
                 "Microsoft Graph pagination exceeded the safe page limit.");
         return candidates;
+    }
+
+    private static bool IsEligibleServicePrincipal(
+        JsonElement servicePrincipal,
+        string customerTenantId)
+    {
+        var ownerTenantId = OptionalString(
+            servicePrincipal,
+            "appOwnerOrganizationId");
+        if (string.IsNullOrWhiteSpace(ownerTenantId) ||
+            string.Equals(
+                ownerTenantId,
+                MicrosoftFirstPartyTenantId,
+                StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(
+                ownerTenantId,
+                customerTenantId,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var principalType = OptionalString(
+            servicePrincipal,
+            "servicePrincipalType");
+        if (!string.Equals(
+                principalType,
+                "Application",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return !servicePrincipal.TryGetProperty(
+                   "accountEnabled",
+                   out var enabledElement) ||
+               enabledElement.ValueKind ==
+               JsonValueKind.Null ||
+               enabledElement.ValueKind ==
+               JsonValueKind.True;
     }
 
     public async Task<WorkloadIdentityCandidate> AssessPermissionsAsync(
@@ -439,6 +485,8 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         var servicePrincipalType = OptionalString(value, "servicePrincipalType");
         var permissions = ReadOnlyDiscoveryAssessment() with
         {
+            IdentityManagement =
+                "Customer-owned application registration in the selected home tenant; local credential ownership is not proven.",
             AttachOrUse = enabled
                 ? "Not proven — credential ownership and target attachment were not evaluated."
                 : "Unavailable — Microsoft Graph reports this service principal disabled.",

@@ -288,6 +288,8 @@ public enum UserVerificationResult
     Canceled,
     Unavailable,
     RemoteSessionUnavailable,
+    RemoteCredentialUnavailable,
+    RemoteCredentialFailed,
     NotConfigured,
     DisabledByPolicy,
     Failed,
@@ -459,6 +461,23 @@ public interface IDiagnosticSink
     void WriteError(string eventName, Exception exception, IReadOnlyDictionary<string, object?> fields);
 }
 
+public interface ISupportBundleService
+{
+    string DiagnosticLogPath { get; }
+    Task<IReadOnlyList<DiagnosticEvent>> ReadRecentAsync(
+        int maximumEvents,
+        CancellationToken cancellationToken);
+    Task<string> CreateAsync(CancellationToken cancellationToken);
+}
+
+public sealed record DiagnosticEvent(
+    DateTimeOffset Timestamp,
+    string Level,
+    string Category,
+    string Scope,
+    string Summary,
+    string Recovery);
+
 public sealed record BrowserFillApproval(
     Guid ApprovalId,
     ValidatedBrowserFillRequest Request,
@@ -471,6 +490,12 @@ public sealed record BrowserFillApproval(
 public sealed record BrowserFillPolicyDecision(
     bool IsAllowed,
     string SafeReason);
+
+public sealed record BrowserDestinationAssessment(
+    ValidatedBrowserFillRequest Request,
+    BrowserMappingFieldPurpose FieldPurpose,
+    BrowserFillPolicyDecision PolicyDecision,
+    BrowserFillMapping? ExistingMapping);
 
 public interface IBrowserFillPolicy
 {

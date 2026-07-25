@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using System.Text.Json;
+using Avalonia.Controls;
 using VaultProspector.App;
 using VaultProspector.App.ViewModels;
 using VaultProspector.Application;
@@ -29,6 +30,7 @@ public sealed class OnboardingTests : IDisposable
 
         Assert.Equal(ProductIdentity.DefaultClientId, settings.ClientId);
         Assert.False(settings.UseCustomClientId);
+        Assert.Equal(0, settings.RevealVerificationGraceSeconds);
     }
 
     [Fact]
@@ -81,6 +83,8 @@ public sealed class OnboardingTests : IDisposable
         {
             CloseBehavior = CloseBehavior.LockToNotificationArea,
             BackgroundMetadataSyncEnabled = true,
+            MinimizeToNotificationArea = false,
+            RevealVerificationGraceSeconds = 60,
         };
 
         await store.SaveAsync(expected, TestContext.Current.CancellationToken);
@@ -88,7 +92,22 @@ public sealed class OnboardingTests : IDisposable
 
         Assert.Equal(CloseBehavior.LockToNotificationArea, restored.CloseBehavior);
         Assert.True(restored.BackgroundMetadataSyncEnabled);
+        Assert.False(restored.MinimizeToNotificationArea);
+        Assert.Equal(60, restored.RevealVerificationGraceSeconds);
     }
+
+    [Theory]
+    [InlineData(true, WindowState.Minimized, true)]
+    [InlineData(false, WindowState.Minimized, false)]
+    [InlineData(true, WindowState.Normal, false)]
+    [InlineData(true, WindowState.Maximized, false)]
+    public void MinimizePolicyHidesOnlyConfiguredMinimizedWindows(
+        bool enabled,
+        WindowState state,
+        bool expected) =>
+        Assert.Equal(
+            expected,
+            WindowLifecyclePolicy.ShouldHideOnMinimize(enabled, state));
 
     [Theory]
     [InlineData(false, false, false, false, false, "Locked — offline")]
@@ -197,12 +216,51 @@ public sealed class OnboardingTests : IDisposable
         Assert.Contains(viewModel.ErrorTitle, viewModel.ErrorAnnouncement, StringComparison.Ordinal);
         Assert.Contains(viewModel.ErrorMessage, viewModel.ErrorAnnouncement, StringComparison.Ordinal);
         Assert.Contains(viewModel.RecoveryText, viewModel.ErrorAnnouncement, StringComparison.Ordinal);
+        Assert.False(viewModel.IsBusy);
+        Assert.Empty(viewModel.ActiveOperationText);
 
         viewModel.UseCustomClientId = false;
         await viewModel.SaveSettingsCommand.ExecuteAsync(null);
 
         Assert.False(viewModel.HasActionableError);
         Assert.Equal("Settings saved locally. No client secret is stored.", viewModel.StatusText);
+    }
+
+    [Fact]
+    public async Task ConnectingTwoReadyIdentitiesClearsBusyStateAndEnablesSynchronization()
+    {
+        var repository = new EmptyRepository();
+        var identityService = new IdentityService(
+            new SequentialIdentityProvider(),
+            repository);
+        var viewModel = new MainViewModel(
+            repository,
+            identityService,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new AppSettingsStore(Path.Combine(_directory, "settings.json")),
+            new UnavailableVerificationService(),
+            null!,
+            null!);
+
+        viewModel.IdentityLabel = "First operator";
+        await viewModel.AddIdentityCommand.ExecuteAsync(null);
+
+        Assert.False(viewModel.IsBusy);
+        Assert.Empty(viewModel.ActiveOperationText);
+        Assert.True(viewModel.SynchronizeCommand.CanExecute(null));
+
+        viewModel.IdentityLabel = "Second operator";
+        await viewModel.AddIdentityCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, viewModel.Identities.Count);
+        Assert.Equal("Second operator", viewModel.SelectedIdentity?.DisplayName);
+        Assert.False(viewModel.IsBusy);
+        Assert.Empty(viewModel.ActiveOperationText);
+        Assert.True(viewModel.SynchronizeCommand.CanExecute(null));
     }
 
     [Fact]
@@ -362,6 +420,8 @@ public sealed class OnboardingTests : IDisposable
     [InlineData(UserVerificationResult.DisabledByPolicy, "policy")]
     [InlineData(UserVerificationResult.Unavailable, "unavailable")]
     [InlineData(UserVerificationResult.RemoteSessionUnavailable, "Remote Desktop")]
+    [InlineData(UserVerificationResult.RemoteCredentialUnavailable, "remote")]
+    [InlineData(UserVerificationResult.RemoteCredentialFailed, "current Windows account")]
     [InlineData(UserVerificationResult.Failed, "failed")]
     public async Task IncompleteWindowsVerificationKeepsApplicationLocked(
         UserVerificationResult result,
@@ -631,6 +691,123 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public async Task WorkloadIdentityFilterIsDeterministicAndSearchable()
+    {
+        var candidates = new[]
+        {
+            WorkloadCandidate(
+                "Zulu automation",
+                "33333333-3333-3333-3333-333333333333"),
+            WorkloadCandidate(
+                "Alpha deployment",
+                "11111111-1111-1111-1111-111111111111"),
+            WorkloadCandidate(
+                "Beta reporting",
+                "22222222-2222-2222-2222-222222222222"),
+        };
+        var administration =
+            new FakeWorkloadAdministrationService
+            {
+                ServicePrincipals = candidates,
+            };
+        var viewModel = new MainViewModel(
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!,
+            administration)
+        {
+            SelectedIdentity = CreateIdentity(),
+        };
+
+        await viewModel.DiscoverServicePrincipalsCommand
+            .ExecuteAsync(null);
+
+        Assert.Equal(
+            ["Alpha deployment", "Beta reporting", "Zulu automation"],
+            viewModel.WorkloadIdentityCandidates
+                .Select(row => row.DisplayName)
+                .ToArray());
+
+        viewModel.WorkloadIdentitySearchText = "report";
+
+        var candidate = Assert.Single(
+            viewModel.WorkloadIdentityCandidates);
+        Assert.Equal(
+            "Beta reporting",
+            candidate.DisplayName);
+        Assert.Contains(
+            "1 of 3",
+            viewModel.WorkloadIdentityFilterStatus,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DiagnosticViewerRefreshesAndFiltersSafeEvents()
+    {
+        var support = new FakeSupportBundleService(
+            [
+                new DiagnosticEvent(
+                    DateTimeOffset.Parse(
+                        "2026-07-25T19:00:00Z",
+                        System.Globalization.CultureInfo
+                            .InvariantCulture),
+                    "error",
+                    "Synchronization",
+                    "Identity 11223344",
+                    "Sync failed · partial",
+                    "Retry synchronization."),
+                new DiagnosticEvent(
+                    DateTimeOffset.Parse(
+                        "2026-07-25T18:00:00Z",
+                        System.Globalization.CultureInfo
+                            .InvariantCulture),
+                    "information",
+                    "Identity",
+                    "Identity AABBCCDD",
+                    "Identity connected · ready",
+                    "No action required."),
+            ]);
+        var viewModel = new MainViewModel(
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!,
+            supportBundleService: support);
+
+        await viewModel.RefreshDiagnosticsCommand
+            .ExecuteAsync(null);
+
+        Assert.Equal(
+            2,
+            viewModel.DiagnosticEvents.Count);
+        viewModel.DiagnosticSearchText = "sync";
+        var diagnosticEvent = Assert.Single(
+            viewModel.DiagnosticEvents);
+        Assert.Equal(
+            "Synchronization",
+            diagnosticEvent.Category);
+        Assert.Contains(
+            "1 of 2",
+            viewModel.DiagnosticViewerStatus,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task InterruptedRotationRecoveryRunsOnlyAfterLocalVerification()
     {
         var engine = new FakeRotationEngine
@@ -801,7 +978,8 @@ public sealed class OnboardingTests : IDisposable
     [Fact]
     public void BackgroundingImmediatelyLocksAndHidesSensitivePresentation()
     {
-        var viewModel = CreateViewModel();
+        var revealSession = new TrackingRevealVerificationSession();
+        var viewModel = CreateViewModel(revealSession);
         viewModel.IsUnlocked = true;
         viewModel.IsApplicationReady = true;
         viewModel.SecretPreview = "sensitive-value";
@@ -812,12 +990,14 @@ public sealed class OnboardingTests : IDisposable
         Assert.False(viewModel.IsApplicationReady);
         Assert.Equal("Secret hidden.", viewModel.SecretPreview);
         Assert.Contains("Locked", viewModel.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(1, revealSession.InvalidationCount);
     }
 
     [Fact]
     public void WindowsSecurityBoundaryImmediatelyLocksAndHidesSensitivePresentation()
     {
-        var viewModel = CreateViewModel();
+        var revealSession = new TrackingRevealVerificationSession();
+        var viewModel = CreateViewModel(revealSession);
         viewModel.IsUnlocked = true;
         viewModel.IsApplicationReady = true;
         viewModel.IsCloseChoiceVisible = true;
@@ -830,6 +1010,32 @@ public sealed class OnboardingTests : IDisposable
         Assert.False(viewModel.IsCloseChoiceVisible);
         Assert.Equal("Secret hidden.", viewModel.SecretPreview);
         Assert.Contains("Windows", viewModel.StatusText, StringComparison.Ordinal);
+        Assert.Equal(1, revealSession.InvalidationCount);
+    }
+
+    [Fact]
+    public void RevealGraceInvalidatesOnSettingIdentityWorkspaceAndManualLock()
+    {
+        var revealSession = new TrackingRevealVerificationSession();
+        var viewModel = CreateViewModel(revealSession);
+
+        viewModel.SelectedRevealVerificationGrace =
+            RevealVerificationGraceOption.All.Single(
+                option => option.Seconds == 60);
+        viewModel.SelectedIdentity = CreateIdentity();
+        viewModel.SelectedWorkspace = new Workspace(
+            Guid.NewGuid(),
+            "Operations",
+            string.Empty,
+            0);
+        viewModel.IsUnlocked = true;
+        viewModel.IsApplicationReady = true;
+        viewModel.SecretPreview = "sensitive-value";
+        viewModel.LockNowCommand.Execute(null);
+
+        Assert.Equal(4, revealSession.InvalidationCount);
+        Assert.False(viewModel.IsUnlocked);
+        Assert.Equal("Secret hidden.", viewModel.SecretPreview);
     }
 
     [Fact]
@@ -1094,8 +1300,22 @@ public sealed class OnboardingTests : IDisposable
             viewModel.RecoveryArchiveDeleteConfirmation);
     }
 
-    private static MainViewModel CreateViewModel() =>
-        new(null!, null!, null!, null!, null!, null!, null!, null!, new UnavailableVerificationService(), null!, null!);
+    private static MainViewModel CreateViewModel(
+        IRevealVerificationSession? revealVerificationSession = null) =>
+        new(
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!,
+            revealVerificationSession:
+                revealVerificationSession);
 
     private sealed class UnavailableVerificationService : IUserVerificationService
     {
@@ -1111,6 +1331,19 @@ public sealed class OnboardingTests : IDisposable
 
         public Task<UserVerificationResult> VerifyAsync(string reason, CancellationToken cancellationToken) =>
             Task.FromResult(result);
+    }
+
+    private sealed class TrackingRevealVerificationSession :
+        IRevealVerificationSession
+    {
+        public int InvalidationCount { get; private set; }
+
+        public Task<bool> EnsureVerifiedAsync(
+            TimeSpan requestedGracePeriod,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(true);
+
+        public void Invalidate() => InvalidationCount++;
     }
 
     private sealed class SubscriptionRepository(
@@ -1183,27 +1416,41 @@ public sealed class OnboardingTests : IDisposable
 
     private sealed class EmptyRepository : IMetadataRepository
     {
+        public List<ConnectedIdentity> Identities { get; } = [];
+
         public Task InitializeAsync(CancellationToken cancellationToken) =>
             Task.CompletedTask;
 
         public Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<ConnectedIdentity>>([]);
+            Task.FromResult<IReadOnlyList<ConnectedIdentity>>(
+                Identities.ToArray());
 
         public Task<ConnectedIdentity?> GetIdentityAsync(
             Guid id,
             CancellationToken cancellationToken) =>
-            Task.FromResult<ConnectedIdentity?>(null);
+            Task.FromResult(
+                Identities.FirstOrDefault(identity => identity.Id == id));
 
         public Task UpsertIdentityAsync(
             ConnectedIdentity identity,
-            CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+            CancellationToken cancellationToken)
+        {
+            var index = Identities.FindIndex(existing => existing.Id == identity.Id);
+            if (index < 0)
+                Identities.Add(identity);
+            else
+                Identities[index] = identity;
+            return Task.CompletedTask;
+        }
 
         public Task RemoveIdentityAsync(
             Guid id,
-            CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+            CancellationToken cancellationToken)
+        {
+            Identities.RemoveAll(identity => identity.Id == id);
+            return Task.CompletedTask;
+        }
 
         public Task<IReadOnlyList<TenantAccess>> GetTenantsAsync(
             Guid identityId,
@@ -1296,6 +1543,38 @@ public sealed class OnboardingTests : IDisposable
             Task.CompletedTask;
     }
 
+    private sealed class SequentialIdentityProvider : IIdentityProvider
+    {
+        public Task<ConnectedIdentity> SignInAsync(
+            string clientId,
+            string displayName,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new ConnectedIdentity(
+                Guid.NewGuid(),
+                clientId,
+                Guid.NewGuid().ToString("D"),
+                $"{displayName.Replace(' ', '.').ToLowerInvariant()}@example.invalid",
+                displayName,
+                "11111111-1111-1111-1111-111111111111",
+                AuthenticationState.Ready,
+                DateTimeOffset.UtcNow));
+
+        public Task<ConnectedIdentity> ReauthenticateAsync(
+            ConnectedIdentity identity,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(identity);
+
+        public Task<ConnectedIdentity> AuthorizeDirectoryReadAsync(
+            ConnectedIdentity identity,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(identity);
+
+        public Task RemoveAsync(
+            ConnectedIdentity identity,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
+
     private sealed class UnsupportedManagedIdentityDetector :
         IManagedIdentityEnvironmentDetector
     {
@@ -1315,6 +1594,7 @@ public sealed class OnboardingTests : IDisposable
     private sealed class FakeWorkloadAdministrationService : IWorkloadIdentityAdministrationService
     {
         public WorkloadIdentityCandidate? AssessedCandidate { get; private set; }
+        public IReadOnlyList<WorkloadIdentityCandidate> ServicePrincipals { get; init; } = [];
 
         public Task<IReadOnlyList<WorkloadIdentityCandidate>> ListManagedIdentitiesAsync(
             ConnectedIdentity administrator,
@@ -1325,7 +1605,7 @@ public sealed class OnboardingTests : IDisposable
         public Task<IReadOnlyList<WorkloadIdentityCandidate>> ListServicePrincipalsAsync(
             ConnectedIdentity administrator,
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<WorkloadIdentityCandidate>>([]);
+            Task.FromResult(ServicePrincipals);
 
         public Task<WorkloadIdentityCandidate> AssessPermissionsAsync(
             ConnectedIdentity administrator,
@@ -1383,6 +1663,27 @@ public sealed class OnboardingTests : IDisposable
                 []);
     }
 
+    private static WorkloadIdentityCandidate WorkloadCandidate(
+        string displayName,
+        string principalId) =>
+        new(
+            "Service principal (Application)",
+            "tenant",
+            string.Empty,
+            string.Empty,
+            displayName,
+            $"/tenants/tenant/servicePrincipals/{principalId}",
+            Guid.NewGuid().ToString("D"),
+            principalId,
+            string.Empty,
+            true,
+            new WorkloadPermissionAssessment(
+                "Confirmed",
+                "Not proven",
+                "Not proven",
+                "Not proven",
+                "Not proven"));
+
     private sealed class FakeRotationEngine :
         ILocalEncryptionRotationEngine
     {
@@ -1403,6 +1704,23 @@ public sealed class OnboardingTests : IDisposable
                 : Task.FromException<LocalEncryptionRecoveryResult>(
                     RecoveryException);
         }
+    }
+
+    private sealed class FakeSupportBundleService(
+        IReadOnlyList<DiagnosticEvent> events) :
+        ISupportBundleService
+    {
+        public string DiagnosticLogPath =>
+            "test.log";
+
+        public Task<IReadOnlyList<DiagnosticEvent>> ReadRecentAsync(
+            int maximumEvents,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(events);
+
+        public Task<string> CreateAsync(
+            CancellationToken cancellationToken) =>
+            Task.FromResult("support.zip");
     }
 
     private sealed class BackgroundProvider : IVaultProvider

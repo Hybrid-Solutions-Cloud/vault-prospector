@@ -180,6 +180,46 @@ public partial class MainWindow : Window
         _isNarrowLayout = narrow;
 
         HeaderContextBadge.IsVisible = !narrow;
+        MainTabs.TabStripPlacement = narrow ? Dock.Top : Dock.Left;
+
+        ActiveContextGrid.ColumnDefinitions = new ColumnDefinitions(
+            narrow
+                ? "Auto,*"
+                : "Auto,Auto,Auto,Auto,*,Auto");
+        ActiveContextGrid.RowDefinitions = new RowDefinitions(
+            narrow
+                ? "Auto,Auto,Auto"
+                : "Auto");
+        Place(ActiveContextLabel, 0, 0);
+        Place(ActiveWorkspaceBadge, 0, 1);
+        Place(
+            ActiveIdentityText,
+            narrow ? 1 : 0,
+            narrow ? 0 : 2);
+        Grid.SetColumnSpan(
+            ActiveIdentityText,
+            narrow ? 2 : 1);
+        Place(
+            ActiveSubscriptionText,
+            narrow ? 2 : 0,
+            narrow ? 0 : 3);
+        Place(
+            ActiveReadyBadge,
+            narrow ? 2 : 0,
+            narrow ? 1 : 5);
+
+        UnlockExperienceGrid.ColumnDefinitions = new ColumnDefinitions(
+            narrow
+                ? "*"
+                : "1.05*,0.95*");
+        UnlockExperienceGrid.RowDefinitions = new RowDefinitions(
+            narrow
+                ? "Auto,Auto"
+                : "*");
+        Place(
+            UnlockVerificationCard,
+            narrow ? 1 : 0,
+            narrow ? 0 : 1);
 
         SearchCommandGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "*,150,Auto");
         SearchCommandGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto,Auto" : "Auto");
@@ -188,8 +228,8 @@ public partial class MainWindow : Window
 
         SearchFilterGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "*,*,*");
         SearchFilterGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto,Auto" : "Auto");
-        Place(SubscriptionFilterTextBox, narrow ? 1 : 0, narrow ? 0 : 1);
-        Place(VaultFilterTextBox, narrow ? 2 : 0, narrow ? 0 : 2);
+        Place(SubscriptionFilterComboBox, narrow ? 1 : 0, narrow ? 0 : 1);
+        Place(VaultFilterComboBox, narrow ? 2 : 0, narrow ? 0 : 2);
 
         SearchResultsGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "2*,1*");
         SearchResultsGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto" : "*");
@@ -202,6 +242,45 @@ public partial class MainWindow : Window
         WorkspaceGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "1*,1*");
         WorkspaceGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto" : "*");
         Place(CreateWorkspaceCard, narrow ? 1 : 0, narrow ? 0 : 1);
+
+        AdministrationGrid.ColumnDefinitions = new ColumnDefinitions(
+            narrow
+                ? "*"
+                : "1*,1*");
+        AdministrationGrid.RowDefinitions = new RowDefinitions(
+            narrow
+                ? "Auto,Auto"
+                : "*");
+        Place(
+            AdministrationPreviewCard,
+            narrow ? 1 : 0,
+            narrow ? 0 : 1);
+
+        BrowserMappingGrid.ColumnDefinitions = new ColumnDefinitions(
+            narrow
+                ? "*"
+                : "1*,1*");
+        BrowserMappingGrid.RowDefinitions = new RowDefinitions(
+            narrow
+                ? "Auto,Auto"
+                : "*");
+        Place(
+            BrowserGuidedMappingCard,
+            narrow ? 1 : 0,
+            narrow ? 0 : 1);
+
+        ActivitySupportGrid.ColumnDefinitions = new ColumnDefinitions(
+            narrow
+                ? "*"
+                : "1.15*,0.85*");
+        ActivitySupportGrid.RowDefinitions = new RowDefinitions(
+            narrow
+                ? "Auto,Auto"
+                : "*");
+        Place(
+            SupportBundleCard,
+            narrow ? 1 : 0,
+            narrow ? 0 : 1);
     }
 
     private static void Place(Control control, int row, int column)

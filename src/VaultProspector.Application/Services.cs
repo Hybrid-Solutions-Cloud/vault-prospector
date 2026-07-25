@@ -502,7 +502,16 @@ public sealed class SynchronizationService(
                 };
             }
             var status = snapshot.Errors.Count == 0 ? SyncStatus.Completed : SyncStatus.CompletedWithErrors;
-            var run = new SyncRun(Guid.NewGuid(), identity.DisplayName, started, clock.UtcNow, status, snapshot.Vaults.Count, snapshot.Items.Count, snapshot.Errors.Select(x => x.SafeMessage).ToArray());
+            var run = new SyncRun(
+                Guid.NewGuid(),
+                identity.DisplayName,
+                started,
+                clock.UtcNow,
+                status,
+                snapshot.Vaults.Count,
+                snapshot.Items.Count,
+                snapshot.Errors.Select(error => error.SafeMessage).ToArray(),
+                ErrorDetails: snapshot.Errors.Select(ToSyncErrorDetail).ToArray());
             await repository.ApplyDiscoveryAsync(identity.Id, snapshot, run, cancellationToken);
             diagnostics.Information("sync_completed", new Dictionary<string, object?> { ["identity_id"] = identity.Id, ["vault_count"] = run.VaultCount, ["item_count"] = run.ItemCount, ["error_count"] = run.NonSensitiveErrors.Count });
             return run;
@@ -538,6 +547,28 @@ public sealed class SynchronizationService(
     {
         if (!identity.IsEnabled || identity.AuthenticationState != AuthenticationState.Ready)
             throw new InvalidOperationException("The selected identity is disabled, revoked, or requires authentication.");
+    }
+
+    private static SyncErrorDetail ToSyncErrorDetail(ProviderError error)
+    {
+        var recovery = error.Category switch
+        {
+            "AuthenticationFailedException" or "MsalUiRequiredException" =>
+                "Reauthenticate the affected identity, then retry synchronization.",
+            "RequestFailedException" when error.SafeMessage.Contains("403", StringComparison.Ordinal) =>
+                "Review metadata-list access for this scope. Other synchronized results remain available.",
+            "RequestFailedException" when error.SafeMessage.Contains("429", StringComparison.Ordinal) =>
+                "Azure throttled this scope. Wait briefly, then retry synchronization.",
+            "RequestFailedException" =>
+                "Verify network, private-endpoint, and Azure service availability for this scope, then retry.",
+            _ =>
+                "Use the safe category shown here to correct the affected scope, then retry synchronization.",
+        };
+        return new SyncErrorDetail(
+            error.Scope,
+            error.Category,
+            error.SafeMessage,
+            recovery);
     }
 
     private static DiscoverySnapshot ApplyTenantConstraints(
@@ -625,15 +656,34 @@ public sealed class SecretAccessService(
     IClipboardService clipboard,
     IUserVerificationService verification,
     IClock clock,
-    IEnterprisePolicy? enterprisePolicy = null)
+    IEnterprisePolicy? enterprisePolicy = null,
+    IRevealVerificationSession? revealVerificationSession = null)
 {
-    public async Task<SensitiveValue> RetrieveAsync(Guid itemId, CancellationToken cancellationToken)
+    public Task<SensitiveValue> RetrieveAsync(
+        Guid itemId,
+        CancellationToken cancellationToken) =>
+        RetrieveAsync(itemId, TimeSpan.Zero, cancellationToken);
+
+    public async Task<SensitiveValue> RetrieveAsync(
+        Guid itemId,
+        TimeSpan revealVerificationGracePeriod,
+        CancellationToken cancellationToken)
     {
         var source = await repository.ResolveItemAsync(itemId, cancellationToken) ?? throw new KeyNotFoundException("The selected vault item no longer exists.");
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be retrieved. Key material and certificate private keys are never exported.");
         EnsureSourceAllowed(source);
         EnsureOnlineIdentityIsUsable(source.Identity);
-        if (!verification.IsAvailable || await verification.VerifyAsync("Reveal an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified) throw new UnauthorizedAccessException("Local verification was not completed.");
+        var verified = revealVerificationSession is not null
+            ? await revealVerificationSession.EnsureVerifiedAsync(
+                revealVerificationGracePeriod,
+                cancellationToken)
+            : verification.IsAvailable &&
+              await verification.VerifyAsync(
+                  "Reveal an Azure Key Vault secret",
+                  cancellationToken) ==
+              UserVerificationResult.Verified;
+        if (!verified)
+            throw new UnauthorizedAccessException("Local verification was not completed.");
         var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
         try
         {
@@ -793,6 +843,37 @@ public sealed class BrowserFillService(
         Task.FromResult(
             "Browser fill is disabled because no machine policy provider is configured.");
 
+    public async Task<BrowserDestinationAssessment> AssessDestinationAsync(
+        ValidatedBrowserFillRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var fieldPurpose = ToDomainPurpose(
+            request.Request.FieldPurpose);
+        var policyDecision = policy is null
+            ? new BrowserFillPolicyDecision(
+                false,
+                "Browser fill is disabled because no machine policy provider is configured.")
+            : await policy.EvaluateAsync(
+                request.Request.BrowserFamily,
+                request.TopOrigin,
+                request.FrameOrigin,
+                fieldPurpose,
+                cancellationToken);
+        var mapping = policyDecision.IsAllowed
+            ? await repository.FindBrowserFillMappingAsync(
+                request.TopOrigin.SerializedOrigin,
+                request.FrameOrigin.SerializedOrigin,
+                fieldPurpose,
+                cancellationToken)
+            : null;
+        return new BrowserDestinationAssessment(
+            request,
+            fieldPurpose,
+            policyDecision,
+            mapping);
+    }
+
     public async Task<BrowserFillMapping> SaveMappingAsync(
         Guid? expectedMappingId,
         Guid itemId,
@@ -865,29 +946,15 @@ public sealed class BrowserFillService(
         ValidatedBrowserFillRequest request,
         CancellationToken cancellationToken)
     {
-        var fieldPurpose = ToDomainPurpose(request.Request.FieldPurpose);
-        if (policy is null)
+        var assessment = await AssessDestinationAsync(
+            request,
+            cancellationToken);
+        if (!assessment.PolicyDecision.IsAllowed)
         {
             await RecordAuditAsync(request, null, "DeniedPolicy", cancellationToken);
             return null;
         }
-        var policyDecision = await policy.EvaluateAsync(
-            request.Request.BrowserFamily,
-            request.TopOrigin,
-            request.FrameOrigin,
-            fieldPurpose,
-            cancellationToken);
-        if (!policyDecision.IsAllowed)
-        {
-            await RecordAuditAsync(request, null, "DeniedPolicy", cancellationToken);
-            return null;
-        }
-
-        var mapping = await repository.FindBrowserFillMappingAsync(
-            request.TopOrigin.SerializedOrigin,
-            request.FrameOrigin.SerializedOrigin,
-            fieldPurpose,
-            cancellationToken);
+        var mapping = assessment.ExistingMapping;
         if (mapping is null)
         {
             await RecordAuditAsync(request, null, "DeniedUnmapped", cancellationToken);

@@ -133,7 +133,14 @@ public sealed record SyncRun(
     int VaultCount,
     int ItemCount,
     IReadOnlyList<string> NonSensitiveErrors,
-    string? CancellationReason = null);
+    string? CancellationReason = null,
+    IReadOnlyList<SyncErrorDetail>? ErrorDetails = null);
+
+public sealed record SyncErrorDetail(
+    string Scope,
+    string Category,
+    string Message,
+    string Recovery);
 
 public sealed record CachePolicy(
     bool IsEnabled,

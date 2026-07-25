@@ -81,6 +81,10 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
                 normalized,
                 "DisableOfflineCache",
                 false);
+            var disableRemoteCredentialVerification = ReadOptionalSwitch(
+                normalized,
+                "DisableRemoteCredentialVerification",
+                false);
             var maximumCacheMinutes = ReadOptionalDword(
                 normalized,
                 "MaximumOfflineCacheMinutes");
@@ -88,6 +92,14 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
             {
                 return EnterprisePolicySnapshot.Invalid(
                     "MaximumOfflineCacheMinutes must be between 1 and 10080");
+            }
+            var maximumRevealGraceSeconds = ReadOptionalDword(
+                normalized,
+                "MaximumRevealVerificationGraceSeconds");
+            if (maximumRevealGraceSeconds is > 120)
+            {
+                return EnterprisePolicySnapshot.Invalid(
+                    "MaximumRevealVerificationGraceSeconds must be between 0 and 120");
             }
 
             var providerCount = allowedProviders?.Count ??
@@ -105,6 +117,14 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
             var clipboardStatus = disableClipboard
                 ? "clipboard disabled"
                 : "clipboard permitted subject to workspace policy";
+            var remoteVerificationStatus =
+                disableRemoteCredentialVerification
+                    ? "remote Windows credential verification disabled"
+                    : "remote Windows credential verification permitted";
+            var revealGraceStatus =
+                maximumRevealGraceSeconds is { } revealSeconds
+                    ? $"reveal verification grace capped at {revealSeconds} second(s)"
+                    : "reveal verification grace uses the user setting";
 
             return new EnterprisePolicySnapshot(
                 true,
@@ -117,10 +137,17 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
                     maximumCacheMinutes is { } maximum
                         ? TimeSpan.FromMinutes(maximum)
                         : null,
+                allowRemoteCredentialVerification:
+                    !disableRemoteCredentialVerification,
+                maximumRevealVerificationGracePeriod:
+                    maximumRevealGraceSeconds is { } maximumReveal
+                        ? TimeSpan.FromSeconds(maximumReveal)
+                        : null,
                 safeStatus:
                     $"Machine-managed policy is active: {tenantScope}; " +
                     $"{providerCount} provider(s); {identityTypeCount} identity type(s); " +
-                    $"{clipboardStatus}; {cacheStatus}.");
+                    $"{clipboardStatus}; {cacheStatus}; " +
+                    $"{remoteVerificationStatus}; {revealGraceStatus}.");
         }
         catch (EnterprisePolicyFormatException exception)
         {

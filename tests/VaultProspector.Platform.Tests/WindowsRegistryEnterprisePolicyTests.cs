@@ -34,7 +34,9 @@ public sealed class WindowsRegistryEnterprisePolicyTests
                 ["AllowedIdentityTypes"] = AllowedIdentityTypeValues,
                 ["DisableClipboard"] = 1,
                 ["DisableOfflineCache"] = 0,
+                ["DisableRemoteCredentialVerification"] = 1,
                 ["MaximumOfflineCacheMinutes"] = 90,
+                ["MaximumRevealVerificationGraceSeconds"] = 30,
             });
 
         Assert.True(policy.IsManaged);
@@ -48,9 +50,17 @@ public sealed class WindowsRegistryEnterprisePolicyTests
             policy.AllowedIdentityTypes);
         Assert.False(policy.AllowClipboard);
         Assert.True(policy.AllowOfflineCache);
+        Assert.False(policy.AllowRemoteCredentialVerification);
         Assert.Equal(
             TimeSpan.FromMinutes(90),
             policy.MaximumOfflineCacheLifetime);
+        Assert.Equal(
+            TimeSpan.FromSeconds(30),
+            policy.MaximumRevealVerificationGracePeriod);
+        Assert.Equal(
+            TimeSpan.FromSeconds(30),
+            policy.ConstrainRevealVerificationGracePeriod(
+                TimeSpan.FromSeconds(120)));
         Assert.DoesNotContain(
             AllowedTenant,
             policy.SafeStatus,
@@ -80,6 +90,7 @@ public sealed class WindowsRegistryEnterprisePolicyTests
         Assert.False(policy.IsManaged);
         Assert.True(policy.AllowClipboard);
         Assert.True(policy.AllowOfflineCache);
+        Assert.True(policy.AllowRemoteCredentialVerification);
     }
 
     [Theory]
@@ -95,6 +106,7 @@ public sealed class WindowsRegistryEnterprisePolicyTests
         Assert.Empty(policy.AllowedIdentityTypes);
         Assert.False(policy.AllowClipboard);
         Assert.False(policy.AllowOfflineCache);
+        Assert.False(policy.AllowRemoteCredentialVerification);
         Assert.Throws<EnterprisePolicyDeniedException>(
             () => policy.EnsureProviderAllowed(
                 EnterpriseProvider.AzureKeyVault));
@@ -150,7 +162,19 @@ public sealed class WindowsRegistryEnterprisePolicyTests
             {
                 ["PolicyVersion"] = 1,
                 ["Enabled"] = 1,
+                ["DisableRemoteCredentialVerification"] = 7,
+            },
+            new Dictionary<string, object?>
+            {
+                ["PolicyVersion"] = 1,
+                ["Enabled"] = 1,
                 ["MaximumOfflineCacheMinutes"] = 10_081,
+            },
+            new Dictionary<string, object?>
+            {
+                ["PolicyVersion"] = 1,
+                ["Enabled"] = 1,
+                ["MaximumRevealVerificationGraceSeconds"] = 121,
             },
         };
 }

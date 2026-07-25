@@ -46,7 +46,9 @@ An enabled policy requires `PolicyVersion=1` and `Enabled=1`.
 | `AllowedIdentityTypes` | `REG_MULTI_SZ` | Optional values: `InteractiveUser`, `ManagedIdentity`, `ServicePrincipal`, `FederatedServicePrincipal`. Missing permits all; present and empty denies all. |
 | `DisableClipboard` | `REG_DWORD` | Optional `0`/`1`; `1` blocks all protected-value clipboard paths. |
 | `DisableOfflineCache` | `REG_DWORD` | Optional `0`/`1`; `1` blocks new storage and opening of existing offline values. Purge remains available. |
+| `DisableRemoteCredentialVerification` | `REG_DWORD` | Optional `0`/`1`; `1` prevents the current-account Windows credential fallback in AVD and Remote Desktop sessions. Missing or `0` permits it when Windows Hello reports that no verification device is present. |
 | `MaximumOfflineCacheMinutes` | `REG_DWORD` | Optional lifetime cap from `1` through `10080` (seven days). The strictest machine/user/workspace value wins. |
+| `MaximumRevealVerificationGraceSeconds` | `REG_DWORD` | Optional cap from `0` through `120`. `0` forces verification before every Reveal. Missing allows the user's Off/30/60/120-second choice. This never applies to copy, offline cache/open, recovery, browser fill, or administration. |
 
 Unknown enum values, non-GUID tenant entries, wrong registry types, unsupported versions, invalid
 switches, out-of-range lifetimes, and unreadable enabled policy fail closed. The UI and diagnostics
@@ -89,7 +91,9 @@ New-ItemProperty -Path $policyPath -Name AllowedIdentityTypes -PropertyType Mult
     -Value @('InteractiveUser', 'ServicePrincipal') -Force | Out-Null
 New-ItemProperty -Path $policyPath -Name DisableClipboard -PropertyType DWord -Value 1 -Force | Out-Null
 New-ItemProperty -Path $policyPath -Name DisableOfflineCache -PropertyType DWord -Value 0 -Force | Out-Null
+New-ItemProperty -Path $policyPath -Name DisableRemoteCredentialVerification -PropertyType DWord -Value 0 -Force | Out-Null
 New-ItemProperty -Path $policyPath -Name MaximumOfflineCacheMinutes -PropertyType DWord -Value 480 -Force | Out-Null
+New-ItemProperty -Path $policyPath -Name MaximumRevealVerificationGraceSeconds -PropertyType DWord -Value 30 -Force | Out-Null
 ```
 
 Deploy registry changes through an elevated management process. Set `Enabled=0` to disable

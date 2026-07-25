@@ -226,7 +226,8 @@ public sealed class AuthenticationConfigurationTests
                   "appId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
                   "displayName": "Automation Reader",
                   "servicePrincipalType": "Application",
-                  "accountEnabled": true
+                  "accountEnabled": true,
+                  "appOwnerOrganizationId": "22222222-2222-2222-2222-222222222222"
                 }
               ],
               "@odata.nextLink": "https://graph.microsoft.com/v1.0/servicePrincipals?$skiptoken=next"
@@ -240,7 +241,8 @@ public sealed class AuthenticationConfigurationTests
                   "appId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
                   "displayName": "Disabled Automation",
                   "servicePrincipalType": "Application",
-                  "accountEnabled": false
+                  "accountEnabled": false,
+                  "appOwnerOrganizationId": "22222222-2222-2222-2222-222222222222"
                 }
               ]
             }
@@ -254,17 +256,70 @@ public sealed class AuthenticationConfigurationTests
             InteractiveAdministrator(),
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(2, candidates.Count);
+        var candidate = Assert.Single(candidates);
         Assert.Equal(2, handler.Calls);
         Assert.All(handler.AuthorizationSchemes, scheme => Assert.Equal("Bearer", scheme));
         Assert.Equal(AzureAuthenticationScopes.GraphDirectoryRead, credential.LastScopes);
         Assert.Equal(
             "22222222-2222-2222-2222-222222222222",
             credential.LastTenantId);
-        Assert.Contains("Confirmed", candidates[0].Permissions.DirectoryVisibility, StringComparison.Ordinal);
-        Assert.Contains("Not proven", candidates[0].Permissions.IdentityManagement, StringComparison.Ordinal);
-        Assert.Contains("disabled", candidates[1].Permissions.AttachOrUse, StringComparison.OrdinalIgnoreCase);
-        Assert.False(candidates[1].IsEnabled);
+        Assert.Contains("Confirmed", candidate.Permissions.DirectoryVisibility, StringComparison.Ordinal);
+        Assert.Contains("Customer-owned", candidate.Permissions.IdentityManagement, StringComparison.Ordinal);
+        Assert.True(candidate.IsEnabled);
+    }
+
+    [Fact]
+    public async Task GraphDiscoveryExcludesMicrosoftFirstPartyServicePrincipalsByDefault()
+    {
+        var handler = new GraphSequenceHandler(
+            """
+            {
+              "value": [
+                {
+                  "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                  "appId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                  "displayName": "Microsoft Infrastructure",
+                  "servicePrincipalType": "Application",
+                  "accountEnabled": true,
+                  "appOwnerOrganizationId": "72f988bf-86f1-41af-91ab-2d7cd011db47"
+                },
+                {
+                  "id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+                  "appId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                  "displayName": "Customer Automation",
+                  "servicePrincipalType": "Application",
+                  "accountEnabled": true,
+                  "appOwnerOrganizationId": "22222222-2222-2222-2222-222222222222"
+                },
+                {
+                  "id": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+                  "appId": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+                  "displayName": "External enterprise application",
+                  "servicePrincipalType": "Application",
+                  "accountEnabled": true,
+                  "appOwnerOrganizationId": "99999999-9999-9999-9999-999999999999"
+                },
+                {
+                  "id": "11111111-1111-1111-1111-111111111111",
+                  "appId": "22222222-2222-2222-2222-222222222222",
+                  "displayName": "Managed identity service principal",
+                  "servicePrincipalType": "ManagedIdentity",
+                  "accountEnabled": true,
+                  "appOwnerOrganizationId": "22222222-2222-2222-2222-222222222222"
+                }
+              ]
+            }
+            """);
+        var service = new WorkloadIdentityDiscoveryService(
+            new StaticTokenCredential(),
+            new HttpClient(handler));
+
+        var candidates = await service.ListServicePrincipalsAsync(
+            InteractiveAdministrator(),
+            TestContext.Current.CancellationToken);
+
+        var candidate = Assert.Single(candidates);
+        Assert.Equal("Customer Automation", candidate.DisplayName);
     }
 
     [Theory]

@@ -3,19 +3,79 @@
         xmlns:vm="using:VaultProspector.App.ViewModels"
         x:Class="VaultProspector.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Width="960" Height="640" MinWidth="320" MinHeight="300"
+        Width="1180" Height="760" MinWidth="320" MinHeight="300"
         WindowStartupLocation="CenterScreen"
         Icon="/Assets/vault-prospector.ico"
         Title="Vault Prospector">
-  <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource ApplicationPageBackgroundThemeBrush}">
-    <Border Grid.Row="0" Background="#073B34" Padding="22,14">
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel>
-          <TextBlock Text="VAULT PROSPECTOR" Foreground="#A7F3D0" FontSize="{StaticResource VaultFontSize12}" FontWeight="Bold" LetterSpacing="2" />
-          <TextBlock Text="Find the right secret. Keep the boundaries clear." Foreground="White" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" TextWrapping="Wrap" />
-        </StackPanel>
-        <Border x:Name="HeaderContextBadge" Grid.Column="1" Background="#14584E" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
-          <TextBlock Text="LOCAL-FIRST · AZURE KEY VAULT" Foreground="#D1FAE5" FontSize="{StaticResource VaultFontSize11}" />
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource VaultColorCanvas}">
+    <Border Grid.Row="0" Background="{DynamicResource VaultColorHeader}">
+      <Grid RowDefinitions="Auto,Auto">
+        <Grid ColumnDefinitions="*,Auto" Margin="22,12">
+          <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+            <Border Width="38" Height="38" Background="#AD543C" CornerRadius="0">
+              <TextBlock Text="VP" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel>
+              <TextBlock Text="Vault Prospector" Foreground="White" FontSize="{StaticResource VaultFontSize18}" FontWeight="SemiBold" />
+              <TextBlock Text="Secure Azure retrieval" Foreground="#AEB9B5" FontSize="{StaticResource VaultFontSize11}" />
+            </StackPanel>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Border x:Name="HeaderContextBadge" BorderBrush="#667170" BorderThickness="1" Padding="12,7">
+              <TextBlock Text="LOCAL-FIRST · READ-ONLY BY DEFAULT" Foreground="#E7ECEA" FontSize="{StaticResource VaultFontSize11}" />
+            </Border>
+            <Button Content="Lock now"
+                    Command="{Binding LockNowCommand}"
+                    IsVisible="{Binding IsUnlocked}"
+                    AutomationProperties.Name="Lock Vault Prospector now" />
+          </StackPanel>
+        </Grid>
+        <Border Grid.Row="1" Background="{DynamicResource VaultColorContext}" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="22,8">
+          <Grid x:Name="ActiveContextGrid"
+                ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto"
+                RowDefinitions="Auto"
+                ColumnSpacing="16"
+                RowSpacing="6">
+            <TextBlock x:Name="ActiveContextLabel"
+                       Text="ACTIVE WORKSPACE"
+                       Foreground="{DynamicResource VaultColorMuted}"
+                       FontSize="{StaticResource VaultFontSize11}"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center" />
+            <Border x:Name="ActiveWorkspaceBadge"
+                    Grid.Column="1"
+                    Background="{DynamicResource VaultColorSurface}"
+                    BorderBrush="{DynamicResource VaultColorLineStrong}"
+                    BorderThickness="1"
+                    Padding="10,6">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Width="7" Background="#1A9B83" />
+                <TextBlock Text="{Binding ActiveWorkspaceContext}"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+              </StackPanel>
+            </Border>
+            <TextBlock x:Name="ActiveIdentityText"
+                       Grid.Column="2"
+                       Text="{Binding ActiveIdentityContext}"
+                       VerticalAlignment="Center" />
+            <TextBlock x:Name="ActiveSubscriptionText"
+                       Grid.Column="3"
+                       Text="{Binding ActiveSubscriptionContext}"
+                       VerticalAlignment="Center" />
+            <Border x:Name="ActiveReadyBadge"
+                    Grid.Column="5"
+                    IsVisible="{Binding IsApplicationReady}"
+                    Background="{DynamicResource VaultColorGoodSoft}"
+                    BorderBrush="{DynamicResource VaultColorGood}"
+                    BorderThickness="1"
+                    Padding="10,5">
+              <TextBlock Text="READY"
+                         Foreground="{DynamicResource VaultColorGood}"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         FontWeight="Bold" />
+            </Border>
+          </Grid>
         </Border>
       </Grid>
     </Border>
@@ -54,13 +114,93 @@
       </StackPanel>
     </Border>
 
-    <Border Grid.Row="2" Margin="18" Classes="card" IsVisible="{Binding !IsUnlocked}" MaxWidth="500" HorizontalAlignment="Center" VerticalAlignment="Center">
-      <StackPanel Spacing="16">
-        <TextBlock Text="Application Locked" FontSize="{StaticResource VaultFontSize24}" FontWeight="Bold" />
-        <TextBlock Text="{Binding UnlockMessage}" TextWrapping="Wrap" />
-        <TextBlock Text="{Binding UnlockRecovery}" TextWrapping="Wrap" Opacity="0.8" />
-        <Button Classes="primary" Content="Unlock Vault Prospector" Command="{Binding InitializeCommand}" HorizontalAlignment="Left" />
-      </StackPanel>
+    <Border Grid.Row="2"
+            Margin="18"
+            IsVisible="{Binding !IsUnlocked}"
+            MaxWidth="900"
+            BorderBrush="{DynamicResource VaultColorLine}"
+            BorderThickness="1"
+            Background="{DynamicResource VaultColorSurface}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+      <Grid x:Name="UnlockExperienceGrid"
+            ColumnDefinitions="1.05*,0.95*"
+            RowDefinitions="*">
+        <Border Background="{DynamicResource VaultColorHeader}"
+                Padding="30">
+          <StackPanel Spacing="16"
+                      VerticalAlignment="Center">
+            <Border Width="64"
+                    Height="64"
+                    Background="{DynamicResource VaultColorAccent}"
+                    HorizontalAlignment="Left">
+              <TextBlock Text="VP"
+                         Foreground="White"
+                         FontSize="{StaticResource VaultFontSize22}"
+                         FontWeight="Bold"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center" />
+            </Border>
+            <TextBlock Text="Local protection"
+                       Foreground="#D4DDD9"
+                       FontSize="{StaticResource VaultFontSize11}"
+                       FontWeight="Bold" />
+            <TextBlock Text="Your Azure identities are separate"
+                       Foreground="White"
+                       FontSize="{StaticResource VaultFontSize24}"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="Unlocking opens encrypted data for this Windows account. It does not sign you into Azure, and you can connect multiple Microsoft Entra identities afterward."
+                       Foreground="#D4DDD9"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="Remote sessions never bypass verification. AVD and Remote Desktop use only the policy-controlled Windows credential fallback when Windows Hello is unavailable."
+                       Foreground="#D4DDD9"
+                       TextWrapping="Wrap"
+                       FontSize="{StaticResource VaultFontSize12}" />
+          </StackPanel>
+        </Border>
+        <Border x:Name="UnlockVerificationCard"
+                Grid.Column="1"
+                Padding="30"
+                Background="{DynamicResource VaultColorSurface}">
+          <StackPanel Spacing="16"
+                      VerticalAlignment="Center">
+            <Border Background="{DynamicResource VaultColorAccentSoft}"
+                    BorderBrush="{DynamicResource VaultColorAccent}"
+                    BorderThickness="1"
+                    Padding="9,5"
+                    HorizontalAlignment="Left">
+              <TextBlock Text="APPLICATION LOCKED"
+                         Foreground="{DynamicResource VaultColorAccentStrong}"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         FontWeight="Bold" />
+            </Border>
+            <TextBlock Text="Unlock this installation"
+                       FontSize="{StaticResource VaultFontSize24}"
+                       FontWeight="Bold"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="{Binding UnlockMessage}"
+                       TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite" />
+            <Border Background="{DynamicResource VaultColorSurfaceAlt}"
+                    BorderBrush="{DynamicResource VaultColorLine}"
+                    BorderThickness="1"
+                    Padding="12">
+              <TextBlock Text="{Binding UnlockRecovery}"
+                         TextWrapping="Wrap" />
+            </Border>
+            <Button Classes="primary"
+                    Content="Verify and continue"
+                    Command="{Binding InitializeCommand}"
+                    HorizontalAlignment="Left"
+                    AutomationProperties.Name="Verify and unlock Vault Prospector" />
+            <TextBlock Text="Windows controls the verification prompt. Vault Prospector never receives your Windows password, PIN, face, or fingerprint."
+                       TextWrapping="Wrap"
+                       FontSize="{StaticResource VaultFontSize11}"
+                       Opacity="0.72" />
+          </StackPanel>
+        </Border>
+      </Grid>
     </Border>
 
     <Border Grid.Row="2"
@@ -94,10 +234,12 @@
 
     <TabControl x:Name="MainTabs"
                 Grid.Row="2"
-                Margin="18"
+                Classes="product-shell"
+                TabStripPlacement="Left"
+                Margin="18,14"
                 IsVisible="{Binding IsApplicationReady}"
                 SelectedIndex="{Binding SelectedMainTabIndex}">
-      <TabItem Header="Search">
+      <TabItem Header="Find secrets">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Grid RowDefinitions="Auto,*,Auto" Margin="4,14,4,4">
           <Border Classes="card">
@@ -117,9 +259,32 @@
                 <CheckBox Content="Recent first" IsChecked="{Binding RecentlyAccessedFirst}" Margin="0,0,14,6" />
               </WrapPanel>
               <Grid x:Name="SearchFilterGrid" ColumnDefinitions="*,*,*" ColumnSpacing="10" RowSpacing="8">
-                <TextBox x:Name="TenantFilterTextBox" PlaceholderText="Tenant ID contains…" Text="{Binding TenantFilter}" AutomationProperties.Name="Tenant filter" />
-                <TextBox x:Name="SubscriptionFilterTextBox" Grid.Column="1" PlaceholderText="Subscription ID contains…" Text="{Binding SubscriptionFilter}" AutomationProperties.Name="Subscription filter" />
-                <TextBox x:Name="VaultFilterTextBox" Grid.Column="2" PlaceholderText="Vault name contains…" Text="{Binding VaultFilter}" AutomationProperties.Name="Vault name filter" />
+                <ComboBox x:Name="TenantFilterComboBox"
+                          ItemsSource="{Binding TenantFilterOptions}"
+                          SelectedItem="{Binding SelectedTenantFilterOption}"
+                          AutomationProperties.Name="Tenant filter">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox x:Name="SubscriptionFilterComboBox"
+                          Grid.Column="1"
+                          ItemsSource="{Binding SubscriptionFilterOptions}"
+                          SelectedItem="{Binding SelectedSubscriptionFilterOption}"
+                          AutomationProperties.Name="Subscription filter">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox x:Name="VaultFilterComboBox"
+                          Grid.Column="2"
+                          ItemsSource="{Binding VaultFilterOptions}"
+                          SelectedItem="{Binding SelectedVaultFilterOption}"
+                          AutomationProperties.Name="Vault filter">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
               </Grid>
             </StackPanel>
           </Border>
@@ -179,7 +344,7 @@
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Identities">
+      <TabItem Header="Connections">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Grid x:Name="IdentityGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
           <Border Classes="card">
@@ -208,6 +373,35 @@
                 <Button Content="Revoke local access" Command="{Binding RevokeIdentityAccessCommand}" Margin="0,0,8,8" />
                 <Button Content="Remove identity" Command="{Binding RemoveIdentityCommand}" Margin="0,0,8,8" />
               </WrapPanel>
+              <Border IsVisible="{Binding HasSyncErrors}"
+                      Background="#FFF0D8"
+                      BorderBrush="#D49342"
+                      BorderThickness="1"
+                      CornerRadius="6"
+                      Padding="12"
+                      AutomationProperties.Name="Actionable isolated synchronization errors"
+                      AutomationProperties.LiveSetting="Polite">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="{Binding SyncErrors.Count, StringFormat={}{0} synchronized scopes need attention}"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="Usable results were preserved. Correct only the affected scope, then retry synchronization."
+                             TextWrapping="Wrap" />
+                  <ListBox ItemsSource="{Binding SyncErrors}"
+                           MaxHeight="220"
+                           AutomationProperties.Name="Synchronization error details">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:SyncErrorRow">
+                        <StackPanel Margin="4,6" Spacing="2">
+                          <TextBlock Text="{Binding Scope}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Category}" Opacity="0.75" />
+                          <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Recovery}" TextWrapping="Wrap" FontWeight="SemiBold" />
+                        </StackPanel>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </StackPanel>
+              </Border>
               <Border IsVisible="{Binding SelectedIdentitySupportsCredentialRotation}"
                       BorderBrush="#344B43"
                       BorderThickness="1"
@@ -308,7 +502,12 @@
           </Border>
           <Border x:Name="ConnectIdentityCard" Grid.Column="1" Classes="card">
             <StackPanel Spacing="10">
-              <Border IsVisible="{Binding IsFirstRun}" Background="#123F36" BorderBrush="#2D8A76" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,6">
+              <Border IsVisible="{Binding IsFirstRun}"
+                      Background="{DynamicResource VaultColorHeader}"
+                      BorderBrush="{DynamicResource VaultColorAccent}"
+                      BorderThickness="1"
+                      Padding="14"
+                      Margin="0,0,0,6">
                 <StackPanel Spacing="5">
                   <TextBlock Text="Set up Vault Prospector" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Foreground="White" />
                   <TextBlock Text="1. Local unlock is complete. Windows verified you so Vault Prospector can open its encrypted local data. This is separate from Azure sign-in." TextWrapping="Wrap" Foreground="White" />
@@ -376,10 +575,18 @@
 
       <TabItem Header="Administration">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-          <Grid ColumnDefinitions="1*,1*" Margin="4,14" ColumnSpacing="14">
+          <Grid x:Name="AdministrationGrid"
+                ColumnDefinitions="1*,1*"
+                RowDefinitions="*"
+                Margin="4,14"
+                ColumnSpacing="14"
+                RowSpacing="14">
             <Border Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Text="Discover workload identities" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
+                <TextBlock Text="A workload identity is a non-human Azure identity used by an application, automation job, or Azure resource. This page helps an administrator inspect eligible customer-managed identities; it does not change Azure."
+                           TextWrapping="Wrap"
+                           FontWeight="SemiBold" />
                 <TextBlock Text="Select an enabled interactive identity on the Identities tab. Discovery uses only that explicit account; it never inherits Azure CLI, PowerShell, IDE, or terminal context." TextWrapping="Wrap" Opacity="0.75" />
                 <Button Content="Authorize Microsoft Graph directory read"
                         Command="{Binding AuthorizeDirectoryReadCommand}"
@@ -402,12 +609,21 @@
                           Command="{Binding DiscoverServicePrincipalsCommand}"
                           Margin="0,0,8,8" />
                 </WrapPanel>
+                <TextBlock Text="Customer-manageable candidates are shown by default. Microsoft first-party and infrastructure principals are excluded from this list."
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
                 <Button Content="Assess selected identity permissions"
                         Command="{Binding AssessWorkloadIdentityPermissionsCommand}"
                         HorizontalAlignment="Left"
                         AutomationProperties.Name="Assess selected workload identity permissions at exact Key Vault" />
                 <TextBlock Text="Assessment is read-only. It evaluates the selected administrator at exact resources and the workload identity's observable RBAC grants, inheritance, deny assignments, and conditions. Conditional or incomplete evidence never appears as allowed." TextWrapping="Wrap" Opacity="0.75" />
                 <TextBlock Text="Visible workload identities" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" />
+                <TextBox Text="{Binding WorkloadIdentitySearchText}"
+                         PlaceholderText="Filter by name, type, client ID, or principal ID"
+                         AutomationProperties.Name="Filter eligible workload identities" />
+                <TextBlock Text="{Binding WorkloadIdentityFilterStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
                 <ListBox ItemsSource="{Binding WorkloadIdentityCandidates}"
                          SelectedItem="{Binding SelectedWorkloadIdentityCandidate}"
                          MinHeight="360"
@@ -431,7 +647,37 @@
               </StackPanel>
             </Border>
 
-            <Border Grid.Column="1" Classes="card">
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Setup check"
+                           FontSize="{StaticResource VaultFontSize20}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="1. Browser extension"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserExtensionStatus}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="2. Native host"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserNativeHostStatus}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="3. Desktop broker"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserBrokerStatus}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="4. Exact destination policy"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserDestinationPolicyStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <TextBlock Text="Focus a username, current-password, or one-time-code field on an HTTPS page, then choose the Vault Prospector extension. A successful click fills this checklist and opens the guided mapping below."
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
+              </StackPanel>
+            </Border>
+
+            <Border x:Name="AdministrationPreviewCard"
+                    Grid.Column="1"
+                    Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Text="Preview workload provisioning" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
                 <Border Background="#3A2510" BorderBrush="#C98A2E" BorderThickness="1" CornerRadius="6" Padding="10">
@@ -475,6 +721,9 @@
         <Grid x:Name="WorkspaceGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
           <Border Classes="card">
             <StackPanel Spacing="10"><TextBlock Text="Workspaces" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
+              <TextBlock Text="A workspace is a local view that groups customer, project, or environment sources. It does not create, copy, move, or change anything in Azure."
+                         TextWrapping="Wrap"
+                         FontWeight="SemiBold" />
               <ListBox ItemsSource="{Binding Workspaces}" SelectedItem="{Binding SelectedWorkspace}" MinHeight="300" AutomationProperties.Name="Vault Prospector workspaces"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Margin="6" /></DataTemplate></ListBox.ItemTemplate></ListBox>
               <WrapPanel>
                 <Button Content="Add selected vault" Command="{Binding AddSelectedVaultToWorkspaceCommand}" Margin="0,0,8,8" />
@@ -519,7 +768,7 @@
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Browser">
+      <TabItem Header="Browser fill">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
           <StackPanel Margin="4,14" Spacing="14">
@@ -575,7 +824,11 @@
               </StackPanel>
             </Border>
 
-            <Grid ColumnDefinitions="1*,1*" ColumnSpacing="14">
+            <Grid x:Name="BrowserMappingGrid"
+                  ColumnDefinitions="1*,1*"
+                  RowDefinitions="*"
+                  ColumnSpacing="14"
+                  RowSpacing="14">
               <Border Classes="card">
                 <StackPanel Spacing="10">
                   <TextBlock Text="Origin-to-secret mappings"
@@ -606,33 +859,46 @@
                 </StackPanel>
               </Border>
 
-              <Border Grid.Column="1" Classes="card">
+              <Border x:Name="BrowserGuidedMappingCard"
+                      Grid.Column="1"
+                      Classes="card">
                 <StackPanel Spacing="10">
-                  <TextBlock Text="Map the selected secret"
+                  <TextBlock Text="Guided destination mapping"
                              FontSize="{StaticResource VaultFontSize20}"
                              FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding BrowserCapturedDestination}"
+                             TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding BrowserDestinationPolicyStatus}"
+                             TextWrapping="Wrap"
+                             FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding BrowserMappingReadinessStatus}"
+                             TextWrapping="Wrap" />
+                  <TextBlock Text="Eligible secret and identity" />
+                  <ComboBox ItemsSource="{Binding BrowserEligibleSources}"
+                            SelectedItem="{Binding SelectedBrowserSourceOption}"
+                            IsEnabled="{Binding HasCapturedBrowserDestination}"
+                            AutomationProperties.Name="Eligible secret and identity for captured browser destination">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Summary}"
+                                   TextWrapping="Wrap" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
                   <TextBlock Text="{Binding BrowserSelectedSource}"
                              TextWrapping="Wrap" />
-                  <TextBlock Text="Top-frame HTTPS origin" />
-                  <TextBox Text="{Binding BrowserTopOrigin}"
-                           PlaceholderText="https://login.example.com"
-                           AutomationProperties.Name="Approved browser top-frame HTTPS origin" />
-                  <TextBlock Text="Target-frame HTTPS origin" />
-                  <TextBox Text="{Binding BrowserFrameOrigin}"
-                           PlaceholderText="https://login.example.com"
-                           AutomationProperties.Name="Approved browser target-frame HTTPS origin" />
-                  <TextBlock Text="Field purpose" />
-                  <ComboBox ItemsSource="{Binding BrowserFieldPurposes}"
-                            SelectedItem="{Binding SelectedBrowserFieldPurpose}"
-                            AutomationProperties.Name="Approved browser field purpose" />
                   <CheckBox Content="Enable this exact mapping"
                             IsChecked="{Binding BrowserMappingEnabled}"
+                            IsEnabled="{Binding HasCapturedBrowserDestination}"
                             AutomationProperties.Name="Enable this exact browser mapping" />
                   <Button Classes="primary"
-                          Content="Save selected secret mapping"
+                          Content="Create mapping for captured destination"
                           Command="{Binding SaveBrowserMappingCommand}"
-                          AutomationProperties.Name="Save the selected secret and identity as this exact browser mapping"
+                          AutomationProperties.Name="Create or update the selected source mapping for the browser-captured destination"
                           HorizontalAlignment="Left" />
+                  <TextBlock Text="You never type or copy an origin. Saving does not retrieve a value. Return to the same browser field and invoke the extension again for the one-time fill."
+                             TextWrapping="Wrap"
+                             Opacity="0.75" />
                 </StackPanel>
               </Border>
             </Grid>
@@ -887,9 +1153,172 @@
         </ScrollViewer>
       </TabItem>
 
+      <TabItem Header="Activity &amp; support">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+          <Grid x:Name="ActivitySupportGrid"
+                ColumnDefinitions="1.15*,0.85*"
+                RowDefinitions="*"
+                Margin="4,14"
+                ColumnSpacing="14"
+                RowSpacing="14">
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Privacy-safe diagnostics"
+                           FontSize="{StaticResource VaultFontSize20}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="Vault Prospector records event types, timestamps, pseudonymous identifiers, counts, and safe status categories. It does not record secret values, access tokens, user names, vault names, or object names."
+                           TextWrapping="Wrap" />
+                <TextBlock Text="External diagnostic log"
+                           FontWeight="SemiBold" />
+                <TextBox Text="{Binding DiagnosticLogPath, Mode=OneWay}"
+                         IsReadOnly="True"
+                         TextWrapping="Wrap"
+                         AutomationProperties.Name="External privacy-safe diagnostic log path" />
+                <TextBlock Text="This path remains available when the application cannot open. Support may ask you to collect it using the documented procedure."
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
+                <Button Content="Refresh diagnostics"
+                        Command="{Binding RefreshDiagnosticsCommand}"
+                        HorizontalAlignment="Left"
+                        AutomationProperties.Name="Refresh recent privacy-safe diagnostic events" />
+                <TextBox Text="{Binding DiagnosticSearchText}"
+                         PlaceholderText="Filter by category, safe scope, status, or recovery action"
+                         AutomationProperties.Name="Filter recent privacy-safe diagnostic events" />
+                <TextBlock Text="{Binding DiagnosticViewerStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <ListBox ItemsSource="{Binding DiagnosticEvents}"
+                         MinHeight="220"
+                         MaxHeight="440"
+                         AutomationProperties.Name="Recent privacy-safe diagnostic events">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DiagnosticEventRow">
+                      <Border BorderBrush="{DynamicResource VaultColorLine}"
+                              BorderThickness="0,0,0,1"
+                              Padding="4,8">
+                        <StackPanel Spacing="3">
+                          <TextBlock Text="{Binding Category}"
+                                     FontWeight="SemiBold" />
+                          <TextBlock Text="{Binding Timestamp}"
+                                     FontSize="{StaticResource VaultFontSize11}" />
+                          <TextBlock Text="{Binding Scope}"
+                                     TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Summary}"
+                                     TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Recovery}"
+                                     TextWrapping="Wrap"
+                                     Opacity="0.75" />
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </StackPanel>
+            </Border>
+            <Border x:Name="SupportBundleCard"
+                    Grid.Column="1"
+                    Classes="card">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Create a support bundle"
+                           FontSize="{StaticResource VaultFontSize20}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="The bundle contains a manifest and at most the latest 4 MiB of the already-redacted diagnostic log. It excludes settings, databases, tokens, cached values, identities, vault names, and object names."
+                           TextWrapping="Wrap" />
+                <Button Classes="primary"
+                        Content="Create support bundle"
+                        Command="{Binding CreateSupportBundleCommand}"
+                        HorizontalAlignment="Left"
+                        AutomationProperties.Name="Create a privacy-safe local support bundle" />
+                <TextBlock Text="{Binding SupportBundleStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <TextBox Text="{Binding LatestSupportBundlePath, Mode=OneWay}"
+                         IsReadOnly="True"
+                         TextWrapping="Wrap"
+                         AutomationProperties.Name="Latest local support bundle path" />
+                <TextBlock Text="Nothing is uploaded automatically. Inspect the ZIP before sharing it."
+                           TextWrapping="Wrap"
+                           FontWeight="SemiBold" />
+              </StackPanel>
+            </Border>
+          </Grid>
+        </ScrollViewer>
+      </TabItem>
+
       <TabItem Header="Settings">
         <ScrollViewer Margin="4,14"><Border Classes="card" MaxWidth="700" HorizontalAlignment="Left">
           <StackPanel Spacing="12">
+            <TextBlock Text="Product updates"
+                       FontSize="{StaticResource VaultFontSize22}"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="Updates are user controlled. Vault Prospector reads trusted release metadata, then downloads and verifies the exact Windows installer before Windows Installer can be started."
+                       TextWrapping="Wrap"
+                       Opacity="0.8" />
+            <Grid ColumnDefinitions="Auto,*"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="14"
+                  RowSpacing="6">
+              <TextBlock Grid.Row="0"
+                         Grid.Column="0"
+                         Text="Installed"
+                         FontWeight="SemiBold" />
+              <TextBlock Grid.Row="0"
+                         Grid.Column="1"
+                         Text="{Binding UpdateCurrentVersion}"
+                         AutomationProperties.Name="Installed Vault Prospector version" />
+              <TextBlock Grid.Row="1"
+                         Grid.Column="0"
+                         Text="Latest"
+                         FontWeight="SemiBold" />
+              <TextBlock Grid.Row="1"
+                         Grid.Column="1"
+                         Text="{Binding UpdateLatestVersion}"
+                         AutomationProperties.Name="Latest trusted Vault Prospector version" />
+            </Grid>
+            <TextBlock Text="{Binding UpdateStatus}"
+                       TextWrapping="Wrap"
+                       AutomationProperties.Name="Product update status"
+                       AutomationProperties.LiveSetting="Polite" />
+            <Border Background="{DynamicResource VaultColorSurfaceAlt}"
+                    BorderBrush="{DynamicResource VaultColorLine}"
+                    BorderThickness="1"
+                    Padding="12">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Release notes"
+                           FontWeight="SemiBold" />
+                <ScrollViewer MaxHeight="180"
+                              VerticalScrollBarVisibility="Auto">
+                  <TextBlock Text="{Binding UpdateReleaseNotes}"
+                             TextWrapping="Wrap"
+                             AutomationProperties.Name="Trusted release notes" />
+                </ScrollViewer>
+              </StackPanel>
+            </Border>
+            <TextBlock Text="{Binding UpdateVerificationStatus}"
+                       TextWrapping="Wrap"
+                       AutomationProperties.Name="Update package verification status"
+                       AutomationProperties.LiveSetting="Polite" />
+            <WrapPanel>
+              <Button Content="Check for updates"
+                      Command="{Binding CheckForUpdatesCommand}"
+                      Margin="0,0,8,8"
+                      AutomationProperties.Name="Check for trusted Vault Prospector updates" />
+              <Button Content="Download and verify"
+                      Command="{Binding DownloadUpdateCommand}"
+                      Margin="0,0,8,8"
+                      AutomationProperties.Name="Download and verify the selected Vault Prospector update" />
+              <Button Classes="primary"
+                      Content="Launch verified installer"
+                      Command="{Binding LaunchVerifiedUpdateCommand}"
+                      Margin="0,0,8,8"
+                      AutomationProperties.Name="Launch the verified Vault Prospector Windows installer" />
+            </WrapPanel>
+            <TextBlock Text="The same Windows account retains encrypted local settings and metadata during an in-place upgrade or reinstall. Moving data to another account or device is unsupported. Windows may request administrator approval; the application locks and exits only after a verified installer starts."
+                       TextWrapping="Wrap"
+                       FontSize="{StaticResource VaultFontSize11}"
+                       Opacity="0.72" />
+            <Separator Margin="0,8" />
             <TextBlock Text="Security settings" FontSize="{StaticResource VaultFontSize22}" FontWeight="SemiBold" />
             <Border Background="#10243A"
                     BorderBrush="#4B84B8"
@@ -908,10 +1337,19 @@
                            Opacity="0.75" />
               </StackPanel>
             </Border>
+            <TextBlock Text="Consecutive Reveal verification"
+                       FontWeight="SemiBold" />
+            <ComboBox ItemsSource="{Binding RevealVerificationGraceOptions}"
+                      SelectedItem="{Binding SelectedRevealVerificationGrace}"
+                      AutomationProperties.Name="Consecutive reveal verification grace period" />
+            <TextBlock Text="{Binding RevealVerificationGraceStatus}"
+                       TextWrapping="Wrap"
+                       Opacity="0.75"
+                       AutomationProperties.LiveSetting="Polite" />
             <CheckBox Content="Enable encrypted offline value cache"
                       IsChecked="{Binding OfflineCacheEnabled}"
                       IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}" />
-            <TextBlock Text="Offline values are disabled by default, encrypted separately, and require Windows Hello." TextWrapping="Wrap" Opacity="0.75" />
+            <TextBlock Text="Offline values are disabled by default, encrypted separately, and always require independent Windows verification. Reveal grace never applies to cache, copy, recovery, browser fill, or administration." TextWrapping="Wrap" Opacity="0.75" />
             <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}" AutomationProperties.Name="Maximum offline cache lifetime in hours" />
             <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" IsEnabled="{Binding IsEnterpriseClipboardAllowed}" AutomationProperties.Name="Clipboard clear delay in seconds" />
             <TextBlock Text="When the main window closes" FontWeight="SemiBold" />
@@ -921,6 +1359,12 @@
             <CheckBox Content="Allow metadata-only background synchronization every 15 minutes"
                       IsChecked="{Binding BackgroundMetadataSyncEnabled}"
                       AutomationProperties.Name="Allow metadata-only synchronization while locked in notification area" />
+            <CheckBox Content="Hide in the notification area when minimized"
+                      IsChecked="{Binding MinimizeToNotificationArea}"
+                      AutomationProperties.Name="Hide Vault Prospector in the notification area when minimized" />
+            <TextBlock Text="Minimizing immediately hides sensitive presentation, cancels unsafe foreground work, removes the taskbar entry, and requires secure unlock after restoration."
+                       TextWrapping="Wrap"
+                       Opacity="0.75" />
             <TextBlock Text="Background synchronization is opt-in, never retrieves values, runs only while the window is hidden, network is available, and Windows confirms external power, and stops or reports interaction-required when Azure cannot authenticate silently." TextWrapping="Wrap" Opacity="0.75" />
             <WrapPanel><Button Classes="primary" Content="Save settings" Command="{Binding SaveSettingsCommand}" Margin="0,0,8,8" /><Button Content="Purge selected vault" Command="{Binding PurgeSelectedVaultCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge selected workspace" Command="{Binding PurgeSelectedWorkspaceCacheCommand}" Margin="0,0,8,8" /><Button Content="Purge all offline values" Command="{Binding PurgeAllCachedValuesCommand}" Margin="0,0,8,8" /></WrapPanel>
             <Separator Margin="0,8" />
@@ -974,8 +1418,15 @@
       </TabItem>
     </TabControl>
 
-    <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="18,10">
-      <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" AutomationProperties.LiveSetting="Polite" /><ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" AutomationProperties.Name="Operation in progress" /></Grid>
+    <Border Grid.Row="3" Background="{DynamicResource VaultColorSurface}" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="18,10">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+        <TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" AutomationProperties.LiveSetting="Polite" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsBusy}">
+          <TextBlock Text="{Binding ActiveOperationText}" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" />
+          <ProgressBar IsIndeterminate="True" Width="120" AutomationProperties.Name="Operation in progress" />
+        </StackPanel>
+        <Button Grid.Column="2" Content="Cancel active operation" Command="{Binding CancelOperationCommand}" IsVisible="{Binding IsBusy}" AutomationProperties.Name="Cancel the active operation" />
+      </Grid>
     </Border>
   </Grid>
 </Window>
