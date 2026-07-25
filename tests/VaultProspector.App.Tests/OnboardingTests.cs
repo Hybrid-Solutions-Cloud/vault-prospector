@@ -12,6 +12,14 @@ public sealed class OnboardingTests : IDisposable
     private readonly string _directory = Path.Combine(Path.GetTempPath(), $"vault-prospector-app-tests-{Guid.NewGuid():N}");
 
     [Fact]
+    public void CyberArkRoadmapFeatureIsNotVisibleInTheWindowsRelease()
+    {
+        var viewModel = CreateViewModel();
+
+        Assert.False(viewModel.IsCyberArkPreviewEnabled);
+    }
+
+    [Fact]
     public async Task MissingSettingsUseProductRegistrationWithoutCustomMode()
     {
         var store = new AppSettingsStore(Path.Combine(_directory, "settings.json"));

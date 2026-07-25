@@ -18,19 +18,22 @@ is the current unsigned Windows desktop Preview for non-production evaluation. I
 - Local-data recovery, rotation, purge, and fail-closed corruption/tamper handling.
 - Read-only workload authorization assessment and deterministic provisioning previews; this
   release does not execute identity, RBAC, or Key Vault writes.
-- Preview CyberArk Privilege Cloud metadata discovery and verified explicit retrieval with
-  separate DPAPI-protected provider credentials.
 - Preview browser-fill/native-host boundaries with explicit origin and field mappings, one-time
   desktop confirmation, and no browser credential-database access.
 - Machine-managed enterprise policy for allowed tenants, providers, identity types, clipboard,
   and offline-cache behavior, including packaged ADMX/ADML templates.
-- Native iOS and Android prototypes and fail-closed credential/autofill extension boundaries in
-  source and CI. Mobile binaries are not distributed by this Windows release.
-- ADO CI with 370 Windows/shared tests, 44 managed mobile tests, native iOS simulator builds,
-  Android Release App Bundle packaging, dependency and secret scanning, package validation, and
-  operational/legal/enterprise gates.
+- GitHub Actions validation on the HCS Azure runner, with Windows package validation routed through
+  the ephemeral HCS Tier-4 Windows build VM.
 - Four release packages, adjacent SHA-256 files, SPDX SBOM, and four Key Vault-backed Cosign
   verification bundles.
+
+## Future roadmap source not included in the Windows release contract
+
+- CyberArk Privilege Cloud source and automated tests remain in the private repository for future
+  development, but the CyberArk UI is disabled in the Windows release. No live-tenant support or
+  GA evidence is claimed.
+- Native iOS and Android prototypes remain future, independently gated products. Mobile binaries,
+  signing, and store acceptance do not block the Windows release.
 
 ## Distribution status
 
@@ -46,16 +49,14 @@ is the current unsigned Windows desktop Preview for non-production evaluation. I
 - Windows binaries are not Authenticode-signed. Windows displays **Unknown Publisher**. Package
   hashes, SBOM, and Cosign bundles provide integrity/provenance evidence but do not replace trusted
   Windows code signing.
-- Use only synthetic or non-production Azure and CyberArk resources. Governed live-provider,
-  multi-tenant, Conditional Access, permission-failure, rotation, and revocation matrices remain
-  open.
+- Use only synthetic or non-production Azure resources. Governed live Azure, multi-tenant,
+  Conditional Access, permission-failure, rotation, and revocation matrices remain open.
 - Independent security, privacy/legal, accessibility, and representative usability approval are
   not complete.
 - Browser integrations are validation-preview features, not store-approved production
   extensions. They do not import, export, scrape, or synchronize browser credentials.
-- The iOS and Android applications are prototypes only. Physical-device security/accessibility,
-  protected signing, TestFlight/Play closed testing, store declarations, and store acceptance
-  remain open.
+- The iOS, Android, and CyberArk implementations are future roadmap work and are not part of this
+  release's acceptance boundary.
 - There is no supported cross-device DPAPI key migration. Reconnect identities and resynchronize
   from Azure on a replacement Windows profile or device.
 - Package-manager availability follows external moderation and can lag the direct release.
@@ -63,5 +64,5 @@ is the current unsigned Windows desktop Preview for non-production evaluation. I
   credentials, tokens, secret values, or sensitive identifiers.
 
 The [release-readiness matrix](release-readiness.md) is authoritative for remaining Preview and GA
-gates. Azure and CyberArk remain their respective systems of record, and no release claim expands
-a user's existing authorization.
+gates. Azure remains the system of record, and no release claim expands a user's existing
+authorization.

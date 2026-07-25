@@ -1,25 +1,24 @@
-# Release and Artifact Verification
+# Release and artifact verification
 
-Stable and GA Windows releases require the one-time [Azure Artifact Signing setup](artifact-signing.md).
-The protected workflow may publish an explicitly labeled `vX.Y.Z-preview.N` evaluation release
-without Authenticode when signing is unavailable; all stable tags still fail closed.
+The free publicly trusted Windows channel is a
+[Microsoft Store–signed MSIX](artifact-signing.md). Direct MSI, portable ZIP, and pre-ingestion
+MSIX artifacts are unsigned and display **Unknown Publisher**. Their SHA-256 files, SPDX SBOM,
+immutable release location, and Sigstore bundles provide integrity and provenance, not Windows
+publisher trust.
 
 ## Release contents
 
 Each Windows release contains:
 
 - a Windows x64 MSI installer;
+- an unsigned MSIX for Microsoft Store ingestion;
 - a self-contained `win-x64` ZIP;
 - WinGet manifests and a Chocolatey `.nupkg`;
 - SHA-256 checksum files;
-- an SPDX JSON software bill of materials;
-- Sigstore bundles for the installer and packaged artifacts.
+- an SPDX JSON software bill of materials; and
+- Sigstore bundles for the packaged artifacts.
 
-Unsigned Preview evaluation candidates must carry checksums, an SPDX SBOM, HCS Key Vault-backed
-Cosign bundles, explicit Unknown Publisher guidance, and immutable provenance. Stable and GA
-candidates must additionally carry Windows Authenticode signatures with RFC 3161 timestamps.
-
-## Verify the checksum
+## Verify a checksum
 
 ```powershell
 $artifact = 'VaultProspector-0.2.0-preview.1-win-x64.msi'
@@ -28,37 +27,24 @@ $actual = (Get-FileHash $artifact -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($actual -ne $expected) { throw 'Checksum verification failed.' }
 ```
 
-## Verify the Sigstore bundle
+## Maintainer procedure
 
-Install Cosign, then run:
-
-```powershell
-$version = '<version>'
-cosign verify-blob `
-  --key release/vault-prospector-release-signing.pub `
-  --bundle "VaultProspector-$version-win-x64.msi.sigstore.json" `
-  "VaultProspector-$version-win-x64.msi"
-```
-
-The signing private key is non-exportable in `kv-hcs-vault-01`. Azure DevOps receives only
-key-scoped signing permission through the `HCS Platform Azure` service connection. The public key
-is committed at `release/vault-prospector-release-signing.pub`. Releases through
-`0.1.1-preview.1` predate this migration and retain their original GitHub OIDC verification
-instructions in their immutable release evidence.
-
-## Maintainer release procedure
-
-1. Confirm CI on `main` passes build, tests, formatting, .NET analyzer enforcement, dependency vulnerability auditing, and secret scanning.
+1. Confirm GitHub CI on HCS runners passes for `main`.
 2. Update release notes and version references.
-3. Create and push an annotated `vX.Y.Z` or `vX.Y.Z-preview.N` tag.
-4. The protected Azure DevOps release pipeline builds and tests on Windows, creates the MSI,
-   portable ZIP, WinGet manifests, Chocolatey package, SBOM, checksums, and Cosign bundles, then
-   creates the immutable public distribution release.
-5. Download the published assets and independently verify the checksum and Sigstore bundle.
-6. Publish the same immutable artifacts to the public distribution repository, then submit the generated manifests to WinGet and Chocolatey by following [Windows package distribution](package-distribution.md).
-7. Install the MSI on a clean supported Windows machine and complete the [release smoke-test checklist](release-checklist.md).
+3. Provision the ephemeral HCS Windows runner.
+4. Create and push an annotated `vX.Y.Z` or `vX.Y.Z-preview.N` tag.
+5. `.github/workflows/release.yml` rebuilds and tests the exact tag, creates packages, checksums,
+   SPDX SBOM, and Sigstore bundles, then publishes binaries only to
+   `Hybrid-Solutions-Cloud/vault-prospector-releases` using the HCS GitHub App.
+6. Clean up the ephemeral Windows runner.
+7. Independently verify the published assets and complete the
+   [release smoke-test checklist](release-checklist.md).
+8. For the trusted channel, rebuild with the exact Partner Center identity values, submit the MSIX,
+   and record Store certification and clean-machine install/upgrade evidence.
+9. Submit the immutable direct-download metadata to WinGet and Chocolatey as applicable.
 
-Rollback is performed by marking the release as withdrawn, documenting the reason, and directing users to the last verified release. Never replace assets under an existing version tag.
+Never replace assets under an existing version tag. Roll back by marking the release withdrawn,
+recording the reason, and directing users to the last verified release.
 
-Exact publication, failure recovery, package withdrawal, incident response, and credential rotation
-steps are maintained in the [Release operations and incident runbook](release-operations-runbook.md).
+Failure recovery, package withdrawal, incident response, and credential handling are maintained in
+the [release operations and incident runbook](release-operations-runbook.md).

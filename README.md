@@ -20,9 +20,9 @@ Vault Prospector is a local-first Windows desktop application for discovering an
   clipboard/offline-cache restrictions, packaged ADMX/ADML templates, and fail-closed enforcement.
 - Preview, fail-closed browser-fill source with explicit origin/field mappings, protected machine
   policy, one-time desktop confirmation, and fresh Windows verification.
-- Preview CyberArk Privilege Cloud source with separate profiles, safes, accounts, versions,
-  direct permission evidence, DPAPI-isolated credentials, metadata-only sync, and verified
-  reveal/copy.
+
+CyberArk and native mobile implementations remain unsupported future-roadmap source. They are not
+part of the current Windows release or its GA gate.
 
 Vault Prospector does not create Azure role assignments, rotate secrets, export keys or certificate private keys, share secrets, or send telemetry.
 
@@ -32,7 +32,8 @@ Vault Prospector does not create Azure role assignments, rotate secrets, export 
 
 1. Download the Windows x64 MSI and its `.sha256` file from the [public distribution releases](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases).
 2. Verify the checksum and Sigstore bundle by following [the release verification guide](docs/release.md).
-3. Run the MSI. It installs Vault Prospector for the computer and adds a Start menu shortcut.
+3. Run the MSI. Direct packages are currently unsigned and display **Unknown Publisher**. The
+   future free trusted channel is the Microsoft Store–signed MSIX.
 4. Open **Vault Prospector** from Start.
 5. On the **Identities** tab, keep the recommended Vault Prospector registration and select **Continue to Microsoft sign-in**. Use a custom public-client registration only when your organization requires one.
 6. Select the connected identity and choose **Sync selected**.

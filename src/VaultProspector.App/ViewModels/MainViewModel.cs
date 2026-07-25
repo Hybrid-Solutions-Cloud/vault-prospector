@@ -34,6 +34,9 @@ public sealed partial class MainViewModel(
         IdentityType.ServicePrincipal,
         IdentityType.FederatedServicePrincipal,
     ];
+    private readonly bool _isCyberArkPreviewEnabled =
+        AppContext.TryGetSwitch("VaultProspector.EnableCyberArkPreview", out var cyberArkPreviewEnabled) &&
+        cyberArkPreviewEnabled;
     private CancellationTokenSource? _activeOperation;
     private bool _isReloadingIdentities;
     private bool _managedIdentityHostSupported;
@@ -52,6 +55,7 @@ public sealed partial class MainViewModel(
     public IReadOnlyList<CloseBehavior> CloseBehaviors { get; } =
         [CloseBehavior.Ask, CloseBehavior.Exit, CloseBehavior.LockToNotificationArea];
     public string VersionLabel { get; } = $"Vault Prospector {GetVersion()}";
+    public bool IsCyberArkPreviewEnabled => _isCyberArkPreviewEnabled;
 
     [ObservableProperty] private IdentityType _selectedIdentityType = IdentityType.InteractiveUser;
     [ObservableProperty] private string _credentialData = string.Empty;

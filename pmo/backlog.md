@@ -27,14 +27,14 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | List existing managed identities/SPNs | Included in 0.2 Preview; validation open | Exact-subscription managed-identity and explicit-consent Graph service-principal discovery, user workflow, bounded pagination, honest permission distinctions | Effective inherited/deny/conditional RBAC analysis, live validation, independent review |
 | Create a managed identity/SPN during setup | Preview implemented locally | User-reachable deterministic non-mutating managed-identity and service-principal plans with exact optional Key Vault/role scope; no execution command | Security gate, fresh write authorization, confirmation, encrypted audit, rollback, governed creation/live tests |
 | Discover accessible Key Vaults | Included in 0.2 Preview; validation open | Selected identity enumerates visible resources; explicit subscription/vault scope and per-vault observed permission display are user-accessible | Live human/workload Azure permission matrix and independent validation |
-| Machine-managed enterprise access policy | Implemented locally, validation open | HKLM/ADMX policy for allowed tenants, providers, and identity types plus clipboard/offline-cache boundaries; service-layer enforcement, safe Settings status, package templates, and automated fail-closed tests | Governed Group Policy/Intune deployment, live Azure/CyberArk administrator matrix, diagnostics review, independent review, exact signed artifact |
+| Machine-managed enterprise access policy | Implemented locally, validation open | HKLM/ADMX policy for allowed tenants, providers, and identity types plus clipboard/offline-cache boundaries; service-layer enforcement, safe Settings status, package templates, and automated fail-closed tests | Governed Group Policy/Intune deployment, live Azure administrator matrix, diagnostics review, independent review, exact Store candidate |
 | Read-only default | Implemented | No Key Vault mutation or Azure role-assignment operations exist; UI states observed list access, unprobed value read, and policy-disabled writes | Independent policy/security validation |
 | Optional governed write mode | Not implemented | Requirements only | All mutation commands, policy/verification/authorization/audit controls |
 | Notification-area/background operation | Included in 0.2 Preview; validation open | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power | Live tray/sleep/session-lock/network/token-expiry matrix and independent validation |
 | Password-manager UI research/redesign | In progress locally | Primary-source research, four interactive concepts, sixteen automated concept/task states, narrow-viewport and console validation | Participant usability sessions, concept selection, production implementation, accessibility validation |
 | Browser autofill/password-vault integration | Implemented locally, validation open | Toolbar-only Chromium/Firefox extension source, strict protocol, authenticated native host/broker, exact mappings, protected machine policy, desktop confirmation, fresh Windows verification, audit, MSI registration, tests | Signed extension distribution, independent review, live installed-browser/compromise/revocation/usability/AT evidence |
-| CyberArk source | Implemented and merged, validation open | Privilege Cloud ADR/threat model, isolated provider and DPAPI credential store, SQLCipher metadata, verified retrieval, fail-closed local revoke/remove controls, explicit UI, automated tests, exact-commit CI | Governed live tenant, independent review, signed exact-artifact validation |
-| iPhone/iOS and Android/Google apps | Implemented and merged, validation open | Shared search/retrieval UI, native Keychain/Keystore verification and lifecycle controls, fail-closed native autofill prototypes, locked builds, tests, threat model, and CI | Enabled live autofill, physical-device/accessibility matrices, signing, TestFlight/closed test, privacy/data-safety and store acceptance |
+| CyberArk source | Future roadmap; unsupported source prototype | Privilege Cloud ADR/threat model, isolated provider and automated tests remain in private source; the Windows release UI is disabled | Governed live tenant, product approval, independent review, and separate release evidence |
+| iPhone/iOS and Android/Google apps | Future roadmap; source prototypes only | Shared search/retrieval and native-security source remains in the private repository | Separate mobile release plan, physical-device/accessibility matrices, signing, closed testing, privacy/data-safety, and store acceptance |
 
 ## Story status and plan mapping
 
@@ -68,7 +68,7 @@ exit criteria.
 | 7.2 | Security policy | Delivered as policy/process | Phases 14 and 15 operation |
 | 7.3 | Dependency scanning | Delivered | Phase 14 continuous operation |
 | 7.4 | Schema upgrade validation | In progress locally | Phases 3 and 7 |
-| 7.5 | Authenticode signing | Blocked externally | Phase 14 |
+| 7.5 | Free trusted Windows distribution | In progress; MSIX implemented | Phase 14 |
 | 7.6 | Complete workspace resource assignment | Included in 0.2 Preview; validation open | Phase 7 validation |
 | 8.1 | Apple platform security validation | Implemented and merged; live/independent validation open | Phase 13 |
 | 8.2 | iPhone/iOS application and App Store release | Implemented and merged; signing/store gates open | Phase 13 |
@@ -87,7 +87,7 @@ exit criteria.
 | 12.1 | Research password-manager interface patterns | In progress; research and 4 concepts complete | Phase 9 participant validation |
 | 13.1 | Browser extension and native messaging feasibility | Implemented locally, validation open | Phase 11 |
 | 13.2 | Browser password-vault interoperability | Research complete; private-store access prohibited | Phase 11 |
-| 14.1 | CyberArk source integration | Implemented and merged, validation open | Phase 12 |
+| 14.1 | CyberArk source integration | Future roadmap; unsupported source prototype | Future provider roadmap |
 | 15.1 | Consent-based Preview feedback | Delivered as process | Phase 15 operation |
 | 15.2 | Evidence-based GA feedback gate | In progress | Phase 15 |
 | 15.3 | Legal/privacy release controls and approval | In progress | Phases 14 and 15 |
@@ -101,7 +101,7 @@ not implementation.
 
 | ID | Current source or governing evidence | Acceptance proof required |
 | --- | --- | --- |
-| 1.1 | `VaultProspector.sln`, `Directory.Build.props`, `scripts/Build.ps1`, `.ado/ci.yml` | Locked restore, formatting, dependency, supported-platform build, and all-project test gates on the exact release source. |
+| 1.1 | `VaultProspector.sln`, `Directory.Build.props`, `scripts/Build.ps1`, `.github/workflows/ci.yml` | Locked restore, formatting, dependency, supported-platform build, and all-project test gates on the exact release source. |
 | 1.2 | `src/VaultProspector.App/App.axaml.cs`, `Views/MainWindow.axaml` | App/UI automation plus keyboard, scaling, contrast, screen-reader, lifecycle, and exact-candidate evidence. |
 | 2.1 | `MsalIdentityProvider`, `IdentityService`, `MainViewModel` | Automated authentication boundaries and live tenant/consent/MFA/Conditional Access/cancel matrix. |
 | 2.2 | App-owned MSAL account/cache implementation and identity UI | Multi-account/multi-tenant isolation, restart, removal, and live tool-context independence. |
@@ -146,8 +146,8 @@ not implementation.
 | 13.2 | Feasibility spike documents supported public extension/native-messaging APIs and prohibits browser credential-database access; no import/export/sync source exists | Explicit-consent product decision for any future supported handoff, live tests, privacy review, and browser distribution approval. |
 | 14.1 | ADR-0015, CyberArk threat model, dedicated provider/contracts/UI, DPAPI credential store, SQLCipher schema v6, verified retrieval, fail-closed local revoke/remove, and value-free audit | Automated provider/application/platform/persistence/accessibility evidence; governed live tenant permission/failure/audit matrix; independent review; exact signed release. |
 | 15.1 | `preview-feedback.md`, privacy notice, HCS-governed intake and triage process | Sanitized operational records proving notice, consent, privacy boundary, response targets, and escalation. |
-| 15.2 | Readiness G-01 thresholds and go/no-go process | Required evaluator/task/build/install/upgrade coverage, completion rate, blocker closure, 14-day stability, named approval. |
-| 15.3 | Support lifecycle, operations runbook, readiness manifest/validator, Dependabot, scheduled monitor | Named backup operator, retained successful hosted runs, incident/withdrawal/recovery exercise, Authenticode lifecycle approval, and exact-candidate review. |
+| 15.2 | Readiness G-01 evidence and go/no-go process | Required build/install/upgrade coverage, report disposition, blocker closure, exact-candidate validation, and named approval. |
+| 15.3 | Support lifecycle, operations runbook, readiness manifest/validator, Dependabot, scheduled monitor | Named backup operator, retained successful hosted runs, incident/withdrawal/recovery exercise, Store trust evidence, and exact-candidate review. |
 | 15.4 | Deterministic lock inventory/notices, technical privacy statement, package/store metadata, CI drift gate, and packaged disclosure files | Exact signed-candidate SBOM/file and upstream-obligation reconciliation, approved public privacy URL and store declarations, diagnostics-package license disposition, and named legal/privacy approval. |
 
 ## Open implementation and release-gate traceability
@@ -176,7 +176,7 @@ Acceptance criteria:
 Source evidence: `VaultProspector.sln`, `src/VaultProspector.App/VaultProspector.App.csproj`
 
 Implementation status: Delivered in `0.1.1-preview.1` and refreshed in `0.2.0-preview.1`. The desktop source, tests,
-locked dependency graphs, ADO CI/release workflows, and self-contained packaging are migrated to
+locked dependency graphs, HCS-runner GitHub workflows, and self-contained packaging are migrated to
 .NET 10 LTS. Exact PR validation ADO build `281` passes Windows, secret scan, Android, and native iOS;
 merge-commit, clean-machine, signed-artifact, and supported-platform validation remain open in
 Phase 14.
@@ -485,15 +485,19 @@ schemas, and invalid foreign-key relationships without silent repair or plaintex
 Every actually published schema must still be added to the upgrade matrix before its successor is
 released; key rotation, backup/restore, and device replacement remain open under G-03.
 
-### Story: Authenticode signing (post-preview)
+### Story: Free trusted Windows distribution (post-preview)
 
-As a Windows user, I need individual executable and library signatures from the approved code-signing identity in addition to archive checksums, Sigstore, SBOM, and provenance.
+As a Windows user, I need a publicly trusted installation path that does not require HCS to
+purchase a code-signing certificate.
 
 Acceptance criteria:
-- All executables and libraries are Authenticode signed.
-- Signatures validate correctly against trusted root authorities.
+- The exact release source produces a reproducible MSIX with checksum, SBOM, and provenance.
+- Microsoft Store accepts and signs the package after certification.
+- The Store-signed package installs, launches, upgrades, and uninstalls on clean supported Windows.
+- Direct MSI/ZIP downloads remain clearly labeled unsigned and retain integrity evidence.
 
-Implementation status: Blocked until the approved Azure Artifact Signing identity and profile exist.
+Implementation status: MSIX packaging is implemented. Partner Center identity reservation,
+certification, and clean-machine Store-package validation remain.
 
 ### Story: Complete workspace resource assignment (post-preview)
 
@@ -807,7 +811,7 @@ credential inventory, so private database access, scraping, and implicit import/
 prohibited. No browser password-vault interoperability beyond explicit one-time mapped fill is
 implemented.
 
-## Epic 14 — CyberArk provider
+## Epic 14 — CyberArk provider (future roadmap)
 
 ### Story: CyberArk source integration
 
@@ -820,12 +824,11 @@ Acceptance criteria:
 - Provider credentials are isolated, encrypted, removable, and never logged.
 - Contract, integration, security, and redaction tests cover the provider before release.
 
-Implementation status: Implemented and merged; validation remains open. The selected Privilege
-Cloud integration has separate profiles, DPAPI-protected client credentials, SQLCipher metadata,
-safe/account/version/permission mapping, verified explicit retrieval, fail-closed revoke/remove
-controls, user-visible configuration, and automated contract/security/redaction tests. Governed
-live-tenant permission/failure/audit evidence, independent review, and signed exact-artifact
-validation remain mandatory.
+Implementation status: Unsupported future source prototype. The selected Privilege Cloud
+integration has isolated profiles, credentials, metadata, provider models, and automated tests, but
+the Windows release UI is disabled. It is not a current Windows acceptance dependency. A governed
+tenant, explicit product approval, independent review, and separate release evidence are required
+before it can enter a supported release.
 
 ## Epic 15 — Preview feedback and GA promotion
 
@@ -847,18 +850,19 @@ Implementation status: Delivered as a governed process; ongoing operation remain
 
 ### Story: Evidence-based GA feedback gate
 
-As a release approver, I need measurable feedback, triage, upgrade, and stability thresholds so that
-GA is based on observed reliability rather than an undocumented judgment.
+As a release approver, I need traceable feedback, triage, upgrade, and exact-candidate evidence so
+that GA is based on observed reliability rather than an undocumented judgment.
 
 Acceptance criteria:
 
 - The release owner triages every report and publishes a weekly sanitized rollup during Preview.
-- G-01 tracks a 30-day operational window, at least five consenting evaluators, at least 20 core-task
-  attempts, supported Windows and MSI/WinGet/Chocolatey coverage, and a 90% unaided completion rate.
+- G-01 records supported Windows and distribution-path coverage for the release workflows.
 - Every failure has a disposition; no security-sensitive or release-blocking defect remains open.
-- The final candidate completes a 14-day blocker-free stability window before G-01 passes.
+- The exact candidate passes the full automated and clean-machine suite after the last
+  release-blocking change, followed by a named go/no-go decision.
 
-Implementation status: In progress; evaluator, upgrade, completion-rate, and stability evidence remain open.
+Implementation status: In progress; upgrade, report-disposition, exact-candidate, and go/no-go
+evidence remain open. No arbitrary evaluator quota or waiting period applies.
 
 ### Story: Operational support and lifecycle readiness
 
@@ -870,7 +874,7 @@ Acceptance criteria:
 - Support, security, and release owners plus non-contractual response targets are explicit.
 - Current/superseded/withdrawn/end-of-support states and immutable replacement rules are published.
 - Desktop/mobile NuGet and browser/design npm dependencies receive scheduled update proposals
-  without automatic merging; pinned ADO tasks and third-party pipeline tools require governed
+  without automatic merging; pinned GitHub Actions and third-party pipeline tools require governed
   version review.
 - A scheduled monitor checks runtime lifecycle, known dependency vulnerabilities, and public
   release/support endpoints and retains machine-readable evidence.
@@ -880,7 +884,7 @@ Acceptance criteria:
 Implementation status (2026-07-24): source policy and automation are implemented locally. The
 integrated validator passes all 34 contract checks with desktop and mobile pinned to .NET 10 LTS
 and its recorded 2028-11-14 support date. A named backup operator, successful hosted-monitor
-history, complete runbook exercise, Authenticode lifecycle approval, and exact-candidate review
+history, complete runbook exercise, Microsoft Store trust evidence, and exact-candidate review
 remain open.
 
 ### Story: Legal/privacy release controls and approval

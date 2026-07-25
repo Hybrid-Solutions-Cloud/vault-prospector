@@ -1,0 +1,42 @@
+name: Operational Readiness
+
+on:
+  schedule:
+    - cron: '17 18 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: operational-readiness
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: [self-hosted, linux, ubuntu-22.04, hcs]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.302
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - name: Restore locked dependencies
+        run: dotnet restore VaultProspector.sln --locked-mode
+      - name: Check direct and transitive vulnerabilities
+        shell: pwsh
+        run: ./scripts/Test-VulnerablePackages.ps1
+      - name: Validate lifecycle contract and public channels
+        shell: pwsh
+        run: |
+          ./scripts/Test-OperationalReadiness.ps1 `
+            -CheckPublicEndpoints `
+            -OutputPath artifacts/operational-readiness/report.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: operational-readiness-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/operational-readiness/report.json
+          if-no-files-found: error
+          retention-days: 90

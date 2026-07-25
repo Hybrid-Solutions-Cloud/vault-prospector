@@ -1,5 +1,23 @@
 # Session handoff
 
+## Release-scope and runner correction — 2026-07-25
+
+- CyberArk and native mobile were moved to future-roadmap status and removed from Windows GA
+  dependencies. The CyberArk source remains for future work, but its Windows tab is disabled.
+- HCS runner inventory confirmed the repo-specific Azure Container Apps runner is healthy. GitHub
+  Actions now targets that runner for portable validation and the ephemeral Tier-4 Windows VM for
+  Windows-only packaging.
+- Azure DevOps remains the work-item hierarchy. ADO build history is retained as evidence, but ADO
+  pipeline YAML is retired after replacement GitHub validation succeeds.
+- The paid Authenticode assumption was replaced with a free Microsoft Store–signed MSIX path.
+  Direct MSI/ZIP artifacts remain explicitly unsigned with checksum, SBOM, and Sigstore evidence.
+- The self-imposed 30-day collection window, evaluator/task quotas, and 14-day stability period
+  were removed as hard GA blockers. G-01 now requires traceable workflow coverage, report
+  disposition, zero known blockers, an exact-candidate suite after the final blocking change, and
+  named approval.
+- Stale PRs #16–#21 were closed as superseded by merged PR #22. Dependabot PR #23 was tested and
+  merged as `62700679edd8141bed87d12e107d73278a1eb9e8`.
+
 ## Goal and recovery update — 2026-07-23
 
 - Durable repository goal: `.ai/state/GOAL.md`.

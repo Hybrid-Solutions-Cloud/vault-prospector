@@ -105,9 +105,9 @@
       "status": "implemented"
     },
     {
-      "name": "Authenticode",
-      "rotation": "approval and protected key lifecycle required before stable or GA",
-      "status": "blocked"
+      "name": "Microsoft Store package trust",
+      "rotation": "Microsoft-managed Store signing; no HCS signing key",
+      "status": "implemented"
     }
   ],
   "publicMonitors": [
@@ -138,8 +138,8 @@
       "description": "A complete incident, withdrawal, recovery, and communication exercise is required on the GA candidate."
     },
     {
-      "id": "G08-AUTHENTICODE-LIFECYCLE",
-      "description": "Authenticode key custody, rotation, revocation, and compromise handling remain blocked on signing setup."
+      "id": "G08-STORE-TRUST",
+      "description": "Partner Center certification and clean-machine validation of the Microsoft-signed MSIX remain open."
     }
   ]
 }

@@ -661,7 +661,8 @@
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="CyberArk">
+      <TabItem Header="CyberArk"
+               IsVisible="{Binding IsCyberArkPreviewEnabled}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
           <StackPanel Margin="4,14" Spacing="14">

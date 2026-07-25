@@ -1,65 +1,45 @@
 # CI build environments
 
-Vault Prospector uses Azure DevOps Pipelines in the private **Vault Prospector** project, as
-required by the HCS ADO project strategy. Pipeline YAML lives in `.ado/`; GitHub Actions is not
-used for CI or release automation.
+Vault Prospector uses GitHub Actions with HCS-owned compute. Azure DevOps Boards remains the
+governed system for epics, features, user stories, tasks, acceptance criteria, and evidence links;
+Azure DevOps Pipelines is not used for current delivery automation.
 
-## Pipelines
+## Workflows and HCS routing
 
-| Pipeline | YAML | Trigger | Purpose |
+| Workflow | Trigger | HCS environment | Purpose |
 | --- | --- | --- | --- |
-| Vault Prospector CI | `.ado/ci.yml` | Pull requests and `main` | Windows build/test/package validation, full-history secret scanning, managed mobile tests, Android packaging, and unsigned iOS simulator compilation |
-| Vault Prospector Operational Readiness | `.ado/operational-readiness.yml` | Mondays at 18:17 UTC and manual | Dependency, runtime-lifecycle, ownership, support-channel, and public-endpoint verification |
-| Vault Prospector Release | `.ado/release.yml` | Immutable `v*` tags | Preview rebuild, package validation, SPDX SBOM, HCS Key Vault-backed Cosign signatures, public release publication, and Chocolatey submission |
+| `.github/workflows/ci.yml` portable jobs | Pull requests and `main` | Tier 2 Azure Container Apps runner: `self-hosted,linux,ubuntu-22.04,hcs` | Locked restore, formatting, build, platform-neutral tests, browser build/tests, dependency audit, operational contract, and full-history secret scan |
+| `.github/workflows/ci.yml` Windows candidate | `main` and manual | Tier 4 ephemeral Azure Windows VM: `self-hosted,windows,hcs,vault-prospector` | Full Windows tests, performance, MSI/MSIX/package candidates, browser host, legal/privacy, enterprise policy, and operational evidence |
+| `.github/workflows/operational-readiness.yml` | Mondays at 18:17 UTC and manual | Tier 2 Azure Container Apps runner | Dependency, runtime-lifecycle, ownership, support-channel, and public-endpoint verification |
+| `.github/workflows/release.yml` | Immutable `v*` tags | Tier 4 ephemeral Azure Windows VM | Exact-tag rebuild, package validation, MSIX, SPDX SBOM, Sigstore bundles, and public binary-only publication |
 
-The project uses the Key Vault-linked `vp-prd-secrets` variable group. Pipeline definitions
-reference secret names only; values remain in `kv-hcs-vault-01`.
+The repo-specific Tier 2 runner is the Azure Container Apps job
+`caj-hcs-vp-gh-runner-eus2-01` in `rg-hcs-gh-runners-eus2-01`. It scales to zero and creates
+ephemeral runners only when matching work is queued.
 
-## Workload routing
+Windows packaging uses the isolated resource group `rg-hcs-vp-winbuild-eus2-01`. The deployment
+script creates a random temporary administrator credential in HCS Key Vault, runs the required
+what-if, provisions one ephemeral runner, and leaves the credential only until cleanup.
 
-| Workload | Environment |
-| --- | --- |
-| Windows desktop build, DPAPI tests, and desktop package validation | Azure Pipelines Windows Server 2025 hosted image |
-| Full-history secret scanning, shared mobile tests, Android packaging | Azure Pipelines Ubuntu 24.04 hosted image |
-| iOS simulator compilation | Azure Pipelines macOS 15 image with pinned Xcode 26.0.1 |
+## Validate a pull request
 
-The macOS build selects `iossimulator-x64` on Intel agents and `iossimulator-arm64` on Apple
-Silicon. The .NET iOS workload is pinned by `global.json` and the locked mobile dependency graph.
-
-## HCS tier evidence and fallback
-
-The migration candidate was independently validated on the HCS build-environment tiers before the
-ADO cutover:
-
-- HCS Tier 2 Container Apps completed secret scanning, managed mobile tests, and Android packaging.
-- HCS Tier 4 Windows Server 2025 completed the full Windows validation suite under LocalSystem,
-  including DPAPI CurrentUser tests and installer/package validation.
-- HCS Tier 3 `bld-01` was unavailable because its registered Key Vault credential no longer matched
-  the VM; the machine was returned to its original powered-off state.
-
-The committed runner Bicep and deployment scripts remain a break-glass diagnostic fallback. They
-do not define a second CI/CD system and must not be attached to normal GitHub workflows.
-
-## Pull-request evidence
-
-Every PR build checks out the synthetic pull-request merge ref. A successful run therefore proves
-both the submitted commit and its merge with the current target branch. Retained test results,
-package candidates, SBOMs, checksums, and signing bundles are Azure Pipeline artifacts.
-
-Before merging:
-
-1. Confirm every `Vault Prospector CI` job succeeded.
-2. Confirm the run source is the PR merge ref and the source version matches the current PR.
-3. Resolve any security, package, or platform failure without suppressing its gate.
-
-## Ephemeral Windows cleanup
-
-The HCS Tier 4 validation VM is temporary. After its job reaches a terminal state:
+1. Confirm both Tier 2 jobs use the PR merge ref and pass.
+2. Run the full Windows suite locally when Windows-specific source or packaging changes.
+3. After merge, provision the Tier 4 runner for the queued `main` Windows candidate:
 
 ```powershell
-pwsh ./scripts/Remove-HcsWindowsFallback.ps1
-pwsh ./scripts/Remove-HcsWindowsFallback.ps1 -Remove
+pwsh ./scripts/Deploy-HcsWindowsFallback.ps1 -Deploy -Confirm:$false
 ```
 
-Cleanup validates the exact resource tags, removes the VM identity's Key Vault assignment, starts
+4. Confirm the exact `main` Windows candidate succeeds and retains its artifacts.
+5. Remove the ephemeral environment:
+
+```powershell
+pwsh ./scripts/Remove-HcsWindowsFallback.ps1 -Remove -Confirm:$false
+```
+
+Cleanup validates exact resource tags, removes the VM identity's Key Vault assignment, starts
 deletion of the isolated resource group, and soft-deletes the temporary credential pair.
+
+Historical ADO builds remain immutable evidence for the commits they tested. They are not evidence
+for later commits and do not define the current execution system.

@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  release:
+    runs-on: [self-hosted, windows, hcs, vault-prospector]
+    environment: release
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.302
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Resolve release version
+        id: release
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          if ($version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') {
+            throw "Tag '${{ github.ref_name }}' is not a supported semantic version."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Build and test
+        shell: pwsh
+        run: ./scripts/Build.ps1 -Configuration Release
+      - name: Build release packages
+        shell: pwsh
+        run: |
+          $version = '${{ steps.release.outputs.version }}'
+          ./scripts/Package.ps1 -Version $version
+          ./scripts/PackageInstaller.ps1 -Version $version -SkipPublish
+          ./scripts/PackageMsix.ps1 -Version $version -SkipPublish
+          ./scripts/Test-MsixPackage.ps1 `
+            -PackagePath "./artifacts/VaultProspector-$version-win-x64.msix"
+          ./scripts/PackageDistribution.ps1 -Version $version
+          $installer = "./artifacts/VaultProspector-$version-win-x64.msi"
+          ./scripts/Test-InstallerUpgradeSchedule.ps1 -InstallerPath $installer
+          ./scripts/Test-InstallerShortcutIcon.ps1 -InstallerPath $installer
+          npm test --prefix browser-extension
+          npm run build --prefix browser-extension
+          ./scripts/Test-BrowserHostInstaller.ps1 `
+            -InstallerPath $installer `
+            -PublishDirectory ./artifacts/publish-win-x64
+      - name: Record unsigned direct-download boundary
+        shell: pwsh
+        run: |
+          $version = '${{ steps.release.outputs.version }}'
+          $targets = @(
+            "./artifacts/VaultProspector-$version-win-x64.msi",
+            "./artifacts/VaultProspector-$version-win-x64.msix"
+          )
+          foreach ($target in $targets) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $target
+            if ($signature.Status -ne 'NotSigned') {
+              throw "Expected '$target' to remain unsigned before Microsoft Store ingestion."
+            }
+          }
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: artifacts/publish-win-x64
+          format: spdx-json
+          output-file: artifacts/VaultProspector-${{ steps.release.outputs.version }}-win-x64.spdx.json
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Sign direct-download packages with keyless Sigstore
+        shell: pwsh
+        run: |
+          $packages = @(
+            Get-ChildItem artifacts -File |
+              Where-Object Extension -in '.msi', '.msix', '.zip', '.nupkg'
+          )
+          foreach ($package in $packages) {
+            cosign sign-blob `
+              --yes `
+              --bundle "$($package.FullName).sigstore.json" `
+              $package.FullName
+            if ($LASTEXITCODE -ne 0) {
+              throw "Sigstore signing failed for '$($package.Name)'."
+            }
+          }
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        id: app-token
+        with:
+          app-id: ${{ vars.HCS_PLATFORM_GITHUB_APP_ID }}
+          private-key: ${{ secrets.HCS_PLATFORM_GITHUB_APP_PRIVATE_KEY }}
+          owner: Hybrid-Solutions-Cloud
+          repositories: vault-prospector-releases
+      - name: Publish immutable binaries to the public release repository
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          choco install gh --yes --no-progress --limit-output
+          if ($LASTEXITCODE -notin @(0, 2)) {
+            throw "GitHub CLI installation failed with exit code $LASTEXITCODE."
+          }
+          ./scripts/PublishDistribution.ps1 `
+            -Version '${{ steps.release.outputs.version }}'
