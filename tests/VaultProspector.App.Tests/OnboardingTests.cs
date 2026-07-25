@@ -750,6 +750,64 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public async Task DiagnosticViewerRefreshesAndFiltersSafeEvents()
+    {
+        var support = new FakeSupportBundleService(
+            [
+                new DiagnosticEvent(
+                    DateTimeOffset.Parse(
+                        "2026-07-25T19:00:00Z",
+                        System.Globalization.CultureInfo
+                            .InvariantCulture),
+                    "error",
+                    "Synchronization",
+                    "Identity 11223344",
+                    "Sync failed · partial",
+                    "Retry synchronization."),
+                new DiagnosticEvent(
+                    DateTimeOffset.Parse(
+                        "2026-07-25T18:00:00Z",
+                        System.Globalization.CultureInfo
+                            .InvariantCulture),
+                    "information",
+                    "Identity",
+                    "Identity AABBCCDD",
+                    "Identity connected · ready",
+                    "No action required."),
+            ]);
+        var viewModel = new MainViewModel(
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!,
+            supportBundleService: support);
+
+        await viewModel.RefreshDiagnosticsCommand
+            .ExecuteAsync(null);
+
+        Assert.Equal(
+            2,
+            viewModel.DiagnosticEvents.Count);
+        viewModel.DiagnosticSearchText = "sync";
+        var diagnosticEvent = Assert.Single(
+            viewModel.DiagnosticEvents);
+        Assert.Equal(
+            "Synchronization",
+            diagnosticEvent.Category);
+        Assert.Contains(
+            "1 of 2",
+            viewModel.DiagnosticViewerStatus,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task InterruptedRotationRecoveryRunsOnlyAfterLocalVerification()
     {
         var engine = new FakeRotationEngine
@@ -1646,6 +1704,23 @@ public sealed class OnboardingTests : IDisposable
                 : Task.FromException<LocalEncryptionRecoveryResult>(
                     RecoveryException);
         }
+    }
+
+    private sealed class FakeSupportBundleService(
+        IReadOnlyList<DiagnosticEvent> events) :
+        ISupportBundleService
+    {
+        public string DiagnosticLogPath =>
+            "test.log";
+
+        public Task<IReadOnlyList<DiagnosticEvent>> ReadRecentAsync(
+            int maximumEvents,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(events);
+
+        public Task<string> CreateAsync(
+            CancellationToken cancellationToken) =>
+            Task.FromResult("support.zip");
     }
 
     private sealed class BackgroundProvider : IVaultProvider
