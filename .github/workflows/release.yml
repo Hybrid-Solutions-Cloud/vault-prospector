@@ -21,6 +21,9 @@ jobs:
           dotnet-version: 10.0.302
           cache: true
           cache-dependency-path: '**/packages.lock.json'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
       - name: Resolve release version
         id: release
         shell: pwsh
