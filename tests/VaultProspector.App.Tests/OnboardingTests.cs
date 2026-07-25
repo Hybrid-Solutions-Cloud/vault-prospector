@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.Text.Json;
 using VaultProspector.App;
 using VaultProspector.App.ViewModels;
@@ -405,6 +406,14 @@ public sealed class OnboardingTests : IDisposable
                 UserVerificationResult.Verified),
             null!,
             new UnsupportedManagedIdentityDetector());
+        var identityTypeResetCount = 0;
+        viewModel.IdentityTypes.CollectionChanged += (_, args) =>
+        {
+            if (args.Action == NotifyCollectionChangedAction.Reset)
+            {
+                identityTypeResetCount++;
+            }
+        };
 
         await viewModel.InitializeAsync();
 
@@ -415,6 +424,13 @@ public sealed class OnboardingTests : IDisposable
         Assert.Equal(
             "Continue to Microsoft sign-in",
             viewModel.ConnectIdentityActionText);
+        Assert.Equal(
+            IdentityType.InteractiveUser,
+            viewModel.SelectedIdentityType);
+        Assert.Contains(
+            viewModel.SelectedIdentityType,
+            viewModel.IdentityTypes);
+        Assert.Equal(0, identityTypeResetCount);
         Assert.Contains(
             "Local unlock complete",
             viewModel.StatusText,

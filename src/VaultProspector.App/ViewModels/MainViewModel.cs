@@ -1346,22 +1346,20 @@ public sealed partial class MainViewModel(
                 Math.Max(1, (int)Math.Floor(maximum.TotalHours)));
         }
 
-        IdentityTypes.Clear();
-        foreach (var identityType in SupportedIdentityTypes)
-        {
-            if (policy.AllowedIdentityTypes.Contains(identityType) &&
+        var availableIdentityTypes = SupportedIdentityTypes
+            .Where(identityType =>
+                policy.AllowedIdentityTypes.Contains(identityType) &&
                 (identityType != IdentityType.ManagedIdentity ||
                  _managedIdentityHostSupported))
-            {
-                IdentityTypes.Add(identityType);
-            }
+            .ToArray();
+
+        if (!availableIdentityTypes.Contains(SelectedIdentityType) &&
+            availableIdentityTypes.Length > 0)
+        {
+            SelectedIdentityType = availableIdentityTypes[0];
         }
 
-        if (!IdentityTypes.Contains(SelectedIdentityType) &&
-            IdentityTypes.Count > 0)
-        {
-            SelectedIdentityType = IdentityTypes[0];
-        }
+        SynchronizeIdentityTypes(availableIdentityTypes);
 
         AddIdentityCommand.NotifyCanExecuteChanged();
         AuthorizeDirectoryReadCommand.NotifyCanExecuteChanged();
@@ -1375,6 +1373,37 @@ public sealed partial class MainViewModel(
         CacheSelectedCommand.NotifyCanExecuteChanged();
         OpenOfflineCommand.NotifyCanExecuteChanged();
         NotifyCyberArkCommands();
+    }
+
+    private void SynchronizeIdentityTypes(
+        IdentityType[] availableIdentityTypes)
+    {
+        // Preserve a valid selection while policy and host availability are refreshed.
+        // Clearing the bound collection makes Avalonia push null into the enum property.
+        for (var index = 0; index < availableIdentityTypes.Length; index++)
+        {
+            var identityType = availableIdentityTypes[index];
+            if (index < IdentityTypes.Count &&
+                IdentityTypes[index] == identityType)
+            {
+                continue;
+            }
+
+            var existingIndex = IdentityTypes.IndexOf(identityType);
+            if (existingIndex >= 0)
+            {
+                IdentityTypes.Move(existingIndex, index);
+            }
+            else
+            {
+                IdentityTypes.Insert(index, identityType);
+            }
+        }
+
+        while (IdentityTypes.Count > availableIdentityTypes.Length)
+        {
+            IdentityTypes.RemoveAt(IdentityTypes.Count - 1);
+        }
     }
 
     private static string? NullIfWhiteSpace(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
