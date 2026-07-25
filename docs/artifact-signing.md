@@ -1,83 +1,78 @@
-# Azure Artifact Signing Setup
+# Trusted Windows Distribution Without Paid Signing
 
-Vault Prospector stable and GA Windows releases must use Microsoft-trusted Authenticode signatures
-and RFC 3161 timestamps. An explicitly labeled non-production Preview evaluation may be unsigned
-when its release page warns about Unknown Publisher and retains checksums, SBOM, Sigstore, and
-provenance. Sigstore does not replace Windows publisher trust.
+Vault Prospector uses the Microsoft Store as its free, publicly trusted Windows distribution path.
+The release workflow creates an unsigned MSIX for Partner Center ingestion. Microsoft validates and
+re-signs the package after certification, so the installed Store package has Microsoft-backed
+publisher trust without an HCS-purchased code-signing certificate.
 
-## Current state
+Direct MSI and portable ZIP downloads remain available for evaluation and enterprise-managed
+deployment. They are explicitly unsigned and therefore display **Unknown Publisher**. SHA-256
+checksums, SPDX SBOMs, immutable release assets, and Sigstore bundles protect integrity and
+provenance, but they do not create Windows publisher trust.
 
-As of 2026-07-16, an HCS-governed Azure resource inventory query found no
-`Microsoft.CodeSigning/codeSigningAccounts` resource in the HCS management subscription. The
-release pipeline therefore fails closed for stable and GA tags when Artifact Signing configuration
-is absent. Only a tag matching
-`vX.Y.Z-preview.N` may take the explicit unsigned evaluation path.
+## Why this is the selected path
 
-The intended trust model is **Public Trust**. Azure recommends Public Trust for publicly
-distributed Win32 applications. Do not substitute a Public Trust Test or Private Trust profile for
-a signed release.
+- A self-signed certificate is not trusted on an unmanaged Windows system.
+- A publicly trusted CA certificate and Azure Artifact Signing are paid services.
+- Microsoft Store ingestion is free, accepts an unsigned package, and signs the package after
+  certification.
+- The source repository remains private; only versioned binaries and verification material are
+  published in `Hybrid-Solutions-Cloud/vault-prospector-releases`.
 
-## One-time Azure and Azure DevOps setup
+No stable or GA claim may describe the direct MSI, ZIP, or pre-ingestion MSIX as Authenticode
+trusted.
 
-These steps create billable external resources and include a portal-only identity-validation
-decision. They require the HCS owner or an explicitly authorized administrator:
+## Build the MSIX
 
-1. Confirm the Azure billing profile exactly matches the legal person or organization that should
-   appear as the software publisher.
-2. Register the `Microsoft.CodeSigning` resource provider in the HCS subscription.
-3. Create an Azure Artifact Signing account in an HCS-owned resource group and supported region.
-4. In the Azure portal, assign the operator **Artifact Signing Identity Verifier**, submit Public
-   Trust identity validation, and complete the emailed verification. Identity validation cannot be
-   completed through CLI automation.
-5. Create a **PublicTrust** certificate profile after validation succeeds.
-6. Install Microsoft's Artifact Signing Azure DevOps extension in the HCS organization.
-7. Create a least-privilege workload-identity-federated Azure service connection for the
-   `Vault Prospector` ADO project.
-8. Assign that service principal **Artifact Signing Certificate Profile Signer** on the certificate
-   profile resource only. Do not assign subscription Owner or Contributor to the release identity.
-9. Configure these non-secret variables for the protected ADO release pipeline:
+Run:
 
-   | Variable | Value |
-   | --- | --- |
-   | `ARTIFACT_SIGNING_CLIENT_ID` | Federated release application's client ID |
-   | `ARTIFACT_SIGNING_TENANT_ID` | HCS tenant ID |
-   | `ARTIFACT_SIGNING_SUBSCRIPTION_ID` | Subscription containing the signing account |
-   | `ARTIFACT_SIGNING_ENDPOINT` | Regional endpoint shown by the signing account, including `https://` |
-   | `ARTIFACT_SIGNING_ACCOUNT` | Artifact Signing account name |
-   | `ARTIFACT_SIGNING_PROFILE` | Public Trust certificate profile name |
+```powershell
+./scripts/PackageMsix.ps1 -Version 0.3.0-preview.1
+```
 
-No PFX, certificate password, Azure client secret, or exportable signing key belongs in a pipeline
-variable. Azure DevOps exchanges its workload-identity assertion for Azure access, and Azure keeps
-the signing key in the managed service.
+The script:
 
-## Workflow behavior
+1. publishes the self-contained Windows x64 application;
+2. creates deterministic Store tile assets;
+3. restores the pinned `Microsoft.Windows.SDK.BuildTools` package and verifies its SHA-256;
+4. builds `artifacts/VaultProspector-<version>-win-x64.msix`; and
+5. writes the adjacent SHA-256 file.
 
-For every version tag, `.ado/release.yml`:
+For Partner Center submission, reserve the application name and copy the exact package identity and
+publisher values from **Product management > Product identity**:
 
-1. requires all signing variables for stable/GA, while permitting only an explicitly versioned
-   Preview evaluation to proceed unsigned;
-2. builds and tests with locked dependencies and enforced vulnerability/secret gates;
-3. publishes the Windows app, then signs and timestamps the Vault Prospector executables and
-   assemblies before creating the portable ZIP;
-4. builds the MSI from those signed files, then signs and timestamps the MSI;
-5. verifies every expected Authenticode signature and timestamp;
-6. recalculates the signed MSI checksum before generating WinGet and Chocolatey metadata;
-7. produces SBOM, provenance, Sigstore bundles, hashes, and immutable release assets.
+```powershell
+./scripts/PackageMsix.ps1 `
+  -Version 0.3.0 `
+  -IdentityName '<Partner Center package identity name>' `
+  -Publisher '<Partner Center publisher subject>'
+```
+
+The values must match Partner Center exactly. The default development identity is suitable for
+local packaging validation only.
+
+## Release behavior
+
+`.github/workflows/release.yml` runs on an ephemeral HCS Windows runner. It builds and tests the
+exact tag, creates MSI, ZIP, MSIX, WinGet, and Chocolatey candidates, generates checksums and an
+SPDX SBOM, produces keyless Sigstore bundles, and publishes binaries only to the public release
+repository using the HCS GitHub App.
+
+The public release must label the direct packages as unsigned. The Store-signed artifact or Store
+listing URL is recorded separately after certification; Microsoft-signed bytes must never be
+silently substituted under an existing tag.
 
 ## Acceptance evidence
 
-P-13 passes only after a fresh candidate workflow proves all of the following:
+The trusted Windows distribution gate passes when:
 
-- the signer subject matches the approved HCS identity validation;
-- `Get-AuthenticodeSignature` returns `Valid` for the MSI, application executable, and project
-  assemblies, with a timestamp certificate present;
-- Windows signature UI shows a valid chain on a clean supported Windows machine;
-- MSI, WinGet, and Chocolatey install the exact signed hash recorded in release evidence;
-- signature validation still succeeds after the short-lived signing certificate expires because
-  the RFC 3161 timestamp remains valid;
-- the release OIDC principal cannot manage the signing account, certificate profile, subscription,
-  or unrelated Azure resources.
+- the exact source tag produces a reproducible MSIX and adjacent SHA-256;
+- Partner Center accepts the package identity and certification submission;
+- Microsoft returns a signed package and/or live Store listing;
+- a clean supported Windows system installs, launches, upgrades, and uninstalls the Store package;
+- the Store package version maps to the immutable source tag and release evidence; and
+- direct-download documentation continues to identify MSI, ZIP, and pre-ingestion MSIX files as
+  unsigned.
 
-Record the account resource ID, profile resource ID, signer subject, workflow run URL, certificate
-thumbprint, timestamp, and artifact hashes in the candidate release-evidence file. Do not record an
-access token or private key.
+No paid certificate, Azure Artifact Signing account, PFX, or exportable signing key is required by
+this design.

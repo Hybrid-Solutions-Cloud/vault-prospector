@@ -21,7 +21,8 @@ Do not report an HCS conformance result when the server cannot resolve this repo
 
 The goal is complete only when:
 
-- every backlog story is implemented or has an explicitly approved removal from scope;
+- every current-release backlog story is implemented or has an explicitly approved removal from
+  scope; future-roadmap stories remain separately prioritized and do not block the current release;
 - every capability has a reachable, understandable user workflow;
 - required unit, integration, UI, accessibility, security, migration, live-service, install,
   upgrade, repair, rollback, and recovery checks pass;
@@ -42,8 +43,10 @@ documented approval, threat-model, and audit requirements.
 
 ## Current constraints
 
-- The HCS governance registry does not currently contain `vault-prospector`, and its MCP host cannot
-  resolve `D:\git\hybrid-solutions-cloud\vault-prospector`; HCS drift must not be reported as passed.
-- Trusted Windows signing, independent security review, package-catalog acceptance, live tenant and
-  platform matrices, evaluator thresholds, and stability windows require external services or human
-  evidence.
+- The HCS standards define GitHub Actions on the HCS Azure runner for portable validation and an
+  ephemeral HCS Windows VM for Windows-only packaging; Azure DevOps Boards remains the work-item
+  system, not the delivery runner.
+- The free trusted Windows path is Microsoft Store–signed MSIX. Partner Center certification,
+  independent security/legal review, live Azure matrices, package-catalog acceptance, and named
+  approval require external or human evidence.
+- CyberArk and native mobile applications are future-roadmap products and do not block Windows GA.

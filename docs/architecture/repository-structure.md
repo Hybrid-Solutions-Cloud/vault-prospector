@@ -3,7 +3,7 @@
 ```text
 vault-prospector/
 ├── .ai/state/                    # durable agent handoff state
-├── .ado/                         # Azure DevOps CI, readiness, and release pipelines
+├── .github/workflows/            # GitHub Actions on HCS-owned build environments
 ├── .github/                      # issue templates and dependency-update configuration
 ├── docs/
 │   ├── adr/                      # accepted architecture decisions

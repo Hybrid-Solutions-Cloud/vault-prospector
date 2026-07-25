@@ -873,7 +873,7 @@
     {
       "ecosystem": "npm",
       "id": "@types/node",
-      "version": "24.13.3",
+      "version": "26.1.1",
       "scopes": [
         "design-prototype"
       ],
@@ -885,8 +885,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@types/node/-/node-24.13.3.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@types/node/v/24.13.3",
+      "projectUrl": "https://registry.npmjs.org/@types/node/-/node-26.1.1.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@types/node/v/26.1.1",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -929,6 +929,426 @@
       "licenseSource": "package-lock",
       "projectUrl": "https://registry.npmjs.org/@types/react-dom/-/react-dom-19.2.3.tgz",
       "packageUrl": "https://www.npmjs.com/package/@types/react-dom/v/19.2.3",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-aix-ppc64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-aix-ppc64/-/typescript-aix-ppc64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-aix-ppc64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-darwin-arm64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-darwin-arm64/-/typescript-darwin-arm64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-darwin-arm64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-darwin-x64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-darwin-x64/-/typescript-darwin-x64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-darwin-x64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-freebsd-arm64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-freebsd-arm64/-/typescript-freebsd-arm64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-freebsd-arm64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-freebsd-x64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-freebsd-x64/-/typescript-freebsd-x64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-freebsd-x64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-linux-arm",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-linux-arm/-/typescript-linux-arm-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-linux-arm/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-linux-arm64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-linux-arm64/-/typescript-linux-arm64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-linux-arm64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-linux-loong64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-linux-loong64/-/typescript-linux-loong64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-linux-loong64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-linux-mips64el",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-linux-mips64el/-/typescript-linux-mips64el-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-linux-mips64el/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-linux-ppc64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-linux-ppc64/-/typescript-linux-ppc64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-linux-ppc64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-linux-riscv64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-linux-riscv64/-/typescript-linux-riscv64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-linux-riscv64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-linux-s390x",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-linux-s390x/-/typescript-linux-s390x-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-linux-s390x/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-linux-x64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-linux-x64/-/typescript-linux-x64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-linux-x64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-netbsd-arm64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-netbsd-arm64/-/typescript-netbsd-arm64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-netbsd-arm64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-netbsd-x64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-netbsd-x64/-/typescript-netbsd-x64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-netbsd-x64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-openbsd-arm64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-openbsd-arm64/-/typescript-openbsd-arm64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-openbsd-arm64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-openbsd-x64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-openbsd-x64/-/typescript-openbsd-x64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-openbsd-x64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-sunos-x64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-sunos-x64/-/typescript-sunos-x64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-sunos-x64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-win32-arm64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-win32-arm64/-/typescript-win32-arm64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-win32-arm64/v/7.0.2",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "npm",
+      "id": "@typescript/typescript-win32-x64",
+      "version": "7.0.2",
+      "scopes": [
+        "design-prototype"
+      ],
+      "dependencyTypes": [
+        "development"
+      ],
+      "sourceFiles": [
+        "docs/design/vault-prospector-ui-concepts/package-lock.json"
+      ],
+      "license": "Apache-2.0",
+      "licenseSource": "package-lock",
+      "projectUrl": "https://registry.npmjs.org/@typescript/typescript-win32-x64/-/typescript-win32-x64-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@typescript/typescript-win32-x64/v/7.0.2",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -1545,7 +1965,7 @@
     {
       "ecosystem": "npm",
       "id": "typescript",
-      "version": "6.0.3",
+      "version": "7.0.2",
       "scopes": [
         "design-prototype"
       ],
@@ -1557,8 +1977,8 @@
       ],
       "license": "Apache-2.0",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz",
-      "packageUrl": "https://www.npmjs.com/package/typescript/v/6.0.3",
+      "projectUrl": "https://registry.npmjs.org/typescript/-/typescript-7.0.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/typescript/v/7.0.2",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -1566,7 +1986,7 @@
     {
       "ecosystem": "npm",
       "id": "undici-types",
-      "version": "7.18.2",
+      "version": "8.3.0",
       "scopes": [
         "design-prototype"
       ],
@@ -1578,8 +1998,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/undici-types/-/undici-types-7.18.2.tgz",
-      "packageUrl": "https://www.npmjs.com/package/undici-types/v/7.18.2",
+      "projectUrl": "https://registry.npmjs.org/undici-types/-/undici-types-8.3.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/undici-types/v/8.3.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""

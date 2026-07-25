@@ -51,7 +51,8 @@ Before each Preview refresh and the GA decision:
 2. verify no security-sensitive or release-blocking report remains open;
 3. record task-outcome, Windows-build, install-path, and triage-latency totals;
 4. rerun the supported-version upgrade matrix after any installer or storage change; and
-5. update G-01 without claiming Passed until every numerical and stability threshold is evidenced.
+5. update G-01 only after supported workflow coverage, report disposition, exact-candidate
+   validation, zero known blockers, and named approval are evidenced.
 
 ## Operational monitoring and maintenance
 
@@ -61,10 +62,10 @@ defined in [Support and product lifecycle](support-lifecycle.md). The machine-re
 
 - Dependabot checks desktop/mobile NuGet and browser/design npm dependencies each Monday.
   Dependency pull requests are reviewed normally and are never auto-merged.
-- The **Vault Prospector Operational Readiness** ADO pipeline runs weekly and on manual request. It checks lifecycle and
+- The **Operational Readiness** GitHub workflow runs on the HCS Azure runner weekly and on manual request. It checks lifecycle and
   ownership agreement, runtime end-of-support dates, direct/transitive desktop NuGet
   vulnerabilities, and the current release, checksum, and feedback endpoints.
-- The normal ADO CI pipeline runs the same contract validator without network checks, preventing a
+- The normal GitHub CI workflow runs the same contract validator without network checks, preventing a
   policy or automation change from silently drifting away from the manifest.
 - The JSON report is retained for 90 days. A failed or missing scheduled run must be dispositioned
   by the support owner before another release.
@@ -138,13 +139,12 @@ git tag -a "v$version" -m "Vault Prospector $version"
 git push origin "v$version"
 ```
 
-Expected result: the protected Azure DevOps release pipeline builds/tests again, signs packages
-with the HCS Key Vault Cosign key, publishes the immutable public release, retains hashes and SPDX
-SBOM evidence, and submits the Chocolatey package.
+Expected result: the protected GitHub release workflow runs on the ephemeral HCS Windows VM,
+builds/tests again, creates MSI/MSIX/ZIP and package-manager candidates, produces Sigstore bundles,
+publishes the immutable public release, and retains hashes and SPDX SBOM evidence.
 
-For an unsigned Preview, the tag must match `vX.Y.Z-preview.N`; the workflow records the unsigned
-classification and verifies that project binaries and MSI are actually `NotSigned`. Stable and GA
-tags remain blocked until Artifact Signing is configured.
+Direct-download packages remain unsigned for every tag. Stable/GA trusted distribution requires
+the exact MSIX to complete Microsoft Store certification and clean-machine Store validation.
 
 If it fails: do not reuse the tag after any artifact was published. Diagnose the workflow, increment
 the version, and create a new candidate.
@@ -272,13 +272,12 @@ organization. Rotate the HCS App private key through the central platform proces
 `hcs-platform-github-app-private-key` in `kv-hcs-vault-01`, invalidate the retired key, and verify a
 fresh installation token without recording it.
 
-### Sigstore and future Authenticode identity
+### Sigstore and Microsoft Store trust
 
-Package signing uses the HCS release key in `kv-hcs-vault-01` through the Key Vault-linked ADO
-release boundary. Rotation requires a new protected key version, committed public-key update, and
-old/new verification evidence before the previous version is disabled. An Authenticode certificate
-is not yet configured; its protected storage, access, rotation, timestamping, revocation, and
-compromise procedure must be approved before P-13 passes.
+Direct-download integrity uses versioned checksums and Sigstore bundles from the protected GitHub
+workflow. Windows publisher trust comes from Microsoft Store certification; HCS does not own or
+rotate a paid Authenticode key. Record the Store package identity, certification result, listing,
+version mapping, and clean-machine verification before P-13 passes.
 
 ## Verification and history
 

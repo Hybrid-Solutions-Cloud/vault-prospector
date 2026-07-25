@@ -464,15 +464,15 @@ assistive-technology behavior remain required evidence.
 - Origin, frame, tab, item mapping, identity, and user-presence checks are enforced and tested.
 - Browser-vault interoperability uses supported APIs and explicit consent only.
 
-## Phase 12 — CyberArk provider
+## Future provider roadmap — CyberArk
 
-**Priority:** P2
+**Priority:** P4
 
-**Status:** Implemented and merged; external validation open
+**Status:** Unsupported source prototype; Windows release UI disabled
 
 **Backlog coverage:** Epic 14
 
-### Scope
+### Future scope
 
 - Select the supported CyberArk product/API and authentication methods through an ADR.
 - Model accounts, safes, objects, permissions, versions, and audit semantics without forcing them
@@ -494,17 +494,16 @@ assistive-technology behavior remain required evidence.
   and value-free audit.
 - Bounded/off-origin/oversize/redaction/provider-contract, credential replay/removal, schema,
   cross-profile rollback, verification, audit-failure disposal, and accessibility tests are present.
-- Governed live tenant, independent security review, and exact signed-artifact evidence remain
-  required before the exit criteria pass.
+- Governed live tenant, explicit product approval, independent security review, and separate
+  release evidence are required before this work may enter a supported release.
 - PR #11 merged exact verified head `31a4f391` after CI run `30069509556` passed both required
   jobs; this establishes source/CI evidence only and does not close the external gates.
 
-## Phase 13 — iPhone/iOS and Android applications
+## Future mobile roadmap — iPhone/iOS and Android applications
 
-**Priority:** P3
+**Priority:** P4
 
-**Status:** Application source implemented and merged; fail-closed autofill prototypes implemented;
-external platform/store gates open
+**Status:** Source prototypes implemented; independently gated and not part of Windows delivery
 
 **Backlog coverage:** Epic 8
 
@@ -529,14 +528,15 @@ external platform/store gates open
 
 **Priority:** GA
 
-**Status:** In progress; trusted signing and independent/live validation gates remain open
+**Status:** In progress; Store trust and independent/live validation gates remain open
 
 ### Scope
 
 - Enforce startup/reopen, encrypted metadata sync, search, cancellation, memory, storage, and
   large-estate targets in controlled automation, then repeat them on representative devices and
   the exact packaged candidate.
-- Complete Azure Artifact Signing Public Trust setup and timestamped Authenticode verification.
+- Build a reproducible MSIX, submit it through the free Microsoft Store path, and verify the
+  Microsoft-signed package on clean Windows.
 - Submit immutable packages to WinGet and Chocolatey; verify catalog installation and update.
 - Execute the independent security-review plan and close all critical/high findings.
 - Complete real Entra, Windows Hello, clipboard, accessibility, clean-machine, upgrade, recovery,
@@ -544,14 +544,15 @@ external platform/store gates open
 - Maintain SBOM, checksums, Sigstore bundles, provenance, release notes, rollback, and vulnerability
   response for every release.
 
-Toolchain progress note (2026-07-24): the desktop solution, tests, lock files, ADO CI/release
-workflows, self-contained application, MSI, ZIP, WinGet manifests, and Chocolatey package are on
+Toolchain progress note (2026-07-25): the desktop solution, tests, lock files, GitHub Actions on HCS
+runners, self-contained application, MSI, ZIP, MSIX, WinGet manifests, and Chocolatey package are on
 .NET 10 LTS. Exact `main` ADO build 284 passed 370 Windows/shared tests, 44 mobile tests, native iOS,
 Android packaging, and all integrated gates. Release build 287 produced and Key Vault-signed the
 public candidate; the exact public MSI then passed all 27 clean Windows lifecycle gates. Trusted
-Authenticode, independent/live validation, and catalog acceptance remain open.
+Store certification, independent/live validation, and catalog acceptance remain open. Those ADO
+builds are retained historical evidence; ADO no longer owns delivery automation.
 
-Progress note (2026-07-24): G-09 source controls now generate a deterministic 225-record integrated
+Progress note (2026-07-25): G-09 source controls now generate a deterministic 245-record integrated
 NuGet/npm inventory and third-party notice, fail CI on lock-file or disclosure drift, document
 package/store declarations, and embed the repository license, privacy statement, and notice in
 Windows ZIP/MSI payloads. G-09 remains in progress: exact signed-candidate SBOM/file
@@ -560,7 +561,8 @@ declaration review, and named human approval are external decision gates.
 
 ### Exit criteria
 
-- Windows shows the trusted publisher on binaries and MSI.
+- Microsoft Store installs a trusted, certified MSIX; direct MSI/ZIP downloads remain explicitly
+  unsigned.
 - Direct, WinGet, and Chocolatey installation/update paths are supported and reproducible.
 - No unresolved critical/high security, data-loss, authentication, authorization, encryption, or
   accessibility release blocker remains.
@@ -570,8 +572,8 @@ declaration review, and named human approval are external decision gates.
 **Priority:** GA
 
 **Status:** In progress; operational automation and lifecycle policy are included in
-`0.2.0-preview.1`, while retained hosted history, backup ownership, exercises, evaluator
-thresholds, and stability evidence remain open
+`0.2.0-preview.1`, while retained hosted history, backup ownership, exercises, exact-candidate
+workflow coverage, and go/no-go evidence remain open
 
 **Backlog coverage:** Epic 15
 
@@ -585,9 +587,9 @@ thresholds, and stability evidence remain open
   monitoring with retained machine-readable evidence.
 - Maintain named support/security ownership, immutable supersedence and end-of-support policy,
   credential/signing rotation controls, and an exercised incident/withdrawal/recovery runbook.
-- Meet the defined evaluator, task-attempt, Windows-build, install-path, completion-rate, upgrade,
-  and response-time thresholds.
-- Complete the final blocker-free stability window on the exact GA candidate.
+- Complete supported Windows-build, install-path, upgrade, report-disposition, and response
+  evidence.
+- Run the full suite on the exact candidate after the last release-blocking change.
 - Produce the final named go/no-go decision and rollback plan.
 
 ### Exit criteria
@@ -602,7 +604,7 @@ PowerShell validator, weekly Dependabot coverage, scheduled vulnerability/runtim
 monitor, and support/EOS policy are implemented. The integrated contract now passes all 34 checks
 with both desktop and mobile pinned to .NET 10 LTS and its recorded 2028-11-14 support date. The
 earlier local baseline also passed all three public endpoints. G-08 remains In progress pending a
-backup operator, retained hosted runs, the complete exercise, and Authenticode lifecycle approval.
+backup operator, retained hosted runs, the complete exercise, and Microsoft Store trust evidence.
 
 ## Backlog-to-plan traceability
 

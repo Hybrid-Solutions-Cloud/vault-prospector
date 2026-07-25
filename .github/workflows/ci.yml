@@ -1,0 +1,180 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  portable-validation:
+    name: Portable source validation
+    runs-on: [self-hosted, linux, ubuntu-22.04, hcs]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.302
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - name: Restore locked dependencies
+        run: dotnet restore VaultProspector.sln --locked-mode
+      - name: Verify formatting
+        run: dotnet format VaultProspector.sln --verify-no-changes --no-restore
+      - name: Build exact source
+        run: dotnet build VaultProspector.sln --configuration Release --no-restore
+      - name: Test platform-neutral projects
+        shell: pwsh
+        run: |
+          $projects = @(
+            'tests/VaultProspector.Application.Tests/VaultProspector.Application.Tests.csproj',
+            'tests/VaultProspector.BrowserProtocol.Tests/VaultProspector.BrowserProtocol.Tests.csproj',
+            'tests/VaultProspector.Domain.Tests/VaultProspector.Domain.Tests.csproj',
+            'tests/VaultProspector.Infrastructure.Tests/VaultProspector.Infrastructure.Tests.csproj',
+            'tests/VaultProspector.Providers.Azure.Tests/VaultProspector.Providers.Azure.Tests.csproj',
+            'tests/VaultProspector.Providers.CyberArk.Tests/VaultProspector.Providers.CyberArk.Tests.csproj',
+            'tests/VaultProspector.Security.Tests/VaultProspector.Security.Tests.csproj'
+          )
+          foreach ($project in $projects) {
+            dotnet test $project `
+              --configuration Release `
+              --no-build `
+              --logger trx `
+              --collect 'XPlat Code Coverage' `
+              --results-directory TestResults
+            if ($LASTEXITCODE -ne 0) {
+              throw "Tests failed for '$project'."
+            }
+          }
+      - name: Verify browser extension
+        run: |
+          npm test --prefix browser-extension
+          npm run build --prefix browser-extension
+      - name: Verify design prototype
+        run: |
+          npm ci --prefix docs/design/vault-prospector-ui-concepts
+          npm run build --prefix docs/design/vault-prospector-ui-concepts
+          npm audit --prefix docs/design/vault-prospector-ui-concepts --audit-level=high
+      - name: Verify PowerShell syntax
+        shell: pwsh
+        run: |
+          $parseErrors = @()
+          Get-ChildItem scripts, tests -Recurse -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName,
+              [ref]$tokens,
+              [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) {
+              $parseErrors += $errors
+            }
+          }
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | Format-List
+            throw "$($parseErrors.Count) PowerShell parser error(s) found."
+          }
+      - name: Check vulnerable dependencies
+        shell: pwsh
+        run: ./scripts/Test-VulnerablePackages.ps1
+      - name: Validate operational-readiness contract
+        shell: pwsh
+        run: ./scripts/Test-OperationalReadiness.ps1 -OutputPath TestResults/operational-readiness.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: portable-test-results-${{ github.sha }}
+          path: TestResults
+          if-no-files-found: warn
+          retention-days: 14
+
+  secret-scan:
+    name: Full-history secret scan
+    runs-on: [self-hosted, linux, ubuntu-22.04, hcs]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.25.4
+          cache: false
+      - name: Install pinned Gitleaks CLI
+        run: go install github.com/zricethezav/gitleaks/v8@v8.30.0
+      - name: Scan Git history for secrets
+        run: '"$(go env GOPATH)/bin/gitleaks" git --redact --no-banner'
+
+  windows-candidate:
+    name: Windows candidate
+    if: github.event_name != 'pull_request'
+    runs-on: [self-hosted, windows, hcs, vault-prospector]
+    env:
+      CI_CANDIDATE_VERSION: 0.3.0-ci.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.302
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - name: Build and test exact Windows source
+        shell: pwsh
+        run: ./scripts/Build.ps1 -Configuration Release
+      - name: Verify performance and scale baseline
+        shell: pwsh
+        run: ./scripts/Test-PerformanceScale.ps1 -OutputPath TestResults/performance-scale.json -NoBuild
+      - name: Build MSI, MSIX, and package-manager candidates
+        shell: pwsh
+        run: |
+          ./scripts/PackageInstaller.ps1 -Version $env:CI_CANDIDATE_VERSION
+          ./scripts/PackageMsix.ps1 -Version $env:CI_CANDIDATE_VERSION -SkipPublish
+          ./scripts/Test-MsixPackage.ps1 `
+            -PackagePath "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msix"
+          ./scripts/PackageDistribution.ps1 -Version $env:CI_CANDIDATE_VERSION
+      - name: Verify installer and browser-host contracts
+        shell: pwsh
+        run: |
+          $installer = "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi"
+          ./scripts/Test-InstallerUpgradeSchedule.ps1 -InstallerPath $installer
+          ./scripts/Test-InstallerShortcutIcon.ps1 -InstallerPath $installer
+          npm test --prefix browser-extension
+          npm run build --prefix browser-extension
+          ./scripts/Test-BrowserHostInstaller.ps1 `
+            -InstallerPath $installer `
+            -PublishDirectory ./artifacts/publish-win-x64
+      - name: Validate legal, privacy, enterprise, and operational evidence
+        shell: pwsh
+        run: |
+          ./scripts/Test-LegalPrivacyReadiness.ps1 `
+            -OutputPath TestResults/legal-privacy.json `
+            -PublishDirectory artifacts/publish-win-x64
+          ./scripts/Test-EnterprisePolicyReadiness.ps1 `
+            -OutputPath TestResults/enterprise-policy.json `
+            -PublishDirectory artifacts/publish-win-x64
+          ./scripts/Test-OperationalReadiness.ps1 `
+            -OutputPath TestResults/operational-readiness.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: windows-candidate-${{ github.sha }}
+          path: |
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-win-x64.msi
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-win-x64.msi.sha256
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-win-x64.msix
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-win-x64.msix.sha256
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-winget-manifests.zip
+            artifacts/VaultProspector-${{ env.CI_CANDIDATE_VERSION }}-winget-manifests.zip.sha256
+            artifacts/vault-prospector.${{ env.CI_CANDIDATE_VERSION }}.nupkg
+            artifacts/vault-prospector.${{ env.CI_CANDIDATE_VERSION }}.nupkg.sha256
+            TestResults
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

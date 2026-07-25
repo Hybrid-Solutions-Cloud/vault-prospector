@@ -1,22 +1,28 @@
 # Current task
 
-Finish the `0.2.0-preview.1` release follow-through in accordance with `pmo/backlog.md`,
-`pmo/plan.md`, the project charter, and `.ai/state/GOAL.md`.
+Correct release scope and delivery governance, validate the exact result, and reconcile Azure
+DevOps Boards with implementation evidence.
 
-The readiness integration is merged. Exact `main` ADO CI builds `284` and `290` passed all four
-jobs, and the
-Key Vault-backed ADO release build `287` produced the 13 checksum-, SBOM-, and Cosign-verified
-assets now published in the public binary repository. The exact public MSI passed all 27 isolated
-Windows 11 installer lifecycle gates on 2026-07-24. WinGet PR `microsoft/winget-pkgs#407541` is
-open and mergeable; Chocolatey has not ingested the package after two HTTP 504 upload responses.
+Confirmed on 2026-07-25:
 
-Next:
+- CyberArk and native mobile applications are future-roadmap work, not Windows GA blockers.
+- The repo-specific Azure Container Apps GitHub runner is healthy with labels
+  `self-hosted,linux,ubuntu-22.04,hcs`.
+- Windows-only packaging uses the HCS Tier-4 ephemeral Azure VM with labels
+  `self-hosted,windows,hcs,vault-prospector`.
+- GitHub Actions owns CI/release execution; Azure DevOps remains the governed hierarchy for epics,
+  features, user stories, and tasks.
+- The free trusted Windows path is Microsoft Store–signed MSIX. Direct MSI/ZIP downloads remain
+  explicitly unsigned with checksums, SBOM, and Sigstore evidence.
+- ADO builds 284, 287, 290, and 295 and the 27/27 clean-Windows run remain historical evidence; they
+  do not justify continuing ADO pipelines.
 
-1. merge this release-documentation update after ADO validation;
-2. monitor WinGet moderation and Chocolatey service recovery without claiming catalog acceptance;
-   and
-3. close or update ADO work item `AB#5095` according to the external catalog state.
+In flight:
 
-GA remains open for the named live Azure/CyberArk, physical-device, independent security/legal,
-representative usability/accessibility, trusted Windows signing, operational exercise, and
-stability-window gates.
+1. restore GitHub workflows on HCS runners and retire ADO pipeline definitions;
+2. add and validate reproducible MSIX packaging;
+3. hide the unsupported CyberArk UI from the Windows release;
+4. remove invented 30-day, evaluator-quota, and 14-day release blockers;
+5. run local and HCS validation, merge the corrective PR, and validate `main`;
+6. update every affected ADO work item and close only items whose tasks and acceptance criteria are
+   fully evidenced.

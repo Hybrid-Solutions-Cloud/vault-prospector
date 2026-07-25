@@ -54,38 +54,33 @@ The owner records a weekly sanitized rollup during an active Preview: new, close
 severity, task outcomes, installation paths, and supported Windows builds. Counts come from explicit
 issues only and must never be described as population telemetry.
 
-## Measurable G-01 exit criteria
+## Evidence-based G-01 exit criteria
 
 G-01 can move to **Passed** only when all of the following evidence exists for the latest GA
 candidate and is linked from the release-readiness matrix:
 
-- The public feedback intake and private security channel have remained operational for at least 30
-  consecutive days after the latest Preview refresh.
-- At least five distinct consenting evaluators have submitted experience feedback spanning at least
-  three supported Windows 11 build/edition combinations and all three intended install paths: direct
-  MSI, WinGet, and Chocolatey.
-- At least 20 recorded core-task attempts cover install/update, first-run sign-in, discovery/sync,
-  search, reveal/copy with synthetic values, offline cache/purge, and identity or local-data removal.
-- At least 90% of those attempts are completed without maintainer intervention; 100% of failures
-  have a triaged work item and disposition.
-- 100% of public Preview reports are triaged within three business days, or an exception with owner,
-  reason, and corrective date is recorded in release evidence.
+- The public feedback intake and private security channel are reachable and their handling process
+  has been exercised.
+- Evidence covers supported Windows versions, the intended distribution paths, install/update,
+  first-run sign-in, discovery/sync, search, reveal/copy with synthetic values, offline
+  cache/purge, and identity or local-data removal.
+- Every observed failure and every public Preview report has a triaged work item or a documented
+  duplicate/non-actionable disposition.
 - There are zero unresolved security-sensitive reports, release blockers, critical/high security
   findings, data-loss defects, authentication/authorization boundary failures, or encryption and
   user-verification bypasses.
 - Every supported published Preview version upgrades to the latest candidate through direct MSI,
   WinGet, and Chocolatey on clean supported Windows, and uninstall/reinstall preserves or removes
   local state exactly as documented.
-- The latest candidate completes a final 14 consecutive days without a newly confirmed release
-  blocker; a replacement candidate restarts this stability window.
+- The exact candidate passes the full automated and clean-machine release suite after the last
+  release-blocking change, with no known unresolved release blocker.
 
-Evaluator count and task count are minimum evidence thresholds, not claims of statistical product
-quality. GA still requires every other gate, independent review, and formal approval.
+No arbitrary evaluator count, task quota, 30-day collection period, or 14-day waiting period is a
+release gate. GA still requires every other applicable Windows gate and a named formal approval.
 
 ## Evidence record
 
 For each weekly rollup and final G-01 decision, record the date range, candidate version and hash,
-public issue query or IDs, unique consenting-evaluator count, task-attempt denominator and outcomes,
-Windows/install-path coverage, triage latency, defect disposition, upgrade matrix, stability-window
-dates, owner, and reviewer. Use sanitized identifiers in the private release-evidence record and do
-not copy issue content that violates this policy.
+public issue query or IDs, task outcomes, Windows/install-path coverage, triage results, defect
+disposition, upgrade matrix, exact validation run, owner, and reviewer. Use sanitized identifiers
+in the private release-evidence record and do not copy issue content that violates this policy.

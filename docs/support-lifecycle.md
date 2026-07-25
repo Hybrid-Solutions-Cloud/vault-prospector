@@ -105,5 +105,5 @@ support, compromised build action, or broken public endpoint triggers immediate 
 Every lifecycle review records the date, current supported version, dependency/runtime status,
 public-channel checks, credential/signing inventory, owner, reviewer, exceptions, and corrective
 dates in release evidence. G-08 remains in progress until a backup operator is named, the scheduled
-monitor has successful hosted history, the complete runbook exercise passes, and Authenticode key
-lifecycle evidence exists.
+monitor has successful hosted history, the complete runbook exercise passes, and Microsoft Store
+trust evidence exists.

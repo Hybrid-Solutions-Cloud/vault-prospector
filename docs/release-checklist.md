@@ -6,8 +6,9 @@ Record the Windows version, package checksum, tester, and time with the release 
 
 - [ ] SHA-256 checksum matches the published checksum file.
 - [ ] Sigstore bundle verifies with `release/vault-prospector-release-signing.pub`.
-- [ ] Unsigned Preview: Authenticode status is `NotSigned` and the release page warns about Unknown
-  Publisher. Stable/GA: MSI and project binaries have valid timestamped Authenticode signatures.
+- [ ] Direct MSI/ZIP/pre-ingestion MSIX artifacts are labeled unsigned and show `NotSigned`.
+- [ ] For stable/GA trust, the Microsoft Store–signed MSIX installs from the Store and Windows
+  identifies the certified publisher.
 - [ ] MSI installs silently with exit code 0, registers in Installed apps, and creates the Start menu shortcut.
 - [ ] Forced MSI repair restores a deliberately changed packaged non-secret file.
 - [ ] MSI upgrade replaces the previous version without leaving duplicate Installed apps entries.
@@ -66,7 +67,8 @@ Record the Windows version, package checksum, tester, and time with the release 
 
 - [ ] Logs contain event categories and pseudonymous IDs but no token, value, username, vault name, or object name.
 - [ ] CI build, tests, formatting, .NET analyzers, vulnerability scan, and secret scan are green for the tagged commit.
-- [ ] Release contains MSI, ZIP, WinGet manifests, Chocolatey package, checksums, SPDX SBOM, and Sigstore bundles.
+- [ ] Release contains MSI, MSIX, ZIP, WinGet manifests, Chocolatey package, checksums, SPDX SBOM,
+  and Sigstore bundles.
 - [ ] `winget validate` succeeds against the generated manifest directory without warnings.
 
 ## Repeatable MSI lifecycle scenario

@@ -14,15 +14,15 @@ The next work is ordered by security dependency rather than visual novelty. Secu
 | --- | --- | --- | --- |
 | Now | Security hardening and secure first-run setup | In progress | A verified local unlock now leads directly to a guided identity setup that separates Windows protection, Microsoft authentication, and metadata-only sync; runtime usability, Windows Hello recovery, tenant-policy, exact-release, and independent security evidence remain. |
 | Now | Encrypted local-data recovery and migration | In progress | Missing/wrong keys, corruption, incomplete/future schemas, v1-to-v4 migration, and internal all-or-rollback key rotation fail closed under tests. Canonical recovery archives are inventoried and can be explicitly deleted only after typed confirmation and fresh Windows verification. Rotation user exposure, live power-loss/reinstall validation, and independent evidence remain under G-03; device/profile replacement intentionally resynchronizes. |
-| Now | Preview feedback and reliability cycle | In progress | Governed public intake, an explicit submission notice, privacy boundaries, triage cadence, and measurable G-01 thresholds are defined; collection, upgrade coverage, blocker closure, and stability windows still require evidence. |
+| Now | Preview feedback and reliability cycle | In progress | Governed public intake, an explicit submission notice, privacy boundaries, triage cadence, upgrade coverage, issue disposition, and a named G-01 decision are required; no arbitrary elapsed-time or evaluator quota blocks promotion. |
 | Now | Legal and privacy release readiness | In progress | Deterministic component inventory/notices, technical privacy disclosures, package/store draft metadata, CI drift checks, and Windows package embedding are implemented. Exact-candidate legal review, a public privacy URL, store declarations, and named approval remain. |
 | Now | Desktop UI and password-manager interface research | In progress | Comparative research and four interactive concepts are complete; participant evidence, selection, production implementation, and assistive-technology validation remain. |
 | Now | Performance and large-estate validation | In progress | A controlled 10-identity, 200-vault, 50,000-object encrypted baseline passes sync, search, initialization/reopen, cancellation, memory, and storage targets. Representative devices, packaged-app startup, live provider conditions, populated UI/AT responsiveness, and exact signed-candidate repetition remain. |
 | Next | Taskbar background operation and metadata synchronization | In progress locally | Lock-on-hide notification-area lifecycle, session/suspend/resume boundary locking, and opt-in metadata-only synchronization are implemented; installed Windows lifecycle and policy evidence remain. |
 | Next | Identity-source expansion and read-only/write-mode policy | In progress locally | Workload profiles, discovery, dry-run provisioning plans, and permission-aware read-only discovery are implemented locally. Governed mutations remain gated behind independent security review. |
-| Next | CyberArk provider integration | Implemented locally, validation open | Privilege Cloud provider, isolated credential/metadata/UI boundaries, and automated tests are present; governed live tenant, independent review, and signed exact-artifact evidence remain. |
+| Future | CyberArk provider integration | Source prototype implemented; unsupported | Privilege Cloud provider, isolated credential/metadata boundaries, and automated tests remain in private source. The Windows release UI is disabled until a governed test tenant, product decision, independent review, and separate release evidence exist. |
 | Next | Browser extension and explicit one-time fill | In progress locally | Origin/frame/purpose binding, authenticated native messaging, protected machine policy, mappings, confirmation, verification, audit, and MSI host registration are implemented; signed distribution, live installed-browser, independent-review, compromise/revocation, usability, and AT gates remain. Private browser password-store access is prohibited. |
-| Parallel | iPhone/iOS and Android/Google Play applications | Implemented and merged, validation open | Shared application/native security hosts and fail-closed autofill prototypes are implemented; enabled native autofill, physical-device/accessibility matrices, signing, closed testing, privacy/data-safety, independent review, and store acceptance remain. |
+| Future | iPhone/iOS and Android/Google Play applications | Source prototypes implemented; not released | Mobile work has its own future roadmap and release gates. Mobile signing, physical-device testing, and store acceptance do not block Windows GA. |
 
 Identity planning follows current Microsoft platform boundaries:
 
@@ -126,7 +126,8 @@ satisfy its own security and store review gates.
 
 Potential providers, subject to separate ADRs:
 
-- CyberArk Privilege Cloud is implemented locally under ADR-0015; release validation remains open.
+- CyberArk Privilege Cloud remains an unsupported future provider under ADR-0015. Its source is not
+  evidence that it is part of the Windows release.
 - HashiCorp Vault.
 - GitHub Actions secrets metadata.
 - 1Password Connect.
@@ -159,6 +160,7 @@ exercise, evaluator, and reliability evidence remains.
   monitoring with retained JSON evidence.
 - Published Preview supersedence/withdrawal and future GA end-of-support rules, named primary
   support/security ownership, and documented credential/signing controls.
-- Measurable evaluator, task-completion, Windows-build, install-path, upgrade, blocker, and stability thresholds.
+- Evidence that supported install, upgrade, and core workflows pass on the exact candidate, all
+  reports are triaged and dispositioned, and no known release or security blocker remains.
 - Formal G-01 decision only after [all feedback-cycle criteria](preview-feedback.md) are evidenced.
 - GA promotion only after every remaining [release-readiness gate](release-readiness.md) passes.
