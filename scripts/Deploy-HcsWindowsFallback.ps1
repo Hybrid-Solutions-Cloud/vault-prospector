@@ -18,6 +18,39 @@ $passwordSecretName = 'hcs-vault-prospector-windows-build-password'
 $temporarySecretsCreated = $false
 $deploymentSucceeded = $false
 
+function Restore-SoftDeletedSecretName {
+    param([Parameter(Mandatory)] [string]$SecretName)
+
+    az keyvault secret show-deleted `
+        --vault-name $keyVaultName `
+        --name $SecretName `
+        --output none 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        return
+    }
+
+    az keyvault secret recover `
+        --vault-name $keyVaultName `
+        --name $SecretName `
+        --output none
+    if ($LASTEXITCODE -ne 0) {
+        throw "Soft-deleted secret '$SecretName' could not be recovered for reuse."
+    }
+
+    for ($attempt = 1; $attempt -le 30; $attempt++) {
+        az keyvault secret show `
+            --vault-name $keyVaultName `
+            --name $SecretName `
+            --output none 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            return
+        }
+        Start-Sleep -Seconds 2
+    }
+
+    throw "Recovered secret '$SecretName' did not become available."
+}
+
 $keyVaultId = (az keyvault show --name $keyVaultName --query id -o tsv).Trim()
 if ([string]::IsNullOrWhiteSpace($keyVaultId)) {
     throw 'The HCS Key Vault resource ID could not be resolved.'
@@ -29,6 +62,9 @@ $temporaryParameterFile = Join-Path ([System.IO.Path]::GetTempPath()) "$deployme
 $temporaryPasswordFile = Join-Path ([System.IO.Path]::GetTempPath()) "$deploymentName.password.txt"
 
 try {
+    Restore-SoftDeletedSecretName -SecretName $usernameSecretName
+    Restore-SoftDeletedSecretName -SecretName $passwordSecretName
+
     $randomBytes = [byte[]]::new(30)
     [System.Security.Cryptography.RandomNumberGenerator]::Fill($randomBytes)
     $adminPassword = 'Vp!' + [Convert]::ToBase64String($randomBytes).Replace('/', '7').Replace('+', 'A')
