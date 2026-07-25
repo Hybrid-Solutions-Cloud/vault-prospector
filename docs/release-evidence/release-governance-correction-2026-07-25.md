@@ -84,3 +84,15 @@ Store-delivered package passes clean-machine install, launch, upgrade, and unins
   audit and remain open.
 
 See [ADO backlog reconciliation](ado-backlog-reconciliation-2026-07-25.md).
+
+## Fresh-runner performance finding
+
+Exact-main run `30148402689` initially failed only the 2-second empty encrypted-repository
+initialization metric: a fresh Server 2025 runner measured 4,663.974 ms while the other seven
+performance targets passed. The metric unintentionally included one-time in-process .NET JIT,
+SQLCipher native loading, and cryptographic-provider activation even though clean
+process-to-usable-window startup is a separate live gate. The probe now performs one isolated,
+unmeasured warmup and retains the original 2-second repository limit; it does not raise or waive
+the threshold. Attempt 2 of the unchanged exact-main source passed all jobs, including the
+performance step, which confirmed the failure was first-process runtime activation rather than a
+repository regression.
