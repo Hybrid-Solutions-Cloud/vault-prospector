@@ -23,6 +23,12 @@
   keyboard/screen-reader, independent-review, and exact-release Acceptance Criteria remain open.
 - The public Preview.4 release is marked withdrawn and points to Preview.5. Historical tags and
   assets remain immutable.
+- Release-record PR #37 merged as `29a957af86c022a8479ee46f39fab94d0f2377bb`;
+  exact-main run `30164830620` passed portable validation, full-history secret scanning, and the
+  Windows candidate on HCS-managed runners.
+- Final cleanup deleted `rg-hcs-vp-winbuild-eus2-01`; zero Windows runners remain. The disposable
+  Hyper-V guest is off at its clean baseline with zero snapshots, and disposable credentials,
+  PIN, and transient captures were removed.
 - No authoritative build, test, package, or publication step ran on the operator workstation.
   HCS Linux and ephemeral Azure Windows runners performed those operations; the workstation only
   orchestrated them and hosted the isolated acceptance-test guest.

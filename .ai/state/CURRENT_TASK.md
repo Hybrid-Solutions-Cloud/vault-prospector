@@ -43,17 +43,19 @@ Validated:
   complete.
 - The public Preview.4 record is marked withdrawn and points to Preview.5; immutable historical
   tags and assets were not changed.
+- Release-record PR #37 merged as `29a957af86c022a8479ee46f39fab94d0f2377bb`.
+  Exact-main run `30164830620` passed all three HCS jobs.
+- The one-shot Azure Windows runner resource group was deleted, zero Windows runners remain, and
+  its temporary Key Vault credentials were soft-deleted.
+- The disposable Hyper-V guest is powered off at its clean baseline with zero snapshots.
+  Disposable credential/PIN files and transient captures were deleted.
 
 Next:
 
-1. Merge and validate the Preview.5 documentation, release-evidence, support, and operational
-   contract update.
-2. Remove the one-shot Azure Windows fallback and restore/remove the disposable Hyper-V test
-   checkpoint, credentials, PIN, tasks, and test account.
-3. Complete current-Windows live identity/provider matrices, independent security/accessibility
+1. Complete current-Windows live identity/provider matrices, independent security/accessibility
    review, enterprise-policy deployment, operational exercise, and legal/privacy approval.
-4. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
+2. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the
    Microsoft-signed Store package.
-5. Implement governed Azure mutations only after the required design/security gate; the current
+3. Implement governed Azure mutations only after the required design/security gate; the current
    product remains intentionally read-only.
-6. Keep CyberArk and mobile in their separate future-roadmap releases.
+4. Keep CyberArk and mobile in their separate future-roadmap releases.
