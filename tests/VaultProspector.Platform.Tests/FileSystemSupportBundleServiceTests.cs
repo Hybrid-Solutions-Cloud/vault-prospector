@@ -7,6 +7,9 @@ namespace VaultProspector.Platform.Tests;
 
 public sealed class FileSystemSupportBundleServiceTests : IDisposable
 {
+    private static readonly string[] ExpectedBundleEntries =
+        ["diagnostics/vault-prospector.log", "manifest.json"];
+
     private readonly string _root = Path.Combine(
         Path.GetTempPath(),
         $"vault-prospector-support-tests-{Guid.NewGuid():N}");
@@ -32,7 +35,7 @@ public sealed class FileSystemSupportBundleServiceTests : IDisposable
 
         using var archive = ZipFile.OpenRead(path);
         Assert.Equal(
-            new[] { "diagnostics/vault-prospector.log", "manifest.json" },
+            ExpectedBundleEntries,
             archive.Entries.Select(entry => entry.FullName).Order().ToArray());
         var manifestEntry = Assert.Single(
             archive.Entries,
