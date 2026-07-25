@@ -1376,7 +1376,7 @@ public sealed partial class MainViewModel(
     }
 
     private void SynchronizeIdentityTypes(
-        IReadOnlyList<IdentityType> availableIdentityTypes)
+        IdentityType[] availableIdentityTypes)
     {
         // Preserve a valid selection while policy and host availability are refreshed.
         // Clearing the bound collection makes Avalonia push null into the enum property.
