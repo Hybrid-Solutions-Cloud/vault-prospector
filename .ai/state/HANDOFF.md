@@ -859,3 +859,65 @@ the repository and must not be committed.
 - Next: validate the evidence-only head, merge PR `#22`, validate the exact `main` merge commit,
   run the immutable Preview release pipeline, verify public artifacts and package submissions,
   then remove the temporary HCS Windows fallback.
+
+## Preview.5 laptop walkthrough backlog — 2026-07-25
+
+- Active walkthrough worktree:
+  `D:\tmp\vault-prospector-laptop-walkthrough`, branch
+  `docs/laptop-install-walkthrough`, based on remote main
+  `92a65535bcb3556a26d4ee084ffe35007daeb8cc`.
+- Running product-owner observations and answers are in
+  `.ai/state/LAPTOP_INSTALL_WALKTHROUGH.md`.
+- The walkthrough synchronized two vaults and 124 objects with three isolated errors. It also
+  reproduced an application-wide stuck busy state after connecting two interactive identities,
+  confirmed that Cancel clears it for both identities, identified that the shipped UI remains the
+  legacy design, and confirmed that AVD/Remote Desktop sessions have no usable unlock path.
+- GitHub master Bugs were created and mirrored into ADO according to the HCS standards:
+  `#39` / `AB#5572` busy state, `#40` / `AB#5573` isolated sync errors,
+  `#41` / `AB#5574` UI divergence, and `#42` / `AB#5575` remote-session unlock.
+  Each GitHub item is native type Bug, labeled `ado-tracked`, and comments link its ADO mirror.
+- ADO-master User Stories were created:
+  `AB#5569` trusted in-app updates, `AB#5570` privacy-safe diagnostics and support bundles,
+  and `AB#5571` approved installation/setup/desktop experience.
+- Thirty child Tasks, `AB#5576` through `AB#5605`, cover implementation, design approval,
+  contextual help, security analysis, documentation, automated tests, and exact-package
+  validation.
+- A REST verification of all 37 new ADO items found zero errors: all are New in the root
+  iteration, use approved tags, have exactly one parent, and meet type-specific fields and
+  Acceptance Criteria requirements. Bugs also have repro steps, severity, GitHub hyperlinks, and
+  Related links.
+- Reinstall behavior verified from the installer and code: installed binaries are per-machine,
+  but state remains under `%LOCALAPPDATA%\VaultProspector`; a same-account same/newer-version
+  reinstall is intended to retain it. DPAPI prevents supported cross-account/device restoration,
+  and the MSI blocks downgrade.
+- No local build, test, packaging, or deployment ran during this backlog-authoring work.
+- A second product-owner walkthrough batch added:
+  - ADO Story `AB#5608` for a short policy-controlled verification grace period across consecutive
+    explicit reveals. It is deliberately not plaintext or offline-value caching and invalidates on
+    every security boundary.
+  - Existing search Story `AB#5312` was refined to require discovered tenant, subscription, and
+    vault selectors; Task `AB#5628` implements the selectors.
+  - GitHub Bug `#43` / ADO mirror `AB#5610` for tenant-wide service-principal discovery including
+    Microsoft first-party infrastructure principals.
+  - GitHub Bug `#44` / ADO mirror `AB#5611` for minimize not hiding the window/taskbar entry in the
+    notification area.
+  - ADO Story `AB#5609` for a guided browser workflow that captures destination context
+    automatically while retaining origin, policy, presence, confirmation, and verification checks.
+- Tasks `AB#5612` through `AB#5628` decompose the second batch. All 22 inspected records—the 21 new
+  items plus refined `AB#5312`—passed standards verification with zero errors. GitHub Bugs `#43`
+  and `#44` are native Bug issues, labeled `ado-tracked`, and link their ADO mirrors.
+
+## Complete UI redesign prototype — 2026-07-25
+
+- A complete review artifact now exists at
+  `docs/design/vault-prospector-ui-redesign-2026-07-25/bundle.html`.
+- It provides three materially different directions—Compass, Command Center, and Atlas—across 11
+  lifecycle screens from install and first-run setup through search, reveal, browser fill,
+  administration, diagnostics, updates, and background behavior.
+- It incorporates all Preview.5 walkthrough findings and has dedicated screenshots for install,
+  setup, and daily search in each direction.
+- Vite build and single-file bundling pass. Automated browser traversal verified all 33
+  direction/screen states with zero console or page errors.
+- This is intentionally isolated design work, not a build or deployment of the production desktop
+  application. The next step is product-owner selection under AB#5571/AB#5587, followed by a
+  production Avalonia handoff and implementation plan.
