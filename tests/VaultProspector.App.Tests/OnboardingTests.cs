@@ -1536,8 +1536,7 @@ public sealed class OnboardingTests : IDisposable
     private sealed class FakeWorkloadAdministrationService : IWorkloadIdentityAdministrationService
     {
         public WorkloadIdentityCandidate? AssessedCandidate { get; private set; }
-        public IReadOnlyList<WorkloadIdentityCandidate>
-            ServicePrincipals { get; init; } = [];
+        public IReadOnlyList<WorkloadIdentityCandidate> ServicePrincipals { get; init; } = [];
 
         public Task<IReadOnlyList<WorkloadIdentityCandidate>> ListManagedIdentitiesAsync(
             ConnectedIdentity administrator,

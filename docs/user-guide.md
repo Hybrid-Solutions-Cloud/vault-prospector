@@ -92,7 +92,13 @@ and remains read-only; it does not create an identity or grant Azure access.
    managed identities visible through that account.
 3. Choose **Authorize Microsoft Graph directory read** only when service-principal discovery is
    needed. Microsoft Entra requests delegated `Application.Read.All` and may require administrator
-   consent. Then choose **List service principals**.
+   consent. Then choose **List service principals**. The default candidate list contains only
+   enabled application service principals whose application-registration owner is the selected
+   identity's home tenant. Microsoft-owned first-party/infrastructure applications, external
+   enterprise applications, disabled principals, and managed-identity service principals are
+   excluded. Managed identities are discovered separately through the exact Azure subscription.
+   Graph traversal is limited to ten 100-item pages and 1,000 eligible candidates. Use the local
+   accessible filter to narrow by name, type, client ID, or principal ID.
 4. Enter one exact Key Vault resource ID, select a discovered candidate, and choose **Assess
    selected identity permissions**. The app reads the administrator's effective permissions at the
    exact managed-identity and vault resources, then inspects applicable candidate role
@@ -107,6 +113,9 @@ and remains read-only; it does not create an identity or grant Azure access.
 
 The plan is deterministic and non-mutating. It names all intended scopes and effects, but this
 build has no execution command and requests no identity or role-assignment write permission.
+Directory visibility and customer ownership do not prove that the current operator owns a
+credential, can attach the identity, or has Key Vault access; those states remain explicitly
+unproven until their separate read-only assessment succeeds.
 Provisioning remains gated on independent security review, fresh authorization design, confirmation,
 encrypted audit, rollback, and live Azure tests.
 
