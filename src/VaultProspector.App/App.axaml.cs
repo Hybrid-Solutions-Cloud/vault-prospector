@@ -40,7 +40,10 @@ public partial class App : Avalonia.Application
             var diagnostics = new RedactingDiagnosticSink(VaultProspectorPaths.LogPath);
             var valueStore = new EncryptedFileValueStore(VaultProspectorPaths.CacheDirectory, keyProvider, clock);
             var clipboard = new AvaloniaClipboardService();
-            IUserVerificationService verification = new WindowsHelloVerificationService();
+            MainWindow? window = null;
+            IUserVerificationService verification =
+                new WindowsHelloVerificationService(
+                    () => window?.TryGetPlatformHandle()?.Handle ?? 0);
             IEnterprisePolicy enterprisePolicy =
                 new WindowsRegistryEnterprisePolicy();
             var secretAccessService = new SecretAccessService(
@@ -145,7 +148,7 @@ public partial class App : Avalonia.Application
                 browserFillService,
                 cyberArkService,
                 enterprisePolicy);
-            var window = new MainWindow { DataContext = viewModel };
+            window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()
             {

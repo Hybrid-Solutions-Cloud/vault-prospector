@@ -2,7 +2,7 @@
 
 ## Install on Windows
 
-Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.1), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
+Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.3), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
 
 After this exact Preview is approved by the community repositories, Windows users can also install with:
 
@@ -30,13 +30,18 @@ After a successful local unlock, a new profile opens directly on **Identities**:
 If Windows verification is canceled, unavailable, not configured, disabled by policy, or fails,
 Vault Prospector remains locked and does not initialize the metadata repository.
 
+Windows can report the verification device as unavailable inside a Remote Desktop session even
+when Windows Hello is configured on the computer. Vault Prospector remains fail-closed in that
+case. Reconnect to the Windows console or a Hyper-V console before retrying; repeating the command
+in the same affected RDP session cannot open the Windows verification prompt.
+
 ## Connect an identity
 
 Open **Identities**, optionally enter a friendly label, keep the recommended Vault Prospector product registration, and choose **Continue to Microsoft sign-in**. Complete the browser-based Microsoft sign-in, including any MFA, passwordless, FIDO, or Conditional Access prompts required by the tenant. Repeat for employer, customer, personal, or lab identities.
 
 If the tenant blocks the product registration or requires an administrator-controlled application, enable **Use my organization's own public-client registration** and enter its Application (client) ID. See [Authentication setup](authentication.md) for consent and registration requirements. Vault Prospector never asks for an Entra password or client secret.
 
-`0.2.0-preview.1` also exposes advanced workload profiles:
+`0.2.0-preview.3` also exposes advanced workload profiles:
 
 - **Managed identity** appears only when Vault Prospector detects an Azure host managed-identity
   endpoint or Azure Instance Metadata Service. A system-assigned identity needs no client ID; a

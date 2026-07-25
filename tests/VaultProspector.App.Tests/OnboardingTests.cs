@@ -360,6 +360,7 @@ public sealed class OnboardingTests : IDisposable
     [InlineData(UserVerificationResult.NotConfigured, "not configured")]
     [InlineData(UserVerificationResult.DisabledByPolicy, "policy")]
     [InlineData(UserVerificationResult.Unavailable, "unavailable")]
+    [InlineData(UserVerificationResult.RemoteSessionUnavailable, "Remote Desktop")]
     [InlineData(UserVerificationResult.Failed, "failed")]
     public async Task IncompleteWindowsVerificationKeepsApplicationLocked(
         UserVerificationResult result,

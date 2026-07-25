@@ -4,7 +4,12 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
-No changes recorded after `0.2.0-preview.3`.
+### Fixed
+
+- Use the HWND-bound `UserConsentVerifierInterop` API required for an unpackaged Windows desktop
+  application instead of the UWP-only verification call.
+- Identify Remote Desktop `DeviceNotPresent` results explicitly so the locked screen explains that
+  repeated retries in the same remote session cannot open Windows verification.
 
 ## [0.2.0-preview.3] - 2026-07-25
 
