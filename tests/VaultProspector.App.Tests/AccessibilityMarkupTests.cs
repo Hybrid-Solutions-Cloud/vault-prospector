@@ -176,7 +176,9 @@ public sealed class AccessibilityMarkupTests
             .Descendants()
             .Single(element =>
                 element.Name.LocalName == "TabItem" &&
-                Attribute(element, "Header")?.Value == "CyberArk");
+                Attribute(element, "Header")?.Value.StartsWith(
+                    "CyberArk",
+                    StringComparison.Ordinal) == true);
         var automationNames = tab
             .Descendants()
             .Select(element =>
@@ -252,7 +254,9 @@ public sealed class AccessibilityMarkupTests
             .Descendants()
             .Single(element =>
                 element.Name.LocalName == "TabItem" &&
-                Attribute(element, "Header")?.Value == "Activity & support");
+                Attribute(element, "Header")?.Value.Contains(
+                    "Activity and support",
+                    StringComparison.Ordinal) == true);
 
         Assert.Contains(
             activity.Descendants(),
@@ -283,23 +287,30 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
-    public void FirstRunGuidanceUsesTheVerifiedForegroundOnItsDarkPanel()
+    public void FirstRunGuidanceUsesTheApprovedAtlasStepperAndMetadataBoundary()
     {
         var document = XDocument.Load(FindMainWindowMarkup());
-        var panel = document
+        var stepper = document
             .Descendants()
             .Single(element =>
-                element.Name.LocalName == "Border" &&
-                Attribute(element, "IsVisible")?.Value ==
-                "{Binding IsFirstRun}");
+                Attribute(element, "Name")?.Value == "SetupStepperGrid");
+        var stepLabels = stepper
+            .Descendants()
+            .Select(element => Attribute(element, "Text")?.Value)
+            .Where(value => value is not null)
+            .Cast<string>()
+            .ToHashSet(StringComparer.Ordinal);
 
-        Assert.Equal(
-            "{DynamicResource VaultColorHeader}",
-            Attribute(panel, "Background")?.Value);
-
-        var guidance = panel.Descendants().Where(element => element.Name.LocalName == "TextBlock").ToArray();
-        Assert.NotEmpty(guidance);
-        Assert.All(guidance, text => Assert.Equal("White", Attribute(text, "Foreground")?.Value));
+        Assert.Contains("Local protection", stepLabels);
+        Assert.Contains("Connect identities", stepLabels);
+        Assert.Contains("Choose discovery scope", stepLabels);
+        Assert.Contains("Synchronize metadata", stepLabels);
+        Assert.Contains(
+            document.Descendants(),
+            element =>
+                Attribute(element, "Text")?.Value?.Contains(
+                    "It does not retrieve secret values",
+                    StringComparison.Ordinal) == true);
     }
 
     [Fact]

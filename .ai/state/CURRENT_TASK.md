@@ -1,12 +1,17 @@
 # Current task
 
-Finish the product-owner walkthrough corrections on branch `feature/desktop-ui-redesign`, close
-acceptance-complete Azure DevOps items bottom-up, merge PR #46, publish an immutable binary-only
-Preview release, verify that exact public package, and clean temporary test/runner resources.
+Correct the failed Atlas production-parity gate on branch `fix/atlas-production-parity`. Replace
+the legacy-derived Avalonia content layouts with the approved C · Atlas experience, add regression
+coverage that checks production structure and rendered output, build on HCS-managed runners,
+install the exact package in the Windows acceptance guest, and publish only after direct
+product-owner visual review passes.
 
 Confirmed on 2026-07-25:
 
 - Atlas is the approved production UI direction.
+- PR #46 was merged, but its exact installed candidate failed visual parity review. Release run
+  `30178225455` was cancelled before publication, and no public `v0.3.0-preview.1` release exists.
+- UI Tasks AB#5589, AB#5591, AB#5592, AB#5600, and AB#5601 were reopened.
 - CyberArk and native mobile applications remain future-roadmap work, not Windows release blockers.
 - GitHub Actions performs builds and releases on HCS-managed runners. Azure DevOps remains the
   authoritative hierarchy for epics, features, user stories, and tasks.
