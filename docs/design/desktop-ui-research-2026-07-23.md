@@ -92,6 +92,20 @@ four switchable structures. Each includes Setup, Search, Secret reveal, and Sett
 | C · Guided tasks | Numbered task navigation reduces setup/recovery errors for infrequent users. | Frequent search may feel slower. |
 | D · Operations console | Dense status supports multi-identity administrators. | Cognitive load and accessibility regressions. |
 
+## Complete lifecycle follow-up — 2026-07-25
+
+The product-owner walkthrough exposed gaps that the initial four-screen concepts could not answer.
+The follow-up prototype at
+[`vault-prospector-ui-redesign-2026-07-25`](vault-prospector-ui-redesign-2026-07-25/README.md)
+therefore compares three complete product directions across the same 11-screen lifecycle:
+installation, secure unlock, identity connection, synchronization, search, reveal, workspaces,
+browser fill, administration, activity/support, and settings/updates.
+
+The follow-up includes multi-account and multi-tenant context, actionable partial-sync errors,
+discovered filter choices, AVD/Remote Desktop unlock, reveal-verification grace, notification-area
+behavior, filtered workload identities, in-application updates, and privacy-safe support bundles.
+It is a review artifact, not the production Avalonia implementation. No direction is approved yet.
+
 ## Insights to opportunities
 
 | Insight | Opportunity | Impact | Effort |
