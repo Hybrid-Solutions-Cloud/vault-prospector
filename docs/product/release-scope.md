@@ -1,8 +1,9 @@
 # Version 0.2 Preview Scope
 
-Version [`0.2.0-preview.1`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.1)
+Version [`0.2.0-preview.4`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.4)
 is the current unsigned Windows desktop Preview for non-production evaluation. It supersedes
-`0.1.1-preview.1`; `0.1.0-preview.2` remains withdrawn and must not be installed or resubmitted.
+withdrawn `0.2.0-preview.3`, which used the wrong Windows desktop verification API.
+`0.1.0-preview.2` also remains withdrawn and must not be installed or resubmitted.
 
 ## Included
 
@@ -24,7 +25,7 @@ is the current unsigned Windows desktop Preview for non-production evaluation. I
   and offline-cache behavior, including packaged ADMX/ADML templates.
 - GitHub Actions validation on the HCS Azure runner, with Windows package validation routed through
   the ephemeral HCS Tier-4 Windows build VM.
-- Four release packages, adjacent SHA-256 files, SPDX SBOM, and four Key Vault-backed Cosign
+- Five release packages, adjacent SHA-256 files, an SPDX SBOM, and five keyless Sigstore
   verification bundles.
 
 ## Future roadmap source not included in the Windows release contract

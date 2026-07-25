@@ -21,7 +21,7 @@ Each Windows release contains:
 ## Verify a checksum
 
 ```powershell
-$artifact = 'VaultProspector-0.2.0-preview.1-win-x64.msi'
+$artifact = 'VaultProspector-0.2.0-preview.4-win-x64.msi'
 $expected = (Get-Content "$artifact.sha256").Split(' ')[0]
 $actual = (Get-FileHash $artifact -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($actual -ne $expected) { throw 'Checksum verification failed.' }

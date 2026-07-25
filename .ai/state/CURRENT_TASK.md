@@ -22,6 +22,20 @@ Confirmed on 2026-07-25:
 
 Validated:
 
+- PR #33 corrected Windows desktop verification and merged as
+  `e84d0f0e47605d9575a3306721adf3b50764c4d2`. Exact-main run `30158989872` passed all
+  three jobs on HCS-managed runners, including the zero-warning 375-test Windows build and
+  packaging gates.
+- Immutable tag `v0.2.0-preview.4` points to that exact merge commit. Release run `30159321059`
+  repeated the zero-warning Windows build and all 375 tests, created packages/SBOM/Sigstore
+  evidence, and published the replacement Preview through the HCS GitHub App.
+- The public `0.2.0-preview.4` prerelease has exactly 16 assets. Independent downloads matched all
+  five package checksum files; Cosign `v3.0.6` verified all five bundles against the exact
+  tag-workflow identity.
+- The active RDP session returns `DeviceNotPresent` even through the correct HWND-bound desktop
+  interop API. The corrected app remains locked and explains that a local Windows or Hyper-V
+  console is required. AB#5539 remains open because real local-console success and cancellation
+  are not yet recorded.
 - `0.2.0-preview.3` is published from immutable source
   `f0ff8e7fc6190953620b4cf7d8aae4447875dfe2` in the public binary repository. Release run
   `30150472368` attempt 2 passed, all 16 assets are present, all five adjacent hashes matched
@@ -50,8 +64,8 @@ Validated:
 
 Next:
 
-1. Complete AB#5539 on HCS runners and replace `0.2.0-preview.3`; record local-console Windows Hello
-   success and cancellation before closing the Task.
+1. Record local-console Windows Hello success and cancellation for `0.2.0-preview.4` before
+   closing AB#5539. Do not treat the Remote Desktop `DeviceNotPresent` result as positive evidence.
 2. Complete current-Windows live matrices, independent security/accessibility review, enterprise
    policy deployment, operational exercise, and legal/privacy approval.
 3. Reserve the free Partner Center identity, submit the reproducible MSIX, and validate the

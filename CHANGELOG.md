@@ -4,6 +4,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+## [0.2.0-preview.4] - 2026-07-25
+
 ### Fixed
 
 - Use the HWND-bound `UserConsentVerifierInterop` API required for an unpackaged Windows desktop
@@ -173,6 +175,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.2.0-preview.4]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.4
 [0.2.0-preview.3]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.3
 [0.2.0-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.1
 [0.1.1-preview.1]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.1.1-preview.1

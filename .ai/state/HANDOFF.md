@@ -1,5 +1,35 @@
 # Session handoff
 
+## 0.2.0-preview.4 desktop verification replacement — 2026-07-25
+
+- Installed `0.2.0-preview.3` exposed a release defect: the unpackaged desktop application called
+  the UWP-only Windows verification request API. The installed application remained locked.
+- The public `0.2.0-preview.3` release title and body now mark it **WITHDRAWN — DO NOT INSTALL**
+  and link to `0.2.0-preview.4`; its immutable tag and assets were not changed.
+- Windows returned `DeviceNotPresent` for both the availability probe and the correct HWND-bound
+  desktop interop request in the active RDP session. Retrying in that session cannot open the
+  Windows verification prompt.
+- AB#5539 tracks the correction under parent User Story AB#5348. It remains New because a local
+  Windows or Hyper-V console must still record real Windows Hello success and cancellation.
+- PR #33 merged the HWND-bound interop correction and explicit Remote Desktop diagnosis as
+  `e84d0f0e47605d9575a3306721adf3b50764c4d2`.
+- Exact-main run `30158989872` passed all three jobs on HCS-managed runners, including the
+  zero-warning 375-test Windows build, MSI/MSIX/package-manager candidates, installer/browser
+  contracts, and readiness checks.
+- Immutable tag `v0.2.0-preview.4` points to the exact merge commit. Release run `30159321059`
+  repeated the zero-warning Windows build and all 375 tests, generated the SPDX SBOM and five
+  keyless Sigstore bundles, and published through the HCS GitHub App.
+- The public prerelease contains exactly 16 assets. Independent downloads matched all five
+  adjacent package checksums; Cosign `v3.0.6` verified all five bundles against
+  `release.yml@refs/tags/v0.2.0-preview.4`.
+- The machine-readable operational contract now names `0.2.0-preview.4` as its only supported
+  Preview and monitors that release page and exact MSI checksum.
+- The current workstation did not perform the authoritative build, tests, packaging, or
+  publication. Those ran on the HCS Linux and ephemeral Azure Windows runners.
+- HCS bootstrap resolves the repository as the `hcs`-scoped `app` profile. Drift validation still
+  returns `Path not found` for both the registered checkout and this temporary worktree, so no
+  deterministic drift pass is claimed.
+
 ## 0.2.0-preview.3 published and independently verified — 2026-07-25
 
 - PR #29 merged as `ea8b407707de7bb743ac27607f6bfa7b98df9801`; it isolates one-time

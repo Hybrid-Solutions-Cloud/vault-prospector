@@ -24,9 +24,9 @@ Never replace an asset under an existing version tag. Publish a new version if a
 Run on Windows with PowerShell 7, .NET 10, WiX, WinGet, and Chocolatey available:
 
 ```powershell
-pwsh ./scripts/PackageInstaller.ps1 -Version 0.2.0-preview.1
-pwsh ./scripts/PackageDistribution.ps1 -Version 0.2.0-preview.1
-winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/0.2.0-preview.1
+pwsh ./scripts/PackageInstaller.ps1 -Version 0.2.0-preview.4
+pwsh ./scripts/PackageDistribution.ps1 -Version 0.2.0-preview.4
+winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/0.2.0-preview.4
 ```
 
 `PackageInstaller.ps1` creates the MSI and checksum. `PackageDistribution.ps1` reads the MSI product identifiers and checksum, then creates the WinGet manifests, manifest archive, Chocolatey source package, `.nupkg`, and checksums.
@@ -48,7 +48,7 @@ only when explicitly labeled and documented; stable and GA artifacts require tru
 Set `GH_TOKEN` to the Hybrid Solutions Cloud GitHub App installation token. Do not use a personal access token to push or publish into the organization.
 
 ```powershell
-pwsh ./scripts/PublishDistribution.ps1 -Version 0.2.0-preview.1
+pwsh ./scripts/PublishDistribution.ps1 -Version 0.2.0-preview.4
 ```
 
 The script creates the matching release in the public distribution repository and uploads the
@@ -106,7 +106,7 @@ later publishing session as `CHOCOLATEY_API_KEY` with the platform environment l
 Install WinGet Manifest Creator once with `winget install Microsoft.WingetCreate`, authenticate with `wingetcreate token --store`, then run:
 
 ```powershell
-pwsh ./scripts/SubmitPackageManagers.ps1 -Version 0.2.0-preview.1
+pwsh ./scripts/SubmitPackageManagers.ps1 -Version 0.2.0-preview.4
 ```
 
 The script submits the validated WinGet manifest directory and pushes the Chocolatey `.nupkg`. Both community services perform independent automated checks and moderation before the commands become available to users.
