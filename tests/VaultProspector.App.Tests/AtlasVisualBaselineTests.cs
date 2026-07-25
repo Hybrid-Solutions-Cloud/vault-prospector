@@ -6,6 +6,11 @@ namespace VaultProspector.App.Tests;
 
 public sealed class AtlasVisualBaselineTests
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     [Fact]
     public void ApprovedAtlasSourcesAndReferenceImagesMatchBaseline()
     {
@@ -13,7 +18,7 @@ public sealed class AtlasVisualBaselineTests
             "tests/VaultProspector.App.Tests/Baselines/atlas.visual-baseline.json");
         var baseline = JsonSerializer.Deserialize<AtlasBaseline>(
             File.ReadAllText(baselinePath),
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            JsonOptions);
 
         Assert.NotNull(baseline);
         Assert.Equal("Atlas", baseline.Direction);
