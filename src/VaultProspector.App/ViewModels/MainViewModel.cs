@@ -51,6 +51,12 @@ public sealed partial class MainViewModel(
     public ObservableCollection<SearchResultRow> Results { get; } = [];
     public ObservableCollection<Workspace> Workspaces { get; } = [];
     public ObservableCollection<LocalRecoveryArchiveRow> RecoveryArchives { get; } = [];
+    public ObservableCollection<SearchFilterOption> TenantFilterOptions { get; } =
+        [SearchFilterOption.All("All tenants")];
+    public ObservableCollection<SearchFilterOption> SubscriptionFilterOptions { get; } =
+        [SearchFilterOption.All("All subscriptions")];
+    public ObservableCollection<SearchFilterOption> VaultFilterOptions { get; } =
+        [SearchFilterOption.All("All vaults")];
     public IReadOnlyList<string> ObjectTypes { get; } = ["All", "Secret", "Key", "Certificate"];
     public IReadOnlyList<CloseBehavior> CloseBehaviors { get; } =
         [CloseBehavior.Ask, CloseBehavior.Exit, CloseBehavior.LockToNotificationArea];
@@ -120,6 +126,9 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _tenantFilter = string.Empty;
     [ObservableProperty] private string _subscriptionFilter = string.Empty;
     [ObservableProperty] private string _vaultFilter = string.Empty;
+    [ObservableProperty] private SearchFilterOption? _selectedTenantFilterOption;
+    [ObservableProperty] private SearchFilterOption? _selectedSubscriptionFilterOption;
+    [ObservableProperty] private SearchFilterOption? _selectedVaultFilterOption;
     [ObservableProperty] private string _selectedObjectType = "All";
     [ObservableProperty] private bool _favoritesOnly;
     [ObservableProperty] private bool _staleOnly;
@@ -257,6 +266,7 @@ public sealed partial class MainViewModel(
             CanResetLocalData = false;
             await ReloadIdentitiesAsync(cancellationToken);
             await ReloadWorkspacesAsync(cancellationToken);
+            await RefreshSearchFilterOptionsAsync(cancellationToken);
             await SearchCoreAsync(cancellationToken);
             await ReloadBrowserIntegrationAsync(cancellationToken);
             await ReloadCyberArkProfilesAsync(cancellationToken);
@@ -527,6 +537,7 @@ public sealed partial class MainViewModel(
         StatusText = $"Synchronizing {SelectedIdentity.DisplayName}…";
         var run = await synchronizationService.SynchronizeAsync(SelectedIdentity, cancellationToken);
         await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
         StatusText = $"{run.Status}: {run.VaultCount} vaults and {run.ItemCount} objects; {run.NonSensitiveErrors.Count} isolated errors.";
     });
@@ -868,6 +879,55 @@ public sealed partial class MainViewModel(
         StatusText = $"{Results.Count} indexed objects. Values were not retrieved.";
     }
 
+    private async Task RefreshSearchFilterOptionsAsync(CancellationToken cancellationToken)
+    {
+        var selectedTenant = SelectedTenantFilterOption?.Value;
+        var selectedSubscription = SelectedSubscriptionFilterOption?.Value;
+        var selectedVault = SelectedVaultFilterOption?.Value;
+        var tenants = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var subscriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var vaults = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var identity in Identities)
+        {
+            foreach (var tenant in await repository.GetTenantsAsync(identity.Id, cancellationToken))
+                tenants.TryAdd(tenant.TenantId, $"{tenant.DisplayName} · {tenant.TenantId}");
+            foreach (var subscription in await repository.GetSubscriptionsAsync(identity.Id, cancellationToken))
+                subscriptions.TryAdd(
+                    subscription.SubscriptionId,
+                    $"{subscription.DisplayName} · {subscription.SubscriptionId}");
+            foreach (var vault in await repository.GetVaultAccessSummariesAsync(identity.Id, cancellationToken))
+                vaults.TryAdd(vault.Vault.Name, vault.Vault.Name);
+        }
+
+        ReplaceFilterOptions(TenantFilterOptions, "All tenants", tenants);
+        ReplaceFilterOptions(SubscriptionFilterOptions, "All subscriptions", subscriptions);
+        ReplaceFilterOptions(VaultFilterOptions, "All vaults", vaults);
+        SelectedTenantFilterOption = FindFilterOption(TenantFilterOptions, selectedTenant);
+        SelectedSubscriptionFilterOption = FindFilterOption(SubscriptionFilterOptions, selectedSubscription);
+        SelectedVaultFilterOption = FindFilterOption(VaultFilterOptions, selectedVault);
+    }
+
+    private static void ReplaceFilterOptions(
+        ObservableCollection<SearchFilterOption> target,
+        string allLabel,
+        IReadOnlyDictionary<string, string> options)
+    {
+        target.Clear();
+        target.Add(SearchFilterOption.All(allLabel));
+        foreach (var option in options
+                     .Select(pair => new SearchFilterOption(pair.Key, pair.Value))
+                     .OrderBy(option => option.Label, StringComparer.CurrentCultureIgnoreCase))
+            target.Add(option);
+    }
+
+    private static SearchFilterOption FindFilterOption(
+        IEnumerable<SearchFilterOption> options,
+        string? value) =>
+        options.FirstOrDefault(option =>
+            string.Equals(option.Value, value, StringComparison.OrdinalIgnoreCase)) ??
+        options.First();
+
     private async Task ReloadIdentitiesAsync(CancellationToken cancellationToken)
     {
         var selectedIdentityId = SelectedIdentity?.Id;
@@ -1202,6 +1262,15 @@ public sealed partial class MainViewModel(
         CopyCommand.NotifyCanExecuteChanged();
         CacheSelectedCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnSelectedTenantFilterOptionChanged(SearchFilterOption? value) =>
+        TenantFilter = value?.Value ?? string.Empty;
+
+    partial void OnSelectedSubscriptionFilterOptionChanged(SearchFilterOption? value) =>
+        SubscriptionFilter = value?.Value ?? string.Empty;
+
+    partial void OnSelectedVaultFilterOptionChanged(SearchFilterOption? value) =>
+        VaultFilter = value?.Value ?? string.Empty;
 
     partial void OnOfflineCacheEnabledChanged(bool value)
     {
@@ -1623,6 +1692,11 @@ public sealed class SearchResultRow(SearchResult result)
     public string AccessStatus => Result.AccessStatus;
     public bool IsFavorite => Result.IsFavorite;
     public string FavoriteMarker => IsFavorite ? "★" : "☆";
+}
+
+public sealed record SearchFilterOption(string Value, string Label)
+{
+    public static SearchFilterOption All(string label) => new(string.Empty, label);
 }
 
 public sealed class SubscriptionSelectionRow(SubscriptionAccess subscription)

@@ -180,6 +180,7 @@ public partial class MainWindow : Window
         _isNarrowLayout = narrow;
 
         HeaderContextBadge.IsVisible = !narrow;
+        MainTabs.TabStripPlacement = narrow ? Dock.Top : Dock.Left;
 
         SearchCommandGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "*,150,Auto");
         SearchCommandGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto,Auto" : "Auto");
@@ -188,8 +189,8 @@ public partial class MainWindow : Window
 
         SearchFilterGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "*,*,*");
         SearchFilterGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto,Auto" : "Auto");
-        Place(SubscriptionFilterTextBox, narrow ? 1 : 0, narrow ? 0 : 1);
-        Place(VaultFilterTextBox, narrow ? 2 : 0, narrow ? 0 : 2);
+        Place(SubscriptionFilterComboBox, narrow ? 1 : 0, narrow ? 0 : 1);
+        Place(VaultFilterComboBox, narrow ? 2 : 0, narrow ? 0 : 2);
 
         SearchResultsGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "2*,1*");
         SearchResultsGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto" : "*");

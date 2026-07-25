@@ -921,3 +921,29 @@ the repository and must not be committed.
 - This is intentionally isolated design work, not a build or deployment of the production desktop
   application. The next step is product-owner selection under AB#5571/AB#5587, followed by a
   production Avalonia handoff and implementation plan.
+
+## Production desktop redesign implementation — 2026-07-25
+
+- The temporary walkthrough worktree was moved into the durable repository area and converted to
+  branch `feature/desktop-ui-redesign` at
+  `D:\git\hybrid-solutions-cloud\vault-prospector-desktop-ui`.
+- Design PR `#45` passed portable validation and full-history secret scanning and was merged to
+  `main` as `613cb37`. The production code is intentionally proceeding in a separate PR.
+- Product direction: Compass is the working production baseline with Atlas's persistent
+  workspace/source context. Command Center is not a competing runtime shell.
+- Added `docs/design/desktop-ui-production-handoff-2026-07-25.md` with tokens, shell behavior,
+  responsive rules, interaction states, accessibility requirements, and delivery slices.
+- First production slice is in progress:
+  - shared Avalonia design tokens and Compass/Atlas shell;
+  - left navigation that moves to the top in the existing narrow-layout mode;
+  - persistent workspace, identity, indexed-object, safety, progress, and cancellation context;
+  - discovered tenant, subscription, and vault search selectors;
+  - markup regression ensuring the three source filters remain populated selectors.
+- The operator workstation has .NET SDK 9 only while the repository pins 10.0.302, and the
+  documented Ubuntu 22.04 WSL distribution is absent. No production build was run on the operator
+  workstation. Validation must use the HCS self-hosted runner according to the current
+  build-environments standard.
+- HCS bootstrap resolves `vault-prospector` as an HCS `app` profile and applies scripting, testing,
+  documentation, governance, build-environments, and project-management standards. Its drift
+  endpoint still returns `Path not found` for the registered Windows checkout; no drift pass is
+  claimed.

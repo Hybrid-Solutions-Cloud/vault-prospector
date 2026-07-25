@@ -3,19 +3,37 @@
         xmlns:vm="using:VaultProspector.App.ViewModels"
         x:Class="VaultProspector.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Width="960" Height="640" MinWidth="320" MinHeight="300"
+        Width="1180" Height="760" MinWidth="320" MinHeight="300"
         WindowStartupLocation="CenterScreen"
         Icon="/Assets/vault-prospector.ico"
         Title="Vault Prospector">
-  <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource ApplicationPageBackgroundThemeBrush}">
-    <Border Grid.Row="0" Background="#073B34" Padding="22,14">
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel>
-          <TextBlock Text="VAULT PROSPECTOR" Foreground="#A7F3D0" FontSize="{StaticResource VaultFontSize12}" FontWeight="Bold" LetterSpacing="2" />
-          <TextBlock Text="Find the right secret. Keep the boundaries clear." Foreground="White" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" TextWrapping="Wrap" />
-        </StackPanel>
-        <Border x:Name="HeaderContextBadge" Grid.Column="1" Background="#14584E" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
-          <TextBlock Text="LOCAL-FIRST · AZURE KEY VAULT" Foreground="#D1FAE5" FontSize="{StaticResource VaultFontSize11}" />
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource VaultColorCanvas}">
+    <Border Grid.Row="0" Background="#143E35">
+      <Grid RowDefinitions="Auto,Auto">
+        <Grid ColumnDefinitions="*,Auto" Margin="22,12">
+          <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+            <Border Width="38" Height="38" Background="#DCEEE8" CornerRadius="4">
+              <TextBlock Text="VP" Foreground="#084E42" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel>
+              <TextBlock Text="Vault Prospector" Foreground="White" FontSize="{StaticResource VaultFontSize18}" FontWeight="SemiBold" />
+              <TextBlock Text="Secure Azure retrieval" Foreground="#BED1CA" FontSize="{StaticResource VaultFontSize11}" />
+            </StackPanel>
+          </StackPanel>
+          <Border x:Name="HeaderContextBadge" Grid.Column="1" Background="#24584D" CornerRadius="4" Padding="12,7" VerticalAlignment="Center">
+            <TextBlock Text="LOCAL-FIRST · READ-ONLY BY DEFAULT" Foreground="#D1FAE5" FontSize="{StaticResource VaultFontSize11}" />
+          </Border>
+        </Grid>
+        <Border Grid.Row="1" Background="#EFF3F0" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="22,8">
+          <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="20">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="Workspace" Foreground="{DynamicResource VaultColorMuted}" />
+              <TextBlock Text="{Binding SelectedWorkspace.Name, FallbackValue=All discovered sources}" FontWeight="SemiBold" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="{Binding Identities.Count, StringFormat={}{0} identities}" />
+            <TextBlock Grid.Column="2" Text="{Binding Results.Count, StringFormat={}{0} indexed objects}" />
+            <TextBlock Grid.Column="4" Text="Values stay protected until an explicit reveal." Foreground="{DynamicResource VaultColorMuted}" />
+          </Grid>
         </Border>
       </Grid>
     </Border>
@@ -94,10 +112,12 @@
 
     <TabControl x:Name="MainTabs"
                 Grid.Row="2"
-                Margin="18"
+                Classes="product-shell"
+                TabStripPlacement="Left"
+                Margin="18,14"
                 IsVisible="{Binding IsApplicationReady}"
                 SelectedIndex="{Binding SelectedMainTabIndex}">
-      <TabItem Header="Search">
+      <TabItem Header="Find secrets">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Grid RowDefinitions="Auto,*,Auto" Margin="4,14,4,4">
           <Border Classes="card">
@@ -117,9 +137,32 @@
                 <CheckBox Content="Recent first" IsChecked="{Binding RecentlyAccessedFirst}" Margin="0,0,14,6" />
               </WrapPanel>
               <Grid x:Name="SearchFilterGrid" ColumnDefinitions="*,*,*" ColumnSpacing="10" RowSpacing="8">
-                <TextBox x:Name="TenantFilterTextBox" PlaceholderText="Tenant ID contains…" Text="{Binding TenantFilter}" AutomationProperties.Name="Tenant filter" />
-                <TextBox x:Name="SubscriptionFilterTextBox" Grid.Column="1" PlaceholderText="Subscription ID contains…" Text="{Binding SubscriptionFilter}" AutomationProperties.Name="Subscription filter" />
-                <TextBox x:Name="VaultFilterTextBox" Grid.Column="2" PlaceholderText="Vault name contains…" Text="{Binding VaultFilter}" AutomationProperties.Name="Vault name filter" />
+                <ComboBox x:Name="TenantFilterComboBox"
+                          ItemsSource="{Binding TenantFilterOptions}"
+                          SelectedItem="{Binding SelectedTenantFilterOption}"
+                          AutomationProperties.Name="Tenant filter">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox x:Name="SubscriptionFilterComboBox"
+                          Grid.Column="1"
+                          ItemsSource="{Binding SubscriptionFilterOptions}"
+                          SelectedItem="{Binding SelectedSubscriptionFilterOption}"
+                          AutomationProperties.Name="Subscription filter">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox x:Name="VaultFilterComboBox"
+                          Grid.Column="2"
+                          ItemsSource="{Binding VaultFilterOptions}"
+                          SelectedItem="{Binding SelectedVaultFilterOption}"
+                          AutomationProperties.Name="Vault filter">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SearchFilterOption"><TextBlock Text="{Binding Label}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
               </Grid>
             </StackPanel>
           </Border>
@@ -179,7 +222,7 @@
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Identities">
+      <TabItem Header="Connections">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Grid x:Name="IdentityGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" Margin="4,14" ColumnSpacing="14" RowSpacing="14">
           <Border Classes="card">
@@ -519,7 +562,7 @@
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Browser">
+      <TabItem Header="Browser fill">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
           <StackPanel Margin="4,14" Spacing="14">
@@ -974,8 +1017,12 @@
       </TabItem>
     </TabControl>
 
-    <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="18,10">
-      <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" AutomationProperties.LiveSetting="Polite" /><ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" AutomationProperties.Name="Operation in progress" /></Grid>
+    <Border Grid.Row="3" Background="{DynamicResource VaultColorSurface}" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="18,10">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+        <TextBlock Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" AutomationProperties.LiveSetting="Polite" />
+        <ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" AutomationProperties.Name="Operation in progress" />
+        <Button Grid.Column="2" Content="Cancel operation" Command="{Binding CancelOperationCommand}" IsVisible="{Binding IsBusy}" AutomationProperties.Name="Cancel the active operation" />
+      </Grid>
     </Border>
   </Grid>
 </Window>

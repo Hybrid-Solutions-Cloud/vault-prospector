@@ -28,6 +28,33 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void SearchSourceFiltersUseDiscoveredChoiceCollections()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var expectedBindings = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Tenant filter"] = "{Binding TenantFilterOptions}",
+            ["Subscription filter"] = "{Binding SubscriptionFilterOptions}",
+            ["Vault filter"] = "{Binding VaultFilterOptions}",
+        };
+
+        var filters = document
+            .Descendants()
+            .Where(element =>
+                expectedBindings.ContainsKey(
+                    Attribute(element, "AutomationProperties.Name")?.Value ?? string.Empty))
+            .ToArray();
+
+        Assert.Equal(expectedBindings.Count, filters.Length);
+        Assert.All(filters, filter =>
+        {
+            Assert.Equal("ComboBox", filter.Name.LocalName);
+            var name = Attribute(filter, "AutomationProperties.Name")!.Value;
+            Assert.Equal(expectedBindings[name], Attribute(filter, "ItemsSource")?.Value);
+        });
+    }
+
+    [Fact]
     public void ApplicationStatusIsAnAccessiblePoliteLiveRegion()
     {
         var document = XDocument.Load(FindMainWindowMarkup());
