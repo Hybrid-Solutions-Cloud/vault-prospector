@@ -28,6 +28,9 @@ runner evidence.
   honestly Removed from product scope. The approved HCS Tier-4 fallback was used instead.
 - Closed AB#5332 and AB#5333 after current pull-request and exact-main dependency and full-history
   secret scans passed.
+- Closed acceptance-evidence Task AB#5309 after every AB#5308 criterion received an observable
+  result. Parent AB#5308 remains New because representative-device and live-provider evidence
+  still fails its own Acceptance Criteria.
 - Added a dated implementation/evidence audit to every remaining open User Story. No item was
   closed solely because source or a prototype exists.
 
@@ -39,11 +42,11 @@ runner evidence.
 | Items missing tags | 0 |
 | Items missing priority | 0 |
 | Closed parents with open children | 0 |
-| New parents whose children are all Closed or Removed | 0 |
+| New parents whose children are all Closed or Removed and whose own Acceptance Criteria pass | 0 |
 | Live ADO pipeline definitions | 0 |
 
 Final state counts are 15 New Epics, 20 New Features, 46 New User Stories, 3 Closed User Stories,
-46 New Tasks, 6 Closed Tasks, and 1 Removed Task. The open counts are intentional: their own
+45 New Tasks, 7 Closed Tasks, and 1 Removed Task. The open counts are intentional: their own
 acceptance criteria or a child acceptance-evidence Task remains open.
 
 ## Correctly open work
@@ -60,5 +63,6 @@ The remaining New items fall into explicit categories:
 - CyberArk and native mobile work, which are separate Priority 4 future-roadmap releases and do
   not block the Windows Preview or Windows GA decision.
 
-Every open story retains its linked open acceptance-evidence Task. Parents remain open whenever any
-child remains open.
+Parents remain open whenever any child remains open. A terminal evidence Task does not by itself
+close its parent: AB#5308 demonstrates the required exception because its automated evidence is
+recorded but its representative-device and live-provider Acceptance Criteria remain unmet.
