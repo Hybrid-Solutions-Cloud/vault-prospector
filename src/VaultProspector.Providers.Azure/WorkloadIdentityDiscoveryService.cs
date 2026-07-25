@@ -12,9 +12,11 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
 {
     private const int MaximumGraphPages = 10;
     private const int MaximumGraphCandidates = 1_000;
+    private const string MicrosoftFirstPartyTenantId =
+        "72f988bf-86f1-41af-91ab-2d7cd011db47";
     private static readonly Uri GraphServicePrincipalsUri = new(
         "https://graph.microsoft.com/v1.0/servicePrincipals" +
-        "?$select=id,appId,displayName,servicePrincipalType,accountEnabled&$top=100");
+        "?$select=id,appId,displayName,servicePrincipalType,accountEnabled,appOwnerOrganizationId&$top=100");
 
     private readonly Func<ConnectedIdentity, CancellationToken, Task<TokenCredential>> _credentialResolver;
     private readonly HttpClient _graphClient;
@@ -141,6 +143,8 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
 
             foreach (var value in values.EnumerateArray())
             {
+                if (IsMicrosoftFirstParty(value))
+                    continue;
                 if (candidates.Count >= MaximumGraphCandidates)
                     throw new InvalidDataException(
                         "Microsoft Graph returned more service principals than the safe display limit.");
@@ -155,6 +159,12 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
                 "Microsoft Graph pagination exceeded the safe page limit.");
         return candidates;
     }
+
+    private static bool IsMicrosoftFirstParty(JsonElement servicePrincipal) =>
+        string.Equals(
+            OptionalString(servicePrincipal, "appOwnerOrganizationId"),
+            MicrosoftFirstPartyTenantId,
+            StringComparison.OrdinalIgnoreCase);
 
     public async Task<WorkloadIdentityCandidate> AssessPermissionsAsync(
         ConnectedIdentity administrator,

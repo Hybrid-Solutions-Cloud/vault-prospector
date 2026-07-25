@@ -445,6 +445,9 @@
                           Command="{Binding DiscoverServicePrincipalsCommand}"
                           Margin="0,0,8,8" />
                 </WrapPanel>
+                <TextBlock Text="Customer-manageable candidates are shown by default. Microsoft first-party and infrastructure principals are excluded from this list."
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
                 <Button Content="Assess selected identity permissions"
                         Command="{Binding AssessWorkloadIdentityPermissionsCommand}"
                         HorizontalAlignment="Left"

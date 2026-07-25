@@ -267,6 +267,44 @@ public sealed class AuthenticationConfigurationTests
         Assert.False(candidates[1].IsEnabled);
     }
 
+    [Fact]
+    public async Task GraphDiscoveryExcludesMicrosoftFirstPartyServicePrincipalsByDefault()
+    {
+        var handler = new GraphSequenceHandler(
+            """
+            {
+              "value": [
+                {
+                  "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                  "appId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                  "displayName": "Microsoft Infrastructure",
+                  "servicePrincipalType": "Application",
+                  "accountEnabled": true,
+                  "appOwnerOrganizationId": "72f988bf-86f1-41af-91ab-2d7cd011db47"
+                },
+                {
+                  "id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+                  "appId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                  "displayName": "Customer Automation",
+                  "servicePrincipalType": "Application",
+                  "accountEnabled": true,
+                  "appOwnerOrganizationId": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
+                }
+              ]
+            }
+            """);
+        var service = new WorkloadIdentityDiscoveryService(
+            new StaticTokenCredential(),
+            new HttpClient(handler));
+
+        var candidates = await service.ListServicePrincipalsAsync(
+            InteractiveAdministrator(),
+            TestContext.Current.CancellationToken);
+
+        var candidate = Assert.Single(candidates);
+        Assert.Equal("Customer Automation", candidate.DisplayName);
+    }
+
     [Theory]
     [InlineData("https://attacker.invalid/collect")]
     [InlineData("https://graph.microsoft.com:444/v1.0/servicePrincipals")]

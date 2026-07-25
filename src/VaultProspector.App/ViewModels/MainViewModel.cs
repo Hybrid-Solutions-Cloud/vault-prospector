@@ -464,7 +464,7 @@ public sealed partial class MainViewModel(
             SelectedIdentity,
             cancellationToken);
         ReplaceWorkloadCandidates(candidates);
-        StatusText = $"{candidates.Count} service principals are visible through explicitly consented Microsoft Graph access. No Azure resources were changed.";
+        StatusText = $"{candidates.Count} customer-manageable service-principal candidates are visible through explicitly consented Microsoft Graph access. Microsoft first-party infrastructure is excluded by default. No Azure resources were changed.";
     });
 
     [RelayCommand(CanExecute = nameof(CanAssessWorkloadIdentityPermissions))]
