@@ -17,12 +17,17 @@ Confirmed on 2026-07-25:
 - ADO builds 284, 287, 290, and 295 and the 27/27 clean-Windows run remain historical evidence; they
   do not justify continuing ADO pipelines.
 
-In flight:
+Validated:
 
-1. restore GitHub workflows on HCS runners and retire ADO pipeline definitions;
-2. add and validate reproducible MSIX packaging;
-3. hide the unsupported CyberArk UI from the Windows release;
-4. remove invented 30-day, evaluator-quota, and 14-day release blockers;
-5. run local and HCS validation, merge the corrective PR, and validate `main`;
-6. update every affected ADO work item and close only items whose tasks and acceptance criteria are
-   fully evidenced.
+- PR #26 HCS run `30146204363` passed portable validation and full-history secret scanning.
+- Local Windows build passed 371 tests plus MSI, MSIX, performance, legal/privacy, enterprise,
+  browser, and operational gates.
+
+Next:
+
+1. merge PR #26;
+2. provision the Tier-4 Windows runner for the queued exact-`main` Windows candidate;
+3. validate `main` and remove the ephemeral Azure resources;
+4. retire the live ADO pipeline definitions; and
+5. reconcile every affected ADO work item, closing only items whose tasks and acceptance criteria
+   are fully evidenced.
