@@ -22,6 +22,8 @@
 - The public prerelease contains exactly 16 assets. Independent downloads matched all five
   adjacent package checksums; Cosign `v3.0.6` verified all five bundles against
   `release.yml@refs/tags/v0.2.0-preview.4`.
+- The machine-readable operational contract now names `0.2.0-preview.4` as its only supported
+  Preview and monitors that release page and exact MSI checksum.
 - The current workstation did not perform the authoritative build, tests, packaging, or
   publication. Those ran on the HCS Linux and ephemeral Azure Windows runners.
 - HCS bootstrap resolves the repository as the `hcs`-scoped `app` profile. Drift validation still
