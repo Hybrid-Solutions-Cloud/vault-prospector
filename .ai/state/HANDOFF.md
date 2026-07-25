@@ -19,6 +19,13 @@
   creation, and public publication.
 - The public prerelease has exactly 16 assets. Independent downloads matched all five adjacent
   SHA-256 files; Cosign `v3.0.6` verified all five bundles against the exact tag-workflow identity.
+- Final release-record PR #31 merged as `1fd7e2ac2d8a112cfe2c2712f75eca8433ab5dc1`;
+  exact-main run `30151303811` passed all three jobs.
+- AB#5309 closed after its evidence-audit Done condition passed. Parent AB#5308 remains New because
+  its representative-device/live-provider Acceptance Criteria remain unmet.
+- Final Tier-4 cleanup completed: the Azure resource group no longer exists, the repository has
+  zero registered runners and zero open pull requests, and the ADO project has zero pipeline
+  definitions.
 - CyberArk and native mobile remain separate future-roadmap scope. Direct downloads remain
   explicitly unsigned; the no-cost trusted path remains Microsoft Store–signed MSIX.
 
