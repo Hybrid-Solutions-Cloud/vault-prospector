@@ -3,6 +3,8 @@ param(
     [Parameter(Mandatory)]
     [string]$KeyVaultName,
 
+    [string]$RunId = 'manual',
+
     [switch]$InstallWinget
 )
 
@@ -10,6 +12,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Write-Host "Initializing ephemeral runner invocation '$RunId'."
 
 function Invoke-WithRetry {
     param(
