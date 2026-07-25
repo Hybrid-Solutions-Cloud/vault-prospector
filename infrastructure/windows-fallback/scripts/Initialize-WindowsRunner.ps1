@@ -121,7 +121,12 @@ if (-not $wingetPackage) {
 
 $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-$env:Path = "$machinePath;$userPath;$($wingetPackage.FullName)"
+$gitBashDirectory = 'C:\Program Files\Git\bin'
+$gitBashPath = Join-Path $gitBashDirectory 'bash.exe'
+if (-not (Test-Path -LiteralPath $gitBashPath)) {
+    throw "Git Bash was not found at the required runner path '$gitBashPath'."
+}
+$env:Path = "$gitBashDirectory;$machinePath;$userPath;$($wingetPackage.FullName)"
 & (Join-Path $wingetPackage.FullName 'winget.exe') --version
 if ($LASTEXITCODE -ne 0) {
     throw "WinGet verification failed with exit code $LASTEXITCODE."

@@ -96,3 +96,13 @@ unmeasured warmup and retains the original 2-second repository limit; it does no
 the threshold. Attempt 2 of the unchanged exact-main source passed all jobs, including the
 performance step, which confirmed the failure was first-process runtime activation rather than a
 repository regression.
+
+## Preview publication runner finding
+
+Release run `30149708293` for immutable tag `v0.2.0-preview.2` passed the 371-test Windows build,
+MSI/MSIX/package-manager creation, unsigned-package boundary, and SBOM generation. Publication did
+not run because the pinned Cosign installer requires `bash`, while Chocolatey's Git installation
+exposed only the Git command directory to the one-shot runner process. No public release or assets
+were created. The Tier-4 bootstrap now verifies `C:\Program Files\Git\bin\bash.exe` and explicitly
+adds that directory to the one-shot runner environment before registration. The failed tag remains
+immutable and is not reused or moved.
