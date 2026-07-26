@@ -6,8 +6,8 @@ namespace VaultProspector.App.ViewModels;
 
 public sealed partial class MainViewModel
 {
-    public IReadOnlyList<GovernedAzureOperation>
-        GovernedAzureOperations { get; } =
+    public IReadOnlyList<GovernedAzureOperation> GovernedAzureOperations
+    { get; } =
         Enum.GetValues<GovernedAzureOperation>();
 
     public bool IsGovernedAzureMutationAvailable =>
