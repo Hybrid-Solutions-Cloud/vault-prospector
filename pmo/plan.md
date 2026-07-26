@@ -49,12 +49,12 @@ Status terms used in PMO reporting:
   notification-area operation, enterprise policy, browser/CyberArk validation paths, and four
   desktop concepts. Their named live, independent, usability, accessibility, and GA evidence
   remains open.
-- Major unimplemented product work: governed Azure mutations. The product owner selected Atlas,
-  but exact candidate `0.3.0-ci.190` failed visual review because the desktop retained a
-  legacy-derived content layout beneath Atlas colors and shell chrome. The release was stopped
-  before publication; production screen parity, rendered regression evidence, public-release,
-  live-provider, usability, accessibility, and independent-review evidence remain open. Mobile
-  source/prototypes are implemented but are not distributed.
+- Major unimplemented product work: governed Azure mutations. The product owner selected Atlas.
+  Corrected exact-main candidate `0.3.0-ci.201` passed the installed Windows 11 RDP walkthrough
+  across all eight production screens after the failed `0.3.0-ci.190` layout was replaced.
+  Exact public-release repetition, live-provider, complete usability/accessibility, and
+  independent-review evidence remain open. Mobile source/prototypes are implemented but are not
+  distributed.
   CyberArk remains future-roadmap work, while browser integration remains a non-production path
   pending installed-browser validation and distribution review.
 - Major GA work: signing, independent security review, complete live identity/accessibility test
