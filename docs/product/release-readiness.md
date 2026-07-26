@@ -6,9 +6,9 @@ prove release readiness; every required gate needs current, reproducible evidenc
 
 **Assessment date:** 2026-07-25
 
-**Current decision:** **`0.3.0-preview.3` released for non-production Preview; not ready for GA**
+**Current decision:** **`0.3.0-preview.4` released for non-production Preview; not ready for GA**
 
-**Current Preview:** [`0.3.0-preview.3`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.3),
+**Current Preview:** [`0.3.0-preview.4`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.4),
 an explicitly unsigned Windows evaluation release published on 2026-07-25. It replaces withdrawn
 `0.3.0-preview.2` with the complete approved Atlas startup and secure-unlock hierarchy and retains
 the first-run and desktop-verification corrections introduced in the 0.2 line. Failed tag

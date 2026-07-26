@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap is intentionally capability-based. The published `0.3.0-preview.3` Windows evaluation
+The roadmap is intentionally capability-based. The published `0.3.0-preview.4` Windows evaluation
 release includes the integrated Windows implementation; live-provider, independent-review,
 trusted-signing, and GA acceptance evidence remain open as named below. Mobile is a separate
 post-Windows roadmap and does not block Windows GA.
