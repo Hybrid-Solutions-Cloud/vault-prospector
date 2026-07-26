@@ -24,7 +24,8 @@
             <Border x:Name="HeaderContextBadge" BorderBrush="#667170" BorderThickness="1" Padding="12,7">
               <TextBlock Text="LOCAL-FIRST · READ-ONLY BY DEFAULT" Foreground="#E7ECEA" FontSize="{StaticResource VaultFontSize11}" FontWeight="SemiBold" />
             </Border>
-            <Button Content="Lock now"
+            <Button Classes="header-action"
+                    Content="Lock now"
                     Command="{Binding LockNowCommand}"
                     IsVisible="{Binding IsUnlocked}"
                     AutomationProperties.Name="Lock Vault Prospector now" />
