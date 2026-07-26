@@ -833,40 +833,12 @@
               </StackPanel>
             </Border>
 
-            <Border Classes="atlas-panel">
-              <StackPanel Spacing="8">
-                <TextBlock Text="Setup check"
-                           FontSize="{StaticResource VaultFontSize20}"
-                           FontWeight="SemiBold" />
-                <TextBlock Text="1. Browser extension"
-                           FontWeight="SemiBold" />
-                <TextBlock Text="{Binding BrowserExtensionStatus}"
-                           TextWrapping="Wrap" />
-                <TextBlock Text="2. Native host"
-                           FontWeight="SemiBold" />
-                <TextBlock Text="{Binding BrowserNativeHostStatus}"
-                           TextWrapping="Wrap" />
-                <TextBlock Text="3. Desktop broker"
-                           FontWeight="SemiBold" />
-                <TextBlock Text="{Binding BrowserBrokerStatus}"
-                           TextWrapping="Wrap" />
-                <TextBlock Text="4. Exact destination policy"
-                           FontWeight="SemiBold" />
-                <TextBlock Text="{Binding BrowserDestinationPolicyStatus}"
-                           TextWrapping="Wrap"
-                           AutomationProperties.LiveSetting="Polite" />
-                <TextBlock Text="Focus a username, current-password, or one-time-code field on an HTTPS page, then choose the Vault Prospector extension. A successful click fills this checklist and opens the guided mapping below."
-                           TextWrapping="Wrap"
-                           Opacity="0.75" />
-              </StackPanel>
-            </Border>
-
             <Border x:Name="AdministrationPreviewCard"
                     Grid.Column="1"
                     Classes="card">
               <StackPanel Spacing="10">
                 <TextBlock Text="Preview workload provisioning" FontSize="{StaticResource VaultFontSize20}" FontWeight="SemiBold" />
-                <Border Background="#3A2510" BorderBrush="#C98A2E" BorderThickness="1" CornerRadius="6" Padding="10">
+                <Border Classes="atlas-warning">
                   <TextBlock Text="Preview only. This build cannot create identities, assign roles, attach identities, or change Key Vault. The independent security-review gate is still open." TextWrapping="Wrap" />
                 </Border>
                 <TextBlock Text="Identity name" />
@@ -973,6 +945,34 @@
               <TextBlock Classes="screen-description"
                          Text="The browser supplies the destination context. Choose a source, verify once, and fill only that exact field." />
             </StackPanel>
+            <Border x:Name="BrowserSetupStatusCard"
+                    Classes="atlas-panel">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Setup check"
+                           FontSize="{StaticResource VaultFontSize20}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="1. Browser extension"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserExtensionStatus}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="2. Native host"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserNativeHostStatus}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="3. Desktop broker"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserBrokerStatus}"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="4. Exact destination policy"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BrowserDestinationPolicyStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <TextBlock Text="Focus a username, current-password, or one-time-code field on an HTTPS page, then choose the Vault Prospector extension. A successful click fills this checklist and opens the guided mapping below."
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
+              </StackPanel>
+            </Border>
             <Border Classes="atlas-panel"
                     AutomationProperties.Name="Browser fill machine policy status">
               <StackPanel Spacing="8">
@@ -1536,11 +1536,7 @@
                        Opacity="0.72" />
             <Separator Margin="0,8" />
             <TextBlock Text="Security settings" FontSize="{StaticResource VaultFontSize22}" FontWeight="SemiBold" />
-            <Border Background="#10243A"
-                    BorderBrush="#4B84B8"
-                    BorderThickness="1"
-                    CornerRadius="6"
-                    Padding="10"
+            <Border Classes="atlas-info"
                     AutomationProperties.Name="Machine-managed enterprise policy status">
               <StackPanel Spacing="6">
                 <TextBlock Text="Machine-managed enterprise policy"
