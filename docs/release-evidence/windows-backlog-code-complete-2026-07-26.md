@@ -33,9 +33,11 @@ remain mandatory. The protected release workflow independently rebuilds and test
 publishes immutable packages directly to the public binary repository without using an Actions
 artifact as its source.
 
-## Release boundary
+## Release result
 
-This record proves source and portable CI completion only. No replacement executable was packaged
-or published from this branch. The PR must merge and the governed HCS Windows candidate must pass
-the full Windows build, test, package, installer-lifecycle, and readiness jobs before one updated
-manual-test Preview is published.
+PR #56 merged, with the Atlas source-baseline correction in PR #57, release-source update in PR
+#58, and quota-safe SBOM publication correction in PR #59. Exact-main run `30220348003` passed the
+full Windows build, tests, performance, packages, installer/browser contracts, clean installer
+lifecycle, and readiness gates. Release run `30222244323` published
+[`0.3.0-preview.5`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.5)
+for manual testing. User-run installed workflow validation remains deliberately pending.
