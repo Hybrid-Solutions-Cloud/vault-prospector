@@ -1,10 +1,10 @@
-# Version 0.2 Preview scope
+# Version 0.3 Preview scope
 
-Version [`0.2.0-preview.5`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.5)
-is the current unsigned Windows desktop Preview for non-production evaluation. It supersedes
-withdrawn `0.2.0-preview.4`, whose first-run Identity Type selector initially rendered a null
-conversion error. It also includes the desktop verification correction introduced after
-withdrawn `0.2.0-preview.3`.
+Version [`0.3.0-preview.3`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.3)
+is the current unsigned Windows desktop Preview for non-production evaluation. It replaces withdrawn
+`0.3.0-preview.2` with the complete approved C · Atlas startup and secure-unlock hierarchy,
+including policy-controlled current-account verification for supported Remote Desktop and AVD
+sessions. It retains the first-run and desktop-verification corrections from the 0.2 line.
 `0.1.0-preview.2` also remains withdrawn and must not be installed or resubmitted.
 
 ## Included

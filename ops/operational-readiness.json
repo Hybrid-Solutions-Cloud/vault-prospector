@@ -43,9 +43,9 @@
   },
   "supportedRelease": {
     "channel": "preview",
-    "currentVersion": "0.2.0-preview.5",
+    "currentVersion": "0.3.0-preview.3",
     "supportedVersions": [
-      "0.2.0-preview.5"
+      "0.3.0-preview.3"
     ],
     "productionSupported": false
   },
@@ -113,11 +113,11 @@
   "publicMonitors": [
     {
       "name": "Current Preview release page",
-      "url": "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.5"
+      "url": "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.3"
     },
     {
       "name": "Current Preview MSI checksum",
-      "url": "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.2.0-preview.5/VaultProspector-0.2.0-preview.5-win-x64.msi.sha256"
+      "url": "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.3.0-preview.3/VaultProspector-0.3.0-preview.3-win-x64.msi.sha256"
     },
     {
       "name": "Preview feedback channel",

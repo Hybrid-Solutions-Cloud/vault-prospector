@@ -36,7 +36,7 @@ Status terms used in PMO reporting:
 
 ## Current product state
 
-- Current public version: `0.2.0-preview.5`, unsigned and restricted to non-production evaluation.
+- Current public version: `0.3.0-preview.3`, unsigned and restricted to non-production evaluation.
 - Core implemented path: interactive Entra sign-in, multiple app-owned MSAL identities,
   subscription and Key Vault discovery, secret/key/certificate metadata indexing, search, explicit
   value retrieval, verified copy, encrypted optional offline access, workspaces, and read-only Azure
@@ -52,9 +52,11 @@ Status terms used in PMO reporting:
 - Major unimplemented product work: governed Azure mutations. The product owner selected Atlas.
   Corrected exact-main candidate `0.3.0-ci.201` passed the installed Windows 11 RDP walkthrough
   across all eight production screens after the failed `0.3.0-ci.190` layout was replaced.
-  Exact public-release repetition, live-provider, complete usability/accessibility, and
-  independent-review evidence remain open. Mobile source/prototypes are implemented but are not
-  distributed.
+  Follow-up `0.3.0-ci.207` passed the complete Atlas secure-unlock startup and current-account RDP
+  verification. Public `0.3.0-preview.3` passed independent artifact verification, installation,
+  startup, and explicit RDP-prompt checks. Complete every-state exact-public
+  usability/accessibility, live-provider, and independent-review evidence remain open. Mobile
+  source/prototypes are implemented but are not distributed.
   CyberArk remains future-roadmap work, while browser integration remains a non-production path
   pending installed-browser validation and distribution review.
 - Major GA work: signing, independent security review, complete live identity/accessibility test
