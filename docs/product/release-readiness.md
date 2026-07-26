@@ -60,6 +60,13 @@ its separate accessibility and live-provider evidence remains open. P-09, P-12, 
 exact public-package lifecycle, artifact/provenance, anonymous-download, and final decision
 evidence.
 
+The product-owner installed walkthrough also identified a cosmetic installer-branding defect: the
+logo can be missing and replaced by a red-X placeholder. GitHub Bug
+[#62](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/issues/62) is the master record and
+ADO AB#5799 is its New planning mirror. The defect does not change the published package identity
+or automated lifecycle result, but it remains open and must be corrected and revalidated before
+GA.
+
 ## GA promotion gates
 
 GA requires every Preview gate to remain green plus the following evidence.

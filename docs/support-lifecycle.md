@@ -7,7 +7,7 @@
 ## Current support status
 
 Vault Prospector is a Preview product for non-production evaluation. The only currently supported
-evaluation build is `0.3.0-preview.3`. “Supported” at this stage means that the maintainer accepts
+evaluation build is `0.3.0-preview.5`. “Supported” at this stage means that the maintainer accepts
 privacy-safe feedback and private vulnerability reports and may provide a replacement Preview or
 containment guidance. It is not a production-support commitment or contractual service-level
 agreement.
@@ -45,8 +45,9 @@ The current history is:
 
 | Version | State | Required action |
 | --- | --- | --- |
-| `0.3.0-preview.3` | Current Preview | Non-production evaluation only |
-| `0.3.0-preview.2` | Withdrawn | Do not install; upgrade to `0.3.0-preview.3` for the complete Atlas secure-unlock experience |
+| `0.3.0-preview.5` | Current Preview | Non-production manual testing only |
+| `0.3.0-preview.3` | Superseded Preview | Upgrade to `0.3.0-preview.5` |
+| `0.3.0-preview.2` | Withdrawn | Do not install; upgrade to `0.3.0-preview.5` |
 | `0.2.0-preview.5` | Superseded Preview | Upgrade to the current Preview |
 | `0.2.0-preview.4` | Withdrawn | Do not install; upgrade to `0.2.0-preview.5`, which corrects its first-run identity-type defect |
 | `0.2.0-preview.3` | Withdrawn | Do not install; upgrade to the current Preview |

@@ -6,6 +6,8 @@
 The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
 in the 0.2 Preview line and remain subject to the live, independent, Store, and GA validation
 gates recorded below.
+The separate missing installer-logo/red-X defect is tracked by GitHub Bug #62 and ADO AB#5799; no
+fix is included in Preview.5.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).
@@ -17,7 +19,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 
 | Requested capability | Current status | What exists now | What is still missing |
 | --- | --- | --- | --- |
-| Normal Windows installer and update path | Implemented | MSI, portable ZIP, immutable GitHub Preview releases, upgrade/repair/uninstall/rollback validation | Trusted signing, WinGet catalog acceptance, Chocolatey catalog acceptance |
+| Normal Windows installer and update path | Implemented; installer-branding defect open | MSI, portable ZIP, immutable GitHub Preview releases, upgrade/repair/uninstall/rollback validation | GitHub Bug #62 / ADO AB#5799 installer-logo correction, trusted signing, WinGet catalog acceptance, Chocolatey catalog acceptance |
 | Interactive Entra user login | Implemented | MSAL public-client system-browser authentication with app-owned token caches | Full live tenant/guest/MFA/Conditional Access evidence |
 | Local login/unlock and MFA boundary | Included in 0.2 Preview; validation open | Fail-closed app unlock and sensitive operations use Windows verification; recovery archives failed state after typed confirmation and fresh verification | Full live Windows Hello/recovery coverage and independent review |
 | Mandatory local encryption | Implemented locally, review open | SQLCipher metadata and AES-GCM offline values with DPAPI keys; verified archive plus authenticated-journal all-or-rollback rotation engine; startup recovery; explicit verified per-archive retention/deletion UX; no plaintext toggle | User-exposed rotation only after independent review, live power-loss validation, supported cross-device decision remains resync |
@@ -38,7 +40,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 
 ## Story status and plan mapping
 
-Status snapshot: 2026-07-25. **Delivered** means present in the current public Preview unless the
+Status snapshot: 2026-07-26. **Delivered** means present in the current public Preview unless the
 note explicitly limits it to policy/process delivery. See [`plan.md`](plan.md) for phase scope and
 exit criteria.
 
