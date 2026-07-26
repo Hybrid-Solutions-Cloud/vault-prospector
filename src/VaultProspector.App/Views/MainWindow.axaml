@@ -256,7 +256,7 @@
                         HorizontalAlignment="Left">
                   <TextBlock Text="◎"
                              Foreground="{DynamicResource VaultColorGood}"
-                             FontSize="42"
+                             FontSize="{StaticResource VaultFontSize24}"
                              HorizontalAlignment="Center"
                              VerticalAlignment="Center" />
                 </Border>
