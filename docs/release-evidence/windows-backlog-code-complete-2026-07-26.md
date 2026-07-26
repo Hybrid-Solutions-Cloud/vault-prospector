@@ -41,3 +41,7 @@ full Windows build, tests, performance, packages, installer/browser contracts, c
 lifecycle, and readiness gates. Release run `30222244323` published
 [`0.3.0-preview.5`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.5)
 for manual testing. User-run installed workflow validation remains deliberately pending.
+
+The post-release Azure DevOps hierarchy, project-name correction, evidence updates, and runner
+cleanup are recorded in
+[Azure DevOps post-release reconciliation](ado-backlog-reconciliation-2026-07-26.md).
