@@ -156,6 +156,24 @@ public partial class App : Avalonia.Application
                 clipboard,
                 clock,
                 enterprisePolicy);
+            var governedMutationReleaseApproved =
+                AppContext.TryGetSwitch(
+                    GovernedAzureMutationService
+                        .ReleaseEnablementSwitch,
+                    out var governedMutationApproved) &&
+                governedMutationApproved;
+            var governedMutationService =
+                new GovernedAzureMutationService(
+                    repository,
+                    identityProvider,
+                    new AzureGovernedMutationProvider(
+                        identityProvider,
+                        governedWriteHttpClient,
+                        authorizationHttpClient),
+                    verification,
+                    enterprisePolicy,
+                    clock,
+                    governedMutationReleaseApproved);
             var viewModel = new MainViewModel(
                 repository,
                 new IdentityService(
@@ -205,21 +223,7 @@ public partial class App : Avalonia.Application
                 releaseUpdateService,
                 new WindowsBrowserIntegrationDiagnostics(
                     AppContext.BaseDirectory),
-                new GovernedAzureMutationService(
-                    repository,
-                    identityProvider,
-                    new AzureGovernedMutationProvider(
-                        identityProvider,
-                        governedWriteHttpClient,
-                        authorizationHttpClient),
-                    verification,
-                    enterprisePolicy,
-                    clock,
-                    AppContext.TryGetSwitch(
-                        GovernedAzureMutationService
-                            .ReleaseEnablementSwitch,
-                        out var governedMutationApproved) &&
-                    governedMutationApproved));
+                governedMutationService);
             window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()
@@ -506,6 +510,7 @@ public partial class App : Avalonia.Application
                     browserBrokerServer.DisposeAsync().AsTask().GetAwaiter().GetResult();
                     browserBrokerServer = null;
                 }
+                governedMutationService.Dispose();
                 repository.Dispose();
                 DisposeTray();
             };

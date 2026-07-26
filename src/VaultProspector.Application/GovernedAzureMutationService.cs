@@ -5,7 +5,7 @@ using VaultProspector.Domain;
 
 namespace VaultProspector.Application;
 
-public sealed class GovernedAzureMutationService
+public sealed class GovernedAzureMutationService : IDisposable
 {
     public const string ReleaseEnablementSwitch =
         "VaultProspector.EnableGovernedAzureMutations";
@@ -243,6 +243,13 @@ public sealed class GovernedAzureMutationService
 
     public void Cancel(Guid previewId) =>
         _pendingPreviews.TryRemove(previewId, out _);
+
+    public void Dispose()
+    {
+        _pendingPreviews.Clear();
+        _auditGate.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     private async Task RecordAuditAsync(
         GovernedMutationPreview preview,
