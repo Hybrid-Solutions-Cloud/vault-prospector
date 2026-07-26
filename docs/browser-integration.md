@@ -71,6 +71,13 @@ oversized, reparse-point, or out-of-installation policy fails closed.
 
 ## User workflow
 
+Before mapping a destination, open **Browser fill** and choose **Refresh setup check**. The desktop
+detects installed Chrome, Edge, and Firefox extension registrations, validates the matching HKLM
+native-messaging host entries and manifests, confirms that the host executable resolves beneath
+the protected Vault Prospector installation root, and reports broker readiness. A missing
+extension, stale registration, malformed manifest, mismatched extension ID, missing executable, or
+unavailable broker remains a visible failed step and cannot be bypassed by creating a mapping.
+
 1. On the intended HTTPS page, focus a supported username, current-password, or one-time-code
    field and invoke the Vault Prospector extension.
 2. The extension supplies the canonical top-frame origin, target-frame origin, browser family,
@@ -89,6 +96,11 @@ Mappings are encrypted in local metadata. Removing an identity or item removes i
 retaining value-free audit history. A capture that creates a mapping is deliberately denied in the
 browser; a new explicit browser gesture is required for the first fill, so setup cannot become an
 implicit fill.
+
+If setup fails after an upgrade, refresh the checklist first. Reinstall or repair the same trusted
+MSI when the native-host executable, manifest, or HKLM registration is missing. Install the
+supported extension when only the browser-registration step is missing. Do not hand-edit the
+manifest to weaken an extension-ID or install-root check.
 
 ## Development and release validation
 

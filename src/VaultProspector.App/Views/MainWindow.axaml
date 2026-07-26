@@ -609,7 +609,7 @@
                 </Border>
                 <StackPanel>
                   <TextBlock Text="Connect identities" FontWeight="Bold" />
-                  <TextBlock Text="Current step" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
+                  <TextBlock Text="{Binding SetupConnectionsStatus}" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
                 </StackPanel>
               </StackPanel>
             </Border>
@@ -620,7 +620,7 @@
                 </Border>
                 <StackPanel>
                   <TextBlock Text="Choose discovery scope" FontWeight="Bold" Foreground="{DynamicResource VaultColorMuted}" />
-                  <TextBlock Text="Not started" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
+                  <TextBlock Text="{Binding SetupScopeStatus}" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
                 </StackPanel>
               </StackPanel>
             </Border>
@@ -631,7 +631,7 @@
                 </Border>
                 <StackPanel>
                   <TextBlock Text="Synchronize metadata" FontWeight="Bold" Foreground="{DynamicResource VaultColorMuted}" />
-                  <TextBlock Text="Not started" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
+                  <TextBlock Text="{Binding SetupSyncStatus}" FontSize="{StaticResource VaultFontSize11}" Foreground="{DynamicResource VaultColorMuted}" />
                 </StackPanel>
               </StackPanel>
             </Border>
@@ -703,6 +703,7 @@
                   <TextBlock Text="Usable results were preserved. Correct only the affected scope, then retry synchronization."
                              TextWrapping="Wrap" />
                   <ListBox ItemsSource="{Binding SyncErrors}"
+                           SelectedItem="{Binding SelectedSyncError}"
                            MaxHeight="220"
                            AutomationProperties.Name="Synchronization error details">
                     <ListBox.ItemTemplate>
@@ -710,12 +711,18 @@
                         <StackPanel Margin="4,6" Spacing="2">
                           <TextBlock Text="{Binding Scope}" FontWeight="SemiBold" TextWrapping="Wrap" />
                           <TextBlock Text="{Binding Category}" Opacity="0.75" />
+                          <TextBlock Text="{Binding Timestamp, StringFormat={}Observed {0}}" Opacity="0.75" />
+                          <TextBlock Text="{Binding CorrelationId, StringFormat={}Correlation {0}}" Opacity="0.75" />
                           <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
                           <TextBlock Text="{Binding Recovery}" TextWrapping="Wrap" FontWeight="SemiBold" />
                         </StackPanel>
                       </DataTemplate>
                     </ListBox.ItemTemplate>
                   </ListBox>
+                  <Button Content="Retry selected scope"
+                          Command="{Binding RetrySelectedSyncErrorCommand}"
+                          HorizontalAlignment="Left"
+                          AutomationProperties.Name="Retry selected failed synchronization scope" />
                 </StackPanel>
               </Border>
               <Border IsVisible="{Binding SelectedIdentitySupportsCredentialRotation}"
@@ -1022,6 +1029,61 @@
               </StackPanel>
             </Border>
           </Grid>
+          <Border Classes="atlas-warning"
+                  BorderBrush="#DC6B6B"
+                  BorderThickness="2"
+                  IsVisible="{Binding IsGovernedAzureMutationAvailable}"
+                  AutomationProperties.Name="Elevated governed Azure operation">
+            <StackPanel Spacing="10">
+              <TextBlock Text="ELEVATED — governed Azure operation"
+                         FontSize="{StaticResource VaultFontSize22}"
+                         FontWeight="Bold" />
+              <TextBlock Text="This area is available only when the accepted release gate and exact machine policy both allow it. Each preview authorizes one operation at one exact vault; there is no general write-mode switch."
+                         TextWrapping="Wrap" />
+              <TextBlock Text="Select the exact identity and vault access path on the Identities page before preparing an operation."
+                         TextWrapping="Wrap"
+                         Opacity="0.8" />
+              <TextBlock Text="Operation" />
+              <ComboBox ItemsSource="{Binding GovernedAzureOperations}"
+                        SelectedItem="{Binding SelectedGovernedAzureOperation}"
+                        AutomationProperties.Name="Governed Azure operation" />
+              <TextBlock Text="Exact Key Vault object name" />
+              <TextBox Text="{Binding GovernedMutationObjectName}"
+                       AutomationProperties.Name="Governed mutation object name" />
+              <Button Content="Prepare value-free preview"
+                      Command="{Binding PrepareGovernedMutationCommand}"
+                      HorizontalAlignment="Left" />
+              <TextBox Text="{Binding GovernedMutationPreviewText}"
+                       IsReadOnly="True"
+                       AcceptsReturn="True"
+                       TextWrapping="Wrap"
+                       MinHeight="250"
+                       AutomationProperties.Name="Governed mutation value-free preview" />
+              <StackPanel IsVisible="{Binding GovernedMutationRequiresSensitiveValue}"
+                          Spacing="6">
+                <TextBlock Text="Secret value (never included in preview, logs, or audit)" />
+                <TextBox Text="{Binding GovernedMutationSensitiveValue}"
+                         PasswordChar="●"
+                         AutomationProperties.Name="Secret value for one governed Azure operation" />
+              </StackPanel>
+              <TextBlock Text="One-time confirmation phrase" />
+              <TextBox Text="{Binding GovernedMutationConfirmation}"
+                       AutomationProperties.Name="One-time governed mutation confirmation phrase" />
+              <WrapPanel>
+                <Button Classes="primary"
+                        Content="Verify and execute once"
+                        Command="{Binding ExecuteGovernedMutationCommand}"
+                        Margin="0,0,8,8" />
+                <Button Content="Cancel preview"
+                        Command="{Binding CancelGovernedMutationCommand}"
+                        Margin="0,0,8,8" />
+              </WrapPanel>
+              <TextBlock Text="{Binding GovernedMutationStatus}"
+                         TextWrapping="Wrap"
+                         FontWeight="SemiBold"
+                         AutomationProperties.LiveSetting="Assertive" />
+            </StackPanel>
+          </Border>
           </StackPanel>
         </ScrollViewer>
       </TabItem>
@@ -1119,6 +1181,12 @@
                 <TextBlock Text="{Binding BrowserDestinationPolicyStatus}"
                            TextWrapping="Wrap"
                            AutomationProperties.LiveSetting="Polite" />
+                <TextBlock Text="{Binding BrowserMappingReadinessStatus}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <Button Content="Refresh setup check"
+                        Command="{Binding RefreshBrowserIntegrationCommand}"
+                        HorizontalAlignment="Left" />
                 <TextBlock Text="Focus a username, current-password, or one-time-code field on an HTTPS page, then choose the Vault Prospector extension. A successful click fills this checklist and opens the guided mapping below."
                            TextWrapping="Wrap"
                            Opacity="0.75" />

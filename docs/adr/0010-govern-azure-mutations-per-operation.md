@@ -46,6 +46,13 @@ resource/version identifier and operation-specific recovery guidance.
 No mutation capability may be enabled in a public build until the threat model and implementation
 receive independent security approval and live Azure integration evidence.
 
+Implementation note (2026-07-26): the four proposed operation pipelines are implemented in
+production source with exact machine policy, a separately accepted release switch, fresh
+reauthentication/effective-authorization checks, Windows verification, immutable previews,
+one-time confirmations, concurrency checks, and SQLCipher schema-v7 hash-chained value-free audit.
+This ADR remains Proposed: the implementation is default-disabled and does not waive the named
+live-Azure, independent-review, or release-acceptance gates.
+
 ## Options considered
 
 ### Generic write-mode toggle

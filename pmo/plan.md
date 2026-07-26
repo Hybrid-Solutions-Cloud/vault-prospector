@@ -49,7 +49,10 @@ Status terms used in PMO reporting:
   notification-area operation, enterprise policy, browser/CyberArk validation paths, and four
   desktop concepts. Their named live, independent, usability, accessibility, and GA evidence
   remains open.
-- Major unimplemented product work: governed Azure mutations. The product owner selected Atlas.
+- Governed Azure mutation code is implemented internally for four separately controlled
+  operations and remains default-denied behind both an accepted-build release switch and exact
+  machine policy. Live disposable-Azure validation, independent review, and release enablement
+  remain open. The product owner selected Atlas.
   Corrected exact-main candidate `0.3.0-ci.201` passed the installed Windows 11 RDP walkthrough
   across all eight production screens after the failed `0.3.0-ci.190` layout was replaced.
   Follow-up `0.3.0-ci.207` passed the complete Atlas secure-unlock startup and current-account RDP
@@ -341,8 +344,8 @@ validation remain release evidence gates.
 
 **Priority:** P1, high risk
 
-**Status:** Design gate in progress; proposed ADR and threat model complete, mutation code remains
-disabled pending required review
+**Status:** Implemented internally and default-disabled; live Azure, independent review, accepted
+ADR, and release-enable evidence remain open
 
 **Backlog coverage:** Explicit write mode for secrets, keys, and certificates
 

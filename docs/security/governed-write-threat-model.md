@@ -1,6 +1,6 @@
 # Governed Azure mutation threat model
 
-**Status:** Internal design review draft; independent review required before enablement  
+**Status:** Production implementation ready for review; default-disabled pending independent and live validation
 **Date:** 2026-07-23  
 **Related decision:** [ADR-0010](../adr/0010-govern-azure-mutations-per-operation.md)
 
@@ -77,8 +77,22 @@ mutation. Each requires its own threat-model extension and accepted decision.
 
 - accepted ADR and closed internal design findings;
 - production implementation with automated negative, concurrency, redaction, recovery, and UI
-  tests;
+  tests (**complete on PR #56**);
 - disposable live-Azure tests for every supported operation;
 - independent security review with no open critical/high findings;
 - administrator policy deployment and rollback documentation; and
 - exact signed candidate validation before any public control becomes available.
+
+## Implementation evidence
+
+- `GovernedAzureMutationService` enforces the release switch, exact policy, fresh identity
+  reauthentication, Windows verification, immutable preview, single-flight execution, typed
+  confirmation, and replay denial.
+- `AzureGovernedMutationProvider` implements only the four allowlisted Key Vault operations and
+  checks effective data actions immediately before execution.
+- `WindowsRegistryEnterprisePolicy` rejects malformed values, wildcard vault scopes, and enabled
+  policy without exact operations and vault IDs.
+- SQLCipher schema v7 stores value-free, sequence-numbered, hash-chained mutation audit records and
+  validates chain integrity during startup.
+- Application, Azure provider, platform, infrastructure, and UI tests cover default denial,
+  malformed policy, conflicts, request shape, confirmation/replay, and tamper detection.

@@ -13,7 +13,7 @@ public sealed class EncryptedSqliteMetadataRepository(
     string databasePath,
     IKeyMaterialProvider keyMaterial) : IMetadataRepository, IDisposable
 {
-    private const int CurrentSchemaVersion = 6;
+    private const int CurrentSchemaVersion = 7;
     private const int SqlCipherKeyLength = 32;
     private const int SqlCipherSaltLength = 16;
     private const int SqlCipherKdfIterations = 256_000;
@@ -114,6 +114,15 @@ public sealed class EncryptedSqliteMetadataRepository(
                     schemaVersion = 6;
                 }
 
+                if (schemaVersion == 6)
+                {
+                    await EnsureGovernedMutationAuditTableAsync(
+                        connection,
+                        transaction,
+                        cancellationToken);
+                    schemaVersion = 7;
+                }
+
                 if (schemaVersion != CurrentSchemaVersion)
                 {
                     throw new InvalidOperationException($"Migration failed. Expected version {CurrentSchemaVersion}, but ended up at {schemaVersion}.");
@@ -124,6 +133,10 @@ public sealed class EncryptedSqliteMetadataRepository(
         }
 
         await ValidateSchemaAsync(connection, transaction, cancellationToken);
+        await ValidateGovernedMutationAuditChainAsync(
+            connection,
+            transaction,
+            cancellationToken);
         await ValidateForeignKeysAsync(connection, transaction, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         await VerifyDatabaseIntegrityAsync(connection, cancellationToken);
@@ -326,9 +339,19 @@ public sealed class EncryptedSqliteMetadataRepository(
         return vaultIds;
     }
 
-    public async Task ApplyDiscoveryAsync(Guid identityId, DiscoverySnapshot snapshot, SyncRun run, CancellationToken cancellationToken)
+    public Task ApplyDiscoveryAsync(Guid identityId, DiscoverySnapshot snapshot, SyncRun run, CancellationToken cancellationToken) =>
+        ApplyDiscoveryCoreAsync(identityId, snapshot, run, reconcileMissing: true, cancellationToken);
+
+    public Task ApplyDiscoveryPatchAsync(Guid identityId, DiscoverySnapshot snapshot, SyncRun run, CancellationToken cancellationToken) =>
+        ApplyDiscoveryCoreAsync(identityId, snapshot, run, reconcileMissing: false, cancellationToken);
+
+    private async Task ApplyDiscoveryCoreAsync(
+        Guid identityId,
+        DiscoverySnapshot snapshot,
+        SyncRun run,
+        bool reconcileMissing,
+        CancellationToken cancellationToken)
     {
-        _ = identityId;
         await using var connection = await OpenAsync(cancellationToken);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
         foreach (var x in snapshot.Tenants) await UpsertTenantAsync(connection, transaction, x, cancellationToken);
@@ -340,7 +363,7 @@ public sealed class EncryptedSqliteMetadataRepository(
             ("$id", run.Id.ToString("D")), ("$scope", run.Scope), ("$started", Format(run.StartedAt)),
             ("$completed", run.CompletedAt is null ? DBNull.Value : Format(run.CompletedAt.Value)), ("$status", (int)run.Status),
             ("$vaults", run.VaultCount), ("$items", run.ItemCount), ("$errors", run.NonSensitiveErrors.Count));
-        if (snapshot.Errors.Count == 0)
+        if (reconcileMissing && snapshot.Errors.Count == 0)
         {
             var discoveredVaultIds = string.Join(",", snapshot.Vaults.Select(v => $"'{v.Id:D}'"));
             var accessSql = string.IsNullOrEmpty(discoveredVaultIds)
@@ -359,6 +382,108 @@ public sealed class EncryptedSqliteMetadataRepository(
             }
         }
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task RecordGovernedMutationAuditAsync(
+        GovernedMutationAuditEvent auditEvent,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(auditEvent);
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var transaction =
+            (SqliteTransaction)await connection.BeginTransactionAsync(
+                cancellationToken);
+        string currentHash;
+        await using (var current = connection.CreateCommand())
+        {
+            current.Transaction = transaction;
+            current.CommandText =
+                "SELECT record_hash FROM governed_mutation_audit ORDER BY sequence DESC LIMIT 1";
+            currentHash =
+                (await current.ExecuteScalarAsync(cancellationToken)
+                    as string) ?? string.Empty;
+        }
+        if (!string.Equals(
+                currentHash,
+                auditEvent.PreviousHash,
+                StringComparison.Ordinal))
+        {
+            throw new LocalDataIntegrityException(
+                "The governed-mutation audit chain changed before the new record could be appended.");
+        }
+
+        await ExecuteAsync(
+            connection,
+            transaction,
+            """
+            INSERT INTO governed_mutation_audit(
+                id,preview_id,occurred_at,operation,identity_id,tenant_id,
+                subscription_id,vault_resource_id,object_name_hash,
+                sensitive_value_length,result,provider_version,safe_message,
+                previous_hash,record_hash)
+            VALUES(
+                $id,$preview,$occurred,$operation,$identity,$tenant,
+                $subscription,$vault,$object_hash,$value_length,$result,
+                $version,$message,$previous_hash,$record_hash)
+            """,
+            cancellationToken,
+            ("$id", auditEvent.Id.ToString("D")),
+            ("$preview", auditEvent.PreviewId.ToString("D")),
+            ("$occurred", Format(auditEvent.OccurredAt)),
+            ("$operation", (int)auditEvent.Operation),
+            ("$identity", auditEvent.IdentityId.ToString("D")),
+            ("$tenant", auditEvent.TenantId),
+            ("$subscription", auditEvent.SubscriptionId),
+            ("$vault", auditEvent.VaultResourceId),
+            ("$object_hash", auditEvent.ObjectNameHash),
+            ("$value_length", auditEvent.SensitiveValueLength),
+            ("$result", (int)auditEvent.Result),
+            ("$version", auditEvent.ProviderVersion),
+            ("$message", auditEvent.SafeMessage),
+            ("$previous_hash", auditEvent.PreviousHash),
+            ("$record_hash", auditEvent.RecordHash));
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<GovernedMutationAuditEvent?>
+        GetLatestGovernedMutationAuditAsync(
+            CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id,preview_id,occurred_at,operation,identity_id,tenant_id,
+                   subscription_id,vault_resource_id,object_name_hash,
+                   sensitive_value_length,result,provider_version,safe_message,
+                   previous_hash,record_hash
+            FROM governed_mutation_audit
+            ORDER BY sequence DESC
+            LIMIT 1
+            """;
+        await using var reader =
+            await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+            return null;
+        return new GovernedMutationAuditEvent(
+            reader.GetGuid(0),
+            reader.GetGuid(1),
+            DateTimeOffset.Parse(
+                reader.GetString(2),
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.RoundtripKind),
+            (GovernedAzureOperation)reader.GetInt32(3),
+            reader.GetGuid(4),
+            reader.GetString(5),
+            reader.GetString(6),
+            reader.GetString(7),
+            reader.GetString(8),
+            reader.GetInt32(9),
+            (GovernedMutationAuditResult)reader.GetInt32(10),
+            reader.GetString(11),
+            reader.GetString(12),
+            reader.GetString(13),
+            reader.GetString(14));
     }
 
     public async Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest request, DateTimeOffset now, CancellationToken cancellationToken)
@@ -1284,6 +1409,7 @@ public sealed class EncryptedSqliteMetadataRepository(
             ["cyberark_versions"] = ["profile_id", "account_id", "version_id", "is_temporary", "modified_at", "modified_by"],
             ["cyberark_permissions"] = ["profile_id", "safe_id", "member_name", "member_type", "list_accounts", "use_accounts", "retrieve_accounts", "view_audit_log", "access_without_confirmation", "requests_authorization_level1", "requests_authorization_level2", "observed_at", "evidence_state"],
             ["cyberark_audit"] = ["id", "profile_id", "account_id", "safe_name", "version_id", "operation", "result", "safe_message", "occurred_at"],
+            ["governed_mutation_audit"] = ["sequence", "id", "preview_id", "occurred_at", "operation", "identity_id", "tenant_id", "subscription_id", "vault_resource_id", "object_name_hash", "sensitive_value_length", "result", "provider_version", "safe_message", "previous_hash", "record_hash"],
         };
         var actualTables = new HashSet<string>(StringComparer.Ordinal);
         await using (var command = connection.CreateCommand())
@@ -1319,6 +1445,78 @@ public sealed class EncryptedSqliteMetadataRepository(
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (await reader.ReadAsync(cancellationToken))
             throw new LocalDataIntegrityException("Encrypted local metadata contains invalid resource relationships.");
+    }
+
+    private static async Task ValidateGovernedMutationAuditChainAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            SELECT sequence,id,preview_id,occurred_at,operation,identity_id,
+                   tenant_id,subscription_id,vault_resource_id,object_name_hash,
+                   sensitive_value_length,result,provider_version,safe_message,
+                   previous_hash,record_hash
+            FROM governed_mutation_audit
+            ORDER BY sequence
+            """;
+        await using var reader =
+            await command.ExecuteReaderAsync(cancellationToken);
+        var expectedSequence = 1L;
+        var previousHash = string.Empty;
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var sequence = reader.GetInt64(0);
+            var observedPreviousHash = reader.GetString(14);
+            if (sequence != expectedSequence ||
+                !string.Equals(
+                    previousHash,
+                    observedPreviousHash,
+                    StringComparison.Ordinal))
+            {
+                throw new LocalDataIntegrityException(
+                    "The governed-mutation audit sequence or hash chain is invalid.");
+            }
+
+            var canonical = string.Join(
+                "|",
+                reader.GetString(1),
+                reader.GetString(2),
+                DateTimeOffset.Parse(
+                        reader.GetString(3),
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.RoundtripKind)
+                    .ToUniversalTime()
+                    .ToString("O"),
+                reader.GetInt32(4),
+                reader.GetString(5),
+                reader.GetString(6),
+                reader.GetString(7),
+                reader.GetString(8),
+                reader.GetString(9),
+                reader.GetInt32(10),
+                reader.GetInt32(11),
+                reader.GetString(12),
+                reader.GetString(13),
+                observedPreviousHash);
+            var computed = Convert.ToHexString(
+                SHA256.HashData(
+                    Encoding.UTF8.GetBytes(canonical)));
+            var observed = reader.GetString(15);
+            if (!string.Equals(
+                    computed,
+                    observed,
+                    StringComparison.Ordinal))
+            {
+                throw new LocalDataIntegrityException(
+                    "The governed-mutation audit integrity chain failed validation.");
+            }
+            previousHash = observed;
+            expectedSequence++;
+        }
     }
 
     private static async Task ExecuteAsync(SqliteConnection connection, SqliteTransaction? transaction, string sql, CancellationToken cancellationToken, params (string Name, object Value)[] values)
@@ -1513,6 +1711,16 @@ public sealed class EncryptedSqliteMetadataRepository(
             connection,
             transaction,
             CyberArkSchema,
+            cancellationToken);
+
+    private static Task EnsureGovernedMutationAuditTableAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken) =>
+        ExecuteAsync(
+            connection,
+            transaction,
+            GovernedMutationAuditSchema,
             cancellationToken);
 
     private static string Format(DateTimeOffset value) => value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
@@ -1734,6 +1942,27 @@ public sealed class EncryptedSqliteMetadataRepository(
         CREATE INDEX IF NOT EXISTS ix_cyberark_audit_profile_time
             ON cyberark_audit(profile_id,occurred_at DESC);
         """;
+    private const string GovernedMutationAuditSchema = """
+        CREATE TABLE IF NOT EXISTS governed_mutation_audit(
+            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT NOT NULL UNIQUE,
+            preview_id TEXT NOT NULL,
+            occurred_at TEXT NOT NULL,
+            operation INTEGER NOT NULL,
+            identity_id TEXT NOT NULL,
+            tenant_id TEXT NOT NULL,
+            subscription_id TEXT NOT NULL,
+            vault_resource_id TEXT NOT NULL,
+            object_name_hash TEXT NOT NULL,
+            sensitive_value_length INTEGER NOT NULL,
+            result INTEGER NOT NULL,
+            provider_version TEXT NOT NULL,
+            safe_message TEXT NOT NULL,
+            previous_hash TEXT NOT NULL,
+            record_hash TEXT NOT NULL UNIQUE);
+        CREATE INDEX IF NOT EXISTS ix_governed_mutation_audit_time
+            ON governed_mutation_audit(occurred_at DESC);
+        """;
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS identities(id TEXT PRIMARY KEY,client_id TEXT NOT NULL,account_identifier TEXT NOT NULL UNIQUE,username_hint TEXT NOT NULL,display_name TEXT NOT NULL,home_tenant_id TEXT NOT NULL,auth_state INTEGER NOT NULL,last_interactive TEXT NOT NULL,is_enabled INTEGER NOT NULL,identity_type INTEGER NOT NULL DEFAULT 0,credential_data TEXT NOT NULL DEFAULT '');
         CREATE TABLE IF NOT EXISTS tenants(id TEXT PRIMARY KEY,identity_id TEXT NOT NULL REFERENCES identities(id) ON DELETE CASCADE,tenant_id TEXT NOT NULL,display_name TEXT NOT NULL,tenant_type TEXT NOT NULL,last_validated TEXT NOT NULL,status TEXT NOT NULL,UNIQUE(identity_id,tenant_id));
@@ -1760,5 +1989,7 @@ public sealed class EncryptedSqliteMetadataRepository(
         CREATE TABLE IF NOT EXISTS cyberark_permissions(profile_id TEXT NOT NULL,safe_id TEXT NOT NULL,member_name TEXT NOT NULL,member_type TEXT NOT NULL,list_accounts INTEGER NOT NULL,use_accounts INTEGER NOT NULL,retrieve_accounts INTEGER NOT NULL,view_audit_log INTEGER NOT NULL,access_without_confirmation INTEGER NOT NULL,requests_authorization_level1 INTEGER NOT NULL,requests_authorization_level2 INTEGER NOT NULL,observed_at TEXT NOT NULL,evidence_state TEXT NOT NULL,PRIMARY KEY(profile_id,safe_id),FOREIGN KEY(profile_id,safe_id) REFERENCES cyberark_safes(profile_id,safe_id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS cyberark_audit(id TEXT PRIMARY KEY,profile_id TEXT NOT NULL,account_id TEXT,safe_name TEXT,version_id INTEGER,operation TEXT NOT NULL,result INTEGER NOT NULL,safe_message TEXT NOT NULL,occurred_at TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS ix_cyberark_audit_profile_time ON cyberark_audit(profile_id,occurred_at DESC);
+        CREATE TABLE IF NOT EXISTS governed_mutation_audit(sequence INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT NOT NULL UNIQUE,preview_id TEXT NOT NULL,occurred_at TEXT NOT NULL,operation INTEGER NOT NULL,identity_id TEXT NOT NULL,tenant_id TEXT NOT NULL,subscription_id TEXT NOT NULL,vault_resource_id TEXT NOT NULL,object_name_hash TEXT NOT NULL,sensitive_value_length INTEGER NOT NULL,result INTEGER NOT NULL,provider_version TEXT NOT NULL,safe_message TEXT NOT NULL,previous_hash TEXT NOT NULL,record_hash TEXT NOT NULL UNIQUE);
+        CREATE INDEX IF NOT EXISTS ix_governed_mutation_audit_time ON governed_mutation_audit(occurred_at DESC);
         """;
 }

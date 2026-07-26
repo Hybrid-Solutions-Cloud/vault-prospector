@@ -96,9 +96,9 @@ try {
     $unpresentedElementIds = @($elementIds | Where-Object { $_ -notin $presentationReferenceIds })
     $unknownPresentationIds = @($presentationReferenceIds | Where-Object { $_ -notin $elementIds })
     Add-Check -Name 'ADML element references' `
-        -Passed ($elementIds.Count -eq 8 -and $unpresentedElementIds.Count -eq 0 -and
+        -Passed ($elementIds.Count -eq 11 -and $unpresentedElementIds.Count -eq 0 -and
             $unknownPresentationIds.Count -eq 0) `
-        -Detail 'The policy presentation must reference all eight ADMX elements and no unknown element IDs.'
+        -Detail 'The policy presentation must reference all eleven ADMX elements and no unknown element IDs.'
 
     $stringIds = @(
         $adml.SelectNodes('//p:stringTable/p:string[@id]', $admlNamespaces) |
@@ -144,7 +144,10 @@ foreach ($marker in @(
         'DisableOfflineCache'
         'DisableRemoteCredentialVerification'
         'MaximumOfflineCacheMinutes'
-        'MaximumRevealVerificationGraceSeconds')) {
+        'MaximumRevealVerificationGraceSeconds'
+        'EnableGovernedAzureMutations'
+        'AllowedAzureMutations'
+        'AllowedAzureMutationVaults')) {
     Add-Check -Name "ADMX policy value: $marker" -Passed $admxText.Contains($marker) `
         -Detail "The Group Policy template must define '$marker'."
 }
@@ -162,6 +165,15 @@ $sourceContracts = [ordered]@{
     'src/VaultProspector.Providers.Azure/WorkloadIdentityDiscoveryService.cs' = @(
         'EnsureAdministratorAllowed'
         'EnsureTenantAllowed')
+    'src/VaultProspector.Application/GovernedAzureMutationService.cs' = @(
+        'EnsureReleaseApproved'
+        'EnsureAzureMutationAllowed'
+        'EnsureConfirmation')
+    'src/VaultProspector.Providers.Azure/AzureGovernedMutationProvider.cs' = @(
+        'EnsureAuthorizedAsync'
+        'CreateSecretVersion'
+        'CreateSoftwareKeyVersion'
+        'StartCertificatePolicy')
     'src/VaultProspector.App/Views/MainWindow.axaml' = @(
         'EnterprisePolicyStatus'
         'IsEnterpriseOfflineCacheAllowed'

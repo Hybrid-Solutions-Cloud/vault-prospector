@@ -1,8 +1,9 @@
 # Roadmap
 
 The roadmap is intentionally capability-based. The published `0.3.0-preview.3` Windows evaluation
-release includes the integrated Phase 0–13 implementation; live-provider, independent-review,
-trusted-signing, mobile/store, and GA acceptance evidence remains open as named below.
+release includes the integrated Windows implementation; live-provider, independent-review,
+trusted-signing, and GA acceptance evidence remain open as named below. Mobile is a separate
+post-Windows roadmap and does not block Windows GA.
 
 Release promotion is controlled by the evidence-based [Preview and GA readiness matrix](release-readiness.md). A phase marked delivered here describes implemented capability; it does not override an incomplete release gate.
 
@@ -19,10 +20,11 @@ The next work is ordered by security dependency rather than visual novelty. Secu
 | Now | Desktop UI and password-manager interface research | In progress | Comparative research and four interactive concepts are complete; participant evidence, selection, production implementation, and assistive-technology validation remain. |
 | Now | Performance and large-estate validation | In progress | A controlled 10-identity, 200-vault, 50,000-object encrypted baseline passes sync, search, initialization/reopen, cancellation, memory, and storage targets. Representative devices, packaged-app startup, live provider conditions, populated UI/AT responsiveness, and exact signed-candidate repetition remain. |
 | Next | Taskbar background operation and metadata synchronization | In progress locally | Lock-on-hide notification-area lifecycle, session/suspend/resume boundary locking, and opt-in metadata-only synchronization are implemented; installed Windows lifecycle and policy evidence remain. |
-| Next | Identity-source expansion and read-only/write-mode policy | In progress locally | Workload profiles, discovery, dry-run provisioning plans, and permission-aware read-only discovery are implemented locally. Governed mutations remain gated behind independent security review. |
-| Future | CyberArk provider integration | Source prototype implemented; unsupported | Privilege Cloud provider, isolated credential/metadata boundaries, and automated tests remain in private source. The Windows release UI is disabled until a governed test tenant, product decision, independent review, and separate release evidence exist. |
+| Next | Identity-source expansion and read-only/write-mode policy | Implemented internally; validation gated | Workload profiles, discovery, dry-run provisioning plans, permission-aware read-only discovery, and four separately governed Key Vault mutation operations are implemented. Mutations remain default-hidden behind accepted-build and exact machine-policy gates until live Azure and independent review pass. |
+| Post-GA | CyberArk provider integration | Source prototype implemented; unsupported | Privilege Cloud provider, isolated credential/metadata boundaries, and automated tests remain in private source. The Windows release UI is disabled until after Windows GA and a governed test tenant, product decision, independent review, and separate release evidence exist. |
 | Next | Browser extension and explicit one-time fill | In progress locally | Origin/frame/purpose binding, authenticated native messaging, protected machine policy, mappings, confirmation, verification, audit, and MSI host registration are implemented; signed distribution, live installed-browser, independent-review, compromise/revocation, usability, and AT gates remain. Private browser password-store access is prohibited. |
-| Future | iPhone/iOS and Android/Google Play applications | Source prototypes implemented; not released | Mobile work has its own future roadmap and release gates. Mobile signing, physical-device testing, and store acceptance do not block Windows GA. |
+| Future roadmap | iPhone/iOS and Android/Google Play applications | Source prototypes implemented; not released | Mobile work has its own future roadmap and release gates. Mobile signing, physical-device testing, and store acceptance do not block Windows GA. |
+| Final pre-GA | Trusted Windows executable signing | Planned | Complete after all Windows code, testing, and release evidence are final. Signing is the last GA promotion task and does not block producing the explicitly unsigned manual-test Preview. |
 
 Identity planning follows current Microsoft platform boundaries:
 
@@ -84,10 +86,10 @@ Status: delivered for evaluation in the 0.1 preview; independent security review
 - Security review and attack testing.
 - No cloud synchronization.
 
-## Phase 4 — iPhone and Google mobile applications (coming soon)
+## Future roadmap — iPhone and Google mobile applications
 
-These applications are implemented and merged but remain coming soon. No Apple App Store or Google
-Play release is included in the current Windows desktop preview, and each mobile release must
+These applications are roadmap work, not part of the Windows GA release. No Apple App Store or
+Google Play release is included in the current Windows desktop preview, and each mobile release must
 satisfy its own security and store review gates.
 
 - macOS validation.
@@ -120,7 +122,7 @@ satisfy its own security and store review gates.
   open.
 - Audit-friendly local access history.
 - Exportable diagnostics without sensitive data.
-- Signed releases and supply-chain hardening.
+- Signed releases and supply-chain hardening as the final task before Windows GA promotion.
 
 ## Phase 6 — Provider ecosystem
 

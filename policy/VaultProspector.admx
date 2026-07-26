@@ -81,6 +81,21 @@
                  valueName="MaximumRevealVerificationGraceSeconds"
                  minValue="0"
                  maxValue="120" />
+        <boolean id="EnableGovernedAzureMutations"
+                 valueName="EnableGovernedAzureMutations">
+          <trueValue>
+            <decimal value="1" />
+          </trueValue>
+          <falseValue>
+            <decimal value="0" />
+          </falseValue>
+        </boolean>
+        <multiText id="AllowedAzureMutations"
+                   valueName="AllowedAzureMutations"
+                   required="false" />
+        <multiText id="AllowedAzureMutationVaults"
+                   valueName="AllowedAzureMutationVaults"
+                   required="false" />
       </elements>
     </policy>
   </policies>

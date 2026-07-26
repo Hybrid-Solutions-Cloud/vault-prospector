@@ -291,6 +291,14 @@ public sealed partial class MainViewModel
         if (browserFillService is null)
             return;
 
+        if (browserIntegrationDiagnostics is not null)
+        {
+            var setup = await browserIntegrationDiagnostics.InspectAsync(
+                cancellationToken);
+            BrowserExtensionStatus = setup.ExtensionStatus;
+            BrowserNativeHostStatus = setup.NativeHostStatus;
+        }
+
         BrowserPolicyStatus =
             await browserFillService.GetPolicyStatusAsync(cancellationToken);
         var selectedId = SelectedBrowserFillMapping?.Id;

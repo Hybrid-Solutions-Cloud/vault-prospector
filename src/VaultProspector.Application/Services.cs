@@ -502,18 +502,23 @@ public sealed class SynchronizationService(
                 };
             }
             var status = snapshot.Errors.Count == 0 ? SyncStatus.Completed : SyncStatus.CompletedWithErrors;
+            var runId = Guid.NewGuid();
+            var completedAt = clock.UtcNow;
             var run = new SyncRun(
-                Guid.NewGuid(),
+                runId,
                 identity.DisplayName,
                 started,
-                clock.UtcNow,
+                completedAt,
                 status,
                 snapshot.Vaults.Count,
                 snapshot.Items.Count,
                 snapshot.Errors.Select(error => error.SafeMessage).ToArray(),
-                ErrorDetails: snapshot.Errors.Select(ToSyncErrorDetail).ToArray());
+                ErrorDetails: snapshot.Errors
+                    .Select(error => ToSyncErrorDetail(error, runId, completedAt))
+                    .ToArray());
             await repository.ApplyDiscoveryAsync(identity.Id, snapshot, run, cancellationToken);
             diagnostics.Information("sync_completed", new Dictionary<string, object?> { ["identity_id"] = identity.Id, ["vault_count"] = run.VaultCount, ["item_count"] = run.ItemCount, ["error_count"] = run.NonSensitiveErrors.Count });
+            WriteScopeDiagnostics(run, identity.Id);
             return run;
         }
         catch (OperationCanceledException)
@@ -543,13 +548,97 @@ public sealed class SynchronizationService(
         }
     }
 
+    public async Task<SyncRun> RetryFailedScopesAsync(
+        ConnectedIdentity identity,
+        IReadOnlyCollection<SyncErrorDetail> failedScopes,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(failedScopes);
+        identity = await repository.GetIdentityAsync(identity.Id, cancellationToken)
+            ?? throw new KeyNotFoundException("The selected identity no longer exists.");
+        EnsureOnlineIdentityIsUsable(identity);
+
+        var retryScopes = failedScopes
+            .Select(detail => detail.RetryScope)
+            .Where(scope => scope is not null)
+            .Cast<ProviderRetryScope>()
+            .ToArray();
+        var subscriptionIds = retryScopes
+            .Select(scope => scope.SubscriptionId)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var vaultResourceIds = retryScopes
+            .Select(scope => scope.VaultResourceId)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (subscriptionIds.Length == 0 && vaultResourceIds.Length == 0)
+            throw new InvalidOperationException("The selected synchronization error does not expose a retryable Azure scope.");
+
+        var policy = (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance).GetSnapshot();
+        policy.EnsureIdentityAllowed(identity);
+        var constraints = new VaultDiscoveryConstraints(
+            policy.AllowedTenantIds,
+            subscriptionIds,
+            vaultResourceIds);
+        var started = clock.UtcNow;
+        var snapshot = await provider.DiscoverAsync(
+            identity,
+            [],
+            [],
+            constraints,
+            cancellationToken);
+        snapshot = ApplyTenantConstraints(snapshot, constraints);
+
+        var status = snapshot.Errors.Count == 0
+            ? SyncStatus.Completed
+            : SyncStatus.CompletedWithErrors;
+        var runId = Guid.NewGuid();
+        var completedAt = clock.UtcNow;
+        var run = new SyncRun(
+            runId,
+            $"Retry: {identity.DisplayName}",
+            started,
+            completedAt,
+            status,
+            snapshot.Vaults.Count,
+            snapshot.Items.Count,
+            snapshot.Errors.Select(error => error.SafeMessage).ToArray(),
+            ErrorDetails: snapshot.Errors
+                .Select(error => ToSyncErrorDetail(error, runId, completedAt))
+                .ToArray());
+        await repository.ApplyDiscoveryPatchAsync(
+            identity.Id,
+            snapshot,
+            run,
+            cancellationToken);
+        diagnostics.Information(
+            "sync_scope_retry_completed",
+            new Dictionary<string, object?>
+            {
+                ["identity_id"] = identity.Id,
+                ["vault_count"] = run.VaultCount,
+                ["item_count"] = run.ItemCount,
+                ["error_count"] = run.NonSensitiveErrors.Count,
+                ["status"] = status == SyncStatus.Completed ? "completed" : "partial",
+            });
+        WriteScopeDiagnostics(run, identity.Id);
+        return run;
+    }
+
     private static void EnsureOnlineIdentityIsUsable(ConnectedIdentity identity)
     {
         if (!identity.IsEnabled || identity.AuthenticationState != AuthenticationState.Ready)
             throw new InvalidOperationException("The selected identity is disabled, revoked, or requires authentication.");
     }
 
-    private static SyncErrorDetail ToSyncErrorDetail(ProviderError error)
+    private static SyncErrorDetail ToSyncErrorDetail(
+        ProviderError error,
+        Guid runId,
+        DateTimeOffset occurredAt)
     {
         var recovery = error.Category switch
         {
@@ -568,7 +657,35 @@ public sealed class SynchronizationService(
             error.Scope,
             error.Category,
             error.SafeMessage,
-            recovery);
+            recovery,
+            runId,
+            occurredAt,
+            CreateCorrelationId(runId, error),
+            error.RetryScope);
+    }
+
+    private void WriteScopeDiagnostics(SyncRun run, Guid identityId)
+    {
+        foreach (var detail in run.ErrorDetails ?? [])
+        {
+            diagnostics.Information(
+                "sync_scope_failed",
+                new Dictionary<string, object?>
+                {
+                    ["identity_id"] = identityId,
+                    ["scope_id"] = detail.Scope,
+                    ["correlation_id"] = detail.CorrelationId,
+                    ["error_category"] = detail.Category,
+                    ["status"] = run.Status == SyncStatus.Completed ? "completed" : "partial",
+                });
+        }
+    }
+
+    private static string CreateCorrelationId(Guid runId, ProviderError error)
+    {
+        var input = System.Text.Encoding.UTF8.GetBytes(
+            $"{runId:D}|{error.Scope}|{error.Category}");
+        return Convert.ToHexString(SHA256.HashData(input))[..16];
     }
 
     private static DiscoverySnapshot ApplyTenantConstraints(

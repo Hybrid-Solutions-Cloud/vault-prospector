@@ -104,6 +104,14 @@ public partial class App : Avalonia.Application
             {
                 Timeout = TimeSpan.FromSeconds(30),
             };
+            var governedWriteHttpClient = new HttpClient(
+                new SocketsHttpHandler
+                {
+                    AllowAutoRedirect = false,
+                })
+            {
+                Timeout = TimeSpan.FromSeconds(60),
+            };
             var cyberArkHttpClient = new HttpClient(new SocketsHttpHandler
             {
                 AllowAutoRedirect = false,
@@ -148,6 +156,24 @@ public partial class App : Avalonia.Application
                 clipboard,
                 clock,
                 enterprisePolicy);
+            var governedMutationReleaseApproved =
+                AppContext.TryGetSwitch(
+                    GovernedAzureMutationService
+                        .ReleaseEnablementSwitch,
+                    out var governedMutationApproved) &&
+                governedMutationApproved;
+            var governedMutationService =
+                new GovernedAzureMutationService(
+                    repository,
+                    identityProvider,
+                    new AzureGovernedMutationProvider(
+                        identityProvider,
+                        governedWriteHttpClient,
+                        authorizationHttpClient),
+                    verification,
+                    enterprisePolicy,
+                    clock,
+                    governedMutationReleaseApproved);
             var viewModel = new MainViewModel(
                 repository,
                 new IdentityService(
@@ -194,7 +220,10 @@ public partial class App : Avalonia.Application
                     "unknown",
                     clock),
                 revealVerificationSession,
-                releaseUpdateService);
+                releaseUpdateService,
+                new WindowsBrowserIntegrationDiagnostics(
+                    AppContext.BaseDirectory),
+                governedMutationService);
             window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()
@@ -481,6 +510,7 @@ public partial class App : Avalonia.Application
                     browserBrokerServer.DisposeAsync().AsTask().GetAwaiter().GetResult();
                     browserBrokerServer = null;
                 }
+                governedMutationService.Dispose();
                 repository.Dispose();
                 DisposeTray();
             };

@@ -127,21 +127,73 @@ public interface IVaultProvider
     Task<SensitiveValue> RetrieveSecretAsync(ConnectedIdentity identity, VaultResource vault, VaultItem item, CancellationToken cancellationToken);
 }
 
+public interface IGovernedAzureMutationProvider
+{
+    Task<string> GetCurrentSecretVersionAsync(
+        ConnectedIdentity identity,
+        Uri vaultUri,
+        string objectName,
+        CancellationToken cancellationToken);
+
+    Task EnsureAuthorizedAsync(
+        ConnectedIdentity identity,
+        string vaultResourceId,
+        GovernedAzureOperation operation,
+        CancellationToken cancellationToken);
+
+    Task<GovernedMutationResult> ExecuteAsync(
+        ConnectedIdentity identity,
+        GovernedMutationPreview preview,
+        SensitiveValue? sensitiveValue,
+        CancellationToken cancellationToken);
+}
+
 public sealed class VaultDiscoveryConstraints(
-    IEnumerable<string>? allowedTenantIds = null)
+    IEnumerable<string>? allowedTenantIds = null,
+    IEnumerable<string>? allowedSubscriptionIds = null,
+    IEnumerable<string>? allowedVaultResourceIds = null)
 {
     private readonly HashSet<string> _allowedTenantIds = new(
         allowedTenantIds ?? [],
+        StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _allowedSubscriptionIds = new(
+        allowedSubscriptionIds ?? [],
+        StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _allowedVaultResourceIds = new(
+        allowedVaultResourceIds ?? [],
         StringComparer.OrdinalIgnoreCase);
 
     public static VaultDiscoveryConstraints Unrestricted { get; } = new();
 
     public IReadOnlySet<string> AllowedTenantIds => _allowedTenantIds;
+    public IReadOnlySet<string> AllowedSubscriptionIds => _allowedSubscriptionIds;
+    public IReadOnlySet<string> AllowedVaultResourceIds => _allowedVaultResourceIds;
     public bool RestrictsTenants => _allowedTenantIds.Count > 0;
+    public bool RestrictsSubscriptions => _allowedSubscriptionIds.Count > 0;
+    public bool RestrictsVaults => _allowedVaultResourceIds.Count > 0;
+    public bool IsTargetedRetry => RestrictsSubscriptions || RestrictsVaults;
 
     public bool IsTenantAllowed(string tenantId) =>
         !RestrictsTenants ||
         _allowedTenantIds.Contains(tenantId);
+
+    public bool IsSubscriptionAllowed(string subscriptionId) =>
+        !RestrictsSubscriptions ||
+        _allowedSubscriptionIds.Contains(subscriptionId);
+
+    public bool IsVaultAllowed(string vaultResourceId) =>
+        !RestrictsVaults ||
+        _allowedVaultResourceIds.Contains(vaultResourceId);
+}
+
+public sealed record BrowserIntegrationDiagnosticSnapshot(
+    string ExtensionStatus,
+    string NativeHostStatus);
+
+public interface IBrowserIntegrationDiagnostics
+{
+    Task<BrowserIntegrationDiagnosticSnapshot> InspectAsync(
+        CancellationToken cancellationToken);
 }
 
 public interface ICyberArkProvider
@@ -192,6 +244,15 @@ public interface IMetadataRepository
     Task<IReadOnlyList<Guid>> GetVaultIdsForIdentityAsync(Guid identityId, CancellationToken cancellationToken);
     Task SetVaultSelectedAsync(Guid vaultAccessId, bool isSelected, CancellationToken cancellationToken);
     Task ApplyDiscoveryAsync(Guid identityId, DiscoverySnapshot snapshot, SyncRun run, CancellationToken cancellationToken);
+    Task ApplyDiscoveryPatchAsync(Guid identityId, DiscoverySnapshot snapshot, SyncRun run, CancellationToken cancellationToken) =>
+        ApplyDiscoveryAsync(identityId, snapshot, run, cancellationToken);
+    Task RecordGovernedMutationAuditAsync(
+        GovernedMutationAuditEvent auditEvent,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Governed mutation audit is not supported by this repository.");
+    Task<GovernedMutationAuditEvent?> GetLatestGovernedMutationAuditAsync(
+        CancellationToken cancellationToken) =>
+        Task.FromResult<GovernedMutationAuditEvent?>(null);
     Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest request, DateTimeOffset now, CancellationToken cancellationToken);
     Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemAsync(Guid itemId, CancellationToken cancellationToken);
     async Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemForIdentityAsync(

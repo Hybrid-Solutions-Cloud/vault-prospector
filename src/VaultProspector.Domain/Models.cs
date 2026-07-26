@@ -140,7 +140,15 @@ public sealed record SyncErrorDetail(
     string Scope,
     string Category,
     string Message,
-    string Recovery);
+    string Recovery,
+    Guid? RunId = null,
+    DateTimeOffset? OccurredAt = null,
+    string CorrelationId = "",
+    ProviderRetryScope? RetryScope = null);
+
+public sealed record ProviderRetryScope(
+    string? SubscriptionId = null,
+    string? VaultResourceId = null);
 
 public sealed record CachePolicy(
     bool IsEnabled,
@@ -194,7 +202,72 @@ public sealed record SearchResult(
     bool IsStale,
     string AccessStatus = "Permission assessment unavailable");
 
-public sealed record ProviderError(string Scope, string Category, string SafeMessage);
+public sealed record ProviderError(
+    string Scope,
+    string Category,
+    string SafeMessage,
+    ProviderRetryScope? RetryScope = null);
+
+public enum GovernedAzureOperation
+{
+    CreateSecret,
+    CreateSecretVersion,
+    CreateSoftwareKeyVersion,
+    StartCertificatePolicy,
+}
+
+public enum GovernedMutationAuditResult
+{
+    Prepared,
+    Denied,
+    Started,
+    Succeeded,
+    Failed,
+    Conflict,
+}
+
+public sealed record GovernedMutationPreview(
+    Guid Id,
+    GovernedAzureOperation Operation,
+    Guid IdentityId,
+    string IdentityDisplayName,
+    string TenantId,
+    string SubscriptionId,
+    string ResourceGroup,
+    string VaultResourceId,
+    Uri VaultUri,
+    string VaultName,
+    string ObjectName,
+    string ExpectedEffect,
+    string ExpectedCurrentVersion,
+    string RecoveryGuidance,
+    string ConfirmationPhrase,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset ExpiresAt);
+
+public sealed record GovernedMutationResult(
+    GovernedAzureOperation Operation,
+    string ObjectName,
+    string ProviderVersion,
+    string SafeStatus,
+    string RecoveryGuidance);
+
+public sealed record GovernedMutationAuditEvent(
+    Guid Id,
+    Guid PreviewId,
+    DateTimeOffset OccurredAt,
+    GovernedAzureOperation Operation,
+    Guid IdentityId,
+    string TenantId,
+    string SubscriptionId,
+    string VaultResourceId,
+    string ObjectNameHash,
+    int SensitiveValueLength,
+    GovernedMutationAuditResult Result,
+    string ProviderVersion,
+    string SafeMessage,
+    string PreviousHash,
+    string RecordHash);
 
 public sealed record DiscoverySnapshot(
     IReadOnlyList<TenantAccess> Tenants,
