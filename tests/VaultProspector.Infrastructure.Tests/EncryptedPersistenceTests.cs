@@ -1403,7 +1403,9 @@ public sealed class EncryptedPersistenceTests : IDisposable
         var previewId = Guid.Parse(
             "22222222-2222-2222-2222-222222222222");
         var occurredAt =
-            DateTimeOffset.Parse("2026-07-26T12:00:00Z");
+            DateTimeOffset.Parse(
+                "2026-07-26T12:00:00Z",
+                System.Globalization.CultureInfo.InvariantCulture);
         const GovernedAzureOperation operation =
             GovernedAzureOperation.CreateSecret;
         var identityId = Guid.Parse(

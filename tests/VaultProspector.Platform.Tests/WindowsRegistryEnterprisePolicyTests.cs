@@ -22,6 +22,14 @@ public sealed class WindowsRegistryEnterprisePolicyTests
         ["ClientSecret"];
     private const string AllowedVault =
         "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/example";
+    private static readonly string[] AllowedMutationValues =
+        ["CreateSecret", "CreateSoftwareKeyVersion"];
+    private static readonly string[] AllowedMutationVaultValues =
+        [AllowedVault];
+    private static readonly string[] InvalidMutationValues =
+        ["DeleteSecret"];
+    private static readonly string[] WildcardMutationVaultValues =
+        ["/subscriptions/*/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/example"];
 
     [Fact]
     public void ValidManagedPolicyNormalizesAndConstrainsEveryBoundary()
@@ -40,10 +48,9 @@ public sealed class WindowsRegistryEnterprisePolicyTests
                 ["MaximumOfflineCacheMinutes"] = 90,
                 ["MaximumRevealVerificationGraceSeconds"] = 30,
                 ["EnableGovernedAzureMutations"] = 1,
-                ["AllowedAzureMutations"] =
-                    new[] { "CreateSecret", "CreateSoftwareKeyVersion" },
+                ["AllowedAzureMutations"] = AllowedMutationValues,
                 ["AllowedAzureMutationVaults"] =
-                    new[] { AllowedVault },
+                    AllowedMutationVaultValues,
             });
 
         Assert.True(policy.IsManaged);
@@ -214,10 +221,9 @@ public sealed class WindowsRegistryEnterprisePolicyTests
                 ["PolicyVersion"] = 1,
                 ["Enabled"] = 1,
                 ["EnableGovernedAzureMutations"] = 1,
-                ["AllowedAzureMutations"] =
-                    new[] { "DeleteSecret" },
+                ["AllowedAzureMutations"] = InvalidMutationValues,
                 ["AllowedAzureMutationVaults"] =
-                    new[] { AllowedVault },
+                    AllowedMutationVaultValues,
             },
             new Dictionary<string, object?>
             {
@@ -225,9 +231,9 @@ public sealed class WindowsRegistryEnterprisePolicyTests
                 ["Enabled"] = 1,
                 ["EnableGovernedAzureMutations"] = 1,
                 ["AllowedAzureMutations"] =
-                    new[] { "CreateSecret" },
+                    AllowedMutationValues,
                 ["AllowedAzureMutationVaults"] =
-                    new[] { "/subscriptions/*/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/example" },
+                    WildcardMutationVaultValues,
             },
         };
 }

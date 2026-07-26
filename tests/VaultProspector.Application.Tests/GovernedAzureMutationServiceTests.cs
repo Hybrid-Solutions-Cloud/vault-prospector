@@ -199,7 +199,7 @@ public sealed class GovernedAzureMutationServiceTests
             new FixedClock(),
             releaseApproved);
 
-    private static IEnterprisePolicy AllowedPolicy() =>
+    private static FixedPolicy AllowedPolicy() =>
         new FixedPolicy(
             new EnterprisePolicySnapshot(
                 true,
@@ -220,7 +220,9 @@ public sealed class GovernedAzureMutationServiceTests
             "Operator",
             TenantId,
             AuthenticationState.Ready,
-            DateTimeOffset.Parse("2026-07-26T12:00:00Z"));
+            DateTimeOffset.Parse(
+                "2026-07-26T12:00:00Z",
+                System.Globalization.CultureInfo.InvariantCulture));
 
     private static VaultResource Vault() =>
         new(
@@ -233,12 +235,16 @@ public sealed class GovernedAzureMutationServiceTests
             "eastus",
             new Dictionary<string, string>(),
             new Uri("https://unit-test.vault.azure.net/"),
-            DateTimeOffset.Parse("2026-07-26T12:00:00Z"));
+            DateTimeOffset.Parse(
+                "2026-07-26T12:00:00Z",
+                System.Globalization.CultureInfo.InvariantCulture));
 
     private sealed class FixedClock : IClock
     {
         public DateTimeOffset UtcNow =>
-            DateTimeOffset.Parse("2026-07-26T12:00:00Z");
+            DateTimeOffset.Parse(
+                "2026-07-26T12:00:00Z",
+                System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private sealed class FixedPolicy(
@@ -264,7 +270,9 @@ public sealed class GovernedAzureMutationServiceTests
                 identity with
                 {
                     LastInteractiveAuthentication =
-                        DateTimeOffset.Parse("2026-07-26T12:00:01Z"),
+                        DateTimeOffset.Parse(
+                            "2026-07-26T12:00:01Z",
+                            System.Globalization.CultureInfo.InvariantCulture),
                 });
         }
         public Task<ConnectedIdentity> AuthorizeDirectoryReadAsync(

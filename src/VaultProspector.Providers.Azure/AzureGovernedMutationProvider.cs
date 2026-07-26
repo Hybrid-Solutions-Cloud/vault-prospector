@@ -118,7 +118,7 @@ public sealed class AzureGovernedMutationProvider(
                     token.Token,
                     cancellationToken),
             _ => throw new ArgumentOutOfRangeException(
-                nameof(preview.Operation)),
+                nameof(preview)),
         };
     }
 
