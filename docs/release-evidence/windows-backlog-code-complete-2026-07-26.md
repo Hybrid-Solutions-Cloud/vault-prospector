@@ -27,6 +27,12 @@ warnings-as-errors solution build, platform-neutral tests, browser extension tes
 prototype build/audit, PowerShell syntax, vulnerable-dependency scan, and operational-readiness
 checks.
 
+Actions artifact retention is warning-only because organization storage exhaustion must not
+misreport successful source or Windows validation as a code failure. Candidate and test steps
+remain mandatory. The protected release workflow independently rebuilds and tests the tag, then
+publishes immutable packages directly to the public binary repository without using an Actions
+artifact as its source.
+
 ## Release boundary
 
 This record proves source and portable CI completion only. No replacement executable was packaged

@@ -93,8 +93,10 @@ jobs:
       - name: Validate operational-readiness contract
         shell: pwsh
         run: ./scripts/Test-OperationalReadiness.ps1 -OutputPath TestResults/operational-readiness.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - name: Retain portable results when Actions storage is available
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
+        continue-on-error: true
         with:
           name: portable-test-results-${{ github.sha }}
           path: TestResults
@@ -190,8 +192,10 @@ jobs:
             -PublishDirectory artifacts/publish-win-x64
           ./scripts/Test-OperationalReadiness.ps1 `
             -OutputPath TestResults/operational-readiness.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - name: Retain Windows candidate when Actions storage is available
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
+        continue-on-error: true
         with:
           name: windows-candidate-${{ github.sha }}
           path: |
