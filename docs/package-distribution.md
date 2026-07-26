@@ -24,20 +24,20 @@ Never replace an asset under an existing version tag. Publish a new version if a
 Run on Windows with PowerShell 7, .NET 10, WiX, WinGet, and Chocolatey available:
 
 ```powershell
-pwsh ./scripts/PackageInstaller.ps1 -Version 0.3.0-preview.3
-pwsh ./scripts/PackageDistribution.ps1 -Version 0.3.0-preview.3
-winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/0.3.0-preview.3
+pwsh ./scripts/PackageInstaller.ps1 -Version 0.3.0-preview.5
+pwsh ./scripts/PackageDistribution.ps1 -Version 0.3.0-preview.5
+winget validate --manifest ./artifacts/distribution/winget/HybridSolutionsCloud.VaultProspector/0.3.0-preview.5
 ```
 
 `PackageInstaller.ps1` creates the MSI and checksum. `PackageDistribution.ps1` reads the MSI product identifiers and checksum, then creates the WinGet manifests, manifest archive, Chocolatey source package, `.nupkg`, and checksums.
 
 ## CI validation candidates
 
-Every successful push to `main` builds a unique `0.1.0-ci.<build-id>` package set and retains a
-`windows-candidate` Azure Pipeline artifact. The artifact contains the MSI,
-WinGet manifest archive, Chocolatey package, their checksum files, and `ci-candidate.json`. The JSON
-binds the installer name, byte length, and SHA-256 to the repository, source commit/ref, pipeline
-build, candidate version, and UTC creation time.
+Every successful push to `main` builds a unique `0.3.0-ci.<run-number>` package set on the
+ephemeral HCS Windows runner. The governed GitHub Actions job validates the MSI, MSIX, WinGet
+manifest archive, Chocolatey package, checksums, and installer lifecycle against the exact source.
+Actions artifact retention is best effort while organization storage is exhausted; a retention
+warning never substitutes for or invalidates the mandatory build and test result.
 
 CI candidates exist for clean-machine validation and are not package-manager submissions. The
 protected tag pipeline creates publishable Preview or stable artifacts. A Preview may be unsigned
@@ -48,7 +48,7 @@ only when explicitly labeled and documented; stable and GA artifacts require tru
 Set `GH_TOKEN` to the Hybrid Solutions Cloud GitHub App installation token. Do not use a personal access token to push or publish into the organization.
 
 ```powershell
-pwsh ./scripts/PublishDistribution.ps1 -Version 0.3.0-preview.3
+pwsh ./scripts/PublishDistribution.ps1 -Version 0.3.0-preview.5
 ```
 
 The script creates the matching release in the public distribution repository and uploads the
@@ -106,7 +106,7 @@ later publishing session as `CHOCOLATEY_API_KEY` with the platform environment l
 Install WinGet Manifest Creator once with `winget install Microsoft.WingetCreate`, authenticate with `wingetcreate token --store`, then run:
 
 ```powershell
-pwsh ./scripts/SubmitPackageManagers.ps1 -Version 0.3.0-preview.3
+pwsh ./scripts/SubmitPackageManagers.ps1 -Version 0.3.0-preview.5
 ```
 
 The script submits the validated WinGet manifest directory and pushes the Chocolatey `.nupkg`. Both community services perform independent automated checks and moderation before the commands become available to users.

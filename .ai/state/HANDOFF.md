@@ -1,5 +1,33 @@
 # Session handoff
 
+## 0.3.0-preview.5 current release and ADO reconciliation — 2026-07-26
+
+- Current public source is `1a4f9f7fdc470c71d5faad4aaa819c1452a15799`; exact-main HCS run
+  `30220348003` and immutable release run `30222244323` passed.
+- Tag `v0.3.0-preview.5` published 16 binary-only assets. Independent public verification matched
+  all GitHub digests and all five adjacent checksums.
+- MSI SHA-256:
+  `DBE46EB192912BA7317F0152B23494179781E2C94C22BA94DA778F7C8D10C29D`.
+- Current Windows production code includes the approved Atlas UI, trusted updates, safe support
+  bundles, remote-session unlock, reveal grace, discovered filters, notification-area behavior,
+  service-principal filtering, browser setup diagnostics, isolated-error retry, and release-gated
+  governed Azure mutations.
+- PR #60 merged the verified release record. PR #61 merged the post-release ADO and cleanup record;
+  current documentation main is `0ba5fcc022ffc5c3ae3f481f646c8518ed406822`.
+- The private Agile ADO project is correctly named `Vault Prospector`. It has 198 work items:
+  53 Closed, 1 Removed, and 144 open with named work or evidence. Zero open parents have only
+  terminal children.
+- GitHub Bug #62 and ADO mirror AB#5799 track the product-owner-observed missing installer
+  logo/red-X placeholder. No fix has been attempted.
+- GitHub Bugs #42 and #44 and ADO mirrors AB#5575 and AB#5611 are Closed. GitHub Bugs #39, #40,
+  #41, and #43 remain open for their exact installed or live validation requirements.
+- The Tier-4 Windows resource group is deleted, no repository runner remains registered, and both
+  temporary build credentials are inactive and soft-deleted.
+- Product-owner exact installed workflow validation remains pending. Do not infer it from the
+  automated release result.
+- Mobile remains a separate roadmap, CyberArk remains post-GA, and trusted Microsoft signing
+  remains the final pre-GA distribution gate.
+
 ## 0.3.0-preview.3 corrected Atlas release — 2026-07-25
 
 - PRs #52 and #53 merged the persistent grouped Atlas secure-unlock shell and its protected-main

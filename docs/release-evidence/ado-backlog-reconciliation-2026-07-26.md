@@ -67,14 +67,18 @@ GitHub issues #39, #40, #41, and #43 were updated with the exact remaining proof
 Mobile remains future roadmap, CyberArk remains post-GA roadmap, and free trusted executable
 signing remains the final pre-GA distribution gate.
 
+After this reconciliation snapshot, the product-owner walkthrough identified the missing
+installer-logo/red-X defect. GitHub Bug #62 is the master record and ADO AB#5799 is its New
+Priority 3 / Severity Medium mirror under release readiness. No fix was attempted.
+
 ## Final hierarchy result
 
 | Check | Result |
 | --- | --- |
-| Total work items | 197 |
+| Total work items | 198 |
 | Closed | 53 |
 | Removed | 1 |
-| Open with named remaining work or evidence | 143 |
+| Open with named remaining work or evidence | 144 |
 | Open parents whose children are all Closed or Removed | 0 |
 | Work items left on the retired project root paths | 0 |
 
@@ -89,4 +93,3 @@ The ephemeral Tier-4 Windows release environment was removed after publication:
 - Azure resource group `rg-hcs-vp-winbuild-eus2-01` no longer exists;
 - no repository runner carrying the `vault-prospector` label remains registered; and
 - temporary Key Vault username and password secrets are inactive and soft-deleted.
-

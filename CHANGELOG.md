@@ -4,6 +4,34 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+## [0.3.0-preview.5] - 2026-07-26
+
+### Added
+
+- Add trusted in-application release discovery, verified MSI download, and user-controlled
+  installer handoff.
+- Add privacy-safe diagnostics, external log collection, and redacted support-bundle export.
+- Add policy-controlled reveal-verification grace, discovered tenant/subscription/vault selectors,
+  minimize-to-notification-area behavior, and relevant service-principal filtering.
+- Add guided browser-fill setup diagnostics and actionable isolated synchronization-error
+  inspection with exact-scope retry.
+- Add separately governed Azure Key Vault mutation operations behind default-deny release and
+  machine-policy gates.
+
+### Fixed
+
+- Clear completed identity operations reliably so ready identities can synchronize without using
+  Cancel as a workaround.
+- Support policy-controlled current-account verification in Remote Desktop and AVD-equivalent
+  sessions.
+- Align the production Avalonia hierarchy with the approved C · Atlas design.
+
+### Release
+
+- Publish the unsigned manual-test Preview from source
+  `1a4f9f7fdc470c71d5faad4aaa819c1452a15799`.
+- Verify all 16 public assets and all five adjacent package checksums independently.
+
 ## [0.3.0-preview.3] - 2026-07-25
 
 ### Added
@@ -202,6 +230,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.3.0-preview.5]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.5
 [0.3.0-preview.3]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.3
 [0.2.0-preview.5]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.5
 [0.2.0-preview.4]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.4
