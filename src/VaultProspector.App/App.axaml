@@ -61,6 +61,24 @@
         <Style Selector="Button.primary:pointerover">
             <Setter Property="Background" Value="{DynamicResource VaultColorAccentStrong}" />
         </Style>
+        <Style Selector="Button.header-action">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#86908F" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#F7FAF9" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="CornerRadius" Value="0" />
+        </Style>
+        <Style Selector="Button.header-action:pointerover">
+            <Setter Property="Background" Value="#455252" />
+            <Setter Property="BorderBrush" Value="#B6C0BF" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.header-action:pressed">
+            <Setter Property="Background" Value="#1D2626" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
         <Style Selector="TabControl.product-shell">
             <Setter Property="TabStripPlacement" Value="Left" />
             <Setter Property="Background" Value="{DynamicResource VaultColorCanvas}" />

@@ -186,6 +186,12 @@ public sealed class AtlasVisualBaselineTests
                 element.Name.LocalName == "Button" &&
                 Attribute(element, "Content") == "Reveal safely" &&
                 Attribute(element, "Command") == "{Binding RevealCommand}");
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "Button" &&
+                Attribute(element, "Content") == "Lock now" &&
+                HasClass(element, "header-action"));
     }
 
     private static void AssertBitmap(
