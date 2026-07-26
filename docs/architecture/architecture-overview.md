@@ -79,7 +79,8 @@ Responsibilities:
 - Provider-specific error categories without response-body disclosure.
 
 CyberArk models are not normalized into Azure identities, subscriptions, vaults, RBAC, or object
-types. SQLCipher schema v6 and the desktop CyberArk destination preserve the provider boundary.
+types. SQLCipher schema v7 preserves the schema-v6 CyberArk boundary and adds the hash-chained,
+value-free governed Azure mutation audit.
 The service-user client credential is stored separately in a per-profile DPAPI file.
 
 ### Local index

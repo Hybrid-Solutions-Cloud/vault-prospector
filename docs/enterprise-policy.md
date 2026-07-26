@@ -12,8 +12,9 @@ the application.
 ## Enforcement boundary
 
 Policy is reread at each operation boundary. A newly tightened policy therefore blocks the next
-connect, reauthentication, synchronization, workload-administration, reveal, copy, cache, offline
-open, browser-fill, or CyberArk operation without waiting for application restart.
+connect, reauthentication, synchronization, workload-administration, governed Azure mutation,
+reveal, copy, cache, offline open, browser-fill, or CyberArk operation without waiting for
+application restart.
 
 Enforcement occurs in application services as well as the UI:
 
@@ -49,6 +50,9 @@ An enabled policy requires `PolicyVersion=1` and `Enabled=1`.
 | `DisableRemoteCredentialVerification` | `REG_DWORD` | Optional `0`/`1`; `1` prevents the current-account Windows credential fallback in AVD and Remote Desktop sessions. Missing or `0` permits it when Windows Hello reports that no verification device is present. |
 | `MaximumOfflineCacheMinutes` | `REG_DWORD` | Optional lifetime cap from `1` through `10080` (seven days). The strictest machine/user/workspace value wins. |
 | `MaximumRevealVerificationGraceSeconds` | `REG_DWORD` | Optional cap from `0` through `120`. `0` forces verification before every Reveal. Missing allows the user's Off/30/60/120-second choice. This never applies to copy, offline cache/open, recovery, browser fill, or administration. |
+| `EnableGovernedAzureMutations` | `REG_DWORD` | Optional `0`/`1`; default `0`. `1` is necessary but not sufficient to expose governed mutation controls. The build's separately accepted release switch must also be enabled. |
+| `AllowedAzureMutations` | `REG_MULTI_SZ` | Required when governed mutations are enabled. Allowlisted values are `CreateSecret`, `CreateSecretVersion`, `CreateSoftwareKeyVersion`, and `StartCertificatePolicy`. |
+| `AllowedAzureMutationVaults` | `REG_MULTI_SZ` | Required when governed mutations are enabled. Each value must be an exact Azure Key Vault resource ID; wildcards and broad subscription/resource-group scopes are rejected. |
 
 Unknown enum values, non-GUID tenant entries, wrong registry types, unsupported versions, invalid
 switches, out-of-range lifetimes, and unreadable enabled policy fail closed. The UI and diagnostics
@@ -94,11 +98,23 @@ New-ItemProperty -Path $policyPath -Name DisableOfflineCache -PropertyType DWord
 New-ItemProperty -Path $policyPath -Name DisableRemoteCredentialVerification -PropertyType DWord -Value 0 -Force | Out-Null
 New-ItemProperty -Path $policyPath -Name MaximumOfflineCacheMinutes -PropertyType DWord -Value 480 -Force | Out-Null
 New-ItemProperty -Path $policyPath -Name MaximumRevealVerificationGraceSeconds -PropertyType DWord -Value 30 -Force | Out-Null
+New-ItemProperty -Path $policyPath -Name EnableGovernedAzureMutations -PropertyType DWord -Value 0 -Force | Out-Null
+New-ItemProperty -Path $policyPath -Name AllowedAzureMutations -PropertyType MultiString `
+    -Value @('CreateSecret', 'CreateSecretVersion') -Force | Out-Null
+New-ItemProperty -Path $policyPath -Name AllowedAzureMutationVaults -PropertyType MultiString `
+    -Value @('/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.KeyVault/vaults/example-vault') -Force | Out-Null
 ```
 
 Deploy registry changes through an elevated management process. Set `Enabled=0` to disable
 enforcement without deleting the retained configuration. Test stricter changes with synthetic
 identities and vault metadata before production rollout.
+
+Governed Azure mutations are dual-gated. Machine policy must enable only the exact operations and
+exact vault resource IDs, and the application build must carry the separately accepted
+`VaultProspector.EnableGovernedAzureMutations` release switch. Normal Preview builds leave that
+switch false, so policy alone cannot expose or execute a mutation. Each enabled operation still
+requires fresh Azure reauthentication, effective data-action authorization, Windows verification,
+a value-free preview, and its one-time confirmation phrase.
 
 ## Validation and evidence
 

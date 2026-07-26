@@ -125,7 +125,11 @@ encrypted audit, rollback, and live Azure tests.
 
 Select an identity and choose **Sync selected**. Vault Prospector enumerates subscriptions, discovers Azure Key Vault resources, and indexes secret, key, and certificate versions. It does not retrieve secret values during synchronization. Choose **Cancel** to stop the current run; starting sync again safely upserts the discovered metadata.
 
-One inaccessible subscription, vault, or object category does not stop unrelated work. The status bar reports successful counts and isolated error counts without exposing resource names in logs.
+One inaccessible subscription, vault, or object category does not stop unrelated work. The status
+bar reports successful counts and isolated error counts without exposing resource names in logs.
+Select an isolated error to see its safe timestamp and correlation ID, then choose **Retry selected
+scope**. The retry targets only that exact subscription or vault and upserts its results without
+marking unrelated metadata as removed.
 
 After the first synchronization, the **Identities** tab shows the subscriptions and vault access
 paths discovered for the selected identity. Select a subscription or vault and choose **Include**
@@ -141,7 +145,13 @@ even when the Azure identity has broader permissions.
 
 ## Search offline
 
-The **Search** tab queries the encrypted local index and works without Azure connectivity. Search by object name or tags. Filters cover object type, enabled/expired state, favorite status, staleness, tenant ID, subscription ID, and vault name. Select an identity or workspace on its tab and enable the corresponding search checkbox to scope results. Enable **Recent first** to prioritize objects opened previously. Every result shows its vault and identity context so the access path is explicit.
+The **Search** tab queries the encrypted local index and works without Azure connectivity. Search
+by object name or tags. Tenant, subscription, and vault filters are populated selectors based on
+the synchronized inventory, so an exact available value can be chosen without copying an ID.
+Filters also cover object type, enabled/expired state, favorite status, and staleness. Select an
+identity or workspace on its tab and enable the corresponding search checkbox to scope results.
+Enable **Recent first** to prioritize objects opened previously. Every result shows its vault and
+identity context so the access path is explicit.
 
 Stale means the item has not been refreshed within the application's current staleness window. Azure remains authoritative.
 
@@ -209,6 +219,11 @@ to review the deployed policy rather than editing the registry as a standard use
 [Machine-managed enterprise policy](enterprise-policy.md) for the ADMX/ADML deployment guide and
 validation limits.
 
+Governed Azure mutation controls are absent in normal Preview builds. Their production code is
+default-denied and appears only when an independently accepted build enables its release switch
+and an administrator deploys exact operation and exact vault-resource policy. Connecting an
+identity, synchronizing, searching, revealing, or installing the app never enables mutation.
+
 ## Offline values
 
 Offline values are disabled by default. To evaluate the feature:
@@ -250,6 +265,11 @@ not enough: an administrator must also enable the same HTTPS destination, browse
 purpose in protected machine policy. Each request displays its destination, purpose, secret, vault,
 and identity in the desktop app and requires **Verify and fill once** plus fresh Windows
 verification.
+
+The Browser setup card can refresh its checklist. It reports whether a supported Chrome, Edge, or
+Firefox extension is installed, whether the matching machine native-host registration and
+manifest are valid, whether the host executable is beneath the protected install root, and whether
+the local broker is ready. Correct each failed check before creating a mapping.
 
 Vault Prospector never scans saved browser passwords and does not fill in the background. See
 [Browser integration](browser-integration.md) for setup, policy format, limitations, and release
