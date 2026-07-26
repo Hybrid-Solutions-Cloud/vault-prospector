@@ -280,21 +280,25 @@ public sealed class AtlasVisualBaselineTests
     {
         var applicationSource = File.ReadAllText(
             FindRepoFile("src/VaultProspector.App/App.axaml.cs"));
-        const string expectedStartup =
-            """
-            window.Opened += async (_, _) =>
-            {
-                // Keep startup passive. The Atlas secure-unlock screen must be
-                // visible and understandable before Windows presents any
-                // verification UI. Verification begins only when the user
-                // chooses "Verify and continue".
-                await StartBrowserBrokerAsync();
-            };
-            """;
+        var openedIndex = applicationSource.IndexOf(
+            "window.Opened += async (_, _) =>",
+            StringComparison.Ordinal);
+        Assert.True(openedIndex >= 0);
+        var openedEnd = applicationSource.IndexOf(
+            "};",
+            openedIndex,
+            StringComparison.Ordinal);
+        Assert.True(openedEnd > openedIndex);
+        var openedHandler = applicationSource[
+            openedIndex..(openedEnd + 2)];
 
         Assert.Contains(
-            expectedStartup,
-            applicationSource,
+            "await StartBrowserBrokerAsync();",
+            openedHandler,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "viewModel.InitializeAsync",
+            openedHandler,
             StringComparison.Ordinal);
     }
 
