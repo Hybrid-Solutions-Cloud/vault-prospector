@@ -1,5 +1,28 @@
 # Session handoff
 
+## Atlas corrected exact-main acceptance — 2026-07-25
+
+- PR #47 merged the approved C · Atlas production layouts; PR #48 fixed qualified-account Remote
+  Desktop verification; PR #49 fixed the dark-header action contrast; and PR #50 fixed the
+  Administration panel overlap, moved Setup check to Browser fill, corrected warning/policy
+  palettes, and widened the navigation column.
+- Exact-main source `ae976be1d7a486aa26ba8ec70d52a48ad4bfa6ef` passed HCS run
+  `30181586109` across portable validation, full-history secret scanning, and the Windows
+  candidate.
+- Exact MSI `0.3.0-ci.201` SHA-256 is
+  `FED4F4E877498A56EB6AEE0D9C3A86E4761BDEABD5DFF788057C8BF063EF30C1`.
+- The retained Windows 11 Enterprise 25H2 guest upgraded from `0.3.199` to Installed Apps version
+  `0.3.201`. A real RDP session unlocked using
+  `VP-WIN11-PREVIE\vp-test-admin`.
+- Direct installed review passed Connections, Search, Administration, Workspaces, Browser fill,
+  Activity and support, Settings and updates, and About. Exact screenshots are retained under
+  `docs/release-evidence/images/atlas-ci201/`.
+- Candidate evidence is recorded in
+  `docs/release-evidence/atlas-windows-candidate-2026-07-25.md`.
+- This is not yet exact public-package evidence. Publish only a new immutable
+  `v0.3.0-preview.2`, verify its public assets/provenance, install its public MSI, and repeat the
+  walkthrough before closing AB#5592, AB#5601, or their parents.
+
 ## Atlas visual-parity correction — 2026-07-25
 
 - The product-owner review found that the exact installed candidate retained legacy-derived
