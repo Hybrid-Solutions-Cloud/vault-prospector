@@ -2,7 +2,7 @@
 
 ## Current delivery state
 
-`0.3.0-preview.4` is the current public, unsigned Windows Preview for non-production evaluation.
+`0.3.0-preview.5` is the current public, unsigned Windows Preview for non-production evaluation.
 The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
 in the 0.2 Preview line and remain subject to the live, independent, Store, and GA validation
 gates recorded below.
