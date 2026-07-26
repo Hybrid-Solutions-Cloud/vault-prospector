@@ -2,7 +2,7 @@
 
 Vault Prospector is a local-first Windows desktop application for discovering and searching Azure Key Vault metadata across multiple Microsoft Entra identities, tenants, and subscriptions. Secret values are retrieved only after an explicit action and Windows Hello verification.
 
-> **Release status:** [`0.3.0-preview.3`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.3) is the current unsigned Windows Preview for non-production evaluation. Windows displays **Unknown Publisher**; verify the published SHA-256 before installation. Submit voluntary, non-sensitive feedback through the [public Preview feedback process](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/FEEDBACK.md), and report security issues privately as described in [SECURITY.md](SECURITY.md).
+> **Release status:** [`0.3.0-preview.4`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.4) is the current unsigned Windows Preview for non-production evaluation. Windows displays **Unknown Publisher**; verify the published SHA-256 before installation. Submit voluntary, non-sensitive feedback through the [public Preview feedback process](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/blob/main/FEEDBACK.md), and report security issues privately as described in [SECURITY.md](SECURITY.md).
 
 ## What works
 
@@ -52,8 +52,8 @@ Prerequisites:
 
 ```powershell
 pwsh ./scripts/Build.ps1
-pwsh ./scripts/PackageInstaller.ps1 -Version 0.3.0-preview.3
-pwsh ./scripts/PackageDistribution.ps1 -Version 0.3.0-preview.3
+pwsh ./scripts/PackageInstaller.ps1 -Version 0.3.0-preview.4
+pwsh ./scripts/PackageDistribution.ps1 -Version 0.3.0-preview.4
 ```
 
 HCS Tier 1 WSL is supported for restore, formatting, build, and non-Windows tests. The protected desktop release is built on a Windows runner so the Windows Hello projection is included.

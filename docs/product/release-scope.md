@@ -1,6 +1,6 @@
 # Version 0.3 Preview scope
 
-Version [`0.3.0-preview.3`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.3)
+Version [`0.3.0-preview.4`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.4)
 is the current unsigned Windows desktop Preview for non-production evaluation. It replaces withdrawn
 `0.3.0-preview.2` with the complete approved C · Atlas startup and secure-unlock hierarchy,
 including policy-controlled current-account verification for supported Remote Desktop and AVD
