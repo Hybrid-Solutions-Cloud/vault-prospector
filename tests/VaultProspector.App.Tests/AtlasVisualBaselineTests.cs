@@ -167,6 +167,31 @@ public sealed class AtlasVisualBaselineTests
             "SetupStepperGrid",
             "*,*,*,*");
 
+        var administrationGrid = production
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "Grid" &&
+                Attribute(element, "Name") == "AdministrationGrid");
+        var administrationPanels = administrationGrid
+            .Elements()
+            .Where(element => element.Name.LocalName == "Border")
+            .ToArray();
+        Assert.Equal(2, administrationPanels.Length);
+        Assert.Null(Attribute(administrationPanels[0], "Grid.Column"));
+        Assert.Equal(
+            "1",
+            Attribute(administrationPanels[1], "Grid.Column"));
+        var browserSetupStatusCard = production
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "Name") ==
+                    "BrowserSetupStatusCard");
+        Assert.Contains(
+            browserSetupStatusCard.Ancestors(),
+            element =>
+                element.Name.LocalName == "TabItem" &&
+                Attribute(element, "Header") == "◎  Browser fill");
+
         Assert.Contains(
             production.Descendants(),
             element =>
@@ -192,6 +217,18 @@ public sealed class AtlasVisualBaselineTests
                 element.Name.LocalName == "Button" &&
                 Attribute(element, "Content") == "Lock now" &&
                 HasClass(element, "header-action"));
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "Border" &&
+                Attribute(element, "AutomationProperties.Name") ==
+                    "Machine-managed enterprise policy status" &&
+                HasClass(element, "atlas-info"));
+        Assert.DoesNotContain(
+            production.Descendants(),
+            element =>
+                Attribute(element, "Background") is
+                    "#3A2510" or "#10243A");
     }
 
     private static void AssertBitmap(
