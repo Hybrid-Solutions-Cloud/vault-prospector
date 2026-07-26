@@ -175,7 +175,7 @@ jobs:
           ).Hash
           ./tests/scenario/windows-installer-lifecycle.scenario.ps1 `
             -PreviousMsiPath $previousInstaller `
-            -PreviousSha256 'FDFF5FB0458012B558E1B0C51AA6BBD6A39FD3BBCFABBC44870795075C8B567B' `
+            -PreviousSha256 '778456E2B8BEBE595092961BCA19221F1E034AD31911E57D332EAA01FAD72C78' `
             -CurrentMsiPath $currentInstaller `
             -CurrentSha256 $currentHash `
             -OutputDirectory 'TestResults/installer-lifecycle'
