@@ -28,7 +28,9 @@ public sealed partial class MainViewModel(
     IEnterprisePolicy? enterprisePolicy = null,
     ISupportBundleService? supportBundleService = null,
     IRevealVerificationSession? revealVerificationSession = null,
-    IReleaseUpdateService? releaseUpdateService = null) : ViewModelBase
+    IReleaseUpdateService? releaseUpdateService = null,
+    IBrowserIntegrationDiagnostics? browserIntegrationDiagnostics = null,
+    GovernedAzureMutationService? governedAzureMutationService = null) : ViewModelBase
 {
     private static readonly IdentityType[] SupportedIdentityTypes =
     [
@@ -171,7 +173,9 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _statusText = "Starting securely…";
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _activeOperationText = string.Empty;
+    [ObservableProperty] private string _setupSyncStatus = "Not started";
     [ObservableProperty] private ConnectedIdentity? _selectedIdentity;
+    [ObservableProperty] private SyncErrorRow? _selectedSyncError;
     [ObservableProperty] private TenantAccess? _selectedTenant;
     [ObservableProperty] private SubscriptionSelectionRow? _selectedSubscription;
     [ObservableProperty] private VaultAccessRow? _selectedVaultAccess;
@@ -232,6 +236,12 @@ public sealed partial class MainViewModel(
     public bool HasSelectedIdentity => SelectedIdentity is not null;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
     public bool HasSyncErrors => SyncErrors.Count > 0;
+    public string SetupConnectionsStatus =>
+        Identities.Count == 0 ? "Current step" : "Complete";
+    public string SetupScopeStatus =>
+        Subscriptions.Count == 0 && VaultAccessPaths.Count == 0
+            ? Identities.Count == 0 ? "Waiting for identity" : "Ready to synchronize"
+            : "Complete";
     public bool IsEnterpriseOfflineCacheAllowed =>
         EnterprisePolicy().AllowOfflineCache;
     public bool IsEnterpriseClipboardAllowed =>
@@ -620,8 +630,40 @@ public sealed partial class MainViewModel(
         await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
         ReplaceSyncErrors(run);
+        SetupSyncStatus = run.Status switch
+        {
+            SyncStatus.Completed => "Complete",
+            SyncStatus.CompletedWithErrors => "Complete with isolated errors",
+            SyncStatus.Cancelled => "Cancelled",
+            _ => "Needs attention",
+        };
         StatusText = $"{run.Status}: {run.VaultCount} vaults and {run.ItemCount} objects; {run.NonSensitiveErrors.Count} isolated errors.";
     }, $"Synchronizing {SelectedIdentity?.DisplayName ?? "the selected identity"}");
+
+    [RelayCommand(CanExecute = nameof(CanRetrySelectedSyncError))]
+    private Task RetrySelectedSyncErrorAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null || SelectedSyncError is null)
+            return;
+
+        StatusText = $"Retrying {SelectedSyncError.Scope}…";
+        var run = await synchronizationService.RetryFailedScopesAsync(
+            SelectedIdentity,
+            [SelectedSyncError.Detail],
+            cancellationToken);
+        await ReloadSubscriptionsCoreAsync(
+            SelectedIdentity.Id,
+            cancellationToken);
+        await RefreshSearchFilterOptionsAsync(cancellationToken);
+        await SearchCoreAsync(cancellationToken);
+        ReplaceSyncErrors(run);
+        SetupSyncStatus = run.Status == SyncStatus.Completed
+            ? "Complete"
+            : "Complete with isolated errors";
+        StatusText = run.NonSensitiveErrors.Count == 0
+            ? $"Retry completed: {run.VaultCount} vaults and {run.ItemCount} objects refreshed."
+            : $"Retry completed with {run.NonSensitiveErrors.Count} isolated errors. Successful results remain available.";
+    }, $"Retrying {SelectedSyncError?.Scope ?? "the selected failed scope"}");
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task RefreshSubscriptionsAsync() => RunAsync(async cancellationToken =>
@@ -705,6 +747,7 @@ public sealed partial class MainViewModel(
         ClearBrowserDestinationCapture();
         CancelPendingBrowserFill(
             "Browser fill was cancelled because Vault Prospector was locked.");
+        CancelPendingGovernedMutation();
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
         SecretPreview = "Secret hidden.";
@@ -719,6 +762,7 @@ public sealed partial class MainViewModel(
         revealVerificationSession?.Invalidate();
         ClearBrowserDestinationCapture();
         CancelPendingBrowserFill("Browser fill was cancelled because Vault Prospector moved to the notification area.");
+        CancelPendingGovernedMutation();
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
         SecretPreview = "Secret hidden.";
@@ -733,6 +777,7 @@ public sealed partial class MainViewModel(
         revealVerificationSession?.Invalidate();
         ClearBrowserDestinationCapture();
         CancelPendingBrowserFill("Browser fill was cancelled by a Windows security boundary.");
+        CancelPendingGovernedMutation();
         _sensitivePresentationEpoch++;
         _activeOperation?.Cancel();
         IsCloseChoiceVisible = false;
@@ -1016,6 +1061,7 @@ public sealed partial class MainViewModel(
 
     private void ReplaceSyncErrors(SyncRun run)
     {
+        SelectedSyncError = null;
         SyncErrors.Clear();
         var details = run.ErrorDetails ??
             run.NonSensitiveErrors
@@ -1112,6 +1158,8 @@ public sealed partial class MainViewModel(
         {
             await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
         }
+        OnPropertyChanged(nameof(SetupConnectionsStatus));
+        OnPropertyChanged(nameof(SetupScopeStatus));
     }
 
     private async Task ReloadSubscriptionsCoreAsync(Guid identityId, CancellationToken cancellationToken)
@@ -1167,6 +1215,7 @@ public sealed partial class MainViewModel(
             ? VaultAccessPaths.FirstOrDefault()
             : VaultAccessPaths.FirstOrDefault(access => access.Id == selectedVaultAccessId) ??
               VaultAccessPaths.FirstOrDefault();
+        OnPropertyChanged(nameof(SetupScopeStatus));
     }
 
     private async Task ReloadSubscriptionsAfterSelectionAsync(Guid identityId, int loadVersion)
@@ -1273,6 +1322,9 @@ public sealed partial class MainViewModel(
         } identity &&
         IsIdentityAllowed(identity) &&
         !IsBusy;
+    private bool CanRetrySelectedSyncError() =>
+        CanUseSelectedIdentityOnline() &&
+        SelectedSyncError?.CanRetry == true;
     private bool CanAdministerWorkloadIdentities() =>
         workloadIdentityAdministrationService is not null &&
         SelectedIdentity is
@@ -1329,6 +1381,7 @@ public sealed partial class MainViewModel(
     partial void OnSelectedIdentityChanged(ConnectedIdentity? value)
     {
         revealVerificationSession?.Invalidate();
+        CancelPendingGovernedMutation();
         OnPropertyChanged(nameof(HasSelectedIdentity));
         OnPropertyChanged(nameof(ActiveIdentityContext));
         OnPropertyChanged(nameof(BrowserSelectedSource));
@@ -1339,6 +1392,9 @@ public sealed partial class MainViewModel(
         RemoveIdentityCommand.NotifyCanExecuteChanged();
         PurgeSelectedIdentityCacheCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
+        RetrySelectedSyncErrorCommand.NotifyCanExecuteChanged();
+        PrepareGovernedMutationCommand.NotifyCanExecuteChanged();
+        ExecuteGovernedMutationCommand.NotifyCanExecuteChanged();
         ReauthenticateIdentityCommand.NotifyCanExecuteChanged();
         DisableIdentityCommand.NotifyCanExecuteChanged();
         EnableIdentityCommand.NotifyCanExecuteChanged();
@@ -1376,13 +1432,18 @@ public sealed partial class MainViewModel(
         AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
     }
 
+    partial void OnSelectedSyncErrorChanged(SyncErrorRow? value) =>
+        RetrySelectedSyncErrorCommand.NotifyCanExecuteChanged();
+
     partial void OnSelectedTenantChanged(TenantAccess? value) =>
         AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
 
     partial void OnSelectedVaultAccessChanged(VaultAccessRow? value)
     {
+        CancelPendingGovernedMutation();
         ExcludeVaultCommand.NotifyCanExecuteChanged();
         IncludeVaultCommand.NotifyCanExecuteChanged();
+        PrepareGovernedMutationCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedResultChanged(SearchResultRow? value)
@@ -1474,6 +1535,7 @@ public sealed partial class MainViewModel(
         PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
         PreviewServicePrincipalCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
+        RetrySelectedSyncErrorCommand.NotifyCanExecuteChanged();
         RefreshSubscriptionsCommand.NotifyCanExecuteChanged();
         ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
         IncludeSubscriptionCommand.NotifyCanExecuteChanged();
@@ -1502,6 +1564,8 @@ public sealed partial class MainViewModel(
         RefreshRecoveryArchivesCommand.NotifyCanExecuteChanged();
         DeleteSelectedRecoveryArchiveCommand.NotifyCanExecuteChanged();
         AssessWorkloadIdentityPermissionsCommand.NotifyCanExecuteChanged();
+        PrepareGovernedMutationCommand.NotifyCanExecuteChanged();
+        ExecuteGovernedMutationCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedRecoveryArchiveChanged(
@@ -2004,10 +2068,22 @@ public sealed record SearchFilterOption(string Value, string Label)
 
 public sealed class SyncErrorRow(SyncErrorDetail detail)
 {
+    public SyncErrorDetail Detail { get; } = detail;
     public string Scope { get; } = detail.Scope;
     public string Category { get; } = detail.Category;
     public string Message { get; } = detail.Message;
     public string Recovery { get; } = detail.Recovery;
+    public string Timestamp { get; } = detail.OccurredAt is null
+        ? "Time unavailable"
+        : detail.OccurredAt.Value.ToLocalTime().ToString(
+            "yyyy-MM-dd HH:mm:ss zzz",
+            System.Globalization.CultureInfo.InvariantCulture);
+    public string CorrelationId { get; } = string.IsNullOrWhiteSpace(detail.CorrelationId)
+        ? "Unavailable"
+        : detail.CorrelationId;
+    public bool CanRetry { get; } = detail.RetryScope is not null &&
+        (!string.IsNullOrWhiteSpace(detail.RetryScope.SubscriptionId) ||
+         !string.IsNullOrWhiteSpace(detail.RetryScope.VaultResourceId));
 }
 
 public sealed class DiagnosticEventRow(

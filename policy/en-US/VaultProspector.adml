@@ -19,6 +19,9 @@
       <string id="DisableRemoteCredentialVerification">Disable current-account Windows credential verification in Remote Desktop and Azure Virtual Desktop sessions</string>
       <string id="MaximumOfflineCacheMinutes">Maximum offline-value lifetime in minutes (1–10080)</string>
       <string id="MaximumRevealVerificationGraceSeconds">Maximum consecutive Reveal verification grace in seconds (0 disables; maximum 120)</string>
+      <string id="EnableGovernedAzureMutations">Enable separately governed Azure mutation operations</string>
+      <string id="AllowedAzureMutations">Allowed Azure mutations (one per line: CreateSecret, CreateSecretVersion, CreateSoftwareKeyVersion, StartCertificatePolicy)</string>
+      <string id="AllowedAzureMutationVaults">Exact allowed Key Vault resource IDs (one per line; wildcards are rejected)</string>
     </stringTable>
     <presentationTable>
       <presentation id="Policy_EnterpriseAccess">
@@ -37,6 +40,11 @@
         <decimalTextBox refId="MaximumRevealVerificationGraceSeconds"
                         defaultValue="0"
                         spinStep="30">$(string.MaximumRevealVerificationGraceSeconds)</decimalTextBox>
+        <checkBox refId="EnableGovernedAzureMutations">$(string.EnableGovernedAzureMutations)</checkBox>
+        <text>$(string.AllowedAzureMutations)</text>
+        <multiTextBox refId="AllowedAzureMutations" />
+        <text>$(string.AllowedAzureMutationVaults)</text>
+        <multiTextBox refId="AllowedAzureMutationVaults" />
       </presentation>
     </presentationTable>
   </resources>

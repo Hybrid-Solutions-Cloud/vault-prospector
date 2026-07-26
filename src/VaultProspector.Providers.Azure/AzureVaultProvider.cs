@@ -61,6 +61,8 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
                 }
 
                 var subscriptionId = subscription.Data.SubscriptionId ?? subscription.Id.SubscriptionId ?? string.Empty;
+                if (!constraints.IsSubscriptionAllowed(subscriptionId))
+                    continue;
                 if (excludedSubscriptions.Contains(subscriptionId)) continue;
                 subscriptions.Add(new SubscriptionAccess(Id(identity.Id, tenantId, subscriptionId), tenantAccess.Id, subscriptionId, subscription.Data.DisplayName ?? subscriptionId, subscription.Data.State?.ToString() ?? "Unknown", true, now));
                 try
@@ -68,6 +70,8 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
                     await foreach (var resource in subscription.GetGenericResourcesAsync("resourceType eq 'Microsoft.KeyVault/vaults'", cancellationToken: cancellationToken))
                     {
                         if (excludedVaultResourceIds.Contains(resource.Id.ToString(), StringComparer.OrdinalIgnoreCase))
+                            continue;
+                        if (!constraints.IsVaultAllowed(resource.Id.ToString()))
                             continue;
                         var vaultId = Id(resource.Id.ToString());
                         var vault = new VaultResource(vaultId, resource.Id.ToString(), resource.Data.Name, tenantId, subscriptionId, resource.Id.ResourceGroupName ?? string.Empty, resource.Data.Location.Name, ToTags(resource.Data.Tags), new Uri($"https://{resource.Data.Name}.vault.azure.net/"), now);
@@ -86,7 +90,10 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
                 }
                 catch (Exception ex) when (IsExpectedAzureFailure(ex))
                 {
-                    errors.Add(SafeError($"subscription:{subscriptionId}", ex));
+                    errors.Add(SafeError(
+                        $"subscription:{subscriptionId}",
+                        ex,
+                        new ProviderRetryScope(SubscriptionId: subscriptionId)));
                 }
             }
         }
@@ -132,14 +139,14 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
                         foundVersion = true;
                     }
                 }
-                catch (Exception ex) when (IsExpectedAzureFailure(ex)) { errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:secret_versions", ex)); }
+                catch (Exception ex) when (IsExpectedAzureFailure(ex)) { errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:secret_versions", ex, new ProviderRetryScope(VaultResourceId: vault.ProviderResourceId))); }
                 if (!foundVersion) items.Add(ToItem(vault.Id, current, DateTimeOffset.UtcNow));
             }
         }
         catch (Exception ex) when (IsExpectedAzureFailure(ex))
         {
             secretList = PermissionState(ex);
-            errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:secrets", ex));
+            errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:secrets", ex, new ProviderRetryScope(VaultResourceId: vault.ProviderResourceId)));
         }
 
         try
@@ -156,14 +163,14 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
                         foundVersion = true;
                     }
                 }
-                catch (Exception ex) when (IsExpectedAzureFailure(ex)) { errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:key_versions", ex)); }
+                catch (Exception ex) when (IsExpectedAzureFailure(ex)) { errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:key_versions", ex, new ProviderRetryScope(VaultResourceId: vault.ProviderResourceId))); }
                 if (!foundVersion) items.Add(ToItem(vault.Id, current, DateTimeOffset.UtcNow));
             }
         }
         catch (Exception ex) when (IsExpectedAzureFailure(ex))
         {
             keyList = PermissionState(ex);
-            errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:keys", ex));
+            errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:keys", ex, new ProviderRetryScope(VaultResourceId: vault.ProviderResourceId)));
         }
 
         try
@@ -180,14 +187,14 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
                         foundVersion = true;
                     }
                 }
-                catch (Exception ex) when (IsExpectedAzureFailure(ex)) { errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:certificate_versions", ex)); }
+                catch (Exception ex) when (IsExpectedAzureFailure(ex)) { errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:certificate_versions", ex, new ProviderRetryScope(VaultResourceId: vault.ProviderResourceId))); }
                 if (!foundVersion) items.Add(ToItem(vault.Id, current, DateTimeOffset.UtcNow));
             }
         }
         catch (Exception ex) when (IsExpectedAzureFailure(ex))
         {
             certificateList = PermissionState(ex);
-            errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:certificates", ex));
+            errors.Add(SafeError($"vault:{Pseudonym(vault.Id)}:certificates", ex, new ProviderRetryScope(VaultResourceId: vault.ProviderResourceId)));
         }
 
         var failedCategories = new[]
@@ -219,7 +226,20 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
     private static bool IsExpectedAzureFailure(Exception ex) => ex is RequestFailedException or AuthenticationFailedException or MsalException;
     private static string PermissionState(Exception ex) =>
         ex is RequestFailedException { Status: 401 or 403 } ? "Denied" : "Indeterminate";
-    private static ProviderError SafeError(string scope, Exception ex) => new(scope, ex.GetType().Name, ex switch { RequestFailedException r => $"Azure request failed with status {r.Status} ({r.ErrorCode ?? "unknown"}).", MsalUiRequiredException => "Interactive authentication is required.", _ => "Azure operation failed. See the diagnostic event type." });
+    private static ProviderError SafeError(
+        string scope,
+        Exception ex,
+        ProviderRetryScope? retryScope = null) =>
+        new(
+            scope,
+            ex.GetType().Name,
+            ex switch
+            {
+                RequestFailedException r => $"Azure request failed with status {r.Status} ({r.ErrorCode ?? "unknown"}).",
+                MsalUiRequiredException => "Interactive authentication is required.",
+                _ => "Azure operation failed. See the diagnostic event type.",
+            },
+            retryScope);
     private static string Pseudonym(Guid value) => value.ToString("N")[..12];
     private static Guid Id(params object[] values) { var input = string.Join('|', values.Select(x => x.ToString())); var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input)); return new Guid(hash.AsSpan(0, 16)); }
 

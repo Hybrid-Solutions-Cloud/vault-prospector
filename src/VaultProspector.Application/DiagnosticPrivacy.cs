@@ -27,6 +27,8 @@ public static class DiagnosticPrivacy
                 "sync_auth_failed",
                 "sync_completed",
                 "sync_failed",
+                "sync_scope_failed",
+                "sync_scope_retry_completed",
                 "windows_security_boundary_monitor_unavailable",
                 "workload_credential_rotated",
                 "workload_credential_rotation_failed",
@@ -44,6 +46,9 @@ public static class DiagnosticPrivacy
                 "error_count",
                 "duration_ms",
                 "status",
+                "scope_id",
+                "correlation_id",
+                "error_category",
             ],
             StringComparer.Ordinal);
 

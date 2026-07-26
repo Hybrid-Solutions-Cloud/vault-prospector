@@ -20,6 +20,8 @@ public sealed class WindowsRegistryEnterprisePolicyTests
         ["UnknownProvider"];
     private static readonly string[] InvalidIdentityTypeValues =
         ["ClientSecret"];
+    private const string AllowedVault =
+        "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/example";
 
     [Fact]
     public void ValidManagedPolicyNormalizesAndConstrainsEveryBoundary()
@@ -37,6 +39,11 @@ public sealed class WindowsRegistryEnterprisePolicyTests
                 ["DisableRemoteCredentialVerification"] = 1,
                 ["MaximumOfflineCacheMinutes"] = 90,
                 ["MaximumRevealVerificationGraceSeconds"] = 30,
+                ["EnableGovernedAzureMutations"] = 1,
+                ["AllowedAzureMutations"] =
+                    new[] { "CreateSecret", "CreateSoftwareKeyVersion" },
+                ["AllowedAzureMutationVaults"] =
+                    new[] { AllowedVault },
             });
 
         Assert.True(policy.IsManaged);
@@ -57,6 +64,20 @@ public sealed class WindowsRegistryEnterprisePolicyTests
         Assert.Equal(
             TimeSpan.FromSeconds(30),
             policy.MaximumRevealVerificationGracePeriod);
+        Assert.True(policy.AllowGovernedAzureMutations);
+        Assert.Equal(
+            [
+                GovernedAzureOperation.CreateSecret,
+                GovernedAzureOperation.CreateSoftwareKeyVersion,
+            ],
+            policy.AllowedAzureMutations);
+        policy.EnsureAzureMutationAllowed(
+            GovernedAzureOperation.CreateSecret,
+            AllowedVault);
+        Assert.Throws<EnterprisePolicyDeniedException>(
+            () => policy.EnsureAzureMutationAllowed(
+                GovernedAzureOperation.CreateSecretVersion,
+                AllowedVault));
         Assert.Equal(
             TimeSpan.FromSeconds(30),
             policy.ConstrainRevealVerificationGracePeriod(
@@ -175,6 +196,38 @@ public sealed class WindowsRegistryEnterprisePolicyTests
                 ["PolicyVersion"] = 1,
                 ["Enabled"] = 1,
                 ["MaximumRevealVerificationGraceSeconds"] = 121,
+            },
+            new Dictionary<string, object?>
+            {
+                ["PolicyVersion"] = 1,
+                ["Enabled"] = 1,
+                ["EnableGovernedAzureMutations"] = 2,
+            },
+            new Dictionary<string, object?>
+            {
+                ["PolicyVersion"] = 1,
+                ["Enabled"] = 1,
+                ["EnableGovernedAzureMutations"] = 1,
+            },
+            new Dictionary<string, object?>
+            {
+                ["PolicyVersion"] = 1,
+                ["Enabled"] = 1,
+                ["EnableGovernedAzureMutations"] = 1,
+                ["AllowedAzureMutations"] =
+                    new[] { "DeleteSecret" },
+                ["AllowedAzureMutationVaults"] =
+                    new[] { AllowedVault },
+            },
+            new Dictionary<string, object?>
+            {
+                ["PolicyVersion"] = 1,
+                ["Enabled"] = 1,
+                ["EnableGovernedAzureMutations"] = 1,
+                ["AllowedAzureMutations"] =
+                    new[] { "CreateSecret" },
+                ["AllowedAzureMutationVaults"] =
+                    new[] { "/subscriptions/*/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/example" },
             },
         };
 }

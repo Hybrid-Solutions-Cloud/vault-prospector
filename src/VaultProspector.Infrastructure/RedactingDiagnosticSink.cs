@@ -67,6 +67,45 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
 
         if (string.Equals(
                 fieldName,
+                "scope_id",
+                StringComparison.Ordinal))
+        {
+            writer.WriteString(
+                fieldName,
+                DiagnosticPrivacy.Pseudonymize(value));
+            return;
+        }
+
+        if (string.Equals(
+                fieldName,
+                "correlation_id",
+                StringComparison.Ordinal))
+        {
+            writer.WriteString(
+                fieldName,
+                value?.ToString() ?? string.Empty);
+            return;
+        }
+
+        if (string.Equals(
+                fieldName,
+                "error_category",
+                StringComparison.Ordinal))
+        {
+            writer.WriteString(
+                fieldName,
+                value?.ToString() switch
+                {
+                    "AuthenticationFailedException" => "authentication",
+                    "MsalUiRequiredException" => "interaction_required",
+                    "RequestFailedException" => "azure_request",
+                    _ => "provider_error",
+                });
+            return;
+        }
+
+        if (string.Equals(
+                fieldName,
                 "identity_type",
                 StringComparison.Ordinal))
         {

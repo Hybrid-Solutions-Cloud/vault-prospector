@@ -104,6 +104,14 @@ public partial class App : Avalonia.Application
             {
                 Timeout = TimeSpan.FromSeconds(30),
             };
+            var governedWriteHttpClient = new HttpClient(
+                new SocketsHttpHandler
+                {
+                    AllowAutoRedirect = false,
+                })
+            {
+                Timeout = TimeSpan.FromSeconds(60),
+            };
             var cyberArkHttpClient = new HttpClient(new SocketsHttpHandler
             {
                 AllowAutoRedirect = false,
@@ -194,7 +202,24 @@ public partial class App : Avalonia.Application
                     "unknown",
                     clock),
                 revealVerificationSession,
-                releaseUpdateService);
+                releaseUpdateService,
+                new WindowsBrowserIntegrationDiagnostics(
+                    AppContext.BaseDirectory),
+                new GovernedAzureMutationService(
+                    repository,
+                    identityProvider,
+                    new AzureGovernedMutationProvider(
+                        identityProvider,
+                        governedWriteHttpClient,
+                        authorizationHttpClient),
+                    verification,
+                    enterprisePolicy,
+                    clock,
+                    AppContext.TryGetSwitch(
+                        GovernedAzureMutationService
+                            .ReleaseEnablementSwitch,
+                        out var governedMutationApproved) &&
+                    governedMutationApproved));
             window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()

@@ -47,6 +47,40 @@ public sealed class EncryptedPersistenceTests : IDisposable
     }
 
     [Fact]
+    public async Task GovernedMutationAuditIsAppendOnlyAndTamperingFailsStartup()
+    {
+        var path = Path.Combine(
+            _directory,
+            "governed-mutation-audit.db");
+        using (var repository =
+               new EncryptedSqliteMetadataRepository(path, _keys))
+        {
+            await repository.InitializeAsync(
+                TestContext.Current.CancellationToken);
+            var audit = CreateGovernedMutationAudit(
+                previousHash: string.Empty);
+            await repository.RecordGovernedMutationAuditAsync(
+                audit,
+                TestContext.Current.CancellationToken);
+
+            var latest =
+                await repository.GetLatestGovernedMutationAuditAsync(
+                    TestContext.Current.CancellationToken);
+            Assert.Equal(audit, latest);
+        }
+
+        await ExecuteDatabaseCommandAsync(
+            path,
+            "UPDATE governed_mutation_audit SET safe_message='tampered'");
+
+        using var reopened =
+            new EncryptedSqliteMetadataRepository(path, _keys);
+        await Assert.ThrowsAsync<LocalDataIntegrityException>(
+            () => reopened.InitializeAsync(
+                TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task SearchSelectsDeterministicPreferredAccessAndHonorsIdentityFilter()
     {
         var path = Path.Combine(_directory, "preferred-access.db");
@@ -576,7 +610,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             TestContext.Current.CancellationToken));
         Assert.Empty(await migrated.GetBrowserFillMappingsAsync(
             TestContext.Current.CancellationToken));
-        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -657,7 +691,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
         Assert.NotNull(restored);
         Assert.Equal(IdentityType.InteractiveUser, restored.Type);
         Assert.Equal(string.Empty, restored.CredentialData);
-        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -688,7 +722,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         Assert.Single(summaries);
         Assert.True(summaries[0].Access.IsSelected);
-        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -1279,7 +1313,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(99, exception.ObservedVersion);
-        Assert.Equal(6, exception.SupportedVersion);
+        Assert.Equal(7, exception.SupportedVersion);
         Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)));
         Assert.Equal(99, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
@@ -1334,7 +1368,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name='sync_runs'"));
-        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -1348,7 +1382,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM pragma_table_info('sync_runs') WHERE name='error_count'"));
-        Assert.Equal(6, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     private ConnectedIdentity TestIdentity(string accountIdentifier) => new(
@@ -1360,6 +1394,70 @@ public sealed class EncryptedPersistenceTests : IDisposable
         "tenant",
         AuthenticationState.Ready,
         _clock.UtcNow);
+
+    private static GovernedMutationAuditEvent
+        CreateGovernedMutationAudit(string previousHash)
+    {
+        var id = Guid.Parse(
+            "11111111-1111-1111-1111-111111111111");
+        var previewId = Guid.Parse(
+            "22222222-2222-2222-2222-222222222222");
+        var occurredAt =
+            DateTimeOffset.Parse("2026-07-26T12:00:00Z");
+        const GovernedAzureOperation operation =
+            GovernedAzureOperation.CreateSecret;
+        var identityId = Guid.Parse(
+            "33333333-3333-3333-3333-333333333333");
+        const string tenantId =
+            "44444444-4444-4444-4444-444444444444";
+        const string subscriptionId =
+            "55555555-5555-5555-5555-555555555555";
+        const string vaultResourceId =
+            "/subscriptions/55555555-5555-5555-5555-555555555555/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/example";
+        var objectNameHash = Convert.ToHexString(
+            SHA256.HashData(
+                Encoding.UTF8.GetBytes("example")));
+        const int sensitiveValueLength = 12;
+        const GovernedMutationAuditResult result =
+            GovernedMutationAuditResult.Succeeded;
+        const string providerVersion = "version";
+        const string safeMessage = "Created.";
+        var recordHash = Convert.ToHexString(
+            SHA256.HashData(
+                Encoding.UTF8.GetBytes(
+                    string.Join(
+                        "|",
+                        id.ToString("D"),
+                        previewId.ToString("D"),
+                        occurredAt.ToUniversalTime().ToString("O"),
+                        (int)operation,
+                        identityId.ToString("D"),
+                        tenantId,
+                        subscriptionId,
+                        vaultResourceId,
+                        objectNameHash,
+                        sensitiveValueLength,
+                        (int)result,
+                        providerVersion,
+                        safeMessage,
+                        previousHash))));
+        return new GovernedMutationAuditEvent(
+            id,
+            previewId,
+            occurredAt,
+            operation,
+            identityId,
+            tenantId,
+            subscriptionId,
+            vaultResourceId,
+            objectNameHash,
+            sensitiveValueLength,
+            result,
+            providerVersion,
+            safeMessage,
+            previousHash,
+            recordHash);
+    }
 
     private async Task ExecuteDatabaseCommandAsync(string path, string sql)
     {

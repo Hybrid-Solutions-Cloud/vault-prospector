@@ -25,6 +25,8 @@ public sealed class EnterprisePolicySnapshot
     private readonly HashSet<string> _allowedTenantIds;
     private readonly HashSet<EnterpriseProvider> _allowedProviders;
     private readonly HashSet<IdentityType> _allowedIdentityTypes;
+    private readonly HashSet<GovernedAzureOperation> _allowedAzureMutations;
+    private readonly HashSet<string> _allowedAzureMutationVaults;
 
     public EnterprisePolicySnapshot(
         bool isManaged,
@@ -36,6 +38,9 @@ public sealed class EnterprisePolicySnapshot
         TimeSpan? maximumOfflineCacheLifetime = null,
         bool allowRemoteCredentialVerification = true,
         TimeSpan? maximumRevealVerificationGracePeriod = null,
+        bool allowGovernedAzureMutations = false,
+        IEnumerable<GovernedAzureOperation>? allowedAzureMutations = null,
+        IEnumerable<string>? allowedAzureMutationVaults = null,
         bool isValid = true,
         string safeStatus = "No machine-managed enterprise policy is configured.")
     {
@@ -62,6 +67,7 @@ public sealed class EnterprisePolicySnapshot
         MaximumOfflineCacheLifetime = maximumOfflineCacheLifetime;
         MaximumRevealVerificationGracePeriod =
             maximumRevealVerificationGracePeriod;
+        AllowGovernedAzureMutations = allowGovernedAzureMutations;
         SafeStatus = string.IsNullOrWhiteSpace(safeStatus)
             ? "Enterprise policy status is unavailable."
             : safeStatus.Trim();
@@ -73,6 +79,12 @@ public sealed class EnterprisePolicySnapshot
             allowedProviders ?? AllProviders);
         _allowedIdentityTypes = new HashSet<IdentityType>(
             allowedIdentityTypes ?? AllIdentityTypes);
+        _allowedAzureMutations = new HashSet<GovernedAzureOperation>(
+            allowedAzureMutations ?? []);
+        _allowedAzureMutationVaults = new HashSet<string>(
+            (allowedAzureMutationVaults ?? [])
+                .Select(NormalizeVaultResourceId),
+            StringComparer.OrdinalIgnoreCase);
     }
 
     public static EnterprisePolicySnapshot Unmanaged { get; } = new(false);
@@ -84,10 +96,15 @@ public sealed class EnterprisePolicySnapshot
     public bool AllowRemoteCredentialVerification { get; }
     public TimeSpan? MaximumOfflineCacheLifetime { get; }
     public TimeSpan? MaximumRevealVerificationGracePeriod { get; }
+    public bool AllowGovernedAzureMutations { get; }
     public string SafeStatus { get; }
     public IReadOnlySet<string> AllowedTenantIds => _allowedTenantIds;
     public IReadOnlySet<EnterpriseProvider> AllowedProviders => _allowedProviders;
     public IReadOnlySet<IdentityType> AllowedIdentityTypes => _allowedIdentityTypes;
+    public IReadOnlySet<GovernedAzureOperation> AllowedAzureMutations =>
+        _allowedAzureMutations;
+    public IReadOnlySet<string> AllowedAzureMutationVaults =>
+        _allowedAzureMutationVaults;
     public bool RestrictsTenants => _allowedTenantIds.Count > 0;
 
     public static EnterprisePolicySnapshot Invalid(string safeReason) =>
@@ -176,6 +193,35 @@ public sealed class EnterprisePolicySnapshot
         }
     }
 
+    public void EnsureAzureMutationAllowed(
+        GovernedAzureOperation operation,
+        string vaultResourceId)
+    {
+        if (!IsManaged ||
+            !IsValid ||
+            !AllowGovernedAzureMutations)
+        {
+            throw new EnterprisePolicyDeniedException(
+                "EnableGovernedAzureMutations",
+                "Governed Azure mutations are not enabled by valid machine-managed policy.");
+        }
+
+        if (!_allowedAzureMutations.Contains(operation))
+        {
+            throw new EnterprisePolicyDeniedException(
+                "AllowedAzureMutations",
+                $"{operation} is not allowed by machine-managed policy.");
+        }
+
+        var normalizedScope = NormalizeVaultResourceId(vaultResourceId);
+        if (!_allowedAzureMutationVaults.Contains(normalizedScope))
+        {
+            throw new EnterprisePolicyDeniedException(
+                "AllowedAzureMutationVaults",
+                "The exact Key Vault target is not allowed by machine-managed policy.");
+        }
+    }
+
     public CachePolicy Constrain(CachePolicy requested)
     {
         ArgumentNullException.ThrowIfNull(requested);
@@ -220,6 +266,24 @@ public sealed class EnterprisePolicySnapshot
                 "Enterprise tenant identifiers must be GUIDs.",
                 nameof(value));
         return tenantId.ToString("D");
+    }
+
+    private static string NormalizeVaultResourceId(string value)
+    {
+        var normalized = value?.Trim().TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(normalized) ||
+            normalized.Contains('*', StringComparison.Ordinal) ||
+            !normalized.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase) ||
+            !normalized.Contains(
+                "/providers/Microsoft.KeyVault/vaults/",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                "Governed Azure mutation scopes must be exact Key Vault resource IDs without wildcards.",
+                nameof(value));
+        }
+
+        return normalized;
     }
 }
 

@@ -101,6 +101,25 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
                 return EnterprisePolicySnapshot.Invalid(
                     "MaximumRevealVerificationGraceSeconds must be between 0 and 120");
             }
+            var allowGovernedAzureMutations = ReadOptionalSwitch(
+                normalized,
+                "EnableGovernedAzureMutations",
+                false);
+            var allowedAzureMutations =
+                ParseEnumSet<GovernedAzureOperation>(
+                    normalized,
+                    "AllowedAzureMutations") ?? [];
+            var allowedAzureMutationVaults =
+                ReadOptionalMultiString(
+                    normalized,
+                    "AllowedAzureMutationVaults") ?? [];
+            if (allowGovernedAzureMutations &&
+                (allowedAzureMutations.Count == 0 ||
+                 allowedAzureMutationVaults.Length == 0))
+            {
+                return EnterprisePolicySnapshot.Invalid(
+                    "enabled governed Azure mutations require at least one exact operation and Key Vault scope");
+            }
 
             var providerCount = allowedProviders?.Count ??
                 Enum.GetValues<EnterpriseProvider>().Length;
@@ -125,6 +144,9 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
                 maximumRevealGraceSeconds is { } revealSeconds
                     ? $"reveal verification grace capped at {revealSeconds} second(s)"
                     : "reveal verification grace uses the user setting";
+            var mutationStatus = allowGovernedAzureMutations
+                ? $"{allowedAzureMutations.Count} governed Azure mutation(s) allowed at {allowedAzureMutationVaults.Length} exact vault scope(s)"
+                : "governed Azure mutations disabled";
 
             return new EnterprisePolicySnapshot(
                 true,
@@ -143,11 +165,17 @@ public sealed class WindowsRegistryEnterprisePolicy : IEnterprisePolicy
                     maximumRevealGraceSeconds is { } maximumReveal
                         ? TimeSpan.FromSeconds(maximumReveal)
                         : null,
+                allowGovernedAzureMutations:
+                    allowGovernedAzureMutations,
+                allowedAzureMutations:
+                    allowedAzureMutations,
+                allowedAzureMutationVaults:
+                    allowedAzureMutationVaults,
                 safeStatus:
                     $"Machine-managed policy is active: {tenantScope}; " +
                     $"{providerCount} provider(s); {identityTypeCount} identity type(s); " +
                     $"{clipboardStatus}; {cacheStatus}; " +
-                    $"{remoteVerificationStatus}; {revealGraceStatus}.");
+                    $"{remoteVerificationStatus}; {revealGraceStatus}; {mutationStatus}.");
         }
         catch (EnterprisePolicyFormatException exception)
         {

@@ -578,6 +578,52 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task SynchronizationRetriesOnlySelectedFailedScopeAsPatch()
+    {
+        var identity = Identity();
+        var repository = new FakeRepository(identity);
+        var provider = new FakeProvider
+        {
+            Snapshot = new DiscoverySnapshot(
+                [],
+                [],
+                [],
+                [],
+                [],
+                []),
+        };
+        var service = new SynchronizationService(
+            provider,
+            repository,
+            new FixedClock(),
+            new FakeDiagnostics());
+        var failed = new SyncErrorDetail(
+            "vault:redacted:secrets",
+            "RequestFailedException",
+            "Azure request failed with status 429.",
+            "Retry.",
+            RetryScope: new ProviderRetryScope(
+                VaultResourceId:
+                    "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/exact"));
+
+        var run = await service.RetryFailedScopesAsync(
+            identity,
+            [failed],
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(SyncStatus.Completed, run.Status);
+        Assert.Equal(1, repository.ApplyPatchCalls);
+        Assert.Equal(0, repository.ApplyFullCalls);
+        Assert.Equal(
+            [
+                "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/exact",
+            ],
+            provider.Constraints?.AllowedVaultResourceIds);
+        Assert.Empty(provider.ExcludedSubscriptions);
+        Assert.Empty(provider.ExcludedVaultResourceIds);
+    }
+
+    [Fact]
     public async Task SynchronizationDoesNotPersistAuthenticationExceptionMessages()
     {
         var identity = Identity();
@@ -1366,6 +1412,8 @@ public sealed class ApplicationServiceTests
     private sealed class FakeRepository(ConnectedIdentity identity) : IMetadataRepository
     {
         public DiscoverySnapshot? AppliedSnapshot { get; private set; }
+        public int ApplyFullCalls { get; private set; }
+        public int ApplyPatchCalls { get; private set; }
         public WorkspaceResourceLink? AddedLink { get; private set; }
         public ConnectedIdentity? UpsertedIdentity { get; private set; }
         public (VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)? Resolved { get; set; }
@@ -1399,7 +1447,8 @@ public sealed class ApplicationServiceTests
         public Task<IReadOnlyList<Guid>> GetVaultIdsForIdentityAsync(Guid identityId, CancellationToken c) =>
             Task.FromResult(VaultIds);
         public Task SetVaultSelectedAsync(Guid vaultAccessId, bool isSelected, CancellationToken c) => Task.CompletedTask;
-        public Task ApplyDiscoveryAsync(Guid id, DiscoverySnapshot snapshot, SyncRun run, CancellationToken c) { AppliedSnapshot = snapshot; return Task.CompletedTask; }
+        public Task ApplyDiscoveryAsync(Guid id, DiscoverySnapshot snapshot, SyncRun run, CancellationToken c) { ApplyFullCalls++; AppliedSnapshot = snapshot; return Task.CompletedTask; }
+        public Task ApplyDiscoveryPatchAsync(Guid id, DiscoverySnapshot snapshot, SyncRun run, CancellationToken c) { ApplyPatchCalls++; AppliedSnapshot = snapshot; return Task.CompletedTask; }
         public Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest r, DateTimeOffset n, CancellationToken c) => Task.FromResult(SearchResults);
         public Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemAsync(Guid id, CancellationToken c) => Task.FromResult(Resolved);
         public Task RecordAccessAsync(Guid id, DateTimeOffset at, CancellationToken c)

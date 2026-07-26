@@ -203,6 +203,43 @@ internal sealed class AzureAuthorizationEvidenceEvaluator
         };
     }
 
+    public async Task<bool> IsCallerDataActionAllowedAsync(
+        TokenCredential credential,
+        ConnectedIdentity identity,
+        string keyVaultResourceId,
+        string dataAction,
+        CancellationToken cancellationToken)
+    {
+        var vaultScope = NormalizeResourceId(
+            keyVaultResourceId,
+            "Microsoft.KeyVault/vaults",
+            nameof(keyVaultResourceId));
+        var token = await credential.GetTokenAsync(
+            new TokenRequestContext(
+                AzureAuthenticationScopes.ArmApplication.ToArray(),
+                tenantId: identity.HomeTenantId),
+            cancellationToken);
+        var vault = await GetVaultAsync(
+            vaultScope,
+            token.Token,
+            cancellationToken);
+        if (!string.Equals(
+                vault.TenantId,
+                identity.HomeTenantId,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var permissions = await TryGetCallerPermissionsAsync(
+            vaultScope,
+            token.Token,
+            cancellationToken);
+        return permissions is not null &&
+               permissions.Any(permission =>
+                   IsAllowed(permission, dataAction, dataAction: true));
+    }
+
     private async Task<VaultAuthorizationModel> GetVaultAsync(
         string vaultScope,
         string bearerToken,
