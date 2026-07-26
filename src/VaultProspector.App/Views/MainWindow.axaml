@@ -115,94 +115,245 @@
       </StackPanel>
     </Border>
 
-    <Border Grid.Row="2"
-            Margin="18"
-            IsVisible="{Binding !IsUnlocked}"
-            MaxWidth="900"
-            BorderBrush="{DynamicResource VaultColorLine}"
-            BorderThickness="1"
-            Background="{DynamicResource VaultColorSurface}"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center">
-      <Grid x:Name="UnlockExperienceGrid"
-            ColumnDefinitions="1.05*,0.95*"
-            RowDefinitions="*">
-        <Border Background="{DynamicResource VaultColorHeader}"
-                Padding="30">
-          <StackPanel Spacing="16"
-                      VerticalAlignment="Center">
-            <Border Width="64"
-                    Height="64"
-                    Background="{DynamicResource VaultColorAccent}"
-                    HorizontalAlignment="Left">
-              <TextBlock Text="VP"
-                         Foreground="White"
-                         FontSize="{StaticResource VaultFontSize22}"
-                         FontWeight="Bold"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Center" />
-            </Border>
-            <TextBlock Text="Local protection"
-                       Foreground="#D4DDD9"
-                       FontSize="{StaticResource VaultFontSize11}"
-                       FontWeight="Bold" />
-            <TextBlock Text="Your Azure identities are separate"
-                       Foreground="White"
-                       FontSize="{StaticResource VaultFontSize24}"
-                       FontWeight="SemiBold"
-                       TextWrapping="Wrap" />
-            <TextBlock Text="Unlocking opens encrypted data for this Windows account. It does not sign you into Azure, and you can connect multiple Microsoft Entra identities afterward."
-                       Foreground="#D4DDD9"
-                       TextWrapping="Wrap" />
-            <TextBlock Text="Remote sessions never bypass verification. AVD and Remote Desktop use only the policy-controlled Windows credential fallback when Windows Hello is unavailable."
-                       Foreground="#D4DDD9"
-                       TextWrapping="Wrap"
-                       FontSize="{StaticResource VaultFontSize12}" />
-          </StackPanel>
-        </Border>
-        <Border x:Name="UnlockVerificationCard"
-                Grid.Column="1"
-                Padding="30"
-                Background="{DynamicResource VaultColorSurface}">
-          <StackPanel Spacing="16"
-                      VerticalAlignment="Center">
-            <Border Background="{DynamicResource VaultColorAccentSoft}"
-                    BorderBrush="{DynamicResource VaultColorAccent}"
-                    BorderThickness="1"
-                    Padding="9,5"
-                    HorizontalAlignment="Left">
-              <TextBlock Text="APPLICATION LOCKED"
-                         Foreground="{DynamicResource VaultColorAccentStrong}"
+    <Grid x:Name="UnlockShellGrid"
+          Grid.Row="2"
+          ColumnDefinitions="220,*"
+          RowDefinitions="*"
+          IsVisible="{Binding !IsUnlocked}">
+      <Border x:Name="UnlockNavigation"
+              Background="{DynamicResource VaultColorNavigation}"
+              BorderBrush="{DynamicResource VaultColorLine}"
+              BorderThickness="0,0,1,0">
+        <Grid RowDefinitions="*,Auto">
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="18,22" Spacing="8">
+              <TextBlock Text="WORKSPACE TOOLS"
+                         Foreground="{DynamicResource VaultColorMuted}"
                          FontSize="{StaticResource VaultFontSize11}"
-                         FontWeight="Bold" />
-            </Border>
-            <TextBlock Text="Unlock this installation"
-                       FontSize="{StaticResource VaultFontSize24}"
-                       FontWeight="Bold"
-                       TextWrapping="Wrap" />
-            <TextBlock Text="{Binding UnlockMessage}"
-                       TextWrapping="Wrap"
-                       AutomationProperties.LiveSetting="Polite" />
-            <Border Background="{DynamicResource VaultColorSurfaceAlt}"
-                    BorderBrush="{DynamicResource VaultColorLine}"
-                    BorderThickness="1"
-                    Padding="12">
-              <TextBlock Text="{Binding UnlockRecovery}"
-                         TextWrapping="Wrap" />
-            </Border>
-            <Button Classes="primary"
-                    Content="Verify and continue"
-                    Command="{Binding InitializeCommand}"
-                    HorizontalAlignment="Left"
-                    AutomationProperties.Name="Verify and unlock Vault Prospector" />
-            <TextBlock Text="Windows controls the verification prompt. Vault Prospector never receives your Windows password, PIN, face, or fingerprint."
-                       TextWrapping="Wrap"
-                       FontSize="{StaticResource VaultFontSize11}"
-                       Opacity="0.72" />
+                         FontWeight="Bold"
+                         LetterSpacing="1.2" />
+              <TextBlock Text="START"
+                         Margin="0,12,0,2"
+                         Foreground="{DynamicResource VaultColorMuted}"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         FontWeight="Bold"
+                         LetterSpacing="1.2" />
+              <Border Background="{DynamicResource VaultColorAccent}"
+                      BorderBrush="{DynamicResource VaultColorAccentStrong}"
+                      BorderThickness="5,0,0,0"
+                      Padding="13,11"
+                      AutomationProperties.Name="Secure unlock, selected">
+                <TextBlock Text="◉  Secure unlock"
+                           Foreground="White"
+                           FontSize="{StaticResource VaultFontSize16}"
+                           FontWeight="SemiBold" />
+              </Border>
+              <TextBlock Text="◎  Connect identities"
+                         Margin="13,8,0,0"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         Opacity="0.55" />
+              <TextBlock Text="↻  Sync and health"
+                         Margin="13,8,0,0"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         Opacity="0.55" />
+              <TextBlock Text="USE"
+                         Margin="0,16,0,2"
+                         Foreground="{DynamicResource VaultColorMuted}"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         FontWeight="Bold"
+                         LetterSpacing="1.2" />
+              <TextBlock Text="⌕  Find secrets"
+                         Margin="13,8,0,0"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         Opacity="0.55" />
+              <TextBlock Text="◉  Reveal safely"
+                         Margin="13,8,0,0"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         Opacity="0.55" />
+              <TextBlock Text="▣  Workspaces"
+                         Margin="13,8,0,0"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         Opacity="0.55" />
+              <TextBlock Text="◎  Browser fill"
+                         Margin="13,8,0,0"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         Opacity="0.55" />
+              <TextBlock Text="MANAGE"
+                         Margin="0,16,0,2"
+                         Foreground="{DynamicResource VaultColorMuted}"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         FontWeight="Bold"
+                         LetterSpacing="1.2" />
+              <TextBlock Text="⚙  Administration"
+                         Margin="13,8,0,0"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         Opacity="0.55" />
+              <TextBlock Text="⌁  Activity and support"
+                         Margin="13,8,0,0"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         TextWrapping="Wrap"
+                         Opacity="0.55" />
+              <TextBlock Text="⚙  Settings and updates"
+                         Margin="13,8,0,0"
+                         FontSize="{StaticResource VaultFontSize16}"
+                         TextWrapping="Wrap"
+                         Opacity="0.55" />
+            </StackPanel>
+          </ScrollViewer>
+          <Border Grid.Row="1"
+                  Margin="18"
+                  Padding="0,12,0,0"
+                  BorderBrush="{DynamicResource VaultColorLine}"
+                  BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Border Width="9"
+                      Height="9"
+                      CornerRadius="5"
+                      Background="{DynamicResource VaultColorWarning}"
+                      VerticalAlignment="Top"
+                      Margin="0,3,0,0" />
+              <StackPanel>
+                <TextBlock Text="Locked securely" FontWeight="SemiBold" />
+                <TextBlock Text="Verification required"
+                           FontSize="{StaticResource VaultFontSize11}"
+                           Foreground="{DynamicResource VaultColorMuted}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Border>
+
+      <ScrollViewer x:Name="UnlockContent"
+                    Grid.Column="1"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="38,30,38,24" Spacing="20">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="screen-eyebrow" Text="LOCAL PROTECTION" />
+            <TextBlock Classes="screen-title" Text="Unlock this installation" />
+            <TextBlock Classes="screen-description"
+                       Text="Windows verifies that you are present before Vault Prospector opens its encrypted local data." />
           </StackPanel>
-        </Border>
-      </Grid>
-    </Border>
+
+          <Grid x:Name="UnlockExperienceGrid"
+                ColumnDefinitions="1.05*,0.95*"
+                RowDefinitions="*"
+                ColumnSpacing="24"
+                RowSpacing="24">
+            <Border Padding="28"
+                    Background="{DynamicResource VaultColorSurfaceAlt}"
+                    BorderBrush="{DynamicResource VaultColorLine}"
+                    BorderThickness="1">
+              <StackPanel Spacing="18"
+                          VerticalAlignment="Center">
+                <Border Width="82"
+                        Height="82"
+                        CornerRadius="42"
+                        Background="{DynamicResource VaultColorGoodSoft}"
+                        BorderBrush="{DynamicResource VaultColorGood}"
+                        BorderThickness="1"
+                        HorizontalAlignment="Left">
+                  <TextBlock Text="◎"
+                             Foreground="{DynamicResource VaultColorGood}"
+                             FontSize="42"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="Your Azure identities are separate"
+                           FontSize="{StaticResource VaultFontSize24}"
+                           FontWeight="SemiBold"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="Unlocking opens encrypted data for this Windows account. It does not sign you into Azure, and you can connect multiple Microsoft Entra identities afterward."
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource VaultColorMuted}" />
+              </StackPanel>
+            </Border>
+
+            <Border x:Name="UnlockVerificationCard"
+                    Grid.Column="1"
+                    Classes="card"
+                    Padding="24">
+              <StackPanel Spacing="14">
+                <Border Background="{DynamicResource VaultColorGoodSoft}"
+                        BorderBrush="{DynamicResource VaultColorGood}"
+                        BorderThickness="1"
+                        Padding="12">
+                  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <TextBlock Text="▣"
+                               FontSize="{StaticResource VaultFontSize18}"
+                               VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1">
+                      <TextBlock Text="Windows session detected"
+                                 FontWeight="SemiBold" />
+                      <TextBlock Text="Current Windows account · interactive session"
+                                 FontSize="{StaticResource VaultFontSize11}"
+                                 Foreground="{DynamicResource VaultColorMuted}"
+                                 TextWrapping="Wrap" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2"
+                               Text="SUPPORTED"
+                               Foreground="{DynamicResource VaultColorGood}"
+                               FontSize="{StaticResource VaultFontSize11}"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+
+                <TextBlock Text="Verification method"
+                           FontWeight="SemiBold" />
+                <Border Background="{DynamicResource VaultColorAccentSoft}"
+                        BorderBrush="{DynamicResource VaultColorAccent}"
+                        BorderThickness="1"
+                        Padding="12">
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <TextBlock Text="◎"
+                               FontSize="{StaticResource VaultFontSize20}"
+                               VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1">
+                      <TextBlock Text="Windows verification"
+                                 FontWeight="SemiBold" />
+                      <TextBlock Text="Windows Hello locally, or the administrator-approved current-account credential prompt in a supported AVD or Remote Desktop session."
+                                 TextWrapping="Wrap"
+                                 FontSize="{StaticResource VaultFontSize12}" />
+                    </StackPanel>
+                  </Grid>
+                </Border>
+
+                <Border Background="{DynamicResource VaultColorSurfaceAlt}"
+                        BorderBrush="{DynamicResource VaultColorLine}"
+                        BorderThickness="1"
+                        Padding="12">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="Remote sessions do not bypass verification"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Vault Prospector selects only the verification method allowed for this Windows session and enterprise policy."
+                               TextWrapping="Wrap"
+                               FontSize="{StaticResource VaultFontSize12}" />
+                  </StackPanel>
+                </Border>
+
+                <TextBlock Text="{Binding UnlockMessage}"
+                           TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite" />
+                <TextBlock Text="{Binding UnlockRecovery}"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource VaultColorMuted}" />
+                <Button Classes="primary"
+                        Content="Verify and continue"
+                        Command="{Binding InitializeCommand}"
+                        HorizontalAlignment="Stretch"
+                        AutomationProperties.Name="Verify and unlock Vault Prospector" />
+                <TextBlock Text="Windows controls the verification prompt. Vault Prospector never receives your Windows password, PIN, face, or fingerprint."
+                           TextWrapping="Wrap"
+                           FontSize="{StaticResource VaultFontSize11}"
+                           Opacity="0.72" />
+              </StackPanel>
+            </Border>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
 
     <Border Grid.Row="2"
             ZIndex="20"

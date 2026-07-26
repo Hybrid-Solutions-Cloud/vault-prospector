@@ -285,7 +285,10 @@ public partial class App : Avalonia.Application
 
             window.Opened += async (_, _) =>
             {
-                await viewModel.InitializeAsync();
+                // Keep startup passive. The Atlas secure-unlock screen must be
+                // visible and understandable before Windows presents any
+                // verification UI. Verification begins only when the user
+                // chooses "Verify and continue".
                 await StartBrowserBrokerAsync();
             };
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;

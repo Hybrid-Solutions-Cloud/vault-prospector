@@ -180,6 +180,15 @@ public partial class MainWindow : Window
         _isNarrowLayout = narrow;
 
         HeaderContextBadge.IsVisible = !narrow;
+        UnlockNavigation.IsVisible = !narrow;
+        UnlockShellGrid.ColumnDefinitions = new ColumnDefinitions(
+            narrow
+                ? "*"
+                : "220,*");
+        Place(
+            UnlockContent,
+            0,
+            narrow ? 0 : 1);
         MainTabs.TabStripPlacement = narrow ? Dock.Top : Dock.Left;
 
         ActiveContextGrid.ColumnDefinitions = new ColumnDefinitions(

@@ -231,6 +231,73 @@ public sealed class AtlasVisualBaselineTests
                     "#3A2510" or "#10243A");
     }
 
+    [Fact]
+    public void AtlasSecureUnlockUsesThePersistentWorkspaceShell()
+    {
+        var productionPath = FindRepoFile(
+            "src/VaultProspector.App/Views/MainWindow.axaml");
+        var production = XDocument.Load(productionPath);
+
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "Grid" &&
+                Attribute(element, "Name") == "UnlockShellGrid" &&
+                Attribute(element, "ColumnDefinitions") == "220,*");
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "Border" &&
+                Attribute(element, "Name") == "UnlockNavigation");
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "TextBlock" &&
+                Attribute(element, "Text") == "◉  Secure unlock");
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "TextBlock" &&
+                Attribute(element, "Text") ==
+                    "Windows session detected");
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "TextBlock" &&
+                Attribute(element, "Text") ==
+                    "Remote sessions do not bypass verification");
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "Button" &&
+                Attribute(element, "Content") == "Verify and continue" &&
+                Attribute(element, "Command") ==
+                    "{Binding InitializeCommand}");
+    }
+
+    [Fact]
+    public void StartupWaitsForTheExplicitAtlasUnlockAction()
+    {
+        var applicationSource = File.ReadAllText(
+            FindRepoFile("src/VaultProspector.App/App.axaml.cs"));
+        const string expectedStartup =
+            """
+            window.Opened += async (_, _) =>
+            {
+                // Keep startup passive. The Atlas secure-unlock screen must be
+                // visible and understandable before Windows presents any
+                // verification UI. Verification begins only when the user
+                // chooses "Verify and continue".
+                await StartBrowserBrokerAsync();
+            };
+            """;
+
+        Assert.Contains(
+            expectedStartup,
+            applicationSource,
+            StringComparison.Ordinal);
+    }
+
     private static void AssertBitmap(
         string path,
         int expectedWidth,
