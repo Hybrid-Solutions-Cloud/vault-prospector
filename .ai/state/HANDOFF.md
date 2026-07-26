@@ -1,5 +1,32 @@
 # Session handoff
 
+## 0.3.0-preview.3 corrected Atlas release — 2026-07-25
+
+- PRs #52 and #53 merged the persistent grouped Atlas secure-unlock shell and its protected-main
+  validation correction. Exact source:
+  `866f434e6d39c647c34c86456fc7dac4827412f0`.
+- HCS exact-main run `30184356857` passed portable validation, the Windows candidate,
+  protected-main, and full-history secret scanning. Candidate MSI `0.3.0-ci.207` SHA-256:
+  `6C7A448816776C31D3716202654D77AE2F298A2E015788D12DC0EA427D140C38`.
+- The CI MSI installed in Windows 11 RDP, preserved local state, rendered the corrected Atlas
+  startup without an automatic prompt, opened the explicit current-account prompt, and completed
+  machine-qualified account verification.
+- Immutable tag `v0.3.0-preview.3` points to that exact source. Release run `30185620476` passed
+  all 18 steps and published 16 binary-only assets.
+- Independent public verification matched all 16 GitHub asset digests and all five adjacent
+  checksums. Cosign `v3.1.2` verified all five bundles against
+  `release.yml@refs/tags/v0.3.0-preview.3`.
+- Public MSI SHA-256:
+  `778456E2B8BEBE595092961BCA19221F1E034AD31911E57D332EAA01FAD72C78`.
+  It installed as `0.3.3`, product code `{361536EE-4EE0-497B-979E-19AD46B58E69}`, preserved five
+  local-state files, rendered the Atlas secure-unlock startup, and opened the explicit RDP prompt.
+- Evidence:
+  `docs/release-evidence/atlas-secure-unlock-ci207-2026-07-25.md` and
+  `docs/release-evidence/0.3.0-preview.3.md`.
+- Exact-public every-state keyboard, assistive-technology, representative-user, and independent
+  approval criteria remain open. Do not close AB#5592, AB#5601, AB#5571, or AB#5574 until those
+  separate criteria pass.
+
 ## Atlas corrected exact-main acceptance — 2026-07-25
 
 - PR #47 merged the approved C · Atlas production layouts; PR #48 fixed qualified-account Remote

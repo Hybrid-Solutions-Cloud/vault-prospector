@@ -163,9 +163,9 @@ jobs:
         run: |
           $previousInstaller = Join-Path `
             $env:RUNNER_TEMP `
-            'VaultProspector-0.2.0-preview.5-win-x64.msi'
+            'VaultProspector-0.3.0-preview.3-win-x64.msi'
           Invoke-WebRequest `
-            -Uri 'https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.2.0-preview.5/VaultProspector-0.2.0-preview.5-win-x64.msi' `
+            -Uri 'https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.3.0-preview.3/VaultProspector-0.3.0-preview.3-win-x64.msi' `
             -OutFile $previousInstaller
           $currentInstaller = "./artifacts/VaultProspector-$env:CI_CANDIDATE_VERSION-win-x64.msi"
           $currentHash = (

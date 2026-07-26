@@ -1,5 +1,10 @@
 # Atlas Windows candidate evidence — 2026-07-25
 
+> Follow-up secure-unlock correction: PRs #52 and #53 replaced the remaining legacy startup
+> surface with the persistent Atlas shell. Exact-main candidate `0.3.0-ci.207` passed governed
+> build, installation, and real RDP verification. See
+> [Atlas secure-unlock Windows evidence](atlas-secure-unlock-ci207-2026-07-25.md).
+
 ## Current result
 
 The corrected exact-main candidate passed the installed Windows 11 Remote Desktop walkthrough.

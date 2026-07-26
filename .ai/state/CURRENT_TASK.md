@@ -1,33 +1,32 @@
 # Current task
 
-Publish and verify the corrected C · Atlas Windows Preview from the exact governed source.
+Continue the canonical backlog after publishing and verifying the corrected C · Atlas Windows
+Preview.
 
 Confirmed on 2026-07-25:
 
-- Atlas is the product-owner-approved production UI direction.
-- PRs #47 through #50 replaced the legacy-derived layouts and corrected the installed-screen
-  defects found during direct review.
-- Exact-main source is `ae976be1d7a486aa26ba8ec70d52a48ad4bfa6ef`.
-- HCS GitHub Actions run `30181586109` passed portable validation, full-history secret scanning,
-  and the Windows candidate.
-- Exact candidate `0.3.0-ci.201` MSI SHA-256 is
-  `FED4F4E877498A56EB6AEE0D9C3A86E4761BDEABD5DFF788057C8BF063EF30C1`.
-- The installed MSI passed machine-qualified current-account verification in a real Windows 11
-  RDP session and rendered all eight production screens with the approved Atlas hierarchy.
-- Administration contains the intended workload-discovery and provisioning-preview columns;
-  Browser fill owns the Setup check; warning/policy cards and long navigation labels are readable.
-- The failed `v0.3.0-preview.1` tag is immutable and must never be moved or reused.
-- Source remains private. Only release binaries may be published to
-  `Hybrid-Solutions-Cloud/vault-prospector-releases`.
+- PRs #52 and #53 completed the persistent Atlas secure-unlock shell and corrected its protected
+  main validation.
+- Exact-main source is `866f434e6d39c647c34c86456fc7dac4827412f0`.
+- HCS run `30184356857` passed portable, Windows candidate, protected-main, and full-history
+  secret-scan gates.
+- Exact candidate `0.3.0-ci.207` installed successfully and passed real machine-qualified
+  current-account verification in Windows 11 RDP.
+- Immutable `v0.3.0-preview.3` release run `30185620476` passed and published 16 assets to the
+  public binary-only repository.
+- Independent verification passed all 16 GitHub asset digests, five adjacent checksums, and five
+  Sigstore bundles.
+- The exact public MSI SHA-256 is
+  `778456E2B8BEBE595092961BCA19221F1E034AD31911E57D332EAA01FAD72C78`.
+- The exact public MSI installed as version `0.3.3`, preserved five local-state files, rendered the
+  approved Atlas secure-unlock startup, did not prompt automatically, and opened the explicit RDP
+  current-account prompt.
+- Source remains private; only release binaries are public.
 
 Next:
 
-1. Commit the corrected candidate evidence and PMO/readiness updates through a governed PR.
-2. Close only Atlas child tasks whose implementation and candidate Acceptance Criteria are met.
-3. Create new immutable tag `v0.3.0-preview.2` from the exact passing documentation merge.
-4. Run the governed release workflow and independently verify every public binary, checksum,
-   SBOM, and Sigstore provenance bundle.
-5. Install the exact public MSI in the Windows 11 acceptance guest and repeat the Atlas/RDP
-   walkthrough before closing exact-public-package tasks or parent items.
-6. Continue the canonical backlog in dependency order; leave external live, accessibility,
-   independent-review, Store, legal/privacy, and approval gates open where evidence is absent.
+1. Merge the release-record documentation PR after governed validation.
+2. Update ADO items with exact candidate/public evidence; close only items whose complete task and
+   Acceptance Criteria sets are satisfied.
+3. Continue remaining exact-public every-state accessibility/usability, live provider,
+   independent-review, enterprise, Store, and GA backlog work in dependency order.

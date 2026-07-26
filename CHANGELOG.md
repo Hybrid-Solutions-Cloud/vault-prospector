@@ -4,6 +4,25 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+## [0.3.0-preview.3] - 2026-07-25
+
+### Added
+
+- Ship the product-owner-approved C · Atlas desktop hierarchy across installation, setup, daily
+  use, administration, support, and settings workflows.
+- Add policy-controlled current-account Windows credential verification for supported Remote
+  Desktop and AVD sessions.
+- Add in-app update review, privacy-safe support bundles, discovered-source selectors,
+  notification-area lifecycle controls, and guided browser-fill setup.
+
+### Fixed
+
+- Keep startup fail-closed without opening a credential prompt until the user explicitly chooses
+  **Verify and continue**.
+- Replace the remaining legacy-derived locked surface with the persistent grouped Atlas shell.
+- Preserve unreadable encrypted local data and require an explicit verified archive decision
+  instead of silently rebuilding it.
+
 ## [0.2.0-preview.5] - 2026-07-25
 
 ### Fixed
@@ -183,6 +202,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.3.0-preview.3]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.3
 [0.2.0-preview.5]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.5
 [0.2.0-preview.4]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.4
 [0.2.0-preview.3]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.3
