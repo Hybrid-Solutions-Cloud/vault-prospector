@@ -3,11 +3,11 @@
   "files": [
     {
       "path": "src/VaultProspector.App/App.axaml",
-      "sha256": "858A597D0C8D0AD9E28DCE972EE06DA9E1C63085232A1B80948D1DE08C45B0C2"
+      "sha256": "E89BAFD8F8368FCE70C8AE8A840A131939576D95B59EAC6D7416F12BF61FB528"
     },
     {
       "path": "src/VaultProspector.App/Views/MainWindow.axaml",
-      "sha256": "CCEFCA602C8FEBE491AD3F3547F523AA1D8DC1F77BC136C6CD185AB1260D2C32"
+      "sha256": "534233713C5F2617B6DD00C1BA04A5B1B33D6F4871832F670FB3C27AA7B3D2B6"
     },
     {
       "path": "docs/design/vault-prospector-ui-redesign-2026-07-25/screenshots/atlas-install.png",
