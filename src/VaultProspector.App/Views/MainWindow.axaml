@@ -35,7 +35,7 @@
         </Grid>
         <Border Grid.Row="1" Background="{DynamicResource VaultColorContext}" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,1,0,0" Padding="20,9">
           <Grid x:Name="ActiveContextGrid"
-                ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto"
+                ColumnDefinitions="Auto,Auto,*,Auto"
                 RowDefinitions="Auto"
                 ColumnSpacing="16"
                 RowSpacing="6">
@@ -58,16 +58,8 @@
                            VerticalAlignment="Center" />
               </StackPanel>
             </Border>
-            <TextBlock x:Name="ActiveIdentityText"
-                       Grid.Column="2"
-                       Text="{Binding ActiveIdentityContext}"
-                       VerticalAlignment="Center" />
-            <TextBlock x:Name="ActiveSubscriptionText"
-                       Grid.Column="3"
-                       Text="{Binding ActiveSubscriptionContext}"
-                       VerticalAlignment="Center" />
             <Border x:Name="ActiveReadyBadge"
-                    Grid.Column="5"
+                    Grid.Column="3"
                     IsVisible="{Binding IsApplicationReady}"
                     Background="{DynamicResource VaultColorGoodSoft}"
                     BorderBrush="{DynamicResource VaultColorGood}"
@@ -610,7 +602,7 @@
             <Border x:Name="SetupConnectionsStep" Grid.Column="1" Background="{DynamicResource VaultColorAccentSoft}" BorderBrush="{DynamicResource VaultColorAccent}" BorderThickness="0,3,0,0" Padding="12,12">
               <StackPanel Orientation="Horizontal" Spacing="9">
                 <Border Width="26" Height="26" Background="{DynamicResource VaultColorAccent}" CornerRadius="13">
-                  <TextBlock Text="2" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding SetupConnectionsMarker}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel>
                   <TextBlock Text="Connect identities" FontWeight="Bold" />
@@ -621,7 +613,7 @@
             <Border x:Name="SetupScopeStep" Grid.Column="2" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,3,0,0" Padding="12,12">
               <StackPanel Orientation="Horizontal" Spacing="9">
                 <Border Width="26" Height="26" Background="{DynamicResource VaultColorSurfaceAlt}" CornerRadius="13">
-                  <TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding SetupScopeMarker}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel>
                   <TextBlock Text="Choose discovery scope" FontWeight="Bold" Foreground="{DynamicResource VaultColorMuted}" />
@@ -632,7 +624,7 @@
             <Border x:Name="SetupSyncStep" Grid.Column="3" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,3,0,0" Padding="12,12">
               <StackPanel Orientation="Horizontal" Spacing="9">
                 <Border Width="26" Height="26" Background="{DynamicResource VaultColorSurfaceAlt}" CornerRadius="13">
-                  <TextBlock Text="4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding SetupSyncMarker}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel>
                   <TextBlock Text="Synchronize metadata" FontWeight="Bold" Foreground="{DynamicResource VaultColorMuted}" />
@@ -692,18 +684,29 @@
                 <Button Classes="primary" Content="Enable identity" Command="{Binding EnableIdentityCommand}" IsVisible="{Binding IsSelectedIdentityDisabled}" Margin="0,0,8,8" />
                 <Button Content="Purge identity offline values" Command="{Binding PurgeSelectedIdentityCacheCommand}" Margin="0,0,8,8" />
                 <Button Content="Revoke local access" Command="{Binding RevokeIdentityAccessCommand}" Margin="0,0,8,8" />
+                <Button Content="Remove identity…"
+                        Command="{Binding BeginIdentityRemovalCommand}"
+                        Margin="0,0,8,8"
+                        AutomationProperties.Name="Begin removing selected connected identity" />
               </WrapPanel>
-              <Border Classes="atlas-warning" IsVisible="{Binding HasSelectedIdentity}">
+              <Border Classes="atlas-warning"
+                      IsVisible="{Binding IsIdentityRemovalConfirmationVisible}">
                 <StackPanel Spacing="7">
-                  <TextBlock Text="Remove this local connection" FontWeight="SemiBold" />
-                  <TextBlock Text="This removes the local identity profile and its cached tokens; it does not delete the Microsoft Entra account. Type REMOVE to confirm."
+                  <TextBlock Text="Remove selected identity?" FontWeight="SemiBold" />
+                  <TextBlock Text="This removes the selected local identity profile and its cached tokens. It does not delete the Microsoft Entra account. Type REMOVE to confirm."
                              TextWrapping="Wrap" />
                   <TextBox Text="{Binding IdentityRemovalConfirmation}"
                            PlaceholderText="REMOVE"
                            AutomationProperties.Name="Type REMOVE to confirm connected identity removal" />
-                  <Button Content="Remove local connection"
-                          Command="{Binding RemoveIdentityCommand}"
-                          HorizontalAlignment="Left" />
+                  <WrapPanel>
+                    <Button Content="Remove selected identity"
+                            Command="{Binding RemoveIdentityCommand}"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,8,0" />
+                    <Button Content="Cancel"
+                            Command="{Binding CancelIdentityRemovalCommand}"
+                            HorizontalAlignment="Left" />
+                  </WrapPanel>
                 </StackPanel>
               </Border>
               <Expander Classes="atlas-expander"

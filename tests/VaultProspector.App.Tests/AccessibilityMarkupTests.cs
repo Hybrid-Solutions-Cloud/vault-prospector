@@ -6,6 +6,17 @@ namespace VaultProspector.App.Tests;
 public sealed class AccessibilityMarkupTests
 {
     [Fact]
+    public void AtlasUsesOneLightControlThemeAcrossEveryWindowsColorMode()
+    {
+        var application = XDocument.Load(
+            FindMarkup("src/VaultProspector.App/App.axaml"));
+
+        Assert.Equal(
+            "Light",
+            Attribute(application.Root!, "RequestedThemeVariant")?.Value);
+    }
+
+    [Fact]
     public void DataEntryAndSelectionControlsHaveExplicitAutomationNames()
     {
         var document = XDocument.Load(FindMainWindowMarkup());

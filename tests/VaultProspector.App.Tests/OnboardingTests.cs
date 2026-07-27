@@ -545,6 +545,8 @@ public sealed class OnboardingTests : IDisposable
         Assert.True(viewModel.PurgeSelectedIdentityCacheCommand.CanExecute(null));
         Assert.False(viewModel.RotateSelectedCredentialCommand.CanExecute(null));
 
+        viewModel.BeginIdentityRemovalCommand.Execute(null);
+        Assert.True(viewModel.IsIdentityRemovalConfirmationVisible);
         viewModel.IdentityRemovalConfirmation = "REMOVE";
         Assert.True(viewModel.RemoveIdentityCommand.CanExecute(null));
 
@@ -581,12 +583,34 @@ public sealed class OnboardingTests : IDisposable
             IsEnabled = false,
             AuthenticationState = AuthenticationState.Revoked,
         };
+        viewModel.BeginIdentityRemovalCommand.Execute(null);
         viewModel.IdentityRemovalConfirmation = "REMOVE";
 
         Assert.False(viewModel.SynchronizeCommand.CanExecute(null));
         Assert.True(viewModel.RemoveIdentityCommand.CanExecute(null));
         Assert.True(viewModel.ReauthenticateIdentityCommand.CanExecute(null));
         Assert.True(viewModel.EnableIdentityCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void IdentityRemovalConfirmationIsExplicitAndCancelable()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.SelectedIdentity = CreateIdentity();
+
+        Assert.False(viewModel.IsIdentityRemovalConfirmationVisible);
+
+        viewModel.BeginIdentityRemovalCommand.Execute(null);
+        viewModel.IdentityRemovalConfirmation = "REMOVE";
+
+        Assert.True(viewModel.IsIdentityRemovalConfirmationVisible);
+        Assert.True(viewModel.RemoveIdentityCommand.CanExecute(null));
+
+        viewModel.CancelIdentityRemovalCommand.Execute(null);
+
+        Assert.False(viewModel.IsIdentityRemovalConfirmationVisible);
+        Assert.Empty(viewModel.IdentityRemovalConfirmation);
+        Assert.False(viewModel.RemoveIdentityCommand.CanExecute(null));
     }
 
     [Fact]

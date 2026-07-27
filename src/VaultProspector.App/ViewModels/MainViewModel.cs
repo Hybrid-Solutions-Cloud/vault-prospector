@@ -43,6 +43,7 @@ public sealed partial class MainViewModel(
         AppContext.TryGetSwitch("VaultProspector.EnableCyberArkPreview", out var cyberArkPreviewEnabled) &&
         cyberArkPreviewEnabled;
     private CancellationTokenSource? _activeOperation;
+    private bool _hasLoadedInitialIdentityState;
     private bool _isReloadingIdentities;
     private bool _managedIdentityHostSupported;
     private int _subscriptionLoadVersion;
@@ -115,6 +116,8 @@ public sealed partial class MainViewModel(
         "Managed identity availability is checked after local unlock.";
     [ObservableProperty]
     private string _identityRemovalConfirmation = string.Empty;
+    [ObservableProperty]
+    private bool _isIdentityRemovalConfirmationVisible;
     public ObservableCollection<IdentityType> IdentityTypes { get; } =
         [
             IdentityType.InteractiveUser,
@@ -245,10 +248,18 @@ public sealed partial class MainViewModel(
     public bool HasSyncErrors => SyncErrors.Count > 0;
     public string SetupConnectionsStatus =>
         Identities.Count == 0 ? "Current step" : "Complete";
+    public string SetupConnectionsMarker =>
+        Identities.Count == 0 ? "2" : "✓";
     public string SetupScopeStatus =>
         Subscriptions.Count == 0 && VaultAccessPaths.Count == 0
             ? Identities.Count == 0 ? "Waiting for identity" : "Ready to synchronize"
             : "Complete";
+    public string SetupScopeMarker =>
+        SetupScopeStatus == "Complete" ? "✓" : "3";
+    public string SetupSyncMarker =>
+        SetupSyncStatus is "Complete" or "Complete with isolated errors"
+            ? "✓"
+            : "4";
     public bool IsEnterpriseOfflineCacheAllowed =>
         EnterprisePolicy().AllowOfflineCache;
     public bool IsEnterpriseClipboardAllowed =>
@@ -439,9 +450,24 @@ public sealed partial class MainViewModel(
         var identityName = SelectedIdentity.DisplayName;
         await identityService.RemoveAsync(SelectedIdentity.Id, cancellationToken);
         IdentityRemovalConfirmation = string.Empty;
+        IsIdentityRemovalConfirmationVisible = false;
         await ReloadIdentitiesAsync(cancellationToken);
         StatusText = $"The local connection for {identityName} and its cached tokens were removed. The Microsoft Entra account was not deleted.";
     });
+
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    private void BeginIdentityRemoval()
+    {
+        IdentityRemovalConfirmation = string.Empty;
+        IsIdentityRemovalConfirmationVisible = true;
+    }
+
+    [RelayCommand]
+    private void CancelIdentityRemoval()
+    {
+        IdentityRemovalConfirmation = string.Empty;
+        IsIdentityRemovalConfirmationVisible = false;
+    }
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task PurgeSelectedIdentityCacheAsync() => RunAsync(async cancellationToken =>
@@ -533,9 +559,22 @@ public sealed partial class MainViewModel(
         var identityId = SelectedIdentity.Id;
         await identityService.AuthorizeDirectoryReadAsync(identityId, cancellationToken);
         await ReloadIdentitiesAsync(cancellationToken);
-        SelectedIdentity = Identities.First(identity => identity.Id == identityId);
+        var refreshedIdentity =
+            Identities.First(identity => identity.Id == identityId);
+        SelectedIdentity = refreshedIdentity;
+        IReadOnlyList<WorkloadIdentityCandidate> candidates = [];
+        if (workloadIdentityAdministrationService is not null &&
+            EnterprisePolicy().AllowedIdentityTypes.Contains(
+                IdentityType.ServicePrincipal))
+        {
+            candidates = await workloadIdentityAdministrationService
+                .ListServicePrincipalsAsync(
+                    refreshedIdentity,
+                    cancellationToken);
+        }
+        ReplaceWorkloadCandidates(candidates);
         WorkloadIdentityFilterStatus =
-            "Directory access authorized. Select List service principals to load eligible customer-managed applications.";
+            $"Directory access authorized. {candidates.Count} enabled, customer-owned service principals loaded automatically.";
         StatusText = WorkloadIdentityFilterStatus;
     });
 
@@ -1169,7 +1208,15 @@ public sealed partial class MainViewModel(
             SelectedIdentity = selectedIdentityId is null
                 ? Identities.FirstOrDefault()
                 : Identities.FirstOrDefault(identity => identity.Id == selectedIdentityId) ?? Identities.FirstOrDefault();
-            IsFirstRun = Identities.Count == 0;
+            if (!_hasLoadedInitialIdentityState)
+            {
+                IsFirstRun = Identities.Count == 0;
+                _hasLoadedInitialIdentityState = true;
+            }
+            else if (Identities.Count == 0)
+            {
+                IsFirstRun = true;
+            }
             if (IsFirstRun)
                 SelectedMainTabIndex = 1;
         }
@@ -1192,7 +1239,9 @@ public sealed partial class MainViewModel(
             await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
         }
         OnPropertyChanged(nameof(SetupConnectionsStatus));
+        OnPropertyChanged(nameof(SetupConnectionsMarker));
         OnPropertyChanged(nameof(SetupScopeStatus));
+        OnPropertyChanged(nameof(SetupScopeMarker));
         ContinueToSearchCommand.NotifyCanExecuteChanged();
     }
 
@@ -1250,6 +1299,7 @@ public sealed partial class MainViewModel(
             : VaultAccessPaths.FirstOrDefault(access => access.Id == selectedVaultAccessId) ??
               VaultAccessPaths.FirstOrDefault();
         OnPropertyChanged(nameof(SetupScopeStatus));
+        OnPropertyChanged(nameof(SetupScopeMarker));
     }
 
     private async Task ReloadSubscriptionsAfterSelectionAsync(Guid identityId, int loadVersion)
@@ -1341,6 +1391,7 @@ public sealed partial class MainViewModel(
          _managedIdentityHostSupported);
     private bool CanRemoveIdentity() =>
         CanUseSelectedIdentity() &&
+        IsIdentityRemovalConfirmationVisible &&
         string.Equals(
             IdentityRemovalConfirmation.Trim(),
             "REMOVE",
@@ -1442,7 +1493,9 @@ public sealed partial class MainViewModel(
         OnPropertyChanged(nameof(CredentialRotationLabel));
         if (value is null) FilterSelectedIdentity = false;
         ReplacementCredentialData = string.Empty;
+        IsIdentityRemovalConfirmationVisible = false;
         IdentityRemovalConfirmation = string.Empty;
+        BeginIdentityRemovalCommand.NotifyCanExecuteChanged();
         RemoveIdentityCommand.NotifyCanExecuteChanged();
         PurgeSelectedIdentityCacheCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
@@ -1482,8 +1535,13 @@ public sealed partial class MainViewModel(
     partial void OnIdentityRemovalConfirmationChanged(string value) =>
         RemoveIdentityCommand.NotifyCanExecuteChanged();
 
+    partial void OnIsIdentityRemovalConfirmationVisibleChanged(bool value) =>
+        RemoveIdentityCommand.NotifyCanExecuteChanged();
+
     partial void OnSelectedSubscriptionChanged(SubscriptionSelectionRow? value)
     {
+        if (value is not null)
+            AdministrationSubscriptionId = value.Id.ToString();
         OnPropertyChanged(nameof(ActiveSubscriptionContext));
         ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
         IncludeSubscriptionCommand.NotifyCanExecuteChanged();
@@ -1581,6 +1639,7 @@ public sealed partial class MainViewModel(
     partial void OnIsBusyChanged(bool value)
     {
         AddIdentityCommand.NotifyCanExecuteChanged();
+        BeginIdentityRemovalCommand.NotifyCanExecuteChanged();
         RemoveIdentityCommand.NotifyCanExecuteChanged();
         ReauthenticateIdentityCommand.NotifyCanExecuteChanged();
         DisableIdentityCommand.NotifyCanExecuteChanged();
@@ -1645,6 +1704,12 @@ public sealed partial class MainViewModel(
     {
         DiscoverManagedIdentitiesCommand.NotifyCanExecuteChanged();
         PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSetupSyncStatusChanged(string value)
+    {
+        OnPropertyChanged(nameof(SetupSyncMarker));
+        ContinueToSearchCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnAdministrationResourceGroupChanged(string value) =>
