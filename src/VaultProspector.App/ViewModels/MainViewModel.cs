@@ -115,6 +115,8 @@ public sealed partial class MainViewModel(
         "Managed identity availability is checked after local unlock.";
     [ObservableProperty]
     private string _identityRemovalConfirmation = string.Empty;
+    [ObservableProperty]
+    private bool _isIdentityRemovalConfirmationVisible;
     public ObservableCollection<IdentityType> IdentityTypes { get; } =
         [
             IdentityType.InteractiveUser,
@@ -439,9 +441,24 @@ public sealed partial class MainViewModel(
         var identityName = SelectedIdentity.DisplayName;
         await identityService.RemoveAsync(SelectedIdentity.Id, cancellationToken);
         IdentityRemovalConfirmation = string.Empty;
+        IsIdentityRemovalConfirmationVisible = false;
         await ReloadIdentitiesAsync(cancellationToken);
         StatusText = $"The local connection for {identityName} and its cached tokens were removed. The Microsoft Entra account was not deleted.";
     });
+
+    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    private void BeginIdentityRemoval()
+    {
+        IdentityRemovalConfirmation = string.Empty;
+        IsIdentityRemovalConfirmationVisible = true;
+    }
+
+    [RelayCommand]
+    private void CancelIdentityRemoval()
+    {
+        IdentityRemovalConfirmation = string.Empty;
+        IsIdentityRemovalConfirmationVisible = false;
+    }
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task PurgeSelectedIdentityCacheAsync() => RunAsync(async cancellationToken =>
@@ -1341,6 +1358,7 @@ public sealed partial class MainViewModel(
          _managedIdentityHostSupported);
     private bool CanRemoveIdentity() =>
         CanUseSelectedIdentity() &&
+        IsIdentityRemovalConfirmationVisible &&
         string.Equals(
             IdentityRemovalConfirmation.Trim(),
             "REMOVE",
@@ -1442,7 +1460,9 @@ public sealed partial class MainViewModel(
         OnPropertyChanged(nameof(CredentialRotationLabel));
         if (value is null) FilterSelectedIdentity = false;
         ReplacementCredentialData = string.Empty;
+        IsIdentityRemovalConfirmationVisible = false;
         IdentityRemovalConfirmation = string.Empty;
+        BeginIdentityRemovalCommand.NotifyCanExecuteChanged();
         RemoveIdentityCommand.NotifyCanExecuteChanged();
         PurgeSelectedIdentityCacheCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
@@ -1480,6 +1500,9 @@ public sealed partial class MainViewModel(
     }
 
     partial void OnIdentityRemovalConfirmationChanged(string value) =>
+        RemoveIdentityCommand.NotifyCanExecuteChanged();
+
+    partial void OnIsIdentityRemovalConfirmationVisibleChanged(bool value) =>
         RemoveIdentityCommand.NotifyCanExecuteChanged();
 
     partial void OnSelectedSubscriptionChanged(SubscriptionSelectionRow? value)
@@ -1581,6 +1604,7 @@ public sealed partial class MainViewModel(
     partial void OnIsBusyChanged(bool value)
     {
         AddIdentityCommand.NotifyCanExecuteChanged();
+        BeginIdentityRemovalCommand.NotifyCanExecuteChanged();
         RemoveIdentityCommand.NotifyCanExecuteChanged();
         ReauthenticateIdentityCommand.NotifyCanExecuteChanged();
         DisableIdentityCommand.NotifyCanExecuteChanged();
