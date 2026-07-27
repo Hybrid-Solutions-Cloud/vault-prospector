@@ -194,28 +194,17 @@ public partial class MainWindow : Window
         ActiveContextGrid.ColumnDefinitions = new ColumnDefinitions(
             narrow
                 ? "Auto,*"
-                : "Auto,Auto,Auto,Auto,*,Auto");
+                : "Auto,Auto,*,Auto");
         ActiveContextGrid.RowDefinitions = new RowDefinitions(
             narrow
-                ? "Auto,Auto,Auto"
+                ? "Auto,Auto"
                 : "Auto");
         Place(ActiveContextLabel, 0, 0);
         Place(ActiveWorkspaceBadge, 0, 1);
         Place(
-            ActiveIdentityText,
-            narrow ? 1 : 0,
-            narrow ? 0 : 2);
-        Grid.SetColumnSpan(
-            ActiveIdentityText,
-            narrow ? 2 : 1);
-        Place(
-            ActiveSubscriptionText,
-            narrow ? 2 : 0,
-            narrow ? 0 : 3);
-        Place(
             ActiveReadyBadge,
-            narrow ? 2 : 0,
-            narrow ? 1 : 5);
+            narrow ? 1 : 0,
+            narrow ? 1 : 3);
 
         UnlockExperienceGrid.ColumnDefinitions = new ColumnDefinitions(
             narrow

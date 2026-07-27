@@ -602,7 +602,7 @@
             <Border x:Name="SetupConnectionsStep" Grid.Column="1" Background="{DynamicResource VaultColorAccentSoft}" BorderBrush="{DynamicResource VaultColorAccent}" BorderThickness="0,3,0,0" Padding="12,12">
               <StackPanel Orientation="Horizontal" Spacing="9">
                 <Border Width="26" Height="26" Background="{DynamicResource VaultColorAccent}" CornerRadius="13">
-                  <TextBlock Text="2" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding SetupConnectionsMarker}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel>
                   <TextBlock Text="Connect identities" FontWeight="Bold" />
@@ -613,7 +613,7 @@
             <Border x:Name="SetupScopeStep" Grid.Column="2" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,3,0,0" Padding="12,12">
               <StackPanel Orientation="Horizontal" Spacing="9">
                 <Border Width="26" Height="26" Background="{DynamicResource VaultColorSurfaceAlt}" CornerRadius="13">
-                  <TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding SetupScopeMarker}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel>
                   <TextBlock Text="Choose discovery scope" FontWeight="Bold" Foreground="{DynamicResource VaultColorMuted}" />
@@ -624,7 +624,7 @@
             <Border x:Name="SetupSyncStep" Grid.Column="3" BorderBrush="{DynamicResource VaultColorLine}" BorderThickness="0,3,0,0" Padding="12,12">
               <StackPanel Orientation="Horizontal" Spacing="9">
                 <Border Width="26" Height="26" Background="{DynamicResource VaultColorSurfaceAlt}" CornerRadius="13">
-                  <TextBlock Text="4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding SetupSyncMarker}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel>
                   <TextBlock Text="Synchronize metadata" FontWeight="Bold" Foreground="{DynamicResource VaultColorMuted}" />
