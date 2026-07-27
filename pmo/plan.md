@@ -36,7 +36,7 @@ Status terms used in PMO reporting:
 
 ## Current product state
 
-- Current public version: `0.3.0-preview.5`, unsigned and restricted to non-production evaluation.
+- Current public version: `0.3.0-preview.6`, unsigned and restricted to non-production evaluation.
 - Core implemented path: interactive Entra sign-in, multiple app-owned MSAL identities,
   subscription and Key Vault discovery, secret/key/certificate metadata indexing, search, explicit
   value retrieval, verified copy, encrypted optional offline access, workspaces, and read-only Azure
