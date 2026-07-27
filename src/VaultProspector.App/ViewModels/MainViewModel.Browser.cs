@@ -71,12 +71,6 @@ public sealed partial class MainViewModel
         "Choose a browser below for guided installation. Vault Prospector opens the browser's extension page and the exact packaged extension folder.";
 
     public bool BrowserIntegrationAvailable => browserFillService is not null;
-    public bool IsPackagedBrowserExtensionAvailable =>
-        Directory.Exists(
-            Path.Combine(
-                AppContext.BaseDirectory,
-                "BrowserExtension",
-                "chromium"));
     public string BrowserSelectedSource =>
         SelectedResult is null || SelectedIdentity is null
             ? "Select one secret and its exact identity on Search and Identities first."
