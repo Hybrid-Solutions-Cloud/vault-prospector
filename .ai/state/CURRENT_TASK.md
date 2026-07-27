@@ -1,17 +1,17 @@
 # Current task
 
 Complete product-owner installed workflow validation of the published
-`0.3.0-preview.5` Windows manual-test Preview, then update only the work items whose complete
+`0.3.0-preview.6` Windows manual-test Preview, then update only the work items whose complete
 Acceptance Criteria receive observable evidence.
 
-Confirmed on 2026-07-26:
+Confirmed on 2026-07-27:
 
-- Current public source is `1a4f9f7fdc470c71d5faad4aaa819c1452a15799`.
-- Exact-main run `30220348003` passed the full HCS Windows candidate.
-- Immutable tag `v0.3.0-preview.5` release run `30222244323` passed and published 16 assets.
-- Independent public verification passed all 16 GitHub digests and five adjacent checksums.
+- Current public source is `8751df7f2a6c1014f3e51c4b570625364f9fb5f9`.
+- Exact-main run `30229406561` passed the full HCS Windows candidate.
+- Immutable tag `v0.3.0-preview.6` release run `30233704752` passed and published 16 assets.
+- Independent public verification passed all five adjacent package checksums.
 - The exact MSI SHA-256 is
-  `DBE46EB192912BA7317F0152B23494179781E2C94C22BA94DA778F7C8D10C29D`.
+  `1FAABD20B917C26B2150DA49A6F1558CE1DAE0F2FA6E215038FB876EC5F0040C`.
 - PRs #60 and #61 merged the release and final ADO reconciliation records.
 - The private Agile ADO project is correctly named `Vault Prospector`.
 - The ADO hierarchy contains 198 items: 53 Closed, 1 Removed, and 144 open with named work or

@@ -4,6 +4,24 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+## [0.3.0-preview.6] - 2026-07-27
+
+### Fixed
+
+- Restore readable Atlas text, selectors, browser-fill configuration, and independently scrolling
+  Find Secrets results in the installed application.
+- Unblock upgraded first-run profiles and restore connected-identity enable, removal, workload
+  discovery, and synchronized context workflows.
+- Complete browser-extension installation detection and guided setup.
+- Restore the approved application and installer branding.
+
+### Release
+
+- Publish the unsigned manual-test Preview from source
+  `8751df7f2a6c1014f3e51c4b570625364f9fb5f9`.
+- Pass the exact-main and immutable-tag Windows build, tests, packaging, lifecycle, readiness,
+  SBOM, Sigstore, and public checksum gates.
+
 ## [0.3.0-preview.5] - 2026-07-26
 
 ### Added
@@ -230,6 +248,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.3.0-preview.6]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.6
 [0.3.0-preview.5]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.5
 [0.3.0-preview.3]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.3
 [0.2.0-preview.5]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.5

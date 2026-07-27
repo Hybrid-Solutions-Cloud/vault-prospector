@@ -1,5 +1,21 @@
 # Session handoff
 
+## 0.3.0-preview.6 current release — 2026-07-27
+
+- Exact-main source `8751df7f2a6c1014f3e51c4b570625364f9fb5f9` passed HCS run
+  `30229406561`.
+- Immutable tag `v0.3.0-preview.6` rebuilt, tested, packaged, generated SBOM and Sigstore evidence,
+  and published 16 binary-only assets in release run `30233704752`.
+- Independent public downloads matched all five adjacent package checksums.
+- MSI SHA-256:
+  `1FAABD20B917C26B2150DA49A6F1558CE1DAE0F2FA6E215038FB876EC5F0040C`.
+- The HCS Tier-4 Windows runner was provisioned only for the release and cleanup was started after
+  publication. No authoritative build ran on the operator workstation.
+- Current Windows code and known bug fixes are included. Product-owner installed workflow testing
+  and formal acceptance evidence remain pending.
+- Signing, mobile, browser interoperability research, CyberArk, GA approval, operations, and
+  legal/privacy approval remain deferred roadmap or external-gate work.
+
 ## 0.3.0-preview.5 current release and ADO reconciliation — 2026-07-26
 
 - Current public source is `1a4f9f7fdc470c71d5faad4aaa819c1452a15799`; exact-main HCS run
