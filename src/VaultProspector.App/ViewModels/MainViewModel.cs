@@ -1541,7 +1541,7 @@ public sealed partial class MainViewModel(
     partial void OnSelectedSubscriptionChanged(SubscriptionSelectionRow? value)
     {
         if (value is not null)
-            AdministrationSubscriptionId = value.Id;
+            AdministrationSubscriptionId = value.Id.ToString();
         OnPropertyChanged(nameof(ActiveSubscriptionContext));
         ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
         IncludeSubscriptionCommand.NotifyCanExecuteChanged();
