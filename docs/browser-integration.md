@@ -69,6 +69,19 @@ Keep the file owned and writable only by administrators. Restart Vault Prospecto
 the policy. The Browser tab reports whether policy loaded. Missing, disabled, malformed, duplicate,
 oversized, reparse-point, or out-of-installation policy fails closed.
 
+## Install the extension
+
+The MSI installs the reviewed unpacked extension payload under
+`BrowserExtension\chromium` and `BrowserExtension\firefox` beside the application. In **Browser
+fill**, choose **Set up in Edge**, **Set up in Chrome**, or **Set up in Firefox**. Vault Prospector
+opens both the browser's extension-management page and the exact packaged folder, then displays
+the remaining browser-specific steps.
+
+Chrome and Edge require **Developer mode > Load unpacked** for this preview payload. Firefox uses
+**Load Temporary Add-on** and therefore does not persist it across browser restarts. Browser
+security controls intentionally prevent the desktop app from silently installing an unsigned
+extension. Persistent public installation remains gated on signed browser-store packages.
+
 ## User workflow
 
 Before mapping a destination, open **Browser fill** and choose **Refresh setup check**. The desktop
@@ -98,9 +111,9 @@ browser; a new explicit browser gesture is required for the first fill, so setup
 implicit fill.
 
 If setup fails after an upgrade, refresh the checklist first. Reinstall or repair the same trusted
-MSI when the native-host executable, manifest, or HKLM registration is missing. Install the
-supported extension when only the browser-registration step is missing. Do not hand-edit the
-manifest to weaken an extension-ID or install-root check.
+MSI when the native-host executable, manifest, HKLM registration, or packaged extension folder is
+missing. Use the browser setup action when only the extension step is missing. Do not hand-edit
+the manifest to weaken an extension-ID or install-root check.
 
 ## Development and release validation
 
@@ -112,8 +125,8 @@ npm test
 npm run build
 ```
 
-Build the Windows package and validate the host payload, default policy, and exact HKLM native-host
-registrations:
+Build the Windows package and validate the extension payload, host payload, default policy, and
+exact HKLM native-host registrations:
 
 ```powershell
 pwsh ./scripts/PackageInstaller.ps1 -Version 0.1.0-ci.1

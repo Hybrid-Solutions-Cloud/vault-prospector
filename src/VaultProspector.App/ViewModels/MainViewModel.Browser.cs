@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VaultProspector.Application;
@@ -65,8 +66,17 @@ public sealed partial class MainViewModel
     [ObservableProperty]
     private string _browserMappingReadinessStatus =
         "Capture a destination to create or review its exact mapping.";
+    [ObservableProperty]
+    private string _browserInstallationStatus =
+        "Choose a browser below for guided installation. Vault Prospector opens the browser's extension page and the exact packaged extension folder.";
 
     public bool BrowserIntegrationAvailable => browserFillService is not null;
+    public bool IsPackagedBrowserExtensionAvailable =>
+        Directory.Exists(
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "BrowserExtension",
+                "chromium"));
     public string BrowserSelectedSource =>
         SelectedResult is null || SelectedIdentity is null
             ? "Select one secret and its exact identity on Search and Identities first."
@@ -205,6 +215,92 @@ public sealed partial class MainViewModel
         StatusText =
             $"{BrowserFillMappings.Count} browser mapping(s) loaded. No values were retrieved.";
     });
+
+    [RelayCommand]
+    private void InstallChromiumExtension()
+    {
+        var extensionDirectory = Path.Combine(
+            AppContext.BaseDirectory,
+            "BrowserExtension",
+            "chromium");
+        if (!Directory.Exists(extensionDirectory))
+        {
+            BrowserInstallationStatus =
+                "The reviewed Chromium extension files are missing from this installation. Repair or reinstall Vault Prospector.";
+            return;
+        }
+
+        BrowserInstallationStatus =
+            TryOpenTrustedTarget("msedge.exe", "edge://extensions/") &&
+            TryOpenTrustedTarget("explorer.exe", extensionDirectory)
+                ? "Edge Extensions and the packaged extension folder are open. Turn on Developer mode, choose Load unpacked, and select that folder. Then return here and select Refresh setup check."
+                : "Edge or the packaged extension folder could not be opened. Confirm Edge is installed, then repair Vault Prospector and retry.";
+    }
+
+    [RelayCommand]
+    private void InstallChromeExtension()
+    {
+        var extensionDirectory = Path.Combine(
+            AppContext.BaseDirectory,
+            "BrowserExtension",
+            "chromium");
+        if (!Directory.Exists(extensionDirectory))
+        {
+            BrowserInstallationStatus =
+                "The reviewed Chromium extension files are missing from this installation. Repair or reinstall Vault Prospector.";
+            return;
+        }
+
+        BrowserInstallationStatus =
+            TryOpenTrustedTarget("chrome.exe", "chrome://extensions/") &&
+            TryOpenTrustedTarget("explorer.exe", extensionDirectory)
+                ? "Chrome Extensions and the packaged extension folder are open. Turn on Developer mode, choose Load unpacked, and select that folder. Then return here and select Refresh setup check."
+                : "Chrome or the packaged extension folder could not be opened. Confirm Chrome is installed, then repair Vault Prospector and retry.";
+    }
+
+    [RelayCommand]
+    private void InstallFirefoxExtension()
+    {
+        var extensionDirectory = Path.Combine(
+            AppContext.BaseDirectory,
+            "BrowserExtension",
+            "firefox");
+        if (!Directory.Exists(extensionDirectory))
+        {
+            BrowserInstallationStatus =
+                "The reviewed Firefox extension files are missing from this installation. Repair or reinstall Vault Prospector.";
+            return;
+        }
+
+        BrowserInstallationStatus =
+            TryOpenTrustedTarget(
+                "firefox.exe",
+                "about:debugging#/runtime/this-firefox") &&
+            TryOpenTrustedTarget("explorer.exe", extensionDirectory)
+                ? "Firefox temporary-extension setup and the packaged folder are open. Choose Load Temporary Add-on and select manifest.json. A signed store package is still required for persistent Firefox installation."
+                : "Firefox or the packaged extension folder could not be opened. Confirm Firefox is installed, then repair Vault Prospector and retry.";
+    }
+
+    private static bool TryOpenTrustedTarget(
+        string executable,
+        string argument)
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo(executable)
+            {
+                UseShellExecute = true,
+            };
+            startInfo.ArgumentList.Add(argument);
+            return Process.Start(startInfo) is not null;
+        }
+        catch (Exception exception) when (
+            exception is System.ComponentModel.Win32Exception or
+            InvalidOperationException)
+        {
+            return false;
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(CanApproveBrowserFill))]
     private async Task ApproveBrowserFillAsync()

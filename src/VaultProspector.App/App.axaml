@@ -50,6 +50,50 @@
         <Style Selector="NumericUpDown">
             <Setter Property="MinHeight" Value="26" />
         </Style>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorLineStrong}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button:pointerover">
+            <Setter Property="Background" Value="{DynamicResource VaultColorAccentSoft}" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
+        </Style>
+        <Style Selector="Button:disabled">
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurfaceAlt}" />
+            <Setter Property="Foreground" Value="#5F5A52" />
+            <Setter Property="Opacity" Value="0.72" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorLineStrong}" />
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorLineStrong}" />
+        </Style>
+        <Style Selector="ComboBoxItem">
+            <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
+        </Style>
+        <Style Selector="ComboBoxItem:pointerover">
+            <Setter Property="Background" Value="{DynamicResource VaultColorAccentSoft}" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
+        </Style>
+        <Style Selector="ComboBoxItem:selected">
+            <Setter Property="Background" Value="{DynamicResource VaultColorAccent}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="Background" Value="{DynamicResource VaultColorAccentSoft}" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
+        </Style>
         <Style Selector="Button.primary">
             <Setter Property="Background" Value="{DynamicResource VaultColorAccent}" />
             <Setter Property="Foreground" Value="White" />
@@ -197,6 +241,8 @@
             <Setter Property="MinHeight" Value="40" />
             <Setter Property="CornerRadius" Value="0" />
             <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource VaultColorInk}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource VaultColorLineStrong}" />
         </Style>
         <Style Selector="ListBox.atlas-list">
             <Setter Property="Background" Value="{DynamicResource VaultColorSurface}" />

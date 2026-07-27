@@ -56,10 +56,10 @@ If the tenant blocks the product registration or requires an administrator-contr
 
 The current Preview also exposes advanced workload profiles:
 
-- **Managed identity** appears only when Vault Prospector detects an Azure host managed-identity
-  endpoint or Azure Instance Metadata Service. A system-assigned identity needs no client ID; a
-  user-assigned identity uses its client ID. Creating the profile verifies that Azure can issue an
-  ARM token before saving it.
+- **Managed identity** is always listed so its host support status is clear. It can be connected
+  only when Vault Prospector detects an Azure host managed-identity endpoint or Azure Instance
+  Metadata Service. A system-assigned identity needs no client ID; a user-assigned identity uses
+  its client ID. Creating the profile verifies that Azure can issue an ARM token before saving it.
 - **Service principal** requires tenant and client GUIDs plus the thumbprint of a currently valid
   certificate with an accessible private key in the Windows Personal certificate store. Vault
   Prospector validates Azure token acquisition before saving the profile. Client secrets are not
@@ -124,6 +124,10 @@ encrypted audit, rollback, and live Azure tests.
 ## Synchronize metadata
 
 Select an identity and choose **Sync selected**. Vault Prospector enumerates subscriptions, discovers Azure Key Vault resources, and indexes secret, key, and certificate versions. It does not retrieve secret values during synchronization. Choose **Cancel** to stop the current run; starting sync again safely upserts the discovered metadata.
+
+After a completed synchronization, choose **Continue to Find secrets**. This remains available
+when the run completed with isolated errors because successful metadata is preserved; review and
+retry only the affected scopes from **Identities**.
 
 One inaccessible subscription, vault, or object category does not stop unrelated work. The status
 bar reports successful counts and isolated error counts without exposing resource names in logs.
@@ -271,6 +275,10 @@ Firefox extension is installed, whether the matching machine native-host registr
 manifest are valid, whether the host executable is beneath the protected install root, and whether
 the local broker is ready. Correct each failed check before creating a mapping.
 
+Choose **Set up in Edge**, **Set up in Chrome**, or **Set up in Firefox** to open the browser's
+extension-management page and the exact reviewed extension folder included by the MSI. Follow the
+instructions shown in the app, then choose **Refresh setup check**.
+
 Vault Prospector never scans saved browser passwords and does not fill in the background. See
 [Browser integration](browser-integration.md) for setup, policy format, limitations, and release
 status.
@@ -287,7 +295,9 @@ the current Windows release.
 
 ## Remove local data
 
-- Remove an identity from **Identities** to purge its MSAL token-cache account and local access mapping.
+- To remove an identity from **Identities**, select it, type `REMOVE`, and choose **Remove local
+  connection**. This purges its local token-cache account and mappings; it does not delete the
+  Microsoft Entra account.
 - Choose **Purge identity offline values** to clear every protected offline value associated with
   that identity without removing it.
 - Purge offline values from **Settings**.
