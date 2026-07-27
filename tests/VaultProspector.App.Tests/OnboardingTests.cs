@@ -541,9 +541,12 @@ public sealed class OnboardingTests : IDisposable
             DateTimeOffset.UtcNow);
 
         Assert.True(viewModel.SynchronizeCommand.CanExecute(null));
-        Assert.True(viewModel.RemoveIdentityCommand.CanExecute(null));
+        Assert.False(viewModel.RemoveIdentityCommand.CanExecute(null));
         Assert.True(viewModel.PurgeSelectedIdentityCacheCommand.CanExecute(null));
         Assert.False(viewModel.RotateSelectedCredentialCommand.CanExecute(null));
+
+        viewModel.IdentityRemovalConfirmation = "REMOVE";
+        Assert.True(viewModel.RemoveIdentityCommand.CanExecute(null));
 
         viewModel.SelectedIdentity = viewModel.SelectedIdentity with
         {
@@ -578,6 +581,7 @@ public sealed class OnboardingTests : IDisposable
             IsEnabled = false,
             AuthenticationState = AuthenticationState.Revoked,
         };
+        viewModel.IdentityRemovalConfirmation = "REMOVE";
 
         Assert.False(viewModel.SynchronizeCommand.CanExecute(null));
         Assert.True(viewModel.RemoveIdentityCommand.CanExecute(null));

@@ -12,8 +12,10 @@
       <Grid RowDefinitions="Auto,Auto">
         <Grid ColumnDefinitions="*,Auto" Margin="18,10">
           <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-            <Border Width="34" Height="34" Background="#AD543C" CornerRadius="0">
-              <TextBlock Text="◇" Foreground="White" FontSize="{StaticResource VaultFontSize20}" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <Border Width="38" Height="38" Background="White" CornerRadius="4" Padding="3">
+              <Image Source="/Assets/vault-prospector.png"
+                     Stretch="Uniform"
+                     AutomationProperties.Name="Vault Prospector logo" />
             </Border>
             <StackPanel>
               <TextBlock Text="Vault Prospector" Foreground="White" FontSize="{StaticResource VaultFontSize18}" FontWeight="SemiBold" />
@@ -520,6 +522,9 @@
                          Classes="atlas-list"
                          ItemsSource="{Binding Results}"
                          SelectedItem="{Binding SelectedResult}"
+                         MaxHeight="520"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Visible"
                          AutomationProperties.Name="Vault search results">
                   <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:SearchResultRow">
@@ -683,12 +688,24 @@
                 <Button Classes="primary" Content="Sync selected" Command="{Binding SynchronizeCommand}" Margin="0,0,8,8" />
                 <Button Content="Cancel" Command="{Binding CancelOperationCommand}" IsEnabled="{Binding IsBusy}" Margin="0,0,8,8" />
                 <Button Content="Reauthenticate" Command="{Binding ReauthenticateIdentityCommand}" Margin="0,0,8,8" />
-                <Button Content="Disable" Command="{Binding DisableIdentityCommand}" Margin="0,0,8,8" />
-                <Button Content="Enable" Command="{Binding EnableIdentityCommand}" Margin="0,0,8,8" />
+                <Button Content="Disable" Command="{Binding DisableIdentityCommand}" IsVisible="{Binding IsSelectedIdentityEnabled}" Margin="0,0,8,8" />
+                <Button Classes="primary" Content="Enable identity" Command="{Binding EnableIdentityCommand}" IsVisible="{Binding IsSelectedIdentityDisabled}" Margin="0,0,8,8" />
                 <Button Content="Purge identity offline values" Command="{Binding PurgeSelectedIdentityCacheCommand}" Margin="0,0,8,8" />
                 <Button Content="Revoke local access" Command="{Binding RevokeIdentityAccessCommand}" Margin="0,0,8,8" />
-                <Button Content="Remove identity" Command="{Binding RemoveIdentityCommand}" Margin="0,0,8,8" />
               </WrapPanel>
+              <Border Classes="atlas-warning" IsVisible="{Binding HasSelectedIdentity}">
+                <StackPanel Spacing="7">
+                  <TextBlock Text="Remove this local connection" FontWeight="SemiBold" />
+                  <TextBlock Text="This removes the local identity profile and its cached tokens; it does not delete the Microsoft Entra account. Type REMOVE to confirm."
+                             TextWrapping="Wrap" />
+                  <TextBox Text="{Binding IdentityRemovalConfirmation}"
+                           PlaceholderText="REMOVE"
+                           AutomationProperties.Name="Type REMOVE to confirm connected identity removal" />
+                  <Button Content="Remove local connection"
+                          Command="{Binding RemoveIdentityCommand}"
+                          HorizontalAlignment="Left" />
+                </StackPanel>
+              </Border>
               <Expander Classes="atlas-expander"
                         Header="Connection details, errors, and discovery scope"
                         IsExpanded="False">
@@ -835,12 +852,15 @@
                          Classes="screen-description" />
               <TextBlock Text="✓  Names and tags" Foreground="{DynamicResource VaultColorGood}" />
               <TextBlock Text="✓  Vault and subscription context" Foreground="{DynamicResource VaultColorGood}" />
-              <TextBlock Text="×  No secret values" Foreground="{DynamicResource VaultColorDanger}" />
+              <TextBlock Text="✓  Secret values remain protected and are never synchronized" Foreground="{DynamicResource VaultColorGood}" />
               <Button Classes="primary"
-                      Content="Review discovery scope"
+                      Content="Synchronize selected identity"
                       Command="{Binding SynchronizeCommand}"
                       HorizontalAlignment="Stretch"
                       Margin="0,8,0,0" />
+              <Button Content="Continue to Find secrets"
+                      Command="{Binding ContinueToSearchCommand}"
+                      HorizontalAlignment="Stretch" />
               <TextBlock Text="Select an identity first. You can connect as many interactive accounts as you need."
                          TextWrapping="Wrap"
                          Foreground="{DynamicResource VaultColorMuted}"
@@ -1168,6 +1188,28 @@
                            FontWeight="SemiBold" />
                 <TextBlock Text="{Binding BrowserExtensionStatus}"
                            TextWrapping="Wrap" />
+                <Border Classes="atlas-info">
+                  <StackPanel Spacing="8">
+                    <TextBlock Text="Install the browser extension" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding BrowserInstallationStatus}"
+                               TextWrapping="Wrap"
+                               AutomationProperties.LiveSetting="Polite" />
+                    <WrapPanel>
+                      <Button Content="Set up in Edge"
+                              Command="{Binding InstallChromiumExtensionCommand}"
+                              Margin="0,0,8,8" />
+                      <Button Content="Set up in Chrome"
+                              Command="{Binding InstallChromeExtensionCommand}"
+                              Margin="0,0,8,8" />
+                      <Button Content="Set up in Firefox"
+                              Command="{Binding InstallFirefoxExtensionCommand}"
+                              Margin="0,0,8,8" />
+                    </WrapPanel>
+                    <TextBlock Text="The reviewed extension is included with Vault Prospector. Browser stores do not allow a desktop application to silently install an extension; these actions open the exact browser page and packaged files you need."
+                               TextWrapping="Wrap"
+                               Opacity="0.75" />
+                  </StackPanel>
+                </Border>
                 <TextBlock Text="2. Native host"
                            FontWeight="SemiBold" />
                 <TextBlock Text="{Binding BrowserNativeHostStatus}"

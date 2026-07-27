@@ -23,6 +23,7 @@ $firefoxId = 'vault-prospector@hybrid-solutions.cloud'
 $chromiumManifestName = "$hostName.chromium.json"
 $firefoxManifestName = "$hostName.firefox.json"
 $policyName = 'browser-fill-policy.json'
+$extensionDirectory = Join-Path $resolvedPublish 'BrowserExtension'
 
 $policyPath = Join-Path $resolvedPublish $policyName
 if (-not (Test-Path -LiteralPath $policyPath -PathType Leaf)) {
@@ -45,6 +46,17 @@ foreach ($fileName in $requiredFiles) {
     $path = Join-Path $hostDirectory $fileName
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         throw "Browser host package file '$fileName' is missing."
+    }
+}
+$requiredExtensionFiles = @(
+    'chromium\manifest.json',
+    'chromium\background.js',
+    'firefox\manifest.json',
+    'firefox\background.js'
+)
+foreach ($relativePath in $requiredExtensionFiles) {
+    if (-not (Test-Path -LiteralPath (Join-Path $extensionDirectory $relativePath) -PathType Leaf)) {
+        throw "Packaged browser extension file '$relativePath' is missing."
     }
 }
 $chromium = Get-Content -LiteralPath (Join-Path $hostDirectory $chromiumManifestName) -Raw |
@@ -129,6 +141,12 @@ foreach ($fileName in $requiredFiles) {
 }
 if (-not $fileNames.Contains($policyName)) {
     throw "Installer File table does not contain machine policy '$policyName'."
+}
+foreach ($relativePath in $requiredExtensionFiles) {
+    $fileName = Split-Path -Leaf $relativePath
+    if (-not $fileNames.Contains($fileName)) {
+        throw "Installer File table does not contain browser extension file '$relativePath'."
+    }
 }
 
 $expectedRegistrations = @{

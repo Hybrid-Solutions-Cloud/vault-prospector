@@ -82,6 +82,19 @@ if (-not (Test-Path -LiteralPath (Join-Path $publishDirectory 'BrowserHost/Vault
     throw "Published browser native host was not found under '$publishDirectory'."
 }
 
+$browserExtensionRoot = Join-Path $repoRoot 'browser-extension'
+Invoke-Native -Command 'npm' -Arguments @('test', '--prefix', $browserExtensionRoot)
+Invoke-Native -Command 'npm' -Arguments @('run', 'build', '--prefix', $browserExtensionRoot)
+$browserExtensionPublishRoot = Join-Path $publishDirectory 'BrowserExtension'
+if (Test-Path -LiteralPath $browserExtensionPublishRoot) {
+    Remove-Item -LiteralPath $browserExtensionPublishRoot -Recurse -Force
+}
+New-Item -ItemType Directory -Path $browserExtensionPublishRoot -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $browserExtensionRoot 'dist/chromium') `
+    -Destination $browserExtensionPublishRoot -Recurse -Force
+Copy-Item -LiteralPath (Join-Path $browserExtensionRoot 'dist/firefox') `
+    -Destination $browserExtensionPublishRoot -Recurse -Force
+
 if (Test-Path -LiteralPath $installerOutput) {
     Remove-Item -LiteralPath $installerOutput -Recurse -Force
 }

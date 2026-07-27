@@ -79,18 +79,20 @@ public sealed partial class MainViewModel(
         supportBundleService?.DiagnosticLogPath ??
         "Diagnostic log path is unavailable in this build.";
     public string ActiveWorkspaceContext =>
-        SelectedWorkspace?.Name ??
-        "All discovered sources";
+        SelectedWorkspace is null
+            ? "Workspace: all discovered sources"
+            : $"Workspace: {SelectedWorkspace.Name}";
     public string ActiveIdentityContext =>
         SelectedIdentity is null
-            ? "No identity selected"
-            : string.IsNullOrWhiteSpace(
+            ? "Identity: none selected"
+            : $"Selected identity: {(string.IsNullOrWhiteSpace(
                 SelectedIdentity.DisplayName)
                 ? SelectedIdentity.UsernameHint
-                : SelectedIdentity.DisplayName;
+                : SelectedIdentity.DisplayName)}";
     public string ActiveSubscriptionContext =>
-        SelectedSubscription?.DisplayName ??
-        "All subscriptions";
+        SelectedSubscription is null
+            ? "Subscription filter: all"
+            : $"Selected subscription: {SelectedSubscription.DisplayName}";
 
     [ObservableProperty] private IdentityType _selectedIdentityType = IdentityType.InteractiveUser;
     [ObservableProperty] private string _credentialData = string.Empty;
@@ -111,6 +113,8 @@ public sealed partial class MainViewModel(
     [ObservableProperty]
     private string _managedIdentityAvailabilityText =
         "Managed identity availability is checked after local unlock.";
+    [ObservableProperty]
+    private string _identityRemovalConfirmation = string.Empty;
     public ObservableCollection<IdentityType> IdentityTypes { get; } =
         [
             IdentityType.InteractiveUser,
@@ -234,6 +238,9 @@ public sealed partial class MainViewModel(
     private string _diagnosticSearchText = string.Empty;
 
     public bool HasSelectedIdentity => SelectedIdentity is not null;
+    public bool IsSelectedIdentityEnabled => SelectedIdentity?.IsEnabled == true;
+    public bool IsSelectedIdentityDisabled => SelectedIdentity?.IsEnabled == false;
+    public bool IsManagedIdentityHostSupported => _managedIdentityHostSupported;
     public bool HasSelectedWorkspace => SelectedWorkspace is not null;
     public bool HasSyncErrors => SyncErrors.Count > 0;
     public string SetupConnectionsStatus =>
@@ -408,7 +415,7 @@ public sealed partial class MainViewModel(
         else
         {
             if (SelectedIdentityType == IdentityType.ManagedIdentity &&
-                !IdentityTypes.Contains(IdentityType.ManagedIdentity))
+                !_managedIdentityHostSupported)
             {
                 throw new WorkloadIdentityConfigurationException(
                     "Managed identity is unavailable on this host.",
@@ -425,13 +432,15 @@ public sealed partial class MainViewModel(
         StatusText = $"Connected {identity.DisplayName}. Select Sync to discover resources.";
     }, "Connecting an identity");
 
-    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    [RelayCommand(CanExecute = nameof(CanRemoveIdentity))]
     private Task RemoveIdentityAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedIdentity is null) return;
+        var identityName = SelectedIdentity.DisplayName;
         await identityService.RemoveAsync(SelectedIdentity.Id, cancellationToken);
+        IdentityRemovalConfirmation = string.Empty;
         await ReloadIdentitiesAsync(cancellationToken);
-        StatusText = "Identity and its cached tokens were removed.";
+        StatusText = $"The local connection for {identityName} and its cached tokens were removed. The Microsoft Entra account was not deleted.";
     });
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
@@ -445,22 +454,28 @@ public sealed partial class MainViewModel(
             $"Offline value storage was cleared for {purgedVaultCount} vault scope(s) associated with {SelectedIdentity.DisplayName}.";
     });
 
-    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    [RelayCommand(CanExecute = nameof(CanDisableIdentity))]
     private Task DisableIdentityAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedIdentity is null) return;
-        await identityService.DisableAsync(SelectedIdentity.Id, cancellationToken);
+        var identityId = SelectedIdentity.Id;
+        var identityName = SelectedIdentity.DisplayName;
+        await identityService.DisableAsync(identityId, cancellationToken);
         await ReloadIdentitiesAsync(cancellationToken);
-        StatusText = $"Identity {SelectedIdentity.DisplayName} is now disabled.";
+        SelectedIdentity = Identities.FirstOrDefault(identity => identity.Id == identityId);
+        StatusText = $"Identity {identityName} is now disabled. Select Enable to use it again.";
     });
 
-    [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
+    [RelayCommand(CanExecute = nameof(CanEnableIdentity))]
     private Task EnableIdentityAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedIdentity is null) return;
-        await identityService.EnableAsync(SelectedIdentity.Id, cancellationToken);
+        var identityId = SelectedIdentity.Id;
+        var identityName = SelectedIdentity.DisplayName;
+        await identityService.EnableAsync(identityId, cancellationToken);
         await ReloadIdentitiesAsync(cancellationToken);
-        StatusText = $"Identity {SelectedIdentity.DisplayName} is now enabled.";
+        SelectedIdentity = Identities.FirstOrDefault(identity => identity.Id == identityId);
+        StatusText = $"Identity {identityName} is enabled and ready to use.";
     });
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
@@ -519,7 +534,9 @@ public sealed partial class MainViewModel(
         await identityService.AuthorizeDirectoryReadAsync(identityId, cancellationToken);
         await ReloadIdentitiesAsync(cancellationToken);
         SelectedIdentity = Identities.First(identity => identity.Id == identityId);
-        StatusText = "Microsoft Graph directory read was explicitly authorized for this identity.";
+        WorkloadIdentityFilterStatus =
+            "Directory access authorized. Select List service principals to load eligible customer-managed applications.";
+        StatusText = WorkloadIdentityFilterStatus;
     });
 
     [RelayCommand(CanExecute = nameof(CanDiscoverManagedIdentities))]
@@ -531,7 +548,9 @@ public sealed partial class MainViewModel(
             AdministrationSubscriptionId,
             cancellationToken);
         ReplaceWorkloadCandidates(candidates);
-        StatusText = $"{candidates.Count} user-assigned managed identities are visible in the exact subscription. No Azure resources were changed.";
+        WorkloadIdentityFilterStatus =
+            $"{candidates.Count} user-assigned managed identities loaded from the exact subscription. No Azure resources were changed.";
+        StatusText = WorkloadIdentityFilterStatus;
     });
 
     [RelayCommand(CanExecute = nameof(CanDiscoverServicePrincipals))]
@@ -542,7 +561,9 @@ public sealed partial class MainViewModel(
             SelectedIdentity,
             cancellationToken);
         ReplaceWorkloadCandidates(candidates);
-        StatusText = $"{candidates.Count} customer-manageable service-principal candidates are visible through explicitly consented Microsoft Graph access. Microsoft first-party infrastructure is excluded by default. No Azure resources were changed.";
+        WorkloadIdentityFilterStatus =
+            $"{candidates.Count} enabled, customer-owned application service principals loaded. Microsoft first-party and foreign-tenant principals were excluded. No Azure resources were changed.";
+        StatusText = WorkloadIdentityFilterStatus;
     });
 
     [RelayCommand(CanExecute = nameof(CanAssessWorkloadIdentityPermissions))]
@@ -637,8 +658,19 @@ public sealed partial class MainViewModel(
             SyncStatus.Cancelled => "Cancelled",
             _ => "Needs attention",
         };
+        ContinueToSearchCommand.NotifyCanExecuteChanged();
         StatusText = $"{run.Status}: {run.VaultCount} vaults and {run.ItemCount} objects; {run.NonSensitiveErrors.Count} isolated errors.";
     }, $"Synchronizing {SelectedIdentity?.DisplayName ?? "the selected identity"}");
+
+    [RelayCommand(CanExecute = nameof(CanContinueToSearch))]
+    private void ContinueToSearch()
+    {
+        IsFirstRun = false;
+        SelectedMainTabIndex = 0;
+        StatusText = HasSyncErrors
+            ? "Search is ready. Successful metadata is available; isolated synchronization errors can be reviewed and retried from Identities."
+            : "Search is ready.";
+    }
 
     [RelayCommand(CanExecute = nameof(CanRetrySelectedSyncError))]
     private Task RetrySelectedSyncErrorAsync() => RunAsync(async cancellationToken =>
@@ -660,6 +692,7 @@ public sealed partial class MainViewModel(
         SetupSyncStatus = run.Status == SyncStatus.Completed
             ? "Complete"
             : "Complete with isolated errors";
+        ContinueToSearchCommand.NotifyCanExecuteChanged();
         StatusText = run.NonSensitiveErrors.Count == 0
             ? $"Retry completed: {run.VaultCount} vaults and {run.ItemCount} objects refreshed."
             : $"Retry completed with {run.NonSensitiveErrors.Count} isolated errors. Successful results remain available.";
@@ -1160,6 +1193,7 @@ public sealed partial class MainViewModel(
         }
         OnPropertyChanged(nameof(SetupConnectionsStatus));
         OnPropertyChanged(nameof(SetupScopeStatus));
+        ContinueToSearchCommand.NotifyCanExecuteChanged();
     }
 
     private async Task ReloadSubscriptionsCoreAsync(Guid identityId, CancellationToken cancellationToken)
@@ -1302,7 +1336,15 @@ public sealed partial class MainViewModel(
         !IsBusy &&
         IsProviderAllowed(EnterpriseProvider.AzureKeyVault) &&
         EnterprisePolicy().AllowedIdentityTypes.Contains(
-            SelectedIdentityType);
+            SelectedIdentityType) &&
+        (SelectedIdentityType != IdentityType.ManagedIdentity ||
+         _managedIdentityHostSupported);
+    private bool CanRemoveIdentity() =>
+        CanUseSelectedIdentity() &&
+        string.Equals(
+            IdentityRemovalConfirmation.Trim(),
+            "REMOVE",
+            StringComparison.Ordinal);
     private bool CanManageRecoveryArchives() =>
         localRecoveryArchiveService is not null &&
         !IsBusy;
@@ -1314,6 +1356,15 @@ public sealed partial class MainViewModel(
             LocalRecoveryArchiveService.ConfirmationPhrase,
             StringComparison.Ordinal);
     private bool CanUseSelectedIdentity() => SelectedIdentity is not null && !IsBusy;
+    private bool CanContinueToSearch() =>
+        SelectedIdentity is not null &&
+        !IsBusy &&
+        (Results.Count > 0 ||
+         Subscriptions.Count > 0 ||
+         VaultAccessPaths.Count > 0 ||
+         SetupSyncStatus is "Complete" or "Complete with isolated errors");
+    private bool CanDisableIdentity() => IsSelectedIdentityEnabled && !IsBusy;
+    private bool CanEnableIdentity() => IsSelectedIdentityDisabled && !IsBusy;
     private bool CanUseSelectedIdentityOnline() =>
         SelectedIdentity is
         {
@@ -1383,12 +1434,15 @@ public sealed partial class MainViewModel(
         revealVerificationSession?.Invalidate();
         CancelPendingGovernedMutation();
         OnPropertyChanged(nameof(HasSelectedIdentity));
+        OnPropertyChanged(nameof(IsSelectedIdentityEnabled));
+        OnPropertyChanged(nameof(IsSelectedIdentityDisabled));
         OnPropertyChanged(nameof(ActiveIdentityContext));
         OnPropertyChanged(nameof(BrowserSelectedSource));
         OnPropertyChanged(nameof(SelectedIdentitySupportsCredentialRotation));
         OnPropertyChanged(nameof(CredentialRotationLabel));
         if (value is null) FilterSelectedIdentity = false;
         ReplacementCredentialData = string.Empty;
+        IdentityRemovalConfirmation = string.Empty;
         RemoveIdentityCommand.NotifyCanExecuteChanged();
         PurgeSelectedIdentityCacheCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
@@ -1408,6 +1462,7 @@ public sealed partial class MainViewModel(
         PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
         PreviewServicePrincipalCommand.NotifyCanExecuteChanged();
         RefreshSubscriptionsCommand.NotifyCanExecuteChanged();
+        ContinueToSearchCommand.NotifyCanExecuteChanged();
         AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
@@ -1423,6 +1478,9 @@ public sealed partial class MainViewModel(
         if (!_isReloadingIdentities && IsApplicationReady && value is not null)
             _ = ReloadSubscriptionsAfterSelectionAsync(value.Id, loadVersion);
     }
+
+    partial void OnIdentityRemovalConfirmationChanged(string value) =>
+        RemoveIdentityCommand.NotifyCanExecuteChanged();
 
     partial void OnSelectedSubscriptionChanged(SubscriptionSelectionRow? value)
     {
@@ -1537,6 +1595,7 @@ public sealed partial class MainViewModel(
         SynchronizeCommand.NotifyCanExecuteChanged();
         RetrySelectedSyncErrorCommand.NotifyCanExecuteChanged();
         RefreshSubscriptionsCommand.NotifyCanExecuteChanged();
+        ContinueToSearchCommand.NotifyCanExecuteChanged();
         ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
         IncludeSubscriptionCommand.NotifyCanExecuteChanged();
         ExcludeVaultCommand.NotifyCanExecuteChanged();
@@ -1660,9 +1719,7 @@ public sealed partial class MainViewModel(
 
         var availableIdentityTypes = SupportedIdentityTypes
             .Where(identityType =>
-                policy.AllowedIdentityTypes.Contains(identityType) &&
-                (identityType != IdentityType.ManagedIdentity ||
-                 _managedIdentityHostSupported))
+                policy.AllowedIdentityTypes.Contains(identityType))
             .ToArray();
 
         if (!availableIdentityTypes.Contains(SelectedIdentityType) &&
@@ -1926,6 +1983,7 @@ public sealed partial class MainViewModel(
 
         ManagedIdentityAvailabilityText = status.SafeReason;
         _managedIdentityHostSupported = status.IsSupported;
+        OnPropertyChanged(nameof(IsManagedIdentityHostSupported));
         ApplyEnterprisePolicyToPreferences();
     }
 
