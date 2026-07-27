@@ -1,8 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="493" height="58" viewBox="0 0 493 58">
   <rect width="493" height="58" fill="#fffdf8"/>
   <rect x="420" width="73" height="58" fill="#2c3737"/>
-  <rect x="440" y="12" width="34" height="34" rx="3" fill="#f2dfd8"/>
-  <path d="M448 20h18v18h-18z" fill="none" stroke="#9a412b" stroke-width="2.5"/>
-  <path d="M452 24l10 10m0-10l-10 10" stroke="#9a412b" stroke-width="2.5" stroke-linecap="round"/>
+  <image
+    href="../../src/VaultProspector.App/Assets/vault-prospector.png"
+    x="439"
+    y="10"
+    width="38"
+    height="38"
+    preserveAspectRatio="xMidYMid meet"/>
   <rect y="55" width="493" height="3" fill="#9a412b"/>
 </svg>

@@ -97,6 +97,8 @@ public sealed class AtlasVisualBaselineTests
             FindRepoFile("installer/Assets/AtlasBanner.bmp"),
             expectedWidth: 493,
             expectedHeight: 58);
+        AssertInstallerTitleRegionIsLight(
+            FindRepoFile("installer/Assets/AtlasBanner.bmp"));
     }
 
     [Fact]
@@ -317,6 +319,38 @@ public sealed class AtlasVisualBaselineTests
         Assert.Equal(expectedHeight, reader.ReadInt32());
         stream.Position = 28;
         Assert.Equal(24, reader.ReadInt16());
+    }
+
+    private static void AssertInstallerTitleRegionIsLight(string path)
+    {
+        using var stream = File.OpenRead(path);
+        using var reader = new BinaryReader(stream);
+        stream.Position = 10;
+        var pixelOffset = reader.ReadInt32();
+        stream.Position = 18;
+        var width = reader.ReadInt32();
+        var height = reader.ReadInt32();
+        stream.Position = 28;
+        Assert.Equal(24, reader.ReadInt16());
+
+        var rowSize = ((width * 3 + 3) / 4) * 4;
+        for (var y = 3; y < height; y += 5)
+        {
+            for (var x = 0; x < 410; x += 10)
+            {
+                var bottomUpRow = height - 1 - y;
+                stream.Position =
+                    pixelOffset +
+                    bottomUpRow * rowSize +
+                    x * 3;
+                var blue = reader.ReadByte();
+                var green = reader.ReadByte();
+                var red = reader.ReadByte();
+                Assert.True(
+                    red >= 240 && green >= 240 && blue >= 235,
+                    $"The installer-owned title region must remain light, but pixel ({x}, {y}) was RGB ({red}, {green}, {blue}).");
+            }
+        }
     }
 
     private static string FindRepoFile(string relativePath)
