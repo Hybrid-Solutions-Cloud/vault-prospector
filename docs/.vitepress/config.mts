@@ -50,6 +50,8 @@ export default defineConfig({
   ],
 
   head: [
+    // Public assets are not base-prefixed in raw head tags, so the base is spelled out here.
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/vault-prospector/favicon.svg' }],
     ['meta', { name: 'theme-color', content: '#0b5cab' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Vault Prospector' }],
@@ -63,6 +65,8 @@ export default defineConfig({
   ],
 
   themeConfig: {
+    logo: '/logo.svg',
+
     nav: [
       { text: 'Guide', link: '/user-guide' },
       { text: 'Roadmap', link: '/product/roadmap' },

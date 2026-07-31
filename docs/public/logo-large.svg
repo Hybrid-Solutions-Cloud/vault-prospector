@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 128" width="520" height="128" role="img" aria-label="Vault Prospector">
+  <title>Vault Prospector</title>
+  <!--
+    Full horizontal lockup: mark plus wordmark. Use for README headers, slides, and store
+    listings. The wordmark uses a system font stack so the file renders without a webfont; convert
+    the text to outlines before sending it anywhere the font stack cannot be trusted.
+  -->
+  <defs>
+    <linearGradient id="vpRingLg" x1="16" y1="16" x2="104" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2b8ae0"/>
+      <stop offset="1" stop-color="#0b5cab"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(12, 12) scale(1.5625)">
+    <!-- Vault door ring -->
+    <circle cx="32" cy="32" r="25" fill="none" stroke="url(#vpRingLg)" stroke-width="5"/>
+
+    <!-- Bolt notches -->
+    <g fill="url(#vpRingLg)">
+      <rect x="30" y="1" width="4" height="7" rx="2"/>
+      <rect x="30" y="56" width="4" height="7" rx="2"/>
+      <rect x="1" y="30" width="7" height="4" rx="2"/>
+      <rect x="56" y="30" width="7" height="4" rx="2"/>
+    </g>
+
+    <!-- Magnifier -->
+    <g fill="none" stroke="#f2a541" stroke-width="5" stroke-linecap="round">
+      <circle cx="28" cy="28" r="11"/>
+      <line x1="36.5" y1="36.5" x2="46" y2="46"/>
+    </g>
+  </g>
+
+  <g font-family="Segoe UI, -apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif">
+    <text x="132" y="58" font-size="38" font-weight="700" fill="#0b5cab" letter-spacing="-0.5">Vault</text>
+    <text x="228" y="58" font-size="38" font-weight="400" fill="#0b5cab" letter-spacing="-0.5">Prospector</text>
+    <text x="133" y="86" font-size="15.5" font-weight="500" fill="#5b7186" letter-spacing="0.4">Search every vault you can sign in to</text>
+  </g>
+</svg>
