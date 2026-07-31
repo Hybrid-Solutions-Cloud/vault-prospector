@@ -2,6 +2,9 @@
 layout: home
 
 hero:
+  image:
+    src: /logo.svg
+    alt: Vault Prospector
   name: Vault Prospector
   text: Find any Azure Key Vault secret, across every tenant
   tagline: A local-first Windows desktop app that indexes Key Vault metadata across all of your Microsoft Entra identities, tenants, and subscriptions — and never reveals a value without an explicit action and a Windows Hello check.

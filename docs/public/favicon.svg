@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Vault Prospector">
+  <title>Vault Prospector</title>
+  <!--
+    Browser-tab icon. Simplified from logo.svg: solid background for contrast against light and
+    dark tab strips, heavier strokes, and no bolt notches, so the mark stays legible at 16px.
+  -->
+  <rect width="64" height="64" rx="14" fill="#0b5cab"/>
+
+  <!-- Vault door ring -->
+  <circle cx="32" cy="32" r="21" fill="none" stroke="#ffffff" stroke-width="6"/>
+
+  <!-- Magnifier -->
+  <g fill="none" stroke="#f2a541" stroke-width="6" stroke-linecap="round">
+    <circle cx="29" cy="29" r="10"/>
+    <line x1="37" y1="37" x2="45" y2="45"/>
+  </g>
+</svg>
