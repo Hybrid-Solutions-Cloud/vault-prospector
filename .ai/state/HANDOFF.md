@@ -16,6 +16,10 @@
 - Added private-endpoint scope AB#6192–6225 to the canonical backlog and plan as not-started future
   work. No implementation or delivery claim is permitted without an approved architecture,
   threat model, source, live topology evidence, and independent review.
+- Renamed AB#6052 to `Roadmap: Create and manage Azure Key Vaults and keys`. It remains New, P4,
+  and in the root backlog with zero children. Its description explicitly excludes it from the
+  current delivery target and prohibits decomposition or scheduling until the product owner
+  advances it.
 - Latest public tag is `v0.3.0-preview.8` at
   `2582a44e50155c80205370c6ec90b9d19eb7a006`. The repo lacks a dedicated Preview 8 evidence record;
   Preview 6 remains the latest fully retained artifact/provenance record.

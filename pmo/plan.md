@@ -367,6 +367,21 @@ ADR, and release-enable evidence remain open
   integration tests.
 - Independent security review approves the design before public enablement.
 
+## Main-roadmap follow-on — Key Vault resource and key lifecycle management
+
+**Priority:** P4
+
+**Status:** Not in the current delivery target; do not decompose or schedule
+
+**Backlog coverage:** AB#6052, `Roadmap: Create and manage Azure Key Vaults and keys`
+
+This follow-on expands beyond Phase 8's four narrowly controlled operations into Key Vault
+resource creation/editing, broader key lifecycle and rotation-policy management, and separately
+controlled destructive actions. It remains on the main roadmap, but work begins only after the
+product owner explicitly advances it into a delivery target. At that point it requires Story
+decomposition, design and security approval, implementation, controlled Azure tests, and exact
+release evidence.
+
 ## Phase 9 — Desktop UI research and redesign
 
 **Priority:** P2
@@ -661,7 +676,7 @@ backup operator, retained hosted runs, the complete exercise, and Microsoft Stor
 | Security and governance | Phases 0, 3, 8, 14, and 15 |
 | iPhone and Android | Phase 13 |
 | Secure first-run and identity architecture | Phases 2–5 |
-| Vault discovery and governed writes | Phases 6 and 8 |
+| Vault discovery and governed writes | Phases 6 and 8; AB#6052 remains an unscheduled main-roadmap follow-on |
 | Taskbar/background operation | Phase 10 |
 | Desktop UI research/refinement | Phase 9 |
 | Browser integration | Phase 11 |

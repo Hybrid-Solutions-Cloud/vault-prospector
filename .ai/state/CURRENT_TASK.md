@@ -28,7 +28,9 @@ Next:
    an explicitly evidenced replacement Preview.
 2. Record exact-package live workflow evidence and close only items whose complete Acceptance
    Criteria pass.
-3. Decompose AB#6052 into implementable Stories before scheduling it.
+3. Keep AB#6052 (`Roadmap: Create and manage Azure Key Vaults and keys`) in the P4 root backlog.
+   Do not decompose or schedule it until the product owner explicitly advances it into a delivery
+   target.
 4. Decide the supported private-connectivity architecture before starting AB#6211 or later.
 5. Record repository attribution for cross-repository work after the other two product repositories
    and the authoritative mapping mechanism are confirmed.

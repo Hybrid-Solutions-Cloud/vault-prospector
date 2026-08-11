@@ -46,7 +46,9 @@ The project and default team names are `HCS -Vault Prospector` and
   verification. No equivalent Preview 8 claim is inferred.
 - AB#6192–6225 has no corresponding implementation, ADR, threat model, topology diagram, lab
   evidence, or packaged validation. It remains future planning scope.
-- AB#6052 remains under-decomposed and should receive child Stories before scheduling.
+- AB#6052 is `Roadmap: Create and manage Azure Key Vaults and keys`. It remains New, P4, in the
+  root backlog, and outside the current delivery target. It must not be decomposed or scheduled
+  until the product owner explicitly advances it.
 - Cross-repository attribution remains unresolved until the other two product repositories and the
   approved ADO representation are identified.
 
