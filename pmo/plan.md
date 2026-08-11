@@ -36,7 +36,9 @@ Status terms used in PMO reporting:
 
 ## Current product state
 
-- Current public version: `0.3.0-preview.6`, unsigned and restricted to non-production evaluation.
+- Latest public version: `0.3.0-preview.8`, unsigned and restricted to non-production evaluation.
+  The immutable tag points to `2582a44e50155c80205370c6ec90b9d19eb7a006`; a dedicated Preview 8
+  release-evidence record is still missing, so the release-readiness matrix must retain that gap.
 - Core implemented path: interactive Entra sign-in, multiple app-owned MSAL identities,
   subscription and Key Vault discovery, secret/key/certificate metadata indexing, search, explicit
   value retrieval, verified copy, encrypted optional offline access, workspaces, and read-only Azure
@@ -86,7 +88,7 @@ is executed in the dependency order below; a phase may be split into multiple Pr
 
 ### Scope
 
-- Maintain all 45 backlog stories in `pmo/backlog.md`.
+- Maintain every canonical backlog story in `pmo/backlog.md`.
 - Assign every story an implementation status, source evidence, target phase, and acceptance test.
 - Keep one implementation plan and one release-readiness matrix; do not create conflicting status
   documents.
@@ -473,6 +475,37 @@ assistive-technology behavior remain required evidence.
 - Origin, frame, tab, item mapping, identity, and user-presence checks are enforced and tested.
 - Browser-vault interoperability uses supported APIs and explicit consent only.
 
+## Future private-connectivity roadmap — private-endpoint Key Vaults
+
+**Priority:** P4
+
+**Status:** Not started; canonical backlog and ADO hierarchy only
+
+**Backlog coverage:** Epic 16; ADO AB#6192–6225
+
+### Scope
+
+- Document representative private-endpoint/DNS/topology constraints and evaluate supported Azure
+  Bastion, VNet-hosted connector, and delegated-execution alternatives.
+- Select the architecture through an approved ADR and threat model before implementation begins.
+- Define governed connectivity profiles, resource mappings, connector authentication,
+  end-to-end protection, setup, health, and actionable diagnostics.
+- Route discovery and separately authorized Key Vault operations only through the selected,
+  policy-constrained private path.
+- Validate representative topologies and security boundaries, then publish deployment and support
+  guidance with exact tested constraints.
+
+### Exit criteria
+
+- An approved ADR and threat model identify the supported architecture and rejected alternatives.
+- Connector/profile/routing source and tests enforce identity, tenant, subscription, vault,
+  operation, network, and failure-isolation boundaries.
+- Representative private-network and adverse-path evidence passes against an exact packaged
+  candidate, followed by independent security review and support approval.
+
+No implementation, design decision, lab evidence, or release claim currently exists in this
+repository. The ADO hierarchy is planning scope only.
+
 ## Future provider roadmap — CyberArk
 
 **Priority:** P4
@@ -632,6 +665,7 @@ backup operator, retained hosted runs, the complete exercise, and Microsoft Stor
 | Taskbar/background operation | Phase 10 |
 | Desktop UI research/refinement | Phase 9 |
 | Browser integration | Phase 11 |
+| Private-endpoint Key Vault connectivity | Future private-connectivity roadmap |
 | CyberArk | Phase 12 |
 | Preview feedback and GA | Phase 15 |
 

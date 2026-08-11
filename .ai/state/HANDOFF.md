@@ -1,5 +1,28 @@
 # Session handoff
 
+## ADO-to-code tracking reconciliation — 2026-08-11
+
+- Audited all 124 nonterminal product-backlog items against source at `v0.3.0-preview.8` and the
+  repository's retained release evidence.
+- Repaired AB#6165 and AB#5334 Acceptance Criteria and corrected stale Preview status in AB#5296,
+  AB#5298, and AB#5314. Direct Azure DevOps JSON Patch preserved full rich-text fields; post-write
+  checks found zero missing Acceptance Criteria and zero stale target descriptions.
+- Moved the 21 Active P2 items to `2026-Q3-S4`; split 68 Active P3 items into 29 application,
+  documentation, identity, and release items in `2026-Q3-S5` and 39 browser, provider, and security
+  items in `2026-Q3-S6`; returned the two Active P4 items to New/root backlog.
+- Verified final ADO totals: 248 items; 89 Active, 92 New, 13 Resolved, 53 Closed, 1 Removed; zero
+  Active items at root. The project and default team remain `HCS -Vault Prospector` and
+  `HCS -Vault Prospector Team`.
+- Added private-endpoint scope AB#6192–6225 to the canonical backlog and plan as not-started future
+  work. No implementation or delivery claim is permitted without an approved architecture,
+  threat model, source, live topology evidence, and independent review.
+- Latest public tag is `v0.3.0-preview.8` at
+  `2582a44e50155c80205370c6ec90b9d19eb7a006`. The repo lacks a dedicated Preview 8 evidence record;
+  Preview 6 remains the latest fully retained artifact/provenance record.
+- Browser-extension tests (6/6) and production build passed during the audit. The repository-wide
+  build could not start because this workstation has .NET SDK `9.0.316`, while `global.json`
+  requires `10.0.302`; no full-build pass is claimed.
+
 ## 0.3.0-preview.6 current release — 2026-07-27
 
 - Exact-main source `8751df7f2a6c1014f3e51c4b570625364f9fb5f9` passed HCS run
@@ -30,7 +53,8 @@
   governed Azure mutations.
 - PR #60 merged the verified release record. PR #61 merged the post-release ADO and cleanup record;
   current documentation main is `0ba5fcc022ffc5c3ae3f481f646c8518ed406822`.
-- The private Agile ADO project is correctly named `Vault Prospector`. It has 198 work items:
+- At that time the private Agile ADO project was named `Vault Prospector`; its current governed
+  name is `HCS -Vault Prospector`. It had 198 work items:
   53 Closed, 1 Removed, and 144 open with named work or evidence. Zero open parents have only
   terminal children.
 - GitHub Bug #62 and ADO mirror AB#5799 track the product-owner-observed missing installer
@@ -964,8 +988,8 @@ the repository and must not be committed.
 
 - HCS MCP confirmed the solution must use Azure DevOps for CI/CD rather than mixed GitHub Actions
   and ADO workflows.
-- Private ADO project `Vault Prospector` now contains CI definition `5`, scheduled operational
-  readiness definition `6`, and release definition `7`.
+- At that point the private ADO project (then named `Vault Prospector`) contained CI definition
+  `5`, scheduled operational readiness definition `6`, and release definition `7`.
 - GitHub App connection `Hybrid-Solutions-Cloud GitHub`, Azure connection `HCS Platform Azure`,
   and Key Vault-linked variable group `vp-prd-secrets` are authorized to their required pipelines.
 - Platform governance registration PR `#7` merged as

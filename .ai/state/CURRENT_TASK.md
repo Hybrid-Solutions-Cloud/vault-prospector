@@ -1,31 +1,34 @@
 # Current task
 
-Complete product-owner installed workflow validation of the published
-`0.3.0-preview.6` Windows manual-test Preview, then update only the work items whose complete
-Acceptance Criteria receive observable evidence.
+Reconcile Azure DevOps, the canonical PMO inventory, and deployed source without converting
+implementation evidence into acceptance or release-readiness claims.
 
-Confirmed on 2026-07-27:
+Confirmed on 2026-08-11:
 
-- Current public source is `8751df7f2a6c1014f3e51c4b570625364f9fb5f9`.
-- Exact-main run `30229406561` passed the full HCS Windows candidate.
-- Immutable tag `v0.3.0-preview.6` release run `30233704752` passed and published 16 assets.
-- Independent public verification passed all five adjacent package checksums.
-- The exact MSI SHA-256 is
-  `1FAABD20B917C26B2150DA49A6F1558CE1DAE0F2FA6E215038FB876EC5F0040C`.
-- PRs #60 and #61 merged the release and final ADO reconciliation records.
-- The private Agile ADO project is correctly named `Vault Prospector`.
-- The ADO hierarchy contains 198 items: 53 Closed, 1 Removed, and 144 open with named work or
-  evidence. No open parent has only terminal children.
-- GitHub Bug #62 and ADO mirror AB#5799 track the missing installer logo/red-X placeholder. The
-  records are tracking-only; no fix has been attempted.
-- The Tier-4 Windows resource group is deleted, no repository runner remains registered, and
-  temporary build credentials are soft-deleted.
-- Source remains private; only release binaries are public.
+- The private Agile ADO project is named `HCS -Vault Prospector`; its default team is
+  `HCS -Vault Prospector Team`.
+- ADO contains 248 items: 89 Active, 92 New, 13 Resolved, 53 Closed, and 1 Removed.
+- The 89 Active items are assigned to dated iterations: 21 in `2026-Q3-S4`, 29 in
+  `2026-Q3-S5`, and 39 in `2026-Q3-S6`; none remains at the root iteration.
+- All 124 nonterminal Epic/Feature/User Story/Bug records have Acceptance Criteria.
+- AB#6165 and AB#5334 have corrected distinct Acceptance Criteria. AB#5296, AB#5298, and AB#5314
+  now state that their implementation is in Preview 8 while retaining the open live-validation
+  requirements.
+- `v0.3.0-preview.8` is the latest public tag and points to
+  `2582a44e50155c80205370c6ec90b9d19eb7a006`.
+- No dedicated Preview 8 release-evidence record exists in this repository. Preview 6 remains the
+  latest release with complete retained artifact/provenance evidence; do not infer Preview 8
+  hashes, asset counts, independent downloads, or installed validation.
+- Private-endpoint connectivity AB#6192–6225 is future backlog scope. No corresponding code, ADR,
+  threat model, lab evidence, or deployment exists.
 
 Next:
 
-1. Record product-owner observations from the exact installed Preview.
-2. Close validation Tasks and roll up Stories only when every child and Acceptance Criterion pass.
-3. Continue live Azure/browser, accessibility/usability, independent-review, enterprise,
-   Microsoft Store signing, and GA gates in plan order.
-4. Keep mobile on its separate roadmap and CyberArk on the post-GA roadmap.
+1. Obtain and retain exact Preview 8 artifact/provenance/independent-download evidence, or publish
+   an explicitly evidenced replacement Preview.
+2. Record exact-package live workflow evidence and close only items whose complete Acceptance
+   Criteria pass.
+3. Decompose AB#6052 into implementable Stories before scheduling it.
+4. Decide the supported private-connectivity architecture before starting AB#6211 or later.
+5. Record repository attribution for cross-repository work after the other two product repositories
+   and the authoritative mapping mechanism are confirmed.
