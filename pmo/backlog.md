@@ -23,6 +23,12 @@ reported on 2026-08-12. Local source now enumerates every ARM tenant available t
 account, acquires tenant-qualified tokens for subscription enumeration, isolates failures by
 tenant, and persists explicit tenant plus subscription inclusion choices. Exact installed-package
 validation across the product owner's multi-tenant account remains open.
+ADO Bug AB#7337 is the current P1/S1 release blocker. Installed Preview 10 cannot unlock an
+Entra-backed Windows user in Remote Desktop. Preview 11 proved that adding the `AzureAD` authority
+does not solve Conditional Access MFA (`AADSTS50076`) because password-only Windows logon cannot
+complete the required interaction. The revised fix uses fresh interactive Entra verification and
+binds the returned object ID to the current Windows cloud SID; exact Preview 12 MSI,
+protected-branch CI, and immutable public-release evidence remain required.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).
@@ -36,7 +42,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | --- | --- | --- | --- |
 | Normal Windows installer and update path | Implemented; installer-branding validation open | MSI, portable ZIP, immutable GitHub Preview releases, upgrade/repair/uninstall/rollback validation, and the Preview 8 installer-logo source correction | Exact-package installer visual lifecycle evidence, trusted signing, WinGet catalog acceptance, Chocolatey catalog acceptance |
 | Interactive Entra user login | Implemented | MSAL public-client system-browser authentication with app-owned token caches | Full live tenant/guest/MFA/Conditional Access evidence |
-| Local login/unlock and MFA boundary | Included in 0.2 Preview; validation open | Fail-closed app unlock and sensitive operations use Windows verification; recovery archives failed state after typed confirmation and fresh verification | Full live Windows Hello/recovery coverage and independent review |
+| Local login/unlock and MFA boundary | Preview 10/11 Entra/RDP blocker; revised fix pending package validation | Fail-closed app unlock and sensitive operations use Windows verification; Entra remote sessions use fresh interactive MFA-capable verification bound to the current cloud SID, while local/domain sessions retain native SID verification | AB#7337 exact Preview 12 Entra/RDP validation, local/domain/Entra negative matrix, VDI/AVD coverage, Windows Hello/recovery coverage, and independent review |
 | Mandatory local encryption | Implemented locally, review open | SQLCipher metadata and AES-GCM offline values with DPAPI keys; verified archive plus authenticated-journal all-or-rollback rotation engine; startup recovery; explicit verified per-archive retention/deletion UX; no plaintext toggle | User-exposed rotation only after independent review, live power-loss validation, supported cross-device decision remains resync |
 | Isolation from Azure CLI/PowerShell terminal context | Implemented | App-owned MSAL accounts and caches; no terminal-context credential provider | Broader live multi-account validation and clearer active identity/tenant UI |
 | Managed-identity authentication | Included in 0.2 Preview; validation open | Azure-host detection, profile UI, isolated credential flow, ARM-token validation, local disable/revoke controls, automated tests | Live Azure matrix, external assignment-revocation evidence, independent review |

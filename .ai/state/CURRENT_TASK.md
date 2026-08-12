@@ -1,5 +1,36 @@
 # Current task
 
+Fix and publish AB#7337 before resuming any other issue or feature work.
+
+Current implementation branch: `fix/entra-rdp-unlock` from public Preview 10 source
+`a0168c390568af1fa679ce6c02f6c43f46c66242`.
+
+- Exact installed Preview 10 fails at **Verify and continue** for the current Entra-backed Windows
+  account in RDP, before application Entra sign-in is reachable.
+- Windows Hello is unavailable in the remote session; remote credential policy is allowed; the
+  fallback returns `RemoteCredentialFailed`.
+- Preview 11 proved that supplying the missing `AzureAD` authority was insufficient. Windows
+  Security and AAD Operational events showed `0xC0000250`, `interaction_required`, and
+  `AADSTS50076`: Conditional Access required MFA, which password-only `LogonUserW` cannot perform.
+- Entra-backed remote sessions now use a fresh system-browser Entra sign-in that can satisfy MFA.
+  The authenticated Entra object ID must equal the object ID encoded in the current Windows cloud
+  SID. A different account cannot unlock the current profile, and the unlock token is not persisted.
+- Local and Active Directory domain sessions retain the native credential verifier. They are not a
+  prerequisite or workaround for Entra-only VDI estates.
+- The locked screen now displays the exact installed informational version.
+- The revised Release gate passes locked restore, vulnerability inspection, formatting, a
+  zero-warning build, and all 482 tests. Browser-extension tests and production build also pass.
+
+Next:
+
+1. Commit the exact reviewed source and package `0.3.0-preview.12`.
+2. Install that exact MSI on the current Entra-joined RDP VM and prove successful current-account
+   MFA unlock plus a redacted authorized diagnostic event.
+3. Push, run protected-branch CI, merge only after the exact head passes, then tag and publish the
+   immutable Preview 12 artifacts.
+
+---
+
 Implement, deliver, and validate the 2026-08-12 multi-tenant discovery correction without claiming
 that a local build proves the installed Azure workflows.
 

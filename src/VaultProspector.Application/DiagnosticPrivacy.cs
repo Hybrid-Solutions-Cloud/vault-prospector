@@ -30,6 +30,7 @@ public static class DiagnosticPrivacy
                 "sync_scope_failed",
                 "sync_scope_retry_completed",
                 "windows_security_boundary_monitor_unavailable",
+                "windows_remote_verification_completed",
                 "workload_credential_rotated",
                 "workload_credential_rotation_failed",
                 "workload_identity_connected",
@@ -94,6 +95,13 @@ public static class DiagnosticPrivacy
                 "interaction_required",
                 "azure_request",
                 "provider_error",
+                "credential_rejected",
+                "credential_unpack_failed",
+                "current_identity_unavailable",
+                "interactive_authentication_failed",
+                "native_failure",
+                "prompt_unavailable",
+                "sid_mismatch",
             ],
             StringComparer.Ordinal);
 

@@ -1,5 +1,33 @@
 # Session handoff
 
+## Entra-backed RDP/VDI unlock correction — 2026-08-12
+
+- AB#7337 is the sole active priority by product-owner direction; defer all other defects and
+  feature work until the fix is published.
+- Public Preview 10 was reproduced on the current Entra-joined VM in RDP. The credential prompt
+  closes normally, then the app reports that the supplied credential did not verify the current
+  signed-in account (`RemoteCredentialFailed`). No pre-unlock diagnostic log was emitted.
+- The current process is Entra-backed, Windows Hello is not provisioned in RDP, the device has a
+  healthy PRT/WAM state, and no machine policy blocks the approved remote fallback. A separate
+  local-account session is not an acceptable VDI workaround and cannot unlock the Entra profile's
+  DPAPI-bound data.
+- Preview 11 supplied the `AzureAD` authority but still failed. Its categorical app diagnostic was
+  `credential_rejected`; correlated Windows Security and AAD Operational events showed
+  `0xC0000250`, `interaction_required`, and `AADSTS50076` because Conditional Access required MFA.
+  This proves a password-only Windows logon call cannot be the Entra VDI verification path.
+- The revised fix routes an Entra-backed current Windows account to a fresh, system-browser Entra
+  sign-in capable of satisfying MFA. The returned Entra object ID must match the object ID encoded
+  in the current Windows cloud SID. It does not persist the verification token or add a connected
+  Vault Prospector identity. Local/domain sessions retain native current-SID credential validation.
+- Added allowlisted categorical diagnostics without account, UPN, tenant, password, verification
+  reason, token, or raw exception data. Added the exact installed version to the locked screen.
+- The revised Release gate passes locked restore, no vulnerable packages, formatting, zero
+  warnings/errors, and 482/482 tests. Browser-extension tests and production build also pass.
+- Next gate is an exact locally packaged Preview 12 MSI installed and verified in this same
+  Entra/RDP session. Do not merge, tag, publish, or claim AB#7337 fixed until that passes.
+
+---
+
 ## Multi-tenant subscription and Key Vault correction — 2026-08-12
 
 - The product owner reported that one connected interactive account has access across 5–6 Entra

@@ -6,6 +6,20 @@ namespace VaultProspector.App.Tests;
 public sealed class AccessibilityMarkupTests
 {
     [Fact]
+    public void LockedScreenShowsInstalledVersion()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var version = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Locked screen Vault Prospector version");
+
+        Assert.Equal("TextBlock", version.Name.LocalName);
+        Assert.Equal("{Binding VersionLabel}", Attribute(version, "Text")?.Value);
+    }
+
+    [Fact]
     public void AtlasUsesOneLightControlThemeAcrossEveryWindowsColorMode()
     {
         var application = XDocument.Load(
