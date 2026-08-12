@@ -2202,8 +2202,8 @@ public sealed partial class MainViewModel(
                 "Retry from an interactive AVD or Remote Desktop desktop. If the prompt remains unavailable, ask your administrator to review remote verification policy.",
                 "Application locked — remote Windows verification unavailable."),
             UserVerificationResult.RemoteCredentialFailed => (
-                "Vault Prospector remains locked because the supplied Windows credential did not verify the current signed-in account.",
-                "Retry with the credential for this Windows session. Credentials for a different account cannot unlock this user's encrypted data.",
+                "Vault Prospector remains locked because verification did not confirm the current signed-in account.",
+                "Retry verification for this Windows session. A different account cannot unlock this user's encrypted data.",
                 "Application locked — current Windows account not verified."),
             _ => (
                 "Vault Prospector remains locked because verification did not complete.",

@@ -9,22 +9,25 @@ Current implementation branch: `fix/entra-rdp-unlock` from public Preview 10 sou
   account in RDP, before application Entra sign-in is reachable.
 - Windows Hello is unavailable in the remote session; remote credential policy is allowed; the
   fallback returns `RemoteCredentialFailed`.
-- Root cause: Credential UI can return an unqualified Entra UPN/account alias, while the verifier
-  forwarded a null domain to `LogonUserW`. Windows 10/11 may require the `AzureAD` authority.
-- The fix supplies `AzureAD` only when the current process identity is already Entra-backed. The
-  returned token must still equal the current process SID, so other accounts remain rejected.
-- Redacted diagnostics now distinguish prompt unavailable, unpack failure, credential rejection,
-  SID mismatch, and native failure without recording user, tenant, reason, or credentials.
-- The Release gate passes locked restore, vulnerability inspection, formatting, a zero-warning
-  build, and all 471 tests.
+- Preview 11 proved that supplying the missing `AzureAD` authority was insufficient. Windows
+  Security and AAD Operational events showed `0xC0000250`, `interaction_required`, and
+  `AADSTS50076`: Conditional Access required MFA, which password-only `LogonUserW` cannot perform.
+- Entra-backed remote sessions now use a fresh system-browser Entra sign-in that can satisfy MFA.
+  The authenticated Entra object ID must equal the object ID encoded in the current Windows cloud
+  SID. A different account cannot unlock the current profile, and the unlock token is not persisted.
+- Local and Active Directory domain sessions retain the native credential verifier. They are not a
+  prerequisite or workaround for Entra-only VDI estates.
+- The locked screen now displays the exact installed informational version.
+- The revised Release gate passes locked restore, vulnerability inspection, formatting, a
+  zero-warning build, and all 482 tests. Browser-extension tests and production build also pass.
 
 Next:
 
-1. Commit the exact reviewed source and package `0.3.0-preview.11`.
+1. Commit the exact reviewed source and package `0.3.0-preview.12`.
 2. Install that exact MSI on the current Entra-joined RDP VM and prove successful current-account
-   unlock plus a redacted authorized diagnostic event.
+   MFA unlock plus a redacted authorized diagnostic event.
 3. Push, run protected-branch CI, merge only after the exact head passes, then tag and publish the
-   immutable Preview 11 artifacts.
+   immutable Preview 12 artifacts.
 
 ---
 

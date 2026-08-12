@@ -11,16 +11,19 @@
   healthy PRT/WAM state, and no machine policy blocks the approved remote fallback. A separate
   local-account session is not an acceptable VDI workaround and cannot unlock the Entra profile's
   DPAPI-bound data.
-- Root cause is the missing Entra authority on Credential UI output. The fix binds an unqualified
-  credential to `AzureAD` only when the current process identity is already Entra-backed, then
-  retains the mandatory resulting-token/current-process SID equality check.
-- Added allowlisted categorical diagnostics for authorized, cancelled, prompt unavailable,
-  credential unpack failure, credential rejection, SID mismatch, and native failure. No account,
-  UPN, tenant, password, verification reason, or raw native error is logged.
-- Focused gates pass 97 platform tests and 4 privacy/security tests. The full governed Release gate
-  passes locked restore, no vulnerable packages, formatting, zero warnings/errors, and 471/471
-  tests.
-- Next gate is an exact locally packaged Preview 11 MSI installed and verified in this same
+- Preview 11 supplied the `AzureAD` authority but still failed. Its categorical app diagnostic was
+  `credential_rejected`; correlated Windows Security and AAD Operational events showed
+  `0xC0000250`, `interaction_required`, and `AADSTS50076` because Conditional Access required MFA.
+  This proves a password-only Windows logon call cannot be the Entra VDI verification path.
+- The revised fix routes an Entra-backed current Windows account to a fresh, system-browser Entra
+  sign-in capable of satisfying MFA. The returned Entra object ID must match the object ID encoded
+  in the current Windows cloud SID. It does not persist the verification token or add a connected
+  Vault Prospector identity. Local/domain sessions retain native current-SID credential validation.
+- Added allowlisted categorical diagnostics without account, UPN, tenant, password, verification
+  reason, token, or raw exception data. Added the exact installed version to the locked screen.
+- The revised Release gate passes locked restore, no vulnerable packages, formatting, zero
+  warnings/errors, and 482/482 tests. Browser-extension tests and production build also pass.
+- Next gate is an exact locally packaged Preview 12 MSI installed and verified in this same
   Entra/RDP session. Do not merge, tag, publish, or claim AB#7337 fixed until that passes.
 
 ---

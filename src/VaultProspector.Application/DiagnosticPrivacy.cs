@@ -97,6 +97,8 @@ public static class DiagnosticPrivacy
                 "provider_error",
                 "credential_rejected",
                 "credential_unpack_failed",
+                "current_identity_unavailable",
+                "interactive_authentication_failed",
                 "native_failure",
                 "prompt_unavailable",
                 "sid_mismatch",

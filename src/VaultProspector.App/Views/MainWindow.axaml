@@ -224,7 +224,14 @@
                     VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="38,30,38,24" Spacing="20">
           <StackPanel Spacing="6">
-            <TextBlock Classes="screen-eyebrow" Text="LOCAL PROTECTION" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <TextBlock Classes="screen-eyebrow" Text="LOCAL PROTECTION" />
+              <TextBlock Grid.Column="1"
+                         Text="{Binding VersionLabel}"
+                         FontSize="{StaticResource VaultFontSize11}"
+                         Foreground="{DynamicResource VaultColorMuted}"
+                         AutomationProperties.Name="Locked screen Vault Prospector version" />
+            </Grid>
             <TextBlock Classes="screen-title" Text="Unlock this installation" />
             <TextBlock Classes="screen-description"
                        Text="Windows verifies that you are present before Vault Prospector opens its encrypted local data." />

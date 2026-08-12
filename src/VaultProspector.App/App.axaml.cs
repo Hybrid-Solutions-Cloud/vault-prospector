@@ -49,10 +49,14 @@ public partial class App : Avalonia.Application
                     new WindowsHelloVerificationService(
                         () =>
                             window?.TryGetPlatformHandle()?.Handle ?? 0),
-                    new RemoteWindowsCredentialVerificationService(
-                        () =>
-                            window?.TryGetPlatformHandle()?.Handle ?? 0,
-                        diagnostics),
+                    new CurrentWindowsRemoteVerificationService(
+                        new EntraWindowsAccountVerificationService(
+                            ProductIdentity.DefaultClientId,
+                            diagnostics),
+                        new RemoteWindowsCredentialVerificationService(
+                            () =>
+                                window?.TryGetPlatformHandle()?.Handle ?? 0,
+                            diagnostics)),
                     enterprisePolicy);
             var revealVerificationSession =
                 new RevealVerificationSession(
