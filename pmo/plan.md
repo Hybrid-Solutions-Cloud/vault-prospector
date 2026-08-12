@@ -66,6 +66,13 @@ Status terms used in PMO reporting:
   pending installed-browser validation and distribution review.
 - Major GA work: signing, independent security review, complete live identity/accessibility test
   matrices, public package catalogs, feedback thresholds, and stability evidence.
+- Current remediation batch (local source, 2026-08-11): GitHub #91–#93 / ADO AB#7299,
+  AB#7301, and AB#7303 correct all-connected-identity background sync, managed-identity
+  subscription targeting, and dismissible errors. ADO Story AB#7305 adds the discovered
+  subscription/tenant/account picker. Tasks AB#7307–#7308 under existing Bug #40 / AB#5573 retain
+  safe diagnostic scope/category/correlation fields and require the corrected installed build to
+  classify any remaining Azure permission or provider failures. No installed-package acceptance
+  is claimed yet.
 
 ## Priority model
 

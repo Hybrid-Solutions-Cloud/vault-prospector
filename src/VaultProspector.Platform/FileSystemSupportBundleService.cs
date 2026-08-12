@@ -422,6 +422,42 @@ public sealed class FileSystemSupportBundleService(
             return;
         }
 
+        if (field.NameEquals("scope_id"))
+        {
+            writer.WriteString(
+                field.Name,
+                DiagnosticPrivacy.Pseudonymize(
+                    field.Value.ValueKind ==
+                    JsonValueKind.String
+                        ? field.Value.GetString()
+                        : null));
+            return;
+        }
+
+        if (field.NameEquals("correlation_id"))
+        {
+            writer.WriteString(
+                field.Name,
+                DiagnosticPrivacy.NormalizeCorrelationId(
+                    field.Value.ValueKind ==
+                    JsonValueKind.String
+                        ? field.Value.GetString()
+                        : null));
+            return;
+        }
+
+        if (field.NameEquals("error_category"))
+        {
+            writer.WriteString(
+                field.Name,
+                DiagnosticPrivacy.NormalizeErrorCategory(
+                    field.Value.ValueKind ==
+                    JsonValueKind.String
+                        ? field.Value.GetString()
+                        : null));
+            return;
+        }
+
         if (field.NameEquals("identity_type"))
         {
             writer.WriteString(

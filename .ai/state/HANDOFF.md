@@ -1,5 +1,38 @@
 # Session handoff
 
+## Installed-support remediation implementation — 2026-08-11
+
+- Inspected the product-owner support bundle containing 2,167 events across three connected
+  identities. It showed 1,544 partial scope failures but the exported safe scope, category, and
+  correlation fields were null. One identity continued refreshing through August 11 while the
+  other two stopped on August 5.
+- Root causes: the background timer synchronized only `SelectedIdentity`; subscription selection
+  copied the local `SubscriptionAccess.Id` instead of the Azure `SubscriptionId`; the global error
+  action only restored focus; and support-bundle re-sanitization discarded approved string fields.
+- Created GitHub Bugs #91–#93 and ADO mirrors AB#7299, AB#7301, and AB#7303 with child Tasks
+  AB#7300, AB#7302, and AB#7304. Created ADO Story AB#7305 with Task AB#7306 for the aggregated
+  subscription picker. Added Tasks AB#7307–#7308 under existing Bug #40 / AB#5573 rather than
+  duplicating the isolated-sync bug.
+- Implemented sequential metadata-only synchronization for every enabled, ready, policy-allowed
+  connected identity; aggregate status; refreshed search/subscription metadata; a subscription
+  picker showing Azure subscription name/ID, tenant, and associated connected account; the real
+  Azure subscription ID for managed-identity discovery; a dismiss command for actionable errors;
+  and privacy-safe scope/category/correlation preservation.
+- The product boundary is explicit in the UI: workload candidates stay in Administration until a
+  supported connection is deliberately configured and synchronized. Find Secrets lists indexed
+  vault objects, not discovered identities.
+- Installed SDK 10.0.302 only under `D:/tmp/dotnet-vp-10`. Targeted suites pass (App 114,
+  Platform 92, Security 3). `pwsh ./scripts/Build.ps1 -Configuration Release` passes locked
+  restore, vulnerability inspection, format verification, a zero-warning/error build, and all
+  459 tests.
+- The full locked gate initially exposed three stale downstream lock files from the already
+  committed MSAL 4.87 bump. A forced solution restore mechanically updated only those three locks;
+  the locked Release gate then passed.
+- No installed-package or live-Azure acceptance is claimed. Next: commit/push, protected-branch
+  CI, corrected package installation, three-identity retest, and a new support bundle for AB#7308.
+
+---
+
 ## ADO-to-code tracking reconciliation — 2026-08-11
 
 - Audited all 124 nonterminal product-backlog items against source at `v0.3.0-preview.8` and the

@@ -82,7 +82,7 @@
           <TextBlock Text="{Binding ErrorTitle}" FontSize="{StaticResource VaultFontSize16}" FontWeight="SemiBold" Foreground="White" />
           <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="White" />
           <TextBlock Text="{Binding RecoveryText}" TextWrapping="Wrap" Foreground="#FECACA" FontWeight="SemiBold" />
-          <Button x:Name="ActionableErrorAnnouncementTarget" Content="Return to previous action" Click="ActionableErrorAnnouncementTarget_OnClick" AutomationProperties.Name="{Binding ErrorAnnouncement}" Background="#FECACA" Foreground="#3F1616" HorizontalAlignment="Left" />
+          <Button x:Name="ActionableErrorAnnouncementTarget" Content="Dismiss error and return" Command="{Binding DismissActionableErrorCommand}" Click="ActionableErrorAnnouncementTarget_OnClick" AutomationProperties.Name="{Binding ErrorAnnouncement}" Background="#FECACA" Foreground="#3F1616" HorizontalAlignment="Left" />
         </StackPanel>
       </Grid>
     </Border>
@@ -960,10 +960,18 @@
                         HorizontalAlignment="Left"
                         AutomationProperties.Name="Authorize service principal directory discovery" />
                 <TextBlock Text="Service-principal listing requests delegated Application.Read.All only after this explicit action. Microsoft Entra may require administrator consent. No Graph write permission is requested." TextWrapping="Wrap" Opacity="0.75" />
-                <TextBlock Text="Exact subscription ID" />
-                <TextBox Text="{Binding AdministrationSubscriptionId}"
-                         PlaceholderText="00000000-0000-0000-0000-000000000000"
-                         AutomationProperties.Name="Workload administration subscription ID" />
+                <TextBlock Text="Subscription and connected account" />
+                <ComboBox ItemsSource="{Binding AdministrationSubscriptionOptions}"
+                          SelectedItem="{Binding SelectedAdministrationSubscription}"
+                          PlaceholderText="Sync a connected account to load subscriptions"
+                          AutomationProperties.Name="Workload administration subscription and connected account">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding Label}" TextWrapping="Wrap" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Text="Subscriptions come from metadata already discovered for every enabled, connected interactive account. The selection includes the Azure subscription name and ID, tenant, and account used for the request." TextWrapping="Wrap" Opacity="0.75" />
                 <TextBlock Text="Exact Key Vault resource ID for permission assessment and optional provisioning preview" />
                 <TextBox Text="{Binding AdministrationVaultResourceId}"
                          PlaceholderText="/subscriptions/.../providers/Microsoft.KeyVault/vaults/..."
@@ -985,6 +993,7 @@
                         AutomationProperties.Name="Assess selected workload identity permissions at exact Key Vault" />
                 <TextBlock Text="Assessment is read-only. It evaluates the selected administrator at exact resources and the workload identity's observable RBAC grants, inheritance, deny assignments, and conditions. Conditional or incomplete evidence never appears as allowed." TextWrapping="Wrap" Opacity="0.75" />
                 <TextBlock Text="Visible workload identities" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" />
+                <TextBlock Text="Discovered workload identities stay in Administration for review. They appear in Find Secrets only after you explicitly configure a supported connection and synchronize it; Find Secrets lists vault objects, not identities." TextWrapping="Wrap" Opacity="0.75" />
                 <TextBox Text="{Binding WorkloadIdentitySearchText}"
                          PlaceholderText="Filter by name, type, client ID, or principal ID"
                          AutomationProperties.Name="Filter eligible workload identities" />

@@ -1,5 +1,38 @@
 # Current task
 
+Implement and validate the 2026-08-11 support-bundle remediation batch without claiming that a
+local build proves the installed Azure workflows.
+
+Current implementation branch: `chore/tracking-reconciliation-20260811`.
+
+- GitHub #91 / ADO AB#7299: background metadata sync now processes every enabled, ready,
+  policy-allowed connected identity instead of only the selected identity.
+- GitHub #92 / ADO AB#7301 and Story AB#7305: workload Administration uses the real Azure
+  subscription ID and an aggregated subscription/name/tenant/account picker populated from all
+  ready interactive connections.
+- GitHub #93 / ADO AB#7303: the actionable error banner has a real dismiss command.
+- Existing GitHub #40 / ADO AB#5573, Tasks AB#7307–#7308: support bundles retain pseudonymous
+  scope, bounded correlation ID, and allowlisted error category so the remaining missing-object
+  failures can be classified safely.
+- Discovered workload identities remain Administration candidates. They do not appear in Find
+  Secrets until explicitly configured as a supported connection and synchronized; Find Secrets
+  contains vault objects, not identities.
+- Exact .NET SDK 10.0.302 was installed under `D:/tmp/dotnet-vp-10`. The Release gate passes a
+  locked restore, vulnerability scan, formatting, zero-warning build, and all 459 tests.
+- A prior MSAL 4.87 dependency bump left three downstream NuGet lock files stale; those locks were
+  mechanically reconciled so the locked gate could execute.
+
+Next:
+
+1. Commit and push this implementation and tracking update.
+2. Run protected-branch CI and review the exact head.
+3. Package/install the corrected build and repeat sync plus managed-identity discovery with the
+   product owner's three connected identities.
+4. Generate a new support bundle after that run and use AB#7308 to separate any remaining Azure
+   access failures from application defects.
+
+---
+
 Reconcile Azure DevOps, the canonical PMO inventory, and deployed source without converting
 implementation evidence into acceptance or release-readiness claims.
 

@@ -78,6 +78,9 @@ public sealed class RedactionTests
                     ["identity_type"] =
                         "FederatedServicePrincipal",
                     ["status"] = "ready",
+                    ["scope_id"] = "scope-canary",
+                    ["correlation_id"] = "0123456789abcdef",
+                    ["error_category"] = "RequestFailedException",
                 });
 
             var log = File.ReadAllText(path);
@@ -87,6 +90,18 @@ public sealed class RedactionTests
                 StringComparison.Ordinal);
             Assert.Contains(
                 "\"status\":\"ready\"",
+                log,
+                StringComparison.Ordinal);
+            Assert.DoesNotContain(
+                "scope-canary",
+                log,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "\"correlation_id\":\"0123456789ABCDEF\"",
+                log,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "\"error_category\":\"azure_request\"",
                 log,
                 StringComparison.Ordinal);
         }

@@ -83,7 +83,8 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
         {
             writer.WriteString(
                 fieldName,
-                value?.ToString() ?? string.Empty);
+                DiagnosticPrivacy.NormalizeCorrelationId(
+                    value?.ToString()));
             return;
         }
 
@@ -94,13 +95,8 @@ public sealed class RedactingDiagnosticSink(string logPath) : IDiagnosticSink
         {
             writer.WriteString(
                 fieldName,
-                value?.ToString() switch
-                {
-                    "AuthenticationFailedException" => "authentication",
-                    "MsalUiRequiredException" => "interaction_required",
-                    "RequestFailedException" => "azure_request",
-                    _ => "provider_error",
-                });
+                DiagnosticPrivacy.NormalizeErrorCategory(
+                    value?.ToString()));
             return;
         }
 
