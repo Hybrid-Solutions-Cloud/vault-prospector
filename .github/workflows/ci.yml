@@ -124,7 +124,8 @@ jobs:
   windows-candidate:
     name: Windows candidate
     if: github.event_name != 'pull_request'
-    runs-on: [self-hosted, windows, hcs, vault-prospector]
+    # Governed hosted fallback while the registered HCS Windows runner is unavailable.
+    runs-on: windows-2025
     env:
       CI_CANDIDATE_VERSION: 0.3.0-ci.${{ github.run_number }}
     steps:
