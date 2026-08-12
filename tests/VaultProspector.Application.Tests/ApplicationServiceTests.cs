@@ -6,6 +6,16 @@ namespace VaultProspector.Application.Tests;
 public sealed class ApplicationServiceTests
 {
     [Fact]
+    public void SynchronizationProviderContractHasNoInteractiveDiscoveryPath()
+    {
+        Assert.DoesNotContain(
+            typeof(IVaultProvider).GetMethods(),
+            method => method.Name.Contains(
+                "Interactive",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task LocalDataRecoveryRejectsIncorrectConfirmationBeforeVerification()
     {
         var verification = new CountingVerify();
@@ -575,26 +585,6 @@ public sealed class ApplicationServiceTests
         Assert.Equal("scope", error.Scope);
         Assert.Equal("Forbidden", error.Category);
         Assert.Contains("safe category", error.Recovery, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task ForegroundSynchronizationAllowsInteractiveTenantRecovery()
-    {
-        var identity = Identity();
-        var repository = new FakeRepository(identity);
-        var provider = new FakeProvider();
-        var service = new SynchronizationService(
-            provider,
-            repository,
-            new FixedClock(),
-            new FakeDiagnostics());
-
-        await service.SynchronizeInteractivelyAsync(
-            identity,
-            TestContext.Current.CancellationToken);
-
-        Assert.Equal(1, provider.InteractiveDiscoveryCalls);
-        Assert.Equal(0, provider.SilentDiscoveryCalls);
     }
 
     [Fact]
@@ -1440,8 +1430,6 @@ public sealed class ApplicationServiceTests
         public Exception? DiscoveryException { get; init; }
         public bool HonorCancellation { get; init; }
         public int DiscoveryCalls { get; private set; }
-        public int InteractiveDiscoveryCalls { get; private set; }
-        public int SilentDiscoveryCalls { get; private set; }
         public int RetrieveCalls { get; private set; }
         public SensitiveValue? LastRetrievedValue { get; private set; }
         public IReadOnlyList<string> ExcludedSubscriptions { get; private set; } = [];
@@ -1469,22 +1457,6 @@ public sealed class ApplicationServiceTests
             CancellationToken cancellationToken)
         {
             Constraints = constraints;
-            SilentDiscoveryCalls++;
-            return DiscoverAsync(
-                identity,
-                excludedSubscriptions,
-                excludedVaultResourceIds,
-                cancellationToken);
-        }
-        public Task<DiscoverySnapshot> DiscoverInteractivelyAsync(
-            ConnectedIdentity identity,
-            IReadOnlyList<string> excludedSubscriptions,
-            IReadOnlyList<string> excludedVaultResourceIds,
-            VaultDiscoveryConstraints constraints,
-            CancellationToken cancellationToken)
-        {
-            Constraints = constraints;
-            InteractiveDiscoveryCalls++;
             return DiscoverAsync(
                 identity,
                 excludedSubscriptions,

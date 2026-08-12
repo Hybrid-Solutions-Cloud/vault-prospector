@@ -15,21 +15,24 @@ Current implementation branch: `fix/tenant-scoped-key-vault-sync` from public Pr
 - The remaining failure occurs when correctly tenant-scoped silent MSAL acquisition reports that
   the guest/resource tenant requires interaction. Preview 12/13 convert each such result into a
   partial metadata error and never let a user-triggered sync satisfy that tenant policy.
-- User-triggered sync and failed-scope retry now allow a system-browser Entra interaction targeted
-  to the requesting tenant. A single credential instance deduplicates interaction by tenant and
-  resource scope. Metadata-only background sync remains strictly silent.
-- The governed Release gate passes locked restore, vulnerability inspection, formatting,
-  zero-warning build, and all 487 tests. Browser extension tests (6/6) and build also pass.
+- Preview 14 attempted automatic interactive recovery from foreground sync. One sync opened at
+  least four system-browser prompts for the same visible account because it crossed multiple
+  tenant/resource authorization contexts. The product owner rejected that behavior; Preview 14
+  was stopped, never published, and the VM was restored to exact public Preview 12 with all six
+  local data files preserved byte-for-byte.
+- Automatic interactive authentication is now removed from normal sync, background sync, and
+  failed-scope retry. All three paths are constrained to silent token acquisition and may report
+  partial authorization errors without opening a browser or consent window.
 - Preview 12 publicly resolved the preceding Entra RDP unlock blocker AB#7337 on the specifically
   tested VM/session/account/policy; broader VDI coverage remains open in release readiness.
 
 Next:
 
-1. Commit the interactive tenant-recovery increment and package Preview 14.
-2. Install the exact MSI on the current VM and repeat all three identity synchronizations,
-   completing any tenant-scoped Entra interaction opened by the foreground sync.
-3. Confirm authentication failures are removed while genuine permission/network
-   failures remain isolated and visible.
+1. Add regression coverage for the no-interactive-sync boundary and rerun the governed gate.
+2. Package the next candidate, install it on the current VM, and prove a complete sync attempt
+   opens zero browser/consent prompts.
+3. Preserve partial authentication errors honestly while designing any future tenant authorization
+   as an explicit, user-initiated workflow with a preview of how many tenant prompts may be needed.
 4. Push, pass protected CI, merge, and publish only after exact-package live validation succeeds.
 
 ---

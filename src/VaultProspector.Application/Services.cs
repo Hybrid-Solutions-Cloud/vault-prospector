@@ -438,23 +438,8 @@ public sealed class SynchronizationService(
     IDiagnosticSink diagnostics,
     IEnterprisePolicy? enterprisePolicy = null)
 {
-    public async Task<SyncRun> SynchronizeAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
-        => await SynchronizeCoreAsync(
-            identity,
-            allowInteractiveAuthentication: false,
-            cancellationToken);
-
-    public async Task<SyncRun> SynchronizeInteractivelyAsync(
+    public async Task<SyncRun> SynchronizeAsync(
         ConnectedIdentity identity,
-        CancellationToken cancellationToken) =>
-        await SynchronizeCoreAsync(
-            identity,
-            allowInteractiveAuthentication: true,
-            cancellationToken);
-
-    private async Task<SyncRun> SynchronizeCoreAsync(
-        ConnectedIdentity identity,
-        bool allowInteractiveAuthentication,
         CancellationToken cancellationToken)
     {
         identity = await repository.GetIdentityAsync(identity.Id, cancellationToken)
@@ -487,19 +472,12 @@ public sealed class SynchronizationService(
                 .Select(summary => summary.Vault.ProviderResourceId)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            var snapshot = allowInteractiveAuthentication
-                ? await provider.DiscoverInteractivelyAsync(
-                    identity,
-                    excludedSubscriptions,
-                    excludedVaultResourceIds,
-                    constraints,
-                    cancellationToken)
-                : await provider.DiscoverAsync(
-                    identity,
-                    excludedSubscriptions,
-                    excludedVaultResourceIds,
-                    constraints,
-                    cancellationToken);
+            var snapshot = await provider.DiscoverAsync(
+                identity,
+                excludedSubscriptions,
+                excludedVaultResourceIds,
+                constraints,
+                cancellationToken);
             snapshot = ApplyTenantConstraints(
                 snapshot,
                 constraints);
@@ -621,7 +599,7 @@ public sealed class SynchronizationService(
                 .Where(tenant => !tenant.IsSelected)
                 .Select(tenant => tenant.TenantId));
         var started = clock.UtcNow;
-        var snapshot = await provider.DiscoverInteractivelyAsync(
+        var snapshot = await provider.DiscoverAsync(
             identity,
             [],
             [],

@@ -1,5 +1,23 @@
 # Session handoff
 
+## Preview 14 repeated-auth regression and rollback — 2026-08-12
+
+- Exact local Preview 14 (`71db50d`, MSI SHA-256
+  `57C165B0D39A50E40EAF49A1A6BCD279391AC750432468AA6709CD92508DE5A0`) passed all automated and
+  installer gates but failed live UX validation.
+- A single foreground sync opened at least four system-browser authentication/consent prompts for
+  the same visible connected account. Internally these were distinct tenant/resource token
+  requests, but routine synchronization must not initiate an unbounded authentication cascade.
+- The app was stopped immediately. Preview 14 was never pushed or published. The VM was restored
+  to exact public Preview 12 (`c5fe6d3`, MSI SHA-256
+  `D97627716A3188C004EC5BCDB5AED4128B46A5C1B5380A804D45BF458BD08EB2`). The local data inventory
+  remained six files / 572,133 bytes before and after rollback.
+- The automatic interactive path is being removed from foreground sync, background sync, and
+  failed-scope retry. Future tenant authorization must be a separate explicit action that previews
+  the possible tenant interactions; no sync button may open a browser or consent prompt.
+
+---
+
 ## Tenant-scoped Key Vault metadata correction — 2026-08-12
 
 - After Preview 12 publication, the product owner synchronized three interactive identities on the

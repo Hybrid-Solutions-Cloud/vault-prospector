@@ -56,41 +56,11 @@ public sealed class AzureVaultProvider : IVaultProvider
         IReadOnlyList<string> excludedSubscriptions,
         IReadOnlyList<string> excludedVaultResourceIds,
         VaultDiscoveryConstraints constraints,
-        CancellationToken cancellationToken) =>
-        await DiscoverCoreAsync(
-            identity,
-            excludedSubscriptions,
-            excludedVaultResourceIds,
-            constraints,
-            allowInteractiveAuthentication: false,
-            cancellationToken);
-
-    public async Task<DiscoverySnapshot> DiscoverInteractivelyAsync(
-        ConnectedIdentity identity,
-        IReadOnlyList<string> excludedSubscriptions,
-        IReadOnlyList<string> excludedVaultResourceIds,
-        VaultDiscoveryConstraints constraints,
-        CancellationToken cancellationToken) =>
-        await DiscoverCoreAsync(
-            identity,
-            excludedSubscriptions,
-            excludedVaultResourceIds,
-            constraints,
-            allowInteractiveAuthentication: true,
-            cancellationToken);
-
-    private async Task<DiscoverySnapshot> DiscoverCoreAsync(
-        ConnectedIdentity identity,
-        IReadOnlyList<string> excludedSubscriptions,
-        IReadOnlyList<string> excludedVaultResourceIds,
-        VaultDiscoveryConstraints constraints,
-        bool allowInteractiveAuthentication,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(constraints);
         var credential = await _identityProvider.GetCredentialAsync(
             identity,
-            allowInteractiveAuthentication,
             cancellationToken);
         var arm = _armClientFactory(credential);
         var tenants = new List<TenantAccess>();

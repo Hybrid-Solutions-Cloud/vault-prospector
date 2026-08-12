@@ -23,12 +23,6 @@ public interface IAzureCredentialProvider
     Task<TokenCredential> GetCredentialAsync(
         ConnectedIdentity identity,
         CancellationToken cancellationToken);
-
-    Task<TokenCredential> GetCredentialAsync(
-        ConnectedIdentity identity,
-        bool allowInteractiveAuthentication,
-        CancellationToken cancellationToken) =>
-        GetCredentialAsync(identity, cancellationToken);
 }
 
 public sealed class MsalIdentityProvider(string cacheDirectory)
@@ -137,15 +131,6 @@ public sealed class MsalIdentityProvider(string cacheDirectory)
     }
 
     public async Task<TokenCredential> GetCredentialAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
-        => await GetCredentialAsync(
-            identity,
-            allowInteractiveAuthentication: false,
-            cancellationToken);
-
-    public async Task<TokenCredential> GetCredentialAsync(
-        ConnectedIdentity identity,
-        bool allowInteractiveAuthentication,
-        CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -172,10 +157,7 @@ public sealed class MsalIdentityProvider(string cacheDirectory)
         var application = await GetApplicationAsync(identity.ClientId);
         var account = (await application.GetAccountsAsync()).FirstOrDefault(x => x.HomeAccountId.Identifier == identity.AccountIdentifier)
             ?? throw new MsalUiRequiredException("account_missing", "The identity token cache entry is missing. Sign in again.");
-        return new MsalTokenCredential(
-            application,
-            account,
-            allowInteractiveAuthentication);
+        return new MsalTokenCredential(application, account);
     }
 
     private static System.Security.Cryptography.X509Certificates.X509Certificate2 GetCertificate(string thumbprint)
@@ -248,46 +230,10 @@ public sealed class MsalIdentityProvider(string cacheDirectory)
         return new Guid(hash.AsSpan(0, 16));
     }
 
-    internal sealed class MsalTokenCredential : TokenCredential
+    private sealed class MsalTokenCredential(
+        IPublicClientApplication application,
+        IAccount account) : TokenCredential
     {
-        private readonly TokenAcquirer _silentAcquirer;
-        private readonly TokenAcquirer _interactiveAcquirer;
-        private readonly bool _allowInteractiveAuthentication;
-        private readonly System.Collections.Concurrent.ConcurrentDictionary<
-            string,
-            Lazy<Task<AccessToken>>> _interactiveAttempts =
-                new(StringComparer.Ordinal);
-
-        public MsalTokenCredential(
-            IPublicClientApplication application,
-            IAccount account,
-            bool allowInteractiveAuthentication) : this(
-                (context, cancellationToken) =>
-                    AcquireSilentAsync(
-                        application,
-                        account,
-                        context,
-                        cancellationToken),
-                (context, cancellationToken) =>
-                    AcquireInteractiveAsync(
-                        application,
-                        account,
-                        context,
-                        cancellationToken),
-                allowInteractiveAuthentication)
-        {
-        }
-
-        internal MsalTokenCredential(
-            TokenAcquirer silentAcquirer,
-            TokenAcquirer interactiveAcquirer,
-            bool allowInteractiveAuthentication)
-        {
-            _silentAcquirer = silentAcquirer;
-            _interactiveAcquirer = interactiveAcquirer;
-            _allowInteractiveAuthentication = allowInteractiveAuthentication;
-        }
-
         public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
             GetTokenAsync(requestContext, cancellationToken).AsTask().GetAwaiter().GetResult();
 
@@ -295,111 +241,18 @@ public sealed class MsalIdentityProvider(string cacheDirectory)
         {
             try
             {
-                return await _silentAcquirer(
-                    requestContext,
-                    cancellationToken);
-            }
-            catch (MsalUiRequiredException ex) when (_allowInteractiveAuthentication)
-            {
-                return await AcquireInteractivelyOnceAsync(
-                    requestContext,
-                    ex,
-                    cancellationToken);
+                var builder = application.AcquireTokenSilent(
+                    requestContext.Scopes,
+                    account);
+                if (!string.IsNullOrWhiteSpace(requestContext.TenantId))
+                    builder = builder.WithTenantId(requestContext.TenantId);
+                var result = await builder.ExecuteAsync(cancellationToken);
+                return new AccessToken(result.AccessToken, result.ExpiresOn);
             }
             catch (MsalUiRequiredException ex)
             {
                 throw new AuthenticationFailedException("Interactive Microsoft Entra authentication is required.", ex);
             }
         }
-
-        private static async Task<AccessToken> AcquireSilentAsync(
-            IPublicClientApplication application,
-            IAccount account,
-            TokenRequestContext requestContext,
-            CancellationToken cancellationToken)
-        {
-            var builder = application.AcquireTokenSilent(
-                requestContext.Scopes,
-                account);
-            if (!string.IsNullOrWhiteSpace(requestContext.TenantId))
-                builder = builder.WithTenantId(requestContext.TenantId);
-            var result = await builder.ExecuteAsync(cancellationToken);
-            return new AccessToken(result.AccessToken, result.ExpiresOn);
-        }
-
-        private async Task<AccessToken> AcquireInteractivelyOnceAsync(
-            TokenRequestContext requestContext,
-            MsalUiRequiredException _,
-            CancellationToken cancellationToken)
-        {
-            var requestKey = CreateRequestKey(requestContext);
-            var attempt = _interactiveAttempts.GetOrAdd(
-                requestKey,
-                _ => new Lazy<Task<AccessToken>>(
-                    () => AcquireInteractiveAsync(
-                        requestContext,
-                        cancellationToken),
-                    LazyThreadSafetyMode.ExecutionAndPublication));
-            try
-            {
-                return await attempt.Value.WaitAsync(cancellationToken);
-            }
-            catch (MsalException ex)
-            {
-                throw new AuthenticationFailedException(
-                    "Interactive Microsoft Entra authentication failed.",
-                    ex);
-            }
-        }
-
-        private async Task<AccessToken> AcquireInteractiveAsync(
-            TokenRequestContext requestContext,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                return await _silentAcquirer(
-                    requestContext,
-                    cancellationToken);
-            }
-            catch (MsalUiRequiredException)
-            {
-                return await _interactiveAcquirer(
-                    requestContext,
-                    cancellationToken);
-            }
-        }
-
-        private static async Task<AccessToken> AcquireInteractiveAsync(
-            IPublicClientApplication application,
-            IAccount account,
-            TokenRequestContext requestContext,
-            CancellationToken cancellationToken)
-        {
-            var builder = application
-                .AcquireTokenInteractive(requestContext.Scopes)
-                .WithAccount(account)
-                .WithPrompt(Prompt.SelectAccount);
-            if (!string.IsNullOrWhiteSpace(requestContext.TenantId))
-                builder = builder.WithTenantId(requestContext.TenantId);
-            var result = await builder.ExecuteAsync(cancellationToken);
-            if (!string.Equals(
-                    result.Account.HomeAccountId.Identifier,
-                    account.HomeAccountId.Identifier,
-                    StringComparison.Ordinal))
-            {
-                throw new AuthenticationFailedException(
-                    "Microsoft Entra returned a different account than the selected identity.");
-            }
-
-            return new AccessToken(result.AccessToken, result.ExpiresOn);
-        }
-
-        private static string CreateRequestKey(TokenRequestContext requestContext) =>
-            $"{requestContext.TenantId ?? string.Empty}|{string.Join('|', requestContext.Scopes.Order(StringComparer.OrdinalIgnoreCase))}";
-
-        internal delegate Task<AccessToken> TokenAcquirer(
-            TokenRequestContext requestContext,
-            CancellationToken cancellationToken);
     }
 }

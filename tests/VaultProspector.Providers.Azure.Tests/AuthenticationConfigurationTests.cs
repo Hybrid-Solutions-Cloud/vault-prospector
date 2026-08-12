@@ -13,6 +13,18 @@ namespace VaultProspector.Providers.Azure.Tests;
 public sealed class AuthenticationConfigurationTests
 {
     [Fact]
+    public void SynchronizationCredentialContractHasNoInteractiveAcquisitionPath()
+    {
+        var method = Assert.Single(
+            typeof(IAzureCredentialProvider).GetMethods());
+
+        Assert.Equal("GetCredentialAsync", method.Name);
+        Assert.DoesNotContain(
+            method.GetParameters(),
+            parameter => parameter.ParameterType == typeof(bool));
+    }
+
+    [Fact]
     public void InteractiveSignInUsesOneResourceAudience()
     {
         Assert.Equal([AzureAuthenticationScopes.ArmDelegated], AzureAuthenticationScopes.InteractiveSignIn);
