@@ -2,12 +2,22 @@
 
 ## Current delivery state
 
-`0.3.0-preview.6` is the current public, unsigned Windows Preview for non-production evaluation.
+`0.3.0-preview.8` is the latest public, unsigned Windows Preview for non-production evaluation.
+Its immutable source tag points to `2582a44e50155c80205370c6ec90b9d19eb7a006`; this repository
+does not yet contain a dedicated Preview 8 release-evidence record, so Preview 6 remains the most
+recent release with complete retained artifact/provenance evidence in this backlog.
 The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
 in the 0.2 Preview line and remain subject to the live, independent, Store, and GA validation
 gates recorded below.
-The separate missing installer-logo/red-X defect is tracked by GitHub Bug #62 and ADO AB#5799; no
-fix is included in Preview.5.
+The separate missing installer-logo/red-X defect is tracked by GitHub Bug #62 and ADO AB#5799.
+Its source correction is included in Preview 8; exact-package visual lifecycle evidence remains
+open.
+The 2026-08-11 installed-support investigation produced the current remediation batch: GitHub
+Bugs #91–#93 mirror to ADO AB#7299, AB#7301, and AB#7303; ADO Story AB#7305 owns the discovered
+subscription/account picker; and AB#7307–#7308 extend existing isolated-sync Bug #40 / AB#5573.
+Source and automated tests now cover all-connected-identity background sync, the real Azure
+subscription ID, dismissible error banners, and retained privacy-safe failure fields. These are
+local implementation results, not installed-package closure evidence.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).
@@ -19,28 +29,30 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 
 | Requested capability | Current status | What exists now | What is still missing |
 | --- | --- | --- | --- |
-| Normal Windows installer and update path | Implemented; installer-branding defect open | MSI, portable ZIP, immutable GitHub Preview releases, upgrade/repair/uninstall/rollback validation | GitHub Bug #62 / ADO AB#5799 installer-logo correction, trusted signing, WinGet catalog acceptance, Chocolatey catalog acceptance |
+| Normal Windows installer and update path | Implemented; installer-branding validation open | MSI, portable ZIP, immutable GitHub Preview releases, upgrade/repair/uninstall/rollback validation, and the Preview 8 installer-logo source correction | Exact-package installer visual lifecycle evidence, trusted signing, WinGet catalog acceptance, Chocolatey catalog acceptance |
 | Interactive Entra user login | Implemented | MSAL public-client system-browser authentication with app-owned token caches | Full live tenant/guest/MFA/Conditional Access evidence |
 | Local login/unlock and MFA boundary | Included in 0.2 Preview; validation open | Fail-closed app unlock and sensitive operations use Windows verification; recovery archives failed state after typed confirmation and fresh verification | Full live Windows Hello/recovery coverage and independent review |
 | Mandatory local encryption | Implemented locally, review open | SQLCipher metadata and AES-GCM offline values with DPAPI keys; verified archive plus authenticated-journal all-or-rollback rotation engine; startup recovery; explicit verified per-archive retention/deletion UX; no plaintext toggle | User-exposed rotation only after independent review, live power-loss validation, supported cross-device decision remains resync |
 | Isolation from Azure CLI/PowerShell terminal context | Implemented | App-owned MSAL accounts and caches; no terminal-context credential provider | Broader live multi-account validation and clearer active identity/tenant UI |
 | Managed-identity authentication | Included in 0.2 Preview; validation open | Azure-host detection, profile UI, isolated credential flow, ARM-token validation, local disable/revoke controls, automated tests | Live Azure matrix, external assignment-revocation evidence, independent review |
 | Service-principal authentication | Included in 0.2 Preview; validation open | Certificate and federated-token-file profiles, private-key/token isolation, validate-first rotation, local revocation/cache purge, redacted lifecycle events, automated tests | Live Azure matrix, external issuer-revocation evidence, independent review |
-| List existing managed identities/SPNs | Included in 0.2 Preview; validation open | Exact-subscription managed-identity and explicit-consent Graph service-principal discovery, user workflow, bounded pagination, honest permission distinctions | Effective inherited/deny/conditional RBAC analysis, live validation, independent review |
+| List existing managed identities/SPNs | Current correction implemented locally; package validation open | Administration now offers subscriptions discovered across every ready interactive connection, labeled with subscription, tenant, and account; managed-identity discovery uses the real Azure subscription ID; explicit-consent Graph service-principal discovery and honest permission distinctions remain | Install the corrected package, repeat discovery across the three connected identities, complete inherited/deny/conditional RBAC analysis, live validation, and independent review |
 | Create a managed identity/SPN during setup | Preview implemented locally | User-reachable deterministic non-mutating managed-identity and service-principal plans with exact optional Key Vault/role scope; no execution command | Security gate, fresh write authorization, confirmation, encrypted audit, rollback, governed creation/live tests |
 | Discover accessible Key Vaults | Included in 0.2 Preview; validation open | Selected identity enumerates visible resources; explicit subscription/vault scope and per-vault observed permission display are user-accessible | Live human/workload Azure permission matrix and independent validation |
 | Machine-managed enterprise access policy | Implemented locally, validation open | HKLM/ADMX policy for allowed tenants, providers, and identity types plus clipboard/offline-cache boundaries; service-layer enforcement, safe Settings status, package templates, and automated fail-closed tests | Governed Group Policy/Intune deployment, live Azure administrator matrix, diagnostics review, independent review, exact Store candidate |
 | Read-only default | Implemented | Public/default builds expose no Key Vault mutation or Azure role-assignment path; all governed mutation code is dual-gated by an accepted-build release switch and exact machine policy | Independent policy/security validation |
 | Optional governed write mode | Implemented internally; release-gated | Separate secret create/version, RSA-3072 software-key version, and self-signed certificate-policy operations with exact policy, fresh reauthentication/authorization, Windows verification, immutable preview, one-time confirmation, concurrency, and hash-chained value-free audit controls | Disposable live-Azure matrix, accepted ADR, independent review, and explicit release enablement |
-| Notification-area/background operation | Implemented in Atlas Preview; validation open | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, opt-in metadata-only background sync gated by network and external power; exact candidate minimize/restore and exact-public startup passed in RDP | Live sleep/session-lock/network/token-expiry matrix and independent validation |
+| Create and manage Azure Key Vaults and keys | Main-roadmap follow-on; not in current delivery target | AB#6052 defines future Key Vault resource creation/editing, broader key lifecycle and rotation-policy management, and separately controlled destructive actions | Explicit product-owner advancement, Story decomposition, design and security approval, implementation, controlled Azure tests, and release evidence |
+| Notification-area/background operation | Current correction implemented locally; package validation open | Explicit close behavior, lock-on-hide tray lifecycle, safe status, exit cleanup, and opt-in metadata-only background sync for every enabled ready connection; exact candidate minimize/restore and exact-public startup passed in RDP | Install the corrected package; prove all three connections continue refreshing; complete the sleep/session-lock/network/token-expiry matrix and independent validation |
 | Password-manager UI research/redesign | Atlas released; validation open | Three complete lifecycle directions, product-owner selection of Atlas, production Atlas screen hierarchy, structural/rendered regressions, exact installed Windows 11 RDP walkthroughs, and exact-public secure-unlock rendering | Complete exact-public every-state keyboard/screen-reader and representative-user testing plus independent validation |
 | Browser autofill/password-vault integration | Implemented locally, validation open | Toolbar-only Chromium/Firefox extension source, strict protocol, authenticated native host/broker, exact mappings, protected machine policy, desktop confirmation, fresh Windows verification, audit, MSI registration, tests | Signed extension distribution, independent review, live installed-browser/compromise/revocation/usability/AT evidence |
+| Private-endpoint Key Vault connectivity | Not started; backlog only | ADO AB#6192–6225 define research, architecture, implementation, validation, and documentation work | Supported connectivity architecture, ADR, threat model, connector/profile/routing implementation, representative private-network tests, independent security validation, and support guidance |
 | CyberArk source | Future roadmap; unsupported source prototype | Privilege Cloud ADR/threat model, isolated provider and automated tests remain in private source; the Windows release UI is disabled | Governed live tenant, product approval, independent review, and separate release evidence |
 | iPhone/iOS and Android/Google apps | Future roadmap; source prototypes only | Shared search/retrieval and native-security source remains in the private repository | Separate mobile release plan, physical-device/accessibility matrices, signing, closed testing, privacy/data-safety, and store acceptance |
 
 ## Story status and plan mapping
 
-Status snapshot: 2026-07-26. **Delivered** means present in the current public Preview unless the
+Status snapshot: 2026-08-11. **Delivered** means present in the current public Preview unless the
 note explicitly limits it to policy/process delivery. See [`plan.md`](plan.md) for phase scope and
 exit criteria.
 
@@ -50,8 +62,8 @@ exit criteria.
 | 1.2 | Application shell | Delivered | Existing; redesign in Phase 9 |
 | 2.1 | Connect an Azure identity | Delivered | Phase 2 live validation |
 | 2.2 | Connect multiple identities | Delivered | Phase 2 live validation |
-| 2.3 | Reauthentication | Included in 0.2 Preview; validation open | Phase 2 |
-| 2.4 | Disable and re-enable an identity | Included in 0.2 Preview; validation open | Phase 2 |
+| 2.3 | Reauthentication | Included in Preview 8; validation open | Phase 2 |
+| 2.4 | Disable and re-enable an identity | Included in Preview 8; validation open | Phase 2 |
 | 3.1 | Discover subscriptions | Delivered | Phase 6 permission completion |
 | 3.2 | Discover Key Vaults | Delivered basic path | Phase 6 permission completion |
 | 3.3 | Map access paths | Included in 0.2 Preview; validation open | Phase 6 validation |
@@ -59,7 +71,7 @@ exit criteria.
 | 4.1 | Index secret metadata | Delivered | Phase 7 lifecycle completion |
 | 4.2 | Search by name | Delivered | Phase 9 usability validation |
 | 4.3 | Filter search | Delivered | Phase 9 usability validation |
-| 4.4 | Reconcile removed provider objects | In progress locally | Phase 7 |
+| 4.4 | Reconcile removed provider objects | Included in Preview 8; validation open | Phase 7 |
 | 5.1 | Reveal a secret | Delivered | Phases 3 and 14 validation |
 | 5.2 | Secure copy | Delivered | Phases 3 and 14 validation |
 | 5.3 | Mask values | Delivered | Phase 9 usability validation |
@@ -92,7 +104,9 @@ exit criteria.
 | 14.1 | CyberArk source integration | Future roadmap; unsupported source prototype | Future provider roadmap |
 | 15.1 | Consent-based Preview feedback | Delivered as process | Phase 15 operation |
 | 15.2 | Evidence-based GA feedback gate | In progress | Phase 15 |
-| 15.3 | Legal/privacy release controls and approval | In progress | Phases 14 and 15 |
+| 15.3 | Operational support and lifecycle readiness | In progress | Phase 15 |
+| 15.4 | Legal/privacy release controls and approval | In progress | Phases 14 and 15 |
+| 16.1–16.15 | Governed private-endpoint Key Vault connectivity (ADO AB#6197–6225, odd IDs) | Not started; backlog only | Future private-connectivity roadmap |
 
 ## Story source and acceptance traceability
 
@@ -151,6 +165,7 @@ not implementation.
 | 15.2 | Readiness G-01 evidence and go/no-go process | Required build/install/upgrade coverage, report disposition, blocker closure, exact-candidate validation, and named approval. |
 | 15.3 | Support lifecycle, operations runbook, readiness manifest/validator, Dependabot, scheduled monitor | Named backup operator, retained successful hosted runs, incident/withdrawal/recovery exercise, Store trust evidence, and exact-candidate review. |
 | 15.4 | Deterministic lock inventory/notices, technical privacy statement, package/store metadata, CI drift gate, and packaged disclosure files | Exact signed-candidate SBOM/file and upstream-obligation reconciliation, approved public privacy URL and store declarations, diagnostics-package license disposition, and named legal/privacy approval. |
+| 16.1–16.15 | ADO AB#6197–6225 and the future private-connectivity plan; no implementation, ADR, threat model, test, or deployment evidence exists in this repository | Research and select a supported architecture; define profiles, mappings, authentication, encryption, and health UX; implement governed connector/routing; validate representative private-network topologies and security boundaries; publish deployment/support guidance. |
 
 ## Open implementation and release-gate traceability
 
@@ -909,3 +924,30 @@ Implementation status: In progress. Deterministic source inventory/notices, tech
 package/store draft metadata, a CI contract, and Windows package embedding are implemented and
 locally verified. Exact-candidate review, public privacy publication, store declarations, one
 unknown upstream license disposition, and named approval remain open.
+
+## Epic 16 — Governed private-endpoint Key Vault connectivity (future roadmap)
+
+This scope is canonical but not implemented. ADO Epic AB#6192 owns Features AB#6193–6196 and the
+fifteen User Stories below. Their acceptance criteria remain open; an ADO record is not evidence
+that the capability exists in source or in a deployed package.
+
+| Story | ADO ID |
+| --- | ---: |
+| Document enterprise private-endpoint Key Vault topologies | AB#6197 |
+| Evaluate Azure Bastion connectivity for Key Vault HTTPS traffic | AB#6199 |
+| Evaluate VNet-hosted connector and delegated execution alternatives | AB#6201 |
+| Select the private-connectivity architecture | AB#6203 |
+| Define private connectivity profiles and resource mappings | AB#6205 |
+| Design private-connectivity setup and health UX | AB#6207 |
+| Define connector authentication and end-to-end protection | AB#6209 |
+| Add governed private connectivity profiles | AB#6211 |
+| Implement the approved private-network connector | AB#6213 |
+| Route discovery through the selected private path | AB#6215 |
+| Route authorized Key Vault operations through the selected private path | AB#6217 |
+| Expose private-path health and actionable diagnostics | AB#6219 |
+| Test representative private Key Vault network topologies | AB#6221 |
+| Validate private-connectivity security boundaries | AB#6223 |
+| Publish private Key Vault deployment and support guidance | AB#6225 |
+
+Implementation status: Not started. No repository implementation, ADR, threat model, topology
+diagram, lab evidence, or packaged validation currently supports a delivery claim.

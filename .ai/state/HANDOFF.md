@@ -1,5 +1,65 @@
 # Session handoff
 
+## Installed-support remediation implementation — 2026-08-11
+
+- Inspected the product-owner support bundle containing 2,167 events across three connected
+  identities. It showed 1,544 partial scope failures but the exported safe scope, category, and
+  correlation fields were null. One identity continued refreshing through August 11 while the
+  other two stopped on August 5.
+- Root causes: the background timer synchronized only `SelectedIdentity`; subscription selection
+  copied the local `SubscriptionAccess.Id` instead of the Azure `SubscriptionId`; the global error
+  action only restored focus; and support-bundle re-sanitization discarded approved string fields.
+- Created GitHub Bugs #91–#93 and ADO mirrors AB#7299, AB#7301, and AB#7303 with child Tasks
+  AB#7300, AB#7302, and AB#7304. Created ADO Story AB#7305 with Task AB#7306 for the aggregated
+  subscription picker. Added Tasks AB#7307–#7308 under existing Bug #40 / AB#5573 rather than
+  duplicating the isolated-sync bug.
+- Implemented sequential metadata-only synchronization for every enabled, ready, policy-allowed
+  connected identity; aggregate status; refreshed search/subscription metadata; a subscription
+  picker showing Azure subscription name/ID, tenant, and associated connected account; the real
+  Azure subscription ID for managed-identity discovery; a dismiss command for actionable errors;
+  and privacy-safe scope/category/correlation preservation.
+- The product boundary is explicit in the UI: workload candidates stay in Administration until a
+  supported connection is deliberately configured and synchronized. Find Secrets lists indexed
+  vault objects, not discovered identities.
+- Installed SDK 10.0.302 only under `D:/tmp/dotnet-vp-10`. Targeted suites pass (App 114,
+  Platform 92, Security 3). `pwsh ./scripts/Build.ps1 -Configuration Release` passes locked
+  restore, vulnerability inspection, format verification, a zero-warning/error build, and all
+  459 tests.
+- The full locked gate initially exposed three stale downstream lock files from the already
+  committed MSAL 4.87 bump. A forced solution restore mechanically updated only those three locks;
+  the locked Release gate then passed.
+- No installed-package or live-Azure acceptance is claimed. Next: commit/push, protected-branch
+  CI, corrected package installation, three-identity retest, and a new support bundle for AB#7308.
+
+---
+
+## ADO-to-code tracking reconciliation — 2026-08-11
+
+- Audited all 124 nonterminal product-backlog items against source at `v0.3.0-preview.8` and the
+  repository's retained release evidence.
+- Repaired AB#6165 and AB#5334 Acceptance Criteria and corrected stale Preview status in AB#5296,
+  AB#5298, and AB#5314. Direct Azure DevOps JSON Patch preserved full rich-text fields; post-write
+  checks found zero missing Acceptance Criteria and zero stale target descriptions.
+- Moved the 21 Active P2 items to `2026-Q3-S4`; split 68 Active P3 items into 29 application,
+  documentation, identity, and release items in `2026-Q3-S5` and 39 browser, provider, and security
+  items in `2026-Q3-S6`; returned the two Active P4 items to New/root backlog.
+- Verified final ADO totals: 248 items; 89 Active, 92 New, 13 Resolved, 53 Closed, 1 Removed; zero
+  Active items at root. The project and default team remain `HCS -Vault Prospector` and
+  `HCS -Vault Prospector Team`.
+- Added private-endpoint scope AB#6192–6225 to the canonical backlog and plan as not-started future
+  work. No implementation or delivery claim is permitted without an approved architecture,
+  threat model, source, live topology evidence, and independent review.
+- Renamed AB#6052 to `Roadmap: Create and manage Azure Key Vaults and keys`. It remains New, P4,
+  and in the root backlog with zero children. Its description explicitly excludes it from the
+  current delivery target and prohibits decomposition or scheduling until the product owner
+  advances it.
+- Latest public tag is `v0.3.0-preview.8` at
+  `2582a44e50155c80205370c6ec90b9d19eb7a006`. The repo lacks a dedicated Preview 8 evidence record;
+  Preview 6 remains the latest fully retained artifact/provenance record.
+- Browser-extension tests (6/6) and production build passed during the audit. The repository-wide
+  build could not start because this workstation has .NET SDK `9.0.316`, while `global.json`
+  requires `10.0.302`; no full-build pass is claimed.
+
 ## 0.3.0-preview.6 current release — 2026-07-27
 
 - Exact-main source `8751df7f2a6c1014f3e51c4b570625364f9fb5f9` passed HCS run
@@ -30,7 +90,8 @@
   governed Azure mutations.
 - PR #60 merged the verified release record. PR #61 merged the post-release ADO and cleanup record;
   current documentation main is `0ba5fcc022ffc5c3ae3f481f646c8518ed406822`.
-- The private Agile ADO project is correctly named `Vault Prospector`. It has 198 work items:
+- At that time the private Agile ADO project was named `Vault Prospector`; its current governed
+  name is `HCS -Vault Prospector`. It had 198 work items:
   53 Closed, 1 Removed, and 144 open with named work or evidence. Zero open parents have only
   terminal children.
 - GitHub Bug #62 and ADO mirror AB#5799 track the product-owner-observed missing installer
@@ -964,8 +1025,8 @@ the repository and must not be committed.
 
 - HCS MCP confirmed the solution must use Azure DevOps for CI/CD rather than mixed GitHub Actions
   and ADO workflows.
-- Private ADO project `Vault Prospector` now contains CI definition `5`, scheduled operational
-  readiness definition `6`, and release definition `7`.
+- At that point the private ADO project (then named `Vault Prospector`) contained CI definition
+  `5`, scheduled operational readiness definition `6`, and release definition `7`.
 - GitHub App connection `Hybrid-Solutions-Cloud GitHub`, Azure connection `HCS Platform Azure`,
   and Key Vault-linked variable group `vp-prd-secrets` are authorized to their required pipelines.
 - Platform governance registration PR `#7` merged as

@@ -4,13 +4,17 @@ This is the authoritative gate matrix for promoting Vault Prospector from an int
 Windows Preview and later to General Availability (GA). A roadmap item being implemented does not
 prove release readiness; every required gate needs current, reproducible evidence.
 
-**Assessment date:** 2026-07-26
+**Assessment date:** 2026-08-11
 
-**Current decision:** **`0.3.0-preview.6` released for non-production Preview; not ready for GA**
+**Current decision:** **`0.3.0-preview.8` is the latest public non-production Preview; its retained
+release-evidence record is incomplete, and the product is not ready for GA**
 
-**Current Preview:** [`0.3.0-preview.6`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.6),
-an explicitly unsigned Windows evaluation release published on 2026-07-26. It contains the
-completed Windows backlog and approved Atlas surface. Failed tags `v0.3.0-preview.4` and
+**Current Preview:** [`0.3.0-preview.8`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.8),
+an explicitly unsigned Windows evaluation release tagged from
+`2582a44e50155c80205370c6ec90b9d19eb7a006` on 2026-07-27. Preview 6 remains the most recent
+release with a dedicated retained record of exact artifact hashes, asset count, provenance, and
+independent downloads in this repository. Until equivalent Preview 8 evidence is recorded, its
+artifact/provenance gates are not asserted here. Failed tags `v0.3.0-preview.4` and
 `v0.2.0-preview.2` published no public release or assets; `0.1.0-preview.2` remains withdrawn.
 
 Status meanings:

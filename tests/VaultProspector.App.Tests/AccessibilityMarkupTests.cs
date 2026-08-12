@@ -228,10 +228,30 @@ public sealed class AccessibilityMarkupTests
         Assert.Equal("{Binding ErrorAnnouncement}", Attribute(banner, "AutomationProperties.Name")?.Value);
         Assert.Equal("Assertive", Attribute(banner, "AutomationProperties.LiveSetting")?.Value);
         Assert.Equal("Button", focusTarget.Name.LocalName);
-        Assert.Equal("Return to previous action", Attribute(focusTarget, "Content")?.Value);
+        Assert.Equal("Dismiss error and return", Attribute(focusTarget, "Content")?.Value);
+        Assert.Equal("{Binding DismissActionableErrorCommand}", Attribute(focusTarget, "Command")?.Value);
         Assert.Equal("{Binding ErrorAnnouncement}", Attribute(focusTarget, "AutomationProperties.Name")?.Value);
         Assert.Equal("#FECACA", Attribute(focusTarget, "Background")?.Value);
         Assert.Equal("#3F1616", Attribute(focusTarget, "Foreground")?.Value);
+    }
+
+    [Fact]
+    public void WorkloadAdministrationUsesDiscoveredSubscriptionPicker()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var picker = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Workload administration subscription and connected account");
+
+        Assert.Equal("ComboBox", picker.Name.LocalName);
+        Assert.Equal(
+            "{Binding AdministrationSubscriptionOptions}",
+            Attribute(picker, "ItemsSource")?.Value);
+        Assert.Equal(
+            "{Binding SelectedAdministrationSubscription}",
+            Attribute(picker, "SelectedItem")?.Value);
     }
 
     [Fact]

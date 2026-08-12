@@ -1,5 +1,9 @@
 # Open questions
 
+- Which other two repositories comprise this product, and should cross-repository ownership be
+  represented by ADO artifact links, an inherited field, or explicit source paths in descriptions?
+- Which private-endpoint connectivity architecture, if any, should advance from research into an
+  approved ADR and threat model before AB#6211 or later is scheduled?
 - What exact Partner Center package identity and publisher values will be assigned after the free
   Microsoft Store application name is reserved?
 - Who will supply the independent Windows security review and representative

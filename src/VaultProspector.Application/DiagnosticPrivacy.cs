@@ -87,6 +87,16 @@ public static class DiagnosticPrivacy
             ],
             StringComparer.Ordinal);
 
+    private static readonly HashSet<string> AllowedErrorCategories =
+        new(
+            [
+                "authentication",
+                "interaction_required",
+                "azure_request",
+                "provider_error",
+            ],
+            StringComparer.Ordinal);
+
     public static bool IsAllowedFieldName(string fieldName) =>
         AllowedFieldNames.Contains(fieldName);
 
@@ -113,6 +123,27 @@ public static class DiagnosticPrivacy
         AllowedStatuses.Contains(status)
             ? status
             : "unknown";
+
+    public static string NormalizeCorrelationId(string? correlationId) =>
+        correlationId is { Length: 16 } &&
+        correlationId.All(Uri.IsHexDigit)
+            ? correlationId.ToUpperInvariant()
+            : string.Empty;
+
+    public static string NormalizeErrorCategory(string? errorCategory)
+    {
+        var normalized = errorCategory switch
+        {
+            "AuthenticationFailedException" => "authentication",
+            "MsalUiRequiredException" => "interaction_required",
+            "RequestFailedException" => "azure_request",
+            _ => errorCategory,
+        };
+        return normalized is not null &&
+               AllowedErrorCategories.Contains(normalized)
+            ? normalized
+            : "provider_error";
+    }
 
     public static string Pseudonymize(object? value)
     {

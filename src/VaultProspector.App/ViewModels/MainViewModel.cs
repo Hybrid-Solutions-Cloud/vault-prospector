@@ -56,6 +56,9 @@ public sealed partial class MainViewModel(
     public ObservableCollection<ConnectedIdentity> Identities { get; } = [];
     public ObservableCollection<TenantAccess> Tenants { get; } = [];
     public ObservableCollection<SubscriptionSelectionRow> Subscriptions { get; } = [];
+    public ObservableCollection<AdministrationSubscriptionOption>
+        AdministrationSubscriptionOptions
+    { get; } = [];
     public ObservableCollection<VaultAccessRow> VaultAccessPaths { get; } = [];
     public ObservableCollection<WorkloadIdentityCandidateRow> WorkloadIdentityCandidates { get; } = [];
     public ObservableCollection<SearchResultRow> Results { get; } = [];
@@ -185,6 +188,8 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private SyncErrorRow? _selectedSyncError;
     [ObservableProperty] private TenantAccess? _selectedTenant;
     [ObservableProperty] private SubscriptionSelectionRow? _selectedSubscription;
+    [ObservableProperty]
+    private AdministrationSubscriptionOption? _selectedAdministrationSubscription;
     [ObservableProperty] private VaultAccessRow? _selectedVaultAccess;
     [ObservableProperty]
     private WorkloadIdentityCandidateRow? _selectedWorkloadIdentityCandidate;
@@ -581,10 +586,12 @@ public sealed partial class MainViewModel(
     [RelayCommand(CanExecute = nameof(CanDiscoverManagedIdentities))]
     private Task DiscoverManagedIdentitiesAsync() => RunAsync(async cancellationToken =>
     {
-        if (SelectedIdentity is null || workloadIdentityAdministrationService is null) return;
+        if (SelectedAdministrationSubscription is not { } target ||
+            workloadIdentityAdministrationService is null)
+            return;
         var candidates = await workloadIdentityAdministrationService.ListManagedIdentitiesAsync(
-            SelectedIdentity,
-            AdministrationSubscriptionId,
+            target.Identity,
+            target.Subscription.SubscriptionId,
             cancellationToken);
         ReplaceWorkloadCandidates(candidates);
         WorkloadIdentityFilterStatus =
@@ -650,11 +657,12 @@ public sealed partial class MainViewModel(
     private Task PreviewManagedIdentityAsync() => RunAsync(cancellationToken =>
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (SelectedIdentity is null || workloadIdentityAdministrationService is null)
+        if (SelectedAdministrationSubscription is not { } target ||
+            workloadIdentityAdministrationService is null)
             return Task.CompletedTask;
         var plan = workloadIdentityAdministrationService.BuildManagedIdentityDryRun(
-            SelectedIdentity.HomeTenantId,
-            AdministrationSubscriptionId,
+            target.Tenant.TenantId,
+            target.Subscription.SubscriptionId,
             AdministrationResourceGroup,
             AdministrationIdentityName,
             NullIfWhiteSpace(AdministrationVaultResourceId),
@@ -687,6 +695,7 @@ public sealed partial class MainViewModel(
         StatusText = $"Synchronizing {SelectedIdentity.DisplayName}…";
         var run = await synchronizationService.SynchronizeAsync(SelectedIdentity, cancellationToken);
         await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
         await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
         ReplaceSyncErrors(run);
@@ -725,6 +734,7 @@ public sealed partial class MainViewModel(
         await ReloadSubscriptionsCoreAsync(
             SelectedIdentity.Id,
             cancellationToken);
+        await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
         await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
         ReplaceSyncErrors(run);
@@ -742,6 +752,7 @@ public sealed partial class MainViewModel(
     {
         if (SelectedIdentity is null) return;
         await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
         StatusText = $"{Subscriptions.Count} discovered subscriptions loaded for {SelectedIdentity.DisplayName}.";
     });
 
@@ -863,19 +874,62 @@ public sealed partial class MainViewModel(
     public Task BackgroundSynchronizeOnceAsync()
     {
         if (!BackgroundMetadataSyncEnabled ||
-            IsBusy ||
-            SelectedIdentity is not { IsEnabled: true, AuthenticationState: AuthenticationState.Ready })
+            IsBusy)
+            return Task.CompletedTask;
+
+        var eligibleIdentities = Identities
+            .Where(identity =>
+                identity.IsEnabled &&
+                identity.AuthenticationState == AuthenticationState.Ready &&
+                IsIdentityAllowed(identity))
+            .ToArray();
+        if (eligibleIdentities.Length == 0)
             return Task.CompletedTask;
 
         return RunAsync(async cancellationToken =>
         {
-            var run = await synchronizationService.SynchronizeAsync(SelectedIdentity, cancellationToken);
-            StatusText = run.Status switch
+            var completed = 0;
+            var partial = 0;
+            var failed = 0;
+            var vaultCount = 0;
+            var itemCount = 0;
+            var errorCount = 0;
+
+            foreach (var identity in eligibleIdentities)
             {
-                SyncStatus.Completed => $"Background metadata sync completed: {run.VaultCount} vaults, {run.ItemCount} objects.",
-                SyncStatus.CompletedWithErrors => $"Background metadata sync completed with {run.NonSensitiveErrors.Count} isolated errors.",
-                _ => $"Background metadata sync: {run.Status}.",
-            };
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    var run = await synchronizationService.SynchronizeAsync(
+                        identity,
+                        cancellationToken);
+                    vaultCount += run.VaultCount;
+                    itemCount += run.ItemCount;
+                    errorCount += run.NonSensitiveErrors.Count;
+                    if (run.Status == SyncStatus.Completed)
+                        completed++;
+                    else if (run.Status == SyncStatus.CompletedWithErrors)
+                        partial++;
+                    else
+                        failed++;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch
+                {
+                    failed++;
+                }
+            }
+
+            await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
+            await RefreshSearchFilterOptionsAsync(cancellationToken);
+            await SearchCoreAsync(cancellationToken);
+            StatusText =
+                $"Background metadata sync checked {eligibleIdentities.Length} connected identities: " +
+                $"{completed} complete, {partial} partial, {failed} failed; " +
+                $"{vaultCount} vaults, {itemCount} objects, {errorCount} isolated errors.";
         });
     }
 
@@ -1177,6 +1231,79 @@ public sealed partial class MainViewModel(
         SelectedVaultFilterOption = FindFilterOption(VaultFilterOptions, selectedVault);
     }
 
+    private async Task RefreshAdministrationSubscriptionOptionsAsync(
+        CancellationToken cancellationToken)
+    {
+        var selectedIdentityId =
+            SelectedAdministrationSubscription?.Identity.Id ??
+            SelectedIdentity?.Id;
+        var selectedSubscriptionId =
+            SelectedAdministrationSubscription?.Subscription.SubscriptionId ??
+            AdministrationSubscriptionId;
+        var enterprise = EnterprisePolicy();
+        var options = new List<AdministrationSubscriptionOption>();
+
+        if (enterprise.AllowedProviders.Contains(
+                EnterpriseProvider.AzureKeyVault))
+        {
+            foreach (var identity in Identities.Where(identity =>
+                         identity.Type == IdentityType.InteractiveUser &&
+                         identity.IsEnabled &&
+                         identity.AuthenticationState == AuthenticationState.Ready &&
+                         IsIdentityAllowed(identity)))
+            {
+                var tenants = await repository.GetTenantsAsync(
+                    identity.Id,
+                    cancellationToken);
+                var visibleTenants = tenants
+                    .Where(tenant =>
+                        !enterprise.RestrictsTenants ||
+                        enterprise.AllowedTenantIds.Contains(
+                            tenant.TenantId))
+                    .ToDictionary(tenant => tenant.Id);
+                var subscriptions = await repository.GetSubscriptionsAsync(
+                    identity.Id,
+                    cancellationToken);
+                foreach (var subscription in subscriptions)
+                {
+                    if (visibleTenants.TryGetValue(
+                            subscription.TenantAccessId,
+                            out var tenant))
+                    {
+                        options.Add(
+                            new AdministrationSubscriptionOption(
+                                identity,
+                                tenant,
+                                subscription));
+                    }
+                }
+            }
+        }
+
+        var ordered = options
+            .OrderBy(option => option.Subscription.DisplayName,
+                StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(option => option.Tenant.DisplayName,
+                StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(option => option.Identity.DisplayName,
+                StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
+        AdministrationSubscriptionOptions.Clear();
+        foreach (var option in ordered)
+            AdministrationSubscriptionOptions.Add(option);
+
+        SelectedAdministrationSubscription =
+            ordered.FirstOrDefault(option =>
+                option.Identity.Id == selectedIdentityId &&
+                string.Equals(
+                    option.Subscription.SubscriptionId,
+                    selectedSubscriptionId,
+                    StringComparison.OrdinalIgnoreCase)) ??
+            ordered.FirstOrDefault(option =>
+                option.Identity.Id == SelectedIdentity?.Id) ??
+            ordered.FirstOrDefault();
+    }
+
     private static void ReplaceFilterOptions(
         ObservableCollection<SearchFilterOption> target,
         string allLabel,
@@ -1238,6 +1365,7 @@ public sealed partial class MainViewModel(
         {
             await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
         }
+        await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
         OnPropertyChanged(nameof(SetupConnectionsStatus));
         OnPropertyChanged(nameof(SetupConnectionsMarker));
         OnPropertyChanged(nameof(SetupScopeStatus));
@@ -1441,7 +1569,9 @@ public sealed partial class MainViewModel(
         CanAdministerWorkloadIdentities() &&
         EnterprisePolicy().AllowedIdentityTypes.Contains(
             IdentityType.ManagedIdentity) &&
-        Guid.TryParse(AdministrationSubscriptionId, out _);
+        SelectedAdministrationSubscription is { } target &&
+        target.Identity.Id == SelectedIdentity?.Id &&
+        Guid.TryParse(target.Subscription.SubscriptionId, out _);
     private bool CanDiscoverServicePrincipals() =>
         CanAdministerWorkloadIdentities() &&
         EnterprisePolicy().AllowedIdentityTypes.Contains(
@@ -1541,11 +1671,35 @@ public sealed partial class MainViewModel(
     partial void OnSelectedSubscriptionChanged(SubscriptionSelectionRow? value)
     {
         if (value is not null)
-            AdministrationSubscriptionId = value.Id.ToString();
+        {
+            var option = AdministrationSubscriptionOptions.FirstOrDefault(candidate =>
+                candidate.Identity.Id == SelectedIdentity?.Id &&
+                candidate.Subscription.Id == value.Id);
+            if (option is not null)
+                SelectedAdministrationSubscription = option;
+            else
+                AdministrationSubscriptionId = value.SubscriptionId;
+        }
         OnPropertyChanged(nameof(ActiveSubscriptionContext));
         ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
         IncludeSubscriptionCommand.NotifyCanExecuteChanged();
         AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedAdministrationSubscriptionChanged(
+        AdministrationSubscriptionOption? value)
+    {
+        AdministrationSubscriptionId =
+            value?.Subscription.SubscriptionId ??
+            string.Empty;
+        if (value is not null &&
+            SelectedIdentity?.Id != value.Identity.Id)
+        {
+            SelectedIdentity = Identities.FirstOrDefault(identity =>
+                identity.Id == value.Identity.Id) ?? value.Identity;
+        }
+        DiscoverManagedIdentitiesCommand.NotifyCanExecuteChanged();
+        PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedSyncErrorChanged(SyncErrorRow? value) =>
@@ -2130,6 +2284,9 @@ public sealed partial class MainViewModel(
         RecoveryText = string.Empty;
     }
 
+    [RelayCommand]
+    private void DismissActionableError() => ClearActionableError();
+
 }
 
 public sealed class LocalRecoveryArchiveRow(
@@ -2228,6 +2385,19 @@ public sealed class DiagnosticEventRow(
         diagnosticEvent.Summary;
     public string Recovery { get; } =
         diagnosticEvent.Recovery;
+}
+
+public sealed class AdministrationSubscriptionOption(
+    ConnectedIdentity identity,
+    TenantAccess tenant,
+    SubscriptionAccess subscription)
+{
+    public ConnectedIdentity Identity { get; } = identity;
+    public TenantAccess Tenant { get; } = tenant;
+    public SubscriptionAccess Subscription { get; } = subscription;
+    public string Label =>
+        $"{Subscription.DisplayName} · {Subscription.SubscriptionId} · " +
+        $"{Tenant.DisplayName} ({Tenant.TenantId}) · {Identity.DisplayName}";
 }
 
 public sealed class SubscriptionSelectionRow(SubscriptionAccess subscription)

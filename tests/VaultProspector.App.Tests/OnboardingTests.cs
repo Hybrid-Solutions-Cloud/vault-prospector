@@ -219,6 +219,14 @@ public sealed class OnboardingTests : IDisposable
         Assert.False(viewModel.IsBusy);
         Assert.Empty(viewModel.ActiveOperationText);
 
+        viewModel.DismissActionableErrorCommand.Execute(null);
+
+        Assert.False(viewModel.HasActionableError);
+        Assert.Empty(viewModel.ErrorAnnouncement);
+        Assert.Empty(viewModel.ErrorTitle);
+        Assert.Empty(viewModel.ErrorMessage);
+        Assert.Empty(viewModel.RecoveryText);
+
         viewModel.UseCustomClientId = false;
         await viewModel.SaveSettingsCommand.ExecuteAsync(null);
 
@@ -630,8 +638,31 @@ public sealed class OnboardingTests : IDisposable
             null!,
             null!,
             administration);
-        viewModel.SelectedIdentity = CreateIdentity();
-        viewModel.AdministrationSubscriptionId = "11111111-1111-1111-1111-111111111111";
+        var identity = CreateIdentity();
+        var tenant = new TenantAccess(
+            Guid.NewGuid(),
+            identity.Id,
+            "22222222-2222-2222-2222-222222222222",
+            "Operations tenant",
+            "Member",
+            DateTimeOffset.UtcNow,
+            "Ready");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            tenant.Id,
+            "11111111-1111-1111-1111-111111111111",
+            "Production",
+            "Enabled",
+            true,
+            DateTimeOffset.UtcNow);
+        var option = new AdministrationSubscriptionOption(
+            identity,
+            tenant,
+            subscription);
+        viewModel.Identities.Add(identity);
+        viewModel.SelectedIdentity = identity;
+        viewModel.AdministrationSubscriptionOptions.Add(option);
+        viewModel.SelectedAdministrationSubscription = option;
         viewModel.AdministrationResourceGroup = "rg-automation";
         viewModel.AdministrationIdentityName = "vault-prospector-reader";
 
@@ -640,8 +671,11 @@ public sealed class OnboardingTests : IDisposable
         Assert.True(viewModel.PreviewManagedIdentityCommand.CanExecute(null));
         Assert.True(viewModel.PreviewServicePrincipalCommand.CanExecute(null));
 
+        await viewModel.DiscoverManagedIdentitiesCommand.ExecuteAsync(null);
         await viewModel.PreviewManagedIdentityCommand.ExecuteAsync(null);
 
+        Assert.Equal(subscription.SubscriptionId, administration.LastManagedIdentitySubscriptionId);
+        Assert.Equal(identity.Id, administration.LastManagedIdentityAdministratorId);
         Assert.Contains("PREVIEW ONLY", viewModel.AdministrationPlanText, StringComparison.Ordinal);
         Assert.Contains("performs mutations: False", viewModel.AdministrationPlanText, StringComparison.Ordinal);
 
@@ -1092,17 +1126,49 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
-    public async Task OptInBackgroundSyncUsesMetadataDiscoveryOnlyForReadyIdentity()
+    public async Task OptInBackgroundSyncUsesMetadataDiscoveryForEveryReadyIdentity()
     {
-        var identity = CreateIdentity();
-        var subscription = new SubscriptionAccess(Guid.NewGuid(), Guid.NewGuid(), "subscription", "Subscription", "Enabled", true, DateTimeOffset.UtcNow);
-        var repository = new SubscriptionRepository(identity, subscription);
+        var firstIdentity = CreateIdentity();
+        var secondIdentity = CreateIdentity() with
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Second account",
+        };
+        var disabledIdentity = CreateIdentity() with
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Disabled account",
+            IsEnabled = false,
+        };
+        var repository = new EmptyRepository();
+        repository.Identities.AddRange(
+            [firstIdentity, secondIdentity, disabledIdentity]);
+        var firstTenant = new TenantAccess(
+            Guid.NewGuid(), firstIdentity.Id, Guid.NewGuid().ToString("D"),
+            "First tenant", "Member", DateTimeOffset.UtcNow, "Ready");
+        var secondTenant = new TenantAccess(
+            Guid.NewGuid(), secondIdentity.Id, Guid.NewGuid().ToString("D"),
+            "Second tenant", "Member", DateTimeOffset.UtcNow, "Ready");
+        repository.TenantsByIdentity[firstIdentity.Id] = [firstTenant];
+        repository.TenantsByIdentity[secondIdentity.Id] = [secondTenant];
+        repository.SubscriptionsByIdentity[firstIdentity.Id] =
+        [
+            new SubscriptionAccess(
+                Guid.NewGuid(), firstTenant.Id, Guid.NewGuid().ToString("D"),
+                "First subscription", "Enabled", true, DateTimeOffset.UtcNow),
+        ];
+        repository.SubscriptionsByIdentity[secondIdentity.Id] =
+        [
+            new SubscriptionAccess(
+                Guid.NewGuid(), secondTenant.Id, Guid.NewGuid().ToString("D"),
+                "Second subscription", "Enabled", true, DateTimeOffset.UtcNow),
+        ];
         var provider = new BackgroundProvider();
         var viewModel = new MainViewModel(
             repository,
             null!,
             new SynchronizationService(provider, repository, new TestClock(), new TestDiagnostics()),
-            null!,
+            new SearchService(repository, new TestClock()),
             null!,
             null!,
             null!,
@@ -1111,14 +1177,70 @@ public sealed class OnboardingTests : IDisposable
             null!,
             null!)
         {
-            SelectedIdentity = identity,
+            SelectedIdentity = firstIdentity,
             BackgroundMetadataSyncEnabled = true,
         };
+        viewModel.Identities.Add(firstIdentity);
+        viewModel.Identities.Add(secondIdentity);
+        viewModel.Identities.Add(disabledIdentity);
 
         await viewModel.BackgroundSynchronizeOnceAsync();
 
-        Assert.Equal(1, provider.DiscoveryCalls);
+        Assert.Equal(2, provider.DiscoveryCalls);
+        Assert.Equal(
+            [firstIdentity.Id, secondIdentity.Id],
+            provider.DiscoveredIdentityIds);
         Assert.Equal(0, provider.RetrievalCalls);
+        Assert.Equal(2, viewModel.AdministrationSubscriptionOptions.Count);
+        Assert.Contains(
+            viewModel.AdministrationSubscriptionOptions,
+            option => option.Identity.Id == firstIdentity.Id);
+        Assert.Contains(
+            viewModel.AdministrationSubscriptionOptions,
+            option => option.Identity.Id == secondIdentity.Id);
+    }
+
+    [Fact]
+    public void SelectingDiscoveredSubscriptionUsesAzureIdAndAssociatedAccount()
+    {
+        var identity = CreateIdentity();
+        var tenant = new TenantAccess(
+            Guid.NewGuid(),
+            identity.Id,
+            "22222222-2222-2222-2222-222222222222",
+            "Operations tenant",
+            "Member",
+            DateTimeOffset.UtcNow,
+            "Ready");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            tenant.Id,
+            "11111111-1111-1111-1111-111111111111",
+            "Production",
+            "Enabled",
+            true,
+            DateTimeOffset.UtcNow);
+        var option = new AdministrationSubscriptionOption(
+            identity,
+            tenant,
+            subscription);
+        var viewModel = new MainViewModel(
+            null!, null!, null!, null!, null!, null!, null!, null!,
+            new UnavailableVerificationService(), null!, null!);
+        viewModel.Identities.Add(identity);
+        viewModel.SelectedIdentity = identity;
+        viewModel.AdministrationSubscriptionOptions.Add(option);
+
+        viewModel.SelectedSubscription =
+            new SubscriptionSelectionRow(subscription);
+
+        Assert.Same(option, viewModel.SelectedAdministrationSubscription);
+        Assert.Equal(
+            subscription.SubscriptionId,
+            viewModel.AdministrationSubscriptionId);
+        Assert.NotEqual(
+            subscription.Id.ToString(),
+            viewModel.AdministrationSubscriptionId);
     }
 
     [Fact]
@@ -1445,6 +1567,8 @@ public sealed class OnboardingTests : IDisposable
     private sealed class EmptyRepository : IMetadataRepository
     {
         public List<ConnectedIdentity> Identities { get; } = [];
+        public Dictionary<Guid, IReadOnlyList<TenantAccess>> TenantsByIdentity { get; } = [];
+        public Dictionary<Guid, IReadOnlyList<SubscriptionAccess>> SubscriptionsByIdentity { get; } = [];
 
         public Task InitializeAsync(CancellationToken cancellationToken) =>
             Task.CompletedTask;
@@ -1483,12 +1607,16 @@ public sealed class OnboardingTests : IDisposable
         public Task<IReadOnlyList<TenantAccess>> GetTenantsAsync(
             Guid identityId,
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<TenantAccess>>([]);
+            Task.FromResult(
+                TenantsByIdentity.GetValueOrDefault(identityId) ??
+                Array.Empty<TenantAccess>());
 
         public Task<IReadOnlyList<SubscriptionAccess>> GetSubscriptionsAsync(
             Guid identityId,
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<SubscriptionAccess>>([]);
+            Task.FromResult(
+                SubscriptionsByIdentity.GetValueOrDefault(identityId) ??
+                Array.Empty<SubscriptionAccess>());
 
         public Task SetSubscriptionSelectedAsync(
             Guid subscriptionAccessId,
@@ -1623,12 +1751,18 @@ public sealed class OnboardingTests : IDisposable
     {
         public WorkloadIdentityCandidate? AssessedCandidate { get; private set; }
         public IReadOnlyList<WorkloadIdentityCandidate> ServicePrincipals { get; init; } = [];
+        public Guid? LastManagedIdentityAdministratorId { get; private set; }
+        public string? LastManagedIdentitySubscriptionId { get; private set; }
 
         public Task<IReadOnlyList<WorkloadIdentityCandidate>> ListManagedIdentitiesAsync(
             ConnectedIdentity administrator,
             string subscriptionId,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<WorkloadIdentityCandidate>>([]);
+            CancellationToken cancellationToken)
+        {
+            LastManagedIdentityAdministratorId = administrator.Id;
+            LastManagedIdentitySubscriptionId = subscriptionId;
+            return Task.FromResult<IReadOnlyList<WorkloadIdentityCandidate>>([]);
+        }
 
         public Task<IReadOnlyList<WorkloadIdentityCandidate>> ListServicePrincipalsAsync(
             ConnectedIdentity administrator,
@@ -1755,6 +1889,7 @@ public sealed class OnboardingTests : IDisposable
     {
         public int DiscoveryCalls { get; private set; }
         public int RetrievalCalls { get; private set; }
+        public List<Guid> DiscoveredIdentityIds { get; } = [];
         public Task<DiscoverySnapshot> DiscoverAsync(
             ConnectedIdentity identity,
             IReadOnlyList<string> excludedSubscriptions,
@@ -1762,6 +1897,7 @@ public sealed class OnboardingTests : IDisposable
             CancellationToken cancellationToken)
         {
             DiscoveryCalls++;
+            DiscoveredIdentityIds.Add(identity.Id);
             return Task.FromResult(new DiscoverySnapshot([], [], [], [], [], []));
         }
 

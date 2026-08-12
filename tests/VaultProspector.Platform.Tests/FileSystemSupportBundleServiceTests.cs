@@ -41,7 +41,7 @@ public sealed class FileSystemSupportBundleServiceTests : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
         await File.WriteAllTextAsync(
             logPath,
-            """{"event_name":"sync_completed","fields":{"item_count":124}}""",
+            """{"timestamp":"2026-07-25T19:00:00Z","level":"information","event_name":"sync_scope_failed","exception_type":null,"fields":{"item_count":124,"scope_id":"AABBCCDDEEFF0011","correlation_id":"0123456789abcdef","error_category":"azure_request"}}""",
             TestContext.Current.CancellationToken);
         var service = new FileSystemSupportBundleService(
             logPath,
@@ -69,6 +69,24 @@ public sealed class FileSystemSupportBundleServiceTests : IDisposable
         var privacy = manifest.RootElement.GetProperty("privacy");
         Assert.False(privacy.GetProperty("secretValues").GetBoolean());
         Assert.False(privacy.GetProperty("automaticUpload").GetBoolean());
+        var diagnosticEntry = Assert.Single(
+            archive.Entries,
+            entry => entry.FullName == "diagnostics/vault-prospector.log");
+        var diagnosticText = await ReadEntryAsync(
+            diagnosticEntry,
+            TestContext.Current.CancellationToken);
+        Assert.Contains(
+            $"\"scope_id\":\"{DiagnosticPrivacy.Pseudonymize("AABBCCDDEEFF0011")}\"",
+            diagnosticText,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"correlation_id\":\"0123456789ABCDEF\"",
+            diagnosticText,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"error_category\":\"azure_request\"",
+            diagnosticText,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -176,6 +194,12 @@ public sealed class FileSystemSupportBundleServiceTests : IDisposable
             ProhibitedCanaries[1];
         maliciousFields["item_count"] =
             ProhibitedCanaries[2];
+        maliciousFields["scope_id"] =
+            ProhibitedCanaries[3];
+        maliciousFields["correlation_id"] =
+            ProhibitedCanaries[4];
+        maliciousFields["error_category"] =
+            ProhibitedCanaries[5];
         var maliciousEvent = JsonSerializer.Serialize(
             new Dictionary<string, object?>
             {
@@ -254,6 +278,14 @@ public sealed class FileSystemSupportBundleServiceTests : IDisposable
             StringComparison.Ordinal);
         Assert.Contains(
             "\"item_count\":null",
+            bundleText,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"correlation_id\":\"\"",
+            bundleText,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"error_category\":\"provider_error\"",
             bundleText,
             StringComparison.Ordinal);
     }
