@@ -117,7 +117,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-android-arm-eabi",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -129,8 +129,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-android-arm-eabi/-/binding-android-arm-eabi-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-android-arm-eabi/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-android-arm-eabi/-/binding-android-arm-eabi-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-android-arm-eabi/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -138,7 +138,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-android-arm64",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -150,8 +150,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-android-arm64/-/binding-android-arm64-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-android-arm64/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-android-arm64/-/binding-android-arm64-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-android-arm64/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -159,7 +159,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-darwin-arm64",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -171,8 +171,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-darwin-arm64/-/binding-darwin-arm64-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-darwin-arm64/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-darwin-arm64/-/binding-darwin-arm64-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-darwin-arm64/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -180,7 +180,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-darwin-x64",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -192,8 +192,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-darwin-x64/-/binding-darwin-x64-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-darwin-x64/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-darwin-x64/-/binding-darwin-x64-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-darwin-x64/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -201,7 +201,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-freebsd-x64",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -213,8 +213,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-freebsd-x64/-/binding-freebsd-x64-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-freebsd-x64/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-freebsd-x64/-/binding-freebsd-x64-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-freebsd-x64/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -222,7 +222,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-arm-gnueabihf",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -234,8 +234,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm-gnueabihf/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm-gnueabihf/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -243,7 +243,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-arm-musleabihf",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -255,8 +255,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm-musleabihf/-/binding-linux-arm-musleabihf-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm-musleabihf/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm-musleabihf/-/binding-linux-arm-musleabihf-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm-musleabihf/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -264,7 +264,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-arm64-gnu",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -276,8 +276,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm64-gnu/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm64-gnu/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -285,7 +285,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-arm64-musl",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -297,8 +297,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm64-musl/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-arm64-musl/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -306,7 +306,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-ppc64-gnu",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -318,8 +318,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-ppc64-gnu/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-ppc64-gnu/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -327,7 +327,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-riscv64-gnu",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -339,8 +339,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-riscv64-gnu/-/binding-linux-riscv64-gnu-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-riscv64-gnu/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-riscv64-gnu/-/binding-linux-riscv64-gnu-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-riscv64-gnu/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -348,7 +348,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-riscv64-musl",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -360,8 +360,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-riscv64-musl/-/binding-linux-riscv64-musl-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-riscv64-musl/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-riscv64-musl/-/binding-linux-riscv64-musl-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-riscv64-musl/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -369,7 +369,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-s390x-gnu",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -381,8 +381,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-s390x-gnu/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-s390x-gnu/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -390,7 +390,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-x64-gnu",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -402,8 +402,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-x64-gnu/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-x64-gnu/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -411,7 +411,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-linux-x64-musl",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -423,8 +423,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-x64-musl/-/binding-linux-x64-musl-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-x64-musl/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-linux-x64-musl/-/binding-linux-x64-musl-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-linux-x64-musl/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -432,7 +432,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-openharmony-arm64",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -444,8 +444,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-openharmony-arm64/-/binding-openharmony-arm64-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-openharmony-arm64/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-openharmony-arm64/-/binding-openharmony-arm64-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-openharmony-arm64/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -453,7 +453,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-win32-arm64-msvc",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -465,8 +465,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-win32-arm64-msvc/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-win32-arm64-msvc/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -474,7 +474,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-win32-ia32-msvc",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -486,8 +486,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-win32-ia32-msvc/-/binding-win32-ia32-msvc-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-win32-ia32-msvc/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-win32-ia32-msvc/-/binding-win32-ia32-msvc-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-win32-ia32-msvc/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -495,7 +495,7 @@
     {
       "ecosystem": "npm",
       "id": "@oxlint/binding-win32-x64-msvc",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -507,8 +507,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-win32-x64-msvc/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/@oxlint/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@oxlint/binding-win32-x64-msvc/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -873,7 +873,7 @@
     {
       "ecosystem": "npm",
       "id": "@types/node",
-      "version": "26.1.1",
+      "version": "26.1.2",
       "scopes": [
         "design-prototype"
       ],
@@ -885,8 +885,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/@types/node/-/node-26.1.1.tgz",
-      "packageUrl": "https://www.npmjs.com/package/@types/node/v/26.1.1",
+      "projectUrl": "https://registry.npmjs.org/@types/node/-/node-26.1.2.tgz",
+      "packageUrl": "https://www.npmjs.com/package/@types/node/v/26.1.2",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -1713,7 +1713,7 @@
     {
       "ecosystem": "npm",
       "id": "nanoid",
-      "version": "3.3.16",
+      "version": "3.3.18",
       "scopes": [
         "design-prototype"
       ],
@@ -1725,8 +1725,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.16.tgz",
-      "packageUrl": "https://www.npmjs.com/package/nanoid/v/3.3.16",
+      "projectUrl": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.18.tgz",
+      "packageUrl": "https://www.npmjs.com/package/nanoid/v/3.3.18",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -1734,7 +1734,7 @@
     {
       "ecosystem": "npm",
       "id": "oxlint",
-      "version": "1.75.0",
+      "version": "1.76.0",
       "scopes": [
         "design-prototype"
       ],
@@ -1746,8 +1746,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/oxlint/-/oxlint-1.75.0.tgz",
-      "packageUrl": "https://www.npmjs.com/package/oxlint/v/1.75.0",
+      "projectUrl": "https://registry.npmjs.org/oxlint/-/oxlint-1.76.0.tgz",
+      "packageUrl": "https://www.npmjs.com/package/oxlint/v/1.76.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -1797,7 +1797,7 @@
     {
       "ecosystem": "npm",
       "id": "postcss",
-      "version": "8.5.22",
+      "version": "8.5.26",
       "scopes": [
         "design-prototype"
       ],
@@ -1809,8 +1809,8 @@
       ],
       "license": "MIT",
       "licenseSource": "package-lock",
-      "projectUrl": "https://registry.npmjs.org/postcss/-/postcss-8.5.22.tgz",
-      "packageUrl": "https://www.npmjs.com/package/postcss/v/8.5.22",
+      "projectUrl": "https://registry.npmjs.org/postcss/-/postcss-8.5.26.tgz",
+      "packageUrl": "https://www.npmjs.com/package/postcss/v/8.5.26",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
@@ -3314,24 +3314,18 @@
       "version": "4.86.1",
       "scopes": [
         "development",
-        "production-desktop",
         "production-mobile"
       ],
       "dependencyTypes": [
         "centraltransitive",
-        "direct",
-        "transitive"
+        "direct"
       ],
       "sourceFiles": [
         "mobile/VaultProspector.Mobile.Android/packages.lock.json",
         "mobile/VaultProspector.Mobile.Core/packages.lock.json",
         "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
         "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
-        "mobile/VaultProspector.Mobile/packages.lock.json",
-        "src/VaultProspector.App/packages.lock.json",
-        "src/VaultProspector.Providers.Azure/packages.lock.json",
-        "tests/VaultProspector.App.Tests/packages.lock.json",
-        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+        "mobile/VaultProspector.Mobile/packages.lock.json"
       ],
       "license": "MIT",
       "licenseSource": "nuspec-expression",
@@ -3343,23 +3337,17 @@
     },
     {
       "ecosystem": "nuget",
-      "id": "Microsoft.Identity.Client.Extensions.Msal",
-      "version": "4.86.1",
+      "id": "Microsoft.Identity.Client",
+      "version": "4.87.0",
       "scopes": [
         "development",
-        "production-desktop",
-        "production-mobile"
+        "production-desktop"
       ],
       "dependencyTypes": [
         "direct",
         "transitive"
       ],
       "sourceFiles": [
-        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
-        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
-        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
-        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
-        "mobile/VaultProspector.Mobile/packages.lock.json",
         "src/VaultProspector.App/packages.lock.json",
         "src/VaultProspector.Providers.Azure/packages.lock.json",
         "tests/VaultProspector.App.Tests/packages.lock.json",
@@ -3368,7 +3356,59 @@
       "license": "MIT",
       "licenseSource": "nuspec-expression",
       "projectUrl": "https://github.com/AzureAD/microsoft-authentication-library-for-dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Identity.Client/4.87.0",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Identity.Client.Extensions.Msal",
+      "version": "4.86.1",
+      "scopes": [
+        "development",
+        "production-mobile"
+      ],
+      "dependencyTypes": [
+        "transitive"
+      ],
+      "sourceFiles": [
+        "mobile/VaultProspector.Mobile.Android/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Core/packages.lock.json",
+        "mobile/VaultProspector.Mobile.iOS/packages.lock.json",
+        "mobile/VaultProspector.Mobile.Tests/packages.lock.json",
+        "mobile/VaultProspector.Mobile/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AzureAD/microsoft-authentication-library-for-dotnet",
       "packageUrl": "https://www.nuget.org/packages/Microsoft.Identity.Client.Extensions.Msal/4.86.1",
+      "distribution": "potential-candidate",
+      "reviewStatus": "metadata-recorded",
+      "reviewReason": ""
+    },
+    {
+      "ecosystem": "nuget",
+      "id": "Microsoft.Identity.Client.Extensions.Msal",
+      "version": "4.87.0",
+      "scopes": [
+        "development",
+        "production-desktop"
+      ],
+      "dependencyTypes": [
+        "direct",
+        "transitive"
+      ],
+      "sourceFiles": [
+        "src/VaultProspector.App/packages.lock.json",
+        "src/VaultProspector.Providers.Azure/packages.lock.json",
+        "tests/VaultProspector.App.Tests/packages.lock.json",
+        "tests/VaultProspector.Providers.Azure.Tests/packages.lock.json"
+      ],
+      "license": "MIT",
+      "licenseSource": "nuspec-expression",
+      "projectUrl": "https://github.com/AzureAD/microsoft-authentication-library-for-dotnet",
+      "packageUrl": "https://www.nuget.org/packages/Microsoft.Identity.Client.Extensions.Msal/4.87.0",
       "distribution": "potential-candidate",
       "reviewStatus": "metadata-recorded",
       "reviewReason": ""
