@@ -693,7 +693,9 @@ public sealed partial class MainViewModel(
     {
         if (SelectedIdentity is null) throw new InvalidOperationException("Select an identity before synchronizing.");
         StatusText = $"Synchronizing {SelectedIdentity.DisplayName}…";
-        var run = await synchronizationService.SynchronizeAsync(SelectedIdentity, cancellationToken);
+        var run = await synchronizationService.SynchronizeInteractivelyAsync(
+            SelectedIdentity,
+            cancellationToken);
         await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
         await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
         await RefreshSearchFilterOptionsAsync(cancellationToken);

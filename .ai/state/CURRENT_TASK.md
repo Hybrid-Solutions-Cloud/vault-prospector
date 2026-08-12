@@ -8,20 +8,27 @@ Current implementation branch: `fix/tenant-scoped-key-vault-sync` from public Pr
 - Three interactive identities synchronized with isolated errors on the exact installed Preview 12
   candidate. Safe logs show authentication-heavy failures; one identity found 15 vaults and
   emitted exactly 45 authentication-category scope failures.
-- Root cause: multi-tenant discovery correctly tenant-scoped each ARM client but passed the
-  original unscoped credential to Key Vault metadata enumeration.
-- The local fix passes the same tenant-scoped credential to both ARM and Key Vault data-plane
-  enumeration.
-- A new deterministic regression returns vaults in home and guest tenants and proves each vault
-  metadata request receives the matching tenant context. The Azure provider suite passes 46/46.
+- Preview 13 passed the full local build/package/installer gate and proved each Key Vault request
+  receives the matching tenant context, but live validation did not improve the first identity:
+  it still produced 7 items and 7 isolated errors (2 Azure-request, 5 authentication). Preview 13
+  remains unpublished.
+- The remaining failure occurs when correctly tenant-scoped silent MSAL acquisition reports that
+  the guest/resource tenant requires interaction. Preview 12/13 convert each such result into a
+  partial metadata error and never let a user-triggered sync satisfy that tenant policy.
+- User-triggered sync and failed-scope retry now allow a system-browser Entra interaction targeted
+  to the requesting tenant. A single credential instance deduplicates interaction by tenant and
+  resource scope. Metadata-only background sync remains strictly silent.
+- The governed Release gate passes locked restore, vulnerability inspection, formatting,
+  zero-warning build, and all 487 tests. Browser extension tests (6/6) and build also pass.
 - Preview 12 publicly resolved the preceding Entra RDP unlock blocker AB#7337 on the specifically
   tested VM/session/account/policy; broader VDI coverage remains open in release readiness.
 
 Next:
 
-1. Run the full governed Release gate and package Preview 13.
-2. Install the exact MSI on the current VM and repeat all three identity synchronizations.
-3. Confirm tenant-context authentication failures are removed while genuine permission/network
+1. Commit the interactive tenant-recovery increment and package Preview 14.
+2. Install the exact MSI on the current VM and repeat all three identity synchronizations,
+   completing any tenant-scoped Entra interaction opened by the foreground sync.
+3. Confirm authentication failures are removed while genuine permission/network
    failures remain isolated and visible.
 4. Push, pass protected CI, merge, and publish only after exact-package live validation succeeds.
 

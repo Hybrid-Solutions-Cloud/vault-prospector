@@ -25,10 +25,12 @@ validation across the product owner's multi-tenant account remains open.
 ADO Bug AB#7337 was resolved in public Preview 12 for the specifically tested Entra-backed RDP
 VM/session/account/policy by using fresh interactive Entra verification bound to the current
 Windows cloud SID. Broader VDI coverage remains in release readiness.
-GitHub issue #100 / ADO Bug AB#7341 tracks the follow-on multi-tenant sync defect: ARM enumeration
-uses a tenant-scoped credential, but Preview 12 passes the original unscoped credential into Key
-Vault metadata enumeration. The local fix and deterministic home/guest tenant regression pass;
-exact Preview 13 validation across the same three connected identities remains required.
+GitHub issue #100 / ADO Bug AB#7341 tracks the follow-on multi-tenant sync defect. Preview 13
+correctly tenant-scoped both ARM and Key Vault metadata calls but live validation still produced
+the prior authentication errors because a guest/resource tenant required interactive MSAL token
+acquisition. The next local candidate permits tenant-targeted interaction only for user-triggered
+sync/retry, deduplicates it per tenant/resource scope, and keeps background sync silent. Exact
+Preview 14 validation across the same three connected identities remains required.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).
@@ -49,7 +51,7 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | Service-principal authentication | Included in 0.2 Preview; validation open | Certificate and federated-token-file profiles, private-key/token isolation, validate-first rotation, local revocation/cache purge, redacted lifecycle events, automated tests | Live Azure matrix, external issuer-revocation evidence, independent review |
 | List existing managed identities/SPNs | Current correction implemented locally; package validation open | Administration now offers subscriptions discovered across every ready interactive connection, labeled with subscription, tenant, and account; managed-identity discovery uses the real Azure subscription ID; explicit-consent Graph service-principal discovery and honest permission distinctions remain | Install the corrected package, repeat discovery across the three connected identities, complete inherited/deny/conditional RBAC analysis, live validation, and independent review |
 | Create a managed identity/SPN during setup | Preview implemented locally | User-reachable deterministic non-mutating managed-identity and service-principal plans with exact optional Key Vault/role scope; no execution command | Security gate, fresh write authorization, confirmation, encrypted audit, rollback, governed creation/live tests |
-| Discover accessible Key Vaults | Preview 12 data-plane tenant-routing defect; local fix pending package validation | Selected identity enumerates every accessible ARM tenant with tenant-qualified subscription discovery; the AB#7341 fix carries the same tenant context into Key Vault metadata enumeration | Install Preview 13; repeat the three-identity sync; verify expected counts and distinguish genuine permission/network errors; complete live human/workload Azure permission matrix and independent validation |
+| Discover accessible Key Vaults | Preview 13 tenant-routing correction passed local gates but live guest-tenant interaction recovery remains pending | Selected identity enumerates every accessible ARM tenant with tenant-qualified subscription and Key Vault metadata discovery; foreground sync/retry may satisfy tenant-specific Entra interaction while background sync remains silent | Install Preview 14; repeat the three-identity sync; verify expected counts and distinguish genuine permission/network errors; complete live human/workload Azure permission matrix and independent validation |
 | Machine-managed enterprise access policy | Implemented locally, validation open | HKLM/ADMX policy for allowed tenants, providers, and identity types plus clipboard/offline-cache boundaries; service-layer enforcement, safe Settings status, package templates, and automated fail-closed tests | Governed Group Policy/Intune deployment, live Azure administrator matrix, diagnostics review, independent review, exact Store candidate |
 | Read-only default | Implemented | Public/default builds expose no Key Vault mutation or Azure role-assignment path; all governed mutation code is dual-gated by an accepted-build release switch and exact machine policy | Independent policy/security validation |
 | Optional governed write mode | Implemented internally; release-gated | Separate secret create/version, RSA-3072 software-key version, and self-signed certificate-policy operations with exact policy, fresh reauthentication/authorization, Windows verification, immutable preview, one-time confirmation, concurrency, and hash-chained value-free audit controls | Disposable live-Azure matrix, accepted ADR, independent review, and explicit release enablement |

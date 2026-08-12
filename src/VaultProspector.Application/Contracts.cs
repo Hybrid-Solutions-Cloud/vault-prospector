@@ -124,6 +124,19 @@ public interface IVaultProvider
             excludedVaultResourceIds,
             cancellationToken);
 
+    Task<DiscoverySnapshot> DiscoverInteractivelyAsync(
+        ConnectedIdentity identity,
+        IReadOnlyList<string> excludedSubscriptions,
+        IReadOnlyList<string> excludedVaultResourceIds,
+        VaultDiscoveryConstraints constraints,
+        CancellationToken cancellationToken) =>
+        DiscoverAsync(
+            identity,
+            excludedSubscriptions,
+            excludedVaultResourceIds,
+            constraints,
+            cancellationToken);
+
     Task<SensitiveValue> RetrieveSecretAsync(ConnectedIdentity identity, VaultResource vault, VaultItem item, CancellationToken cancellationToken);
 }
 

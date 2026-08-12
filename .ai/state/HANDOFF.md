@@ -1211,3 +1211,24 @@ the repository and must not be committed.
   documentation, governance, build-environments, and project-management standards. Its drift
   endpoint still returns `Path not found` for the registered Windows checkout; no drift pass is
   claimed.
+## Guest-tenant Key Vault synchronization — 2026-08-12
+
+- Branch `fix/tenant-scoped-key-vault-sync` is in
+  `D:\tmp\vault-prospector-tenant-scoped-sync` and tracks GitHub #100 / ADO AB#7341.
+- Public Preview 12 passed Entra-backed RDP unlock on the current VM but three connected identities
+  synchronized with authentication-heavy partial errors and only 235 discovered objects versus
+  250 on the product owner's laptop.
+- Preview 13 carried the tenant-scoped ARM credential into Key Vault metadata calls and passed all
+  local and exact-MSI gates. Live validation on the first identity remained unchanged at 7 items,
+  2 Azure-request errors, and 5 authentication errors, so Preview 13 was not published.
+- The second root cause is silent MSAL acquisition in the correctly selected guest/resource
+  tenant returning interaction-required. The provider previously isolated every result without
+  giving a foreground sync an interactive recovery path.
+- Foreground sync and failed-scope retry now permit tenant-targeted system-browser Entra recovery;
+  one credential deduplicates prompts by tenant/resource scope. Background metadata sync remains
+  silent. Automated tests cover both boundaries, successful recovery, and failure deduplication.
+- The exact local Release gate passes 487/487 tests with zero warnings and no vulnerable NuGet
+  dependencies. Browser extension tests (6/6) and build pass. Preview 14 packaging and exact-MSI
+  live validation are next; do not publish or resolve AB#7341 before that evidence exists.
+- Direct feedback was recorded separately as GitHub #101 (configurable secure-copy verification
+  grace, independent from Reveal) and #102 (public guide/roadmap/changelog/release links on About).
