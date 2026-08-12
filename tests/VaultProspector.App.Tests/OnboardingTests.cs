@@ -1285,6 +1285,58 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public async Task TenantScopeCommandsPersistExplicitInclusionChoice()
+    {
+        var identity = CreateIdentity();
+        var tenant = new TenantAccess(
+            Guid.NewGuid(),
+            identity.Id,
+            "22222222-2222-2222-2222-222222222222",
+            "Operations tenant",
+            "AAD",
+            DateTimeOffset.UtcNow,
+            "Available");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            tenant.Id,
+            "11111111-1111-1111-1111-111111111111",
+            "Production",
+            "Enabled",
+            true,
+            DateTimeOffset.UtcNow);
+        var repository = new SubscriptionRepository(identity, subscription)
+        {
+            Tenants = [tenant],
+        };
+        var viewModel = new MainViewModel(
+            repository,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!)
+        {
+            SelectedIdentity = identity,
+            SelectedTenant = new TenantSelectionRow(tenant),
+        };
+
+        Assert.True(viewModel.ExcludeTenantCommand.CanExecute(null));
+        Assert.False(viewModel.IncludeTenantCommand.CanExecute(null));
+
+        await viewModel.ExcludeTenantCommand.ExecuteAsync(null);
+
+        Assert.Equal((tenant.Id, false), repository.LastTenantSelection);
+        Assert.NotNull(viewModel.SelectedTenant);
+        Assert.False(viewModel.SelectedTenant.IsSelected);
+        Assert.True(viewModel.IncludeTenantCommand.CanExecute(null));
+    }
+
+    [Fact]
     public async Task VaultScopeCommandsPersistExplicitInclusionChoice()
     {
         var identity = CreateIdentity();
@@ -1364,7 +1416,7 @@ public sealed class OnboardingTests : IDisposable
             null!)
         {
             SelectedIdentity = identity,
-            SelectedTenant = tenant,
+            SelectedTenant = new TenantSelectionRow(tenant),
             SelectedSubscription = new SubscriptionSelectionRow(subscription),
             SelectedWorkspace = workspace,
         };
@@ -1502,6 +1554,7 @@ public sealed class OnboardingTests : IDisposable
     {
         private SubscriptionAccess _subscription = subscription;
         public (Guid Id, bool IsSelected)? LastSelection { get; private set; }
+        public (Guid Id, bool IsSelected)? LastTenantSelection { get; private set; }
         public VaultAccessSummary? VaultSummary { get; set; }
         public (Guid Id, bool IsSelected)? LastVaultSelection { get; private set; }
         public IReadOnlyList<TenantAccess> Tenants { get; set; } = [];
@@ -1517,6 +1570,16 @@ public sealed class OnboardingTests : IDisposable
         public Task RemoveIdentityAsync(Guid id, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<IReadOnlyList<TenantAccess>> GetTenantsAsync(Guid identityId, CancellationToken cancellationToken) =>
             Task.FromResult(Tenants);
+        public Task SetTenantSelectedAsync(Guid tenantAccessId, bool isSelected, CancellationToken cancellationToken)
+        {
+            LastTenantSelection = (tenantAccessId, isSelected);
+            Tenants = Tenants
+                .Select(tenant => tenant.Id == tenantAccessId
+                    ? tenant with { IsSelected = isSelected }
+                    : tenant)
+                .ToArray();
+            return Task.CompletedTask;
+        }
         public Task<IReadOnlyList<SubscriptionAccess>> GetSubscriptionsAsync(Guid identityId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<SubscriptionAccess>>(identityId == identity.Id ? [_subscription] : []);
         public Task SetSubscriptionSelectedAsync(Guid subscriptionAccessId, bool isSelected, CancellationToken cancellationToken)

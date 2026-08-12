@@ -1,9 +1,33 @@
 # Current task
 
+Implement, deliver, and validate the 2026-08-12 multi-tenant discovery correction without claiming
+that a local build proves the installed Azure workflows.
+
+Current implementation branch: `fix/multi-tenant-subscription-discovery-20260812`.
+
+- GitHub Bug #97 / ADO AB#7310 and Tasks AB#7311–#7312 track the defect.
+- Azure discovery now enumerates accessible tenants first and uses an explicit tenant-qualified
+  ARM credential for each tenant's subscription request.
+- A failed tenant is reported with a pseudonymous scope and does not discard successful tenants.
+- Tenant inclusion is persisted in encrypted metadata alongside existing subscription and vault
+  inclusion. The Connections UI supports include/exclude for tenants and shows each subscription's
+  tenant.
+- Schema v8 adds `tenants.is_selected` with a default-included v7 migration and preserves explicit
+  choices on rediscovery.
+- The exact local Release gate passes locked restore, vulnerability inspection, formatting,
+  zero-warning build, and all 465 tests.
+
+Next:
+
+1. Commit/push, open the protected-branch PR, and run CI on the existing documented HCS runners.
+2. Merge only after the exact head passes.
+3. Publish/install the next Preview through the existing release path and verify the reported
+   5–6 tenant account, tenant/subscription selection, and expected Key Vault inventory.
+
+---
+
 Implement and validate the 2026-08-11 support-bundle remediation batch without claiming that a
 local build proves the installed Azure workflows.
-
-Current implementation branch: `chore/tracking-reconciliation-20260811`.
 
 - GitHub #91 / ADO AB#7299: background metadata sync now processes every enabled, ready,
   policy-allowed connected identity instead of only the selected identity.

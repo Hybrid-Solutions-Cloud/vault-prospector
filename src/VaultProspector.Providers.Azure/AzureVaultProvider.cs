@@ -14,8 +14,24 @@ using VaultProspector.Domain;
 
 namespace VaultProspector.Providers.Azure;
 
-public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider) : IVaultProvider
+public sealed class AzureVaultProvider : IVaultProvider
 {
+    private readonly IAzureCredentialProvider _identityProvider;
+    private readonly Func<TokenCredential, ArmClient> _armClientFactory;
+
+    public AzureVaultProvider(IAzureCredentialProvider identityProvider)
+        : this(identityProvider, credential => new ArmClient(credential))
+    {
+    }
+
+    internal AzureVaultProvider(
+        IAzureCredentialProvider identityProvider,
+        Func<TokenCredential, ArmClient> armClientFactory)
+    {
+        _identityProvider = identityProvider;
+        _armClientFactory = armClientFactory;
+    }
+
     public Task<DiscoverySnapshot> DiscoverAsync(
         ConnectedIdentity identity,
         IReadOnlyList<string> excludedSubscriptions,
@@ -36,8 +52,8 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(constraints);
-        var credential = await identityProvider.GetCredentialAsync(identity, cancellationToken);
-        var arm = new ArmClient(credential);
+        var credential = await _identityProvider.GetCredentialAsync(identity, cancellationToken);
+        var arm = _armClientFactory(credential);
         var tenants = new List<TenantAccess>();
         var subscriptions = new List<SubscriptionAccess>();
         var vaults = new List<VaultResource>();
@@ -48,52 +64,88 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
 
         try
         {
-            await foreach (var subscription in arm.GetSubscriptions().GetAllAsync(cancellationToken))
+            await foreach (var tenant in arm.GetTenants().GetAllAsync(cancellationToken))
             {
-                var tenantId = subscription.Data.TenantId?.ToString() ?? identity.HomeTenantId;
-                if (!constraints.IsTenantAllowed(tenantId))
-                    continue;
-                var tenantAccess = tenants.FirstOrDefault(x => x.TenantId == tenantId);
-                if (tenantAccess is null)
+                var tenantId = tenant.Data.TenantId?.ToString() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(tenantId))
                 {
-                    tenantAccess = new TenantAccess(Id(identity.Id, tenantId), identity.Id, tenantId, tenantId, tenantId == identity.HomeTenantId ? "Home" : "Resource", now, "Available");
-                    tenants.Add(tenantAccess);
+                    errors.Add(new ProviderError(
+                        "tenant:unknown",
+                        "InvalidTenantResponse",
+                        "Azure returned a tenant without an identifier."));
+                    continue;
                 }
 
-                var subscriptionId = subscription.Data.SubscriptionId ?? subscription.Id.SubscriptionId ?? string.Empty;
-                if (!constraints.IsSubscriptionAllowed(subscriptionId))
+                var displayName = tenant.Data.DisplayName;
+                if (string.IsNullOrWhiteSpace(displayName))
+                    displayName = tenant.Data.DefaultDomain;
+                if (string.IsNullOrWhiteSpace(displayName))
+                    displayName = tenantId;
+                var tenantAccess = new TenantAccess(
+                    Id(identity.Id, tenantId),
+                    identity.Id,
+                    tenantId,
+                    displayName,
+                    tenant.Data.TenantType?.ToString() ??
+                    (string.Equals(tenantId, identity.HomeTenantId, StringComparison.OrdinalIgnoreCase)
+                        ? "Home"
+                        : "Resource"),
+                    now,
+                    "Available");
+                tenants.Add(tenantAccess);
+
+                if (!constraints.IsTenantAllowed(tenantId))
                     continue;
-                if (excludedSubscriptions.Contains(subscriptionId)) continue;
-                subscriptions.Add(new SubscriptionAccess(Id(identity.Id, tenantId, subscriptionId), tenantAccess.Id, subscriptionId, subscription.Data.DisplayName ?? subscriptionId, subscription.Data.State?.ToString() ?? "Unknown", true, now));
+
                 try
                 {
-                    await foreach (var resource in subscription.GetGenericResourcesAsync("resourceType eq 'Microsoft.KeyVault/vaults'", cancellationToken: cancellationToken))
+                    var tenantArm = _armClientFactory(
+                        new TenantScopedCredential(credential, tenantId));
+                    await foreach (var subscription in tenantArm.GetSubscriptions().GetAllAsync(cancellationToken))
                     {
-                        if (excludedVaultResourceIds.Contains(resource.Id.ToString(), StringComparer.OrdinalIgnoreCase))
+                        var subscriptionId = subscription.Data.SubscriptionId ?? subscription.Id.SubscriptionId ?? string.Empty;
+                        if (!constraints.IsSubscriptionAllowed(subscriptionId))
                             continue;
-                        if (!constraints.IsVaultAllowed(resource.Id.ToString()))
+                        if (excludedSubscriptions.Contains(subscriptionId, StringComparer.OrdinalIgnoreCase))
                             continue;
-                        var vaultId = Id(resource.Id.ToString());
-                        var vault = new VaultResource(vaultId, resource.Id.ToString(), resource.Data.Name, tenantId, subscriptionId, resource.Id.ResourceGroupName ?? string.Empty, resource.Data.Location.Name, ToTags(resource.Data.Tags), new Uri($"https://{resource.Data.Name}.vault.azure.net/"), now);
-                        vaults.Add(vault);
-                        var permissionObservation = await EnumerateVaultAsync(credential, vault, items, errors, cancellationToken);
-                        accessPaths.Add(new VaultAccess(
-                            Id(vaultId, identity.Id),
-                            vaultId,
-                            identity.Id,
-                            tenantId,
-                            permissionObservation.Summary,
-                            now,
-                            permissionObservation.FailureCategory,
-                            0));
+                        subscriptions.Add(new SubscriptionAccess(Id(identity.Id, tenantId, subscriptionId), tenantAccess.Id, subscriptionId, subscription.Data.DisplayName ?? subscriptionId, subscription.Data.State?.ToString() ?? "Unknown", true, now));
+                        try
+                        {
+                            await foreach (var resource in subscription.GetGenericResourcesAsync("resourceType eq 'Microsoft.KeyVault/vaults'", cancellationToken: cancellationToken))
+                            {
+                                if (excludedVaultResourceIds.Contains(resource.Id.ToString(), StringComparer.OrdinalIgnoreCase))
+                                    continue;
+                                if (!constraints.IsVaultAllowed(resource.Id.ToString()))
+                                    continue;
+                                var vaultId = Id(resource.Id.ToString());
+                                var vault = new VaultResource(vaultId, resource.Id.ToString(), resource.Data.Name, tenantId, subscriptionId, resource.Id.ResourceGroupName ?? string.Empty, resource.Data.Location.Name, ToTags(resource.Data.Tags), new Uri($"https://{resource.Data.Name}.vault.azure.net/"), now);
+                                vaults.Add(vault);
+                                var permissionObservation = await EnumerateVaultAsync(credential, vault, items, errors, cancellationToken);
+                                accessPaths.Add(new VaultAccess(
+                                    Id(vaultId, identity.Id),
+                                    vaultId,
+                                    identity.Id,
+                                    tenantId,
+                                    permissionObservation.Summary,
+                                    now,
+                                    permissionObservation.FailureCategory,
+                                    0));
+                            }
+                        }
+                        catch (Exception ex) when (IsExpectedAzureFailure(ex))
+                        {
+                            errors.Add(SafeError(
+                                $"subscription:{subscriptionId}",
+                                ex,
+                                new ProviderRetryScope(SubscriptionId: subscriptionId)));
+                        }
                     }
                 }
                 catch (Exception ex) when (IsExpectedAzureFailure(ex))
                 {
                     errors.Add(SafeError(
-                        $"subscription:{subscriptionId}",
-                        ex,
-                        new ProviderRetryScope(SubscriptionId: subscriptionId)));
+                        $"tenant:{Pseudonym(tenantAccess.Id)}:subscriptions",
+                        ex));
                 }
             }
         }
@@ -112,7 +164,7 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
     public async Task<SensitiveValue> RetrieveSecretAsync(ConnectedIdentity identity, VaultResource vault, VaultItem item, CancellationToken cancellationToken)
     {
         if (item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secrets can be retrieved as values.");
-        var credential = await identityProvider.GetCredentialAsync(identity, cancellationToken);
+        var credential = await _identityProvider.GetCredentialAsync(identity, cancellationToken);
         var client = new SecretClient(vault.VaultUri, credential);
         var response = string.IsNullOrWhiteSpace(item.ProviderVersion)
             ? await client.GetSecretAsync(item.ProviderObjectName, cancellationToken: cancellationToken)
@@ -242,6 +294,33 @@ public sealed class AzureVaultProvider(IAzureCredentialProvider identityProvider
             retryScope);
     private static string Pseudonym(Guid value) => value.ToString("N")[..12];
     private static Guid Id(params object[] values) { var input = string.Join('|', values.Select(x => x.ToString())); var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input)); return new Guid(hash.AsSpan(0, 16)); }
+
+    private sealed class TenantScopedCredential(
+        TokenCredential inner,
+        string tenantId) : TokenCredential
+    {
+        public override AccessToken GetToken(
+            TokenRequestContext requestContext,
+            CancellationToken cancellationToken) =>
+            inner.GetToken(WithTenant(requestContext), cancellationToken);
+
+        public override ValueTask<AccessToken> GetTokenAsync(
+            TokenRequestContext requestContext,
+            CancellationToken cancellationToken) =>
+            inner.GetTokenAsync(WithTenant(requestContext), cancellationToken);
+
+        private TokenRequestContext WithTenant(TokenRequestContext context) =>
+            new(
+                context.Scopes,
+                context.ParentRequestId,
+                context.Claims,
+                tenantId,
+                context.IsCaeEnabled,
+                context.IsProofOfPossessionEnabled,
+                context.ProofOfPossessionNonce,
+                context.ResourceRequestUri,
+                context.ResourceRequestMethod);
+    }
 
     private sealed record VaultPermissionObservation(string Summary, string? FailureCategory);
 }

@@ -33,7 +33,8 @@ public sealed record TenantAccess(
     string DisplayName,
     string TenantType,
     DateTimeOffset LastValidatedAt,
-    string Status);
+    string Status,
+    bool IsSelected = true);
 
 public sealed record SubscriptionAccess(
     Guid Id,

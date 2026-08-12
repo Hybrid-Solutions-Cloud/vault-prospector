@@ -721,6 +721,59 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task SynchronizationExcludesPersistedTenantWithoutRemovingItsKnownVaults()
+    {
+        var identity = Identity();
+        var excludedTenant = new TenantAccess(
+            Guid.NewGuid(),
+            identity.Id,
+            "22222222-2222-2222-2222-222222222222",
+            "Excluded tenant",
+            "AAD",
+            DateTimeOffset.UtcNow,
+            "Available",
+            false);
+        var excludedVault = Vault() with
+        {
+            TenantId = excludedTenant.TenantId,
+        };
+        var repository = new FakeRepository(identity)
+        {
+            Tenants = [excludedTenant],
+            VaultAccessSummaries =
+            [
+                new(
+                    excludedVault,
+                    new VaultAccess(
+                        Guid.NewGuid(),
+                        excludedVault.Id,
+                        identity.Id,
+                        excludedTenant.TenantId,
+                        "Visible",
+                        DateTimeOffset.UtcNow,
+                        null,
+                        0,
+                        true),
+                    identity.DisplayName,
+                    excludedTenant.DisplayName),
+            ],
+        };
+        var provider = new FakeProvider();
+        var service = new SynchronizationService(
+            provider,
+            repository,
+            new FixedClock(),
+            new FakeDiagnostics());
+
+        await service.SynchronizeAsync(identity, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(provider.Constraints);
+        Assert.Contains(excludedTenant.TenantId, provider.Constraints.ExcludedTenantIds);
+        Assert.False(provider.Constraints.IsTenantAllowed(excludedTenant.TenantId));
+        Assert.Contains(repository.AppliedSnapshot!.Vaults, vault => vault.Id == excludedVault.Id);
+    }
+
+    [Fact]
     public async Task SynchronizationExcludesOnlyVaultAccessPathsDisabledForTheSelectedIdentity()
     {
         var identity = Identity();
@@ -1421,6 +1474,7 @@ public sealed class ApplicationServiceTests
         public Exception? UpsertIdentityException { get; init; }
         public int RecordAccessCalls { get; private set; }
         public IReadOnlyList<SubscriptionAccess> Subscriptions { get; init; } = [];
+        public IReadOnlyList<TenantAccess> Tenants { get; init; } = [];
         public IReadOnlyList<VaultAccessSummary> VaultAccessSummaries { get; init; } = [];
         public IReadOnlyList<Guid> VaultIds { get; init; } = [];
         public IReadOnlyList<SearchResult> SearchResults { get; init; } = [];
@@ -1435,7 +1489,7 @@ public sealed class ApplicationServiceTests
         }
         public Task RemoveIdentityAsync(Guid id, CancellationToken c) => Task.CompletedTask;
         public Task<IReadOnlyList<TenantAccess>> GetTenantsAsync(Guid identityId, CancellationToken c) =>
-            Task.FromResult<IReadOnlyList<TenantAccess>>([]);
+            Task.FromResult(Tenants);
         public Task<IReadOnlyList<SubscriptionAccess>> GetSubscriptionsAsync(Guid identityId, CancellationToken c)
         {
             RequestedSubscriptionIdentityId = identityId;

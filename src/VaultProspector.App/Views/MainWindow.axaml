@@ -763,19 +763,33 @@
               </Border>
               <TextBlock Text="Revoking local access disables this profile, removes app-owned human tokens or stored workload credential references, and purges offline copies for its discovered vaults. Revoke a compromised certificate or federation trust at its external issuer too." TextWrapping="Wrap" Opacity="0.75" />
               <TextBlock Text="Tenant access paths" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,8,0,0" />
+              <TextBlock Text="Vault Prospector discovers every tenant available to the selected account. Choose which tenants future synchronization may scan, then choose subscriptions below." TextWrapping="Wrap" Opacity="0.75" />
               <ListBox ItemsSource="{Binding Tenants}"
                        SelectedItem="{Binding SelectedTenant}"
                        MinHeight="90"
                        AutomationProperties.Name="Discovered tenant access paths">
                 <ListBox.ItemTemplate>
                   <DataTemplate>
-                    <StackPanel Margin="6">
-                      <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
-                      <TextBlock Text="{Binding TenantId}" Opacity="0.7" />
-                    </StackPanel>
+                    <Grid ColumnDefinitions="*,Auto" Margin="6">
+                      <StackPanel>
+                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding TenantId}" Opacity="0.7" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding InclusionState}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    </Grid>
                   </DataTemplate>
                 </ListBox.ItemTemplate>
               </ListBox>
+              <WrapPanel>
+                <Button Content="Include selected tenant"
+                        Command="{Binding IncludeTenantCommand}"
+                        AutomationProperties.Name="Include selected tenant in synchronization"
+                        Margin="0,0,8,8" />
+                <Button Content="Exclude selected tenant"
+                        Command="{Binding ExcludeTenantCommand}"
+                        AutomationProperties.Name="Exclude selected tenant from synchronization"
+                        Margin="0,0,8,8" />
+              </WrapPanel>
               <TextBlock Text="Subscription scope" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,8,0,0" />
               <TextBlock Text="Choose which discovered subscriptions future synchronization may scan. Excluding a subscription does not delete its existing local metadata until a complete synchronization reconciles the scope." TextWrapping="Wrap" Opacity="0.75" />
               <ListBox ItemsSource="{Binding Subscriptions}"
@@ -788,6 +802,7 @@
                       <StackPanel>
                         <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
                         <TextBlock Text="{Binding SubscriptionId}" Opacity="0.7" />
+                        <TextBlock Text="{Binding TenantDisplayName}" Opacity="0.7" />
                       </StackPanel>
                       <TextBlock Grid.Column="1" Text="{Binding InclusionState}" VerticalAlignment="Center" FontWeight="SemiBold" />
                     </Grid>
