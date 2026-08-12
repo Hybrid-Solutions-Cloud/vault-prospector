@@ -55,7 +55,9 @@ transitively; the exact release SBOM determines which files are actually distrib
 | nuget | [Microsoft.Extensions.Options](https://www.nuget.org/packages/Microsoft.Extensions.Options/10.0.3) | 10.0.3 | MIT | nuspec-expression |
 | nuget | [Microsoft.Extensions.Primitives](https://www.nuget.org/packages/Microsoft.Extensions.Primitives/10.0.3) | 10.0.3 | MIT | nuspec-expression |
 | nuget | [Microsoft.Identity.Client](https://www.nuget.org/packages/Microsoft.Identity.Client/4.86.1) | 4.86.1 | MIT | nuspec-expression |
+| nuget | [Microsoft.Identity.Client](https://www.nuget.org/packages/Microsoft.Identity.Client/4.87.0) | 4.87.0 | MIT | nuspec-expression |
 | nuget | [Microsoft.Identity.Client.Extensions.Msal](https://www.nuget.org/packages/Microsoft.Identity.Client.Extensions.Msal/4.86.1) | 4.86.1 | MIT | nuspec-expression |
+| nuget | [Microsoft.Identity.Client.Extensions.Msal](https://www.nuget.org/packages/Microsoft.Identity.Client.Extensions.Msal/4.87.0) | 4.87.0 | MIT | nuspec-expression |
 | nuget | [Microsoft.IdentityModel.Abstractions](https://www.nuget.org/packages/Microsoft.IdentityModel.Abstractions/8.14.0) | 8.14.0 | MIT | nuspec-expression |
 | nuget | [Microsoft.IO.RecyclableMemoryStream](https://www.nuget.org/packages/Microsoft.IO.RecyclableMemoryStream/3.0.1) | 3.0.1 | MIT | nuspec-expression |
 | nuget | [Microsoft.NET.ILLink.Tasks](https://www.nuget.org/packages/Microsoft.NET.ILLink.Tasks/10.0.10) | 10.0.10 | MIT | nuspec-expression |
