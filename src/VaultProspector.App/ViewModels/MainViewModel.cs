@@ -54,7 +54,7 @@ public sealed partial class MainViewModel(
         _allDiagnosticEvents = [];
 
     public ObservableCollection<ConnectedIdentity> Identities { get; } = [];
-    public ObservableCollection<TenantAccess> Tenants { get; } = [];
+    public ObservableCollection<TenantSelectionRow> Tenants { get; } = [];
     public ObservableCollection<SubscriptionSelectionRow> Subscriptions { get; } = [];
     public ObservableCollection<AdministrationSubscriptionOption>
         AdministrationSubscriptionOptions
@@ -186,7 +186,7 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private string _setupSyncStatus = "Not started";
     [ObservableProperty] private ConnectedIdentity? _selectedIdentity;
     [ObservableProperty] private SyncErrorRow? _selectedSyncError;
-    [ObservableProperty] private TenantAccess? _selectedTenant;
+    [ObservableProperty] private TenantSelectionRow? _selectedTenant;
     [ObservableProperty] private SubscriptionSelectionRow? _selectedSubscription;
     [ObservableProperty]
     private AdministrationSubscriptionOption? _selectedAdministrationSubscription;
@@ -761,6 +761,25 @@ public sealed partial class MainViewModel(
 
     [RelayCommand(CanExecute = nameof(CanIncludeSubscription))]
     private Task IncludeSubscriptionAsync() => SetSelectedSubscriptionStateAsync(true);
+
+    [RelayCommand(CanExecute = nameof(CanExcludeTenant))]
+    private Task ExcludeTenantAsync() => SetSelectedTenantStateAsync(false);
+
+    [RelayCommand(CanExecute = nameof(CanIncludeTenant))]
+    private Task IncludeTenantAsync() => SetSelectedTenantStateAsync(true);
+
+    private Task SetSelectedTenantStateAsync(bool isSelected) => RunAsync(async cancellationToken =>
+    {
+        if (SelectedIdentity is null || SelectedTenant is null) return;
+        var tenantAccessId = SelectedTenant.Id;
+        var displayName = SelectedTenant.DisplayName;
+        await repository.SetTenantSelectedAsync(tenantAccessId, isSelected, cancellationToken);
+        await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        SelectedTenant = Tenants.FirstOrDefault(tenant => tenant.Id == tenantAccessId);
+        StatusText = isSelected
+            ? $"{displayName} will be included in future synchronization. Choose which of its subscriptions to include below."
+            : $"{displayName} will be excluded from future synchronization.";
+    });
 
     private Task SetSelectedSubscriptionStateAsync(bool isSelected) => RunAsync(async cancellationToken =>
     {
@@ -1398,18 +1417,21 @@ public sealed partial class MainViewModel(
             .Select(tenant => tenant.Id)
             .ToHashSet();
         Tenants.Clear();
-        foreach (var tenant in visibleTenants) Tenants.Add(tenant);
+        foreach (var tenant in visibleTenants) Tenants.Add(new TenantSelectionRow(tenant));
         SelectedTenant = selectedTenantId is null
             ? Tenants.FirstOrDefault()
             : Tenants.FirstOrDefault(tenant => tenant.Id == selectedTenantId) ?? Tenants.FirstOrDefault();
         Subscriptions.Clear();
+        var tenantByAccessId = visibleTenants.ToDictionary(tenant => tenant.Id);
         foreach (var subscription in subscriptions.Where(
                      subscription =>
                          azureAllowed &&
                          (!enterprise.RestrictsTenants ||
                           visibleTenantIds.Contains(
                               subscription.TenantAccessId))))
-            Subscriptions.Add(new SubscriptionSelectionRow(subscription));
+            Subscriptions.Add(new SubscriptionSelectionRow(
+                subscription,
+                tenantByAccessId.GetValueOrDefault(subscription.TenantAccessId)));
         SelectedSubscription = selectedSubscriptionId is null
             ? Subscriptions.FirstOrDefault()
             : Subscriptions.FirstOrDefault(subscription => subscription.Id == selectedSubscriptionId) ??
@@ -1605,6 +1627,8 @@ public sealed partial class MainViewModel(
     private bool CanAddSelectedIdentityToWorkspace() => SelectedWorkspace is not null && SelectedIdentity is not null && !IsBusy;
     private bool CanAddSelectedTenantToWorkspace() => SelectedWorkspace is not null && SelectedTenant is not null && !IsBusy;
     private bool CanAddSelectedSubscriptionToWorkspace() => SelectedWorkspace is not null && SelectedSubscription is not null && !IsBusy;
+    private bool CanExcludeTenant() => SelectedTenant is { IsSelected: true } && !IsBusy;
+    private bool CanIncludeTenant() => SelectedTenant is { IsSelected: false } && !IsBusy;
     private bool CanExcludeSubscription() => SelectedSubscription is { IsSelected: true } && !IsBusy;
     private bool CanIncludeSubscription() => SelectedSubscription is { IsSelected: false } && !IsBusy;
     private bool CanExcludeVault() => SelectedVaultAccess is { IsSelected: true } && !IsBusy;
@@ -1705,8 +1729,12 @@ public sealed partial class MainViewModel(
     partial void OnSelectedSyncErrorChanged(SyncErrorRow? value) =>
         RetrySelectedSyncErrorCommand.NotifyCanExecuteChanged();
 
-    partial void OnSelectedTenantChanged(TenantAccess? value) =>
+    partial void OnSelectedTenantChanged(TenantSelectionRow? value)
+    {
         AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
+        ExcludeTenantCommand.NotifyCanExecuteChanged();
+        IncludeTenantCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnSelectedVaultAccessChanged(VaultAccessRow? value)
     {
@@ -1811,6 +1839,8 @@ public sealed partial class MainViewModel(
         ContinueToSearchCommand.NotifyCanExecuteChanged();
         ExcludeSubscriptionCommand.NotifyCanExecuteChanged();
         IncludeSubscriptionCommand.NotifyCanExecuteChanged();
+        ExcludeTenantCommand.NotifyCanExecuteChanged();
+        IncludeTenantCommand.NotifyCanExecuteChanged();
         ExcludeVaultCommand.NotifyCanExecuteChanged();
         IncludeVaultCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
@@ -2400,13 +2430,29 @@ public sealed class AdministrationSubscriptionOption(
         $"{Tenant.DisplayName} ({Tenant.TenantId}) · {Identity.DisplayName}";
 }
 
-public sealed class SubscriptionSelectionRow(SubscriptionAccess subscription)
+public sealed class TenantSelectionRow(TenantAccess tenant)
+{
+    public TenantAccess Tenant { get; } = tenant;
+    public Guid Id => Tenant.Id;
+    public string TenantId => Tenant.TenantId;
+    public string DisplayName => Tenant.DisplayName;
+    public string TenantType => Tenant.TenantType;
+    public string Status => Tenant.Status;
+    public bool IsSelected => Tenant.IsSelected;
+    public string InclusionState => IsSelected ? "Included" : "Excluded";
+}
+
+public sealed class SubscriptionSelectionRow(
+    SubscriptionAccess subscription,
+    TenantAccess? tenant = null)
 {
     public SubscriptionAccess Subscription { get; } = subscription;
     public Guid Id => Subscription.Id;
     public string SubscriptionId => Subscription.SubscriptionId;
     public string DisplayName => Subscription.DisplayName;
     public string State => Subscription.State;
+    public string TenantDisplayName => tenant?.DisplayName ?? "Unknown tenant";
+    public string TenantId => tenant?.TenantId ?? string.Empty;
     public bool IsSelected => Subscription.IsSelected;
     public string InclusionState => IsSelected ? "Included" : "Excluded";
 }

@@ -73,6 +73,11 @@ Status terms used in PMO reporting:
   safe diagnostic scope/category/correlation fields and require the corrected installed build to
   classify any remaining Azure permission or provider failures. No installed-package acceptance
   is claimed yet.
+- Multi-tenant correction (local source, 2026-08-12): GitHub #97 / ADO AB#7310 and Tasks
+  AB#7311–#7312 replace single-tenant subscription enumeration with per-tenant ARM discovery,
+  explicit tenant-qualified token acquisition, isolated tenant errors, and persisted tenant plus
+  subscription inclusion controls. The local Release gate passes; exact installed-package testing
+  against the reported 5–6 tenant account remains required before closure.
 
 ## Priority model
 

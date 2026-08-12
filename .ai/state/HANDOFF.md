@@ -1,5 +1,33 @@
 # Session handoff
 
+## Multi-tenant subscription and Key Vault correction — 2026-08-12
+
+- The product owner reported that one connected interactive account has access across 5–6 Entra
+  tenants but Vault Prospector only discovers one tenant's subscriptions and Key Vaults. They also
+  require explicit tenant selection as well as subscription selection.
+- Created GitHub Bug #97, ADO Bug AB#7310, and child Tasks AB#7311–#7312. They are scoped to the
+  current S4 defect correction, not CyberArk, mobile, or Key Vault-creation roadmap work.
+- Root cause: `AzureVaultProvider` called `ArmClient.GetSubscriptions()` once. ARM subscription
+  listing is tenant-scoped, so guest/resource-tenant subscriptions were never requested.
+- Implemented ARM tenant enumeration and a tenant-scoped credential wrapper that preserves all
+  token request context while setting the target tenant. Subscription and Key Vault enumeration
+  now runs once per selected tenant, with per-tenant failure isolation and pseudonymous errors.
+- Added persisted tenant inclusion (`tenants.is_selected`) through encrypted schema v8, a safe v7
+  migration defaulting existing tenants to included, rediscovery preservation, synchronization
+  constraints, and retained excluded access paths.
+- Added Connections UI tenant include/exclude commands and state, plus tenant context on every
+  subscription row. Tenant and subscription choices are both persisted and drive future sync.
+- Regression coverage proves distinct home/guest tenant tokens, excluded-tenant behavior, partial
+  success, synchronization constraints, schema migration/selection persistence, and UI commands.
+- Local `pwsh ./scripts/Build.ps1 -Configuration Release` passed locked restore, vulnerability
+  inspection, formatting, zero-warning build, and all 465 tests using the already installed pinned
+  SDK at `D:/tmp/dotnet-vp-10`. No new runner/server/app or cloud infrastructure was created.
+- No live-Azure or installed-package acceptance is claimed. Next: commit/push, PR CI on existing
+  documented HCS runners, merge, publish/install the next Preview, then verify the product owner's
+  multi-tenant account and expected Key Vault inventory.
+
+---
+
 ## Installed-support remediation implementation — 2026-08-11
 
 - Inspected the product-owner support bundle containing 2,167 events across three connected

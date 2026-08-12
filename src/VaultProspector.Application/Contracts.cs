@@ -151,7 +151,8 @@ public interface IGovernedAzureMutationProvider
 public sealed class VaultDiscoveryConstraints(
     IEnumerable<string>? allowedTenantIds = null,
     IEnumerable<string>? allowedSubscriptionIds = null,
-    IEnumerable<string>? allowedVaultResourceIds = null)
+    IEnumerable<string>? allowedVaultResourceIds = null,
+    IEnumerable<string>? excludedTenantIds = null)
 {
     private readonly HashSet<string> _allowedTenantIds = new(
         allowedTenantIds ?? [],
@@ -162,20 +163,27 @@ public sealed class VaultDiscoveryConstraints(
     private readonly HashSet<string> _allowedVaultResourceIds = new(
         allowedVaultResourceIds ?? [],
         StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _excludedTenantIds = new(
+        excludedTenantIds ?? [],
+        StringComparer.OrdinalIgnoreCase);
 
     public static VaultDiscoveryConstraints Unrestricted { get; } = new();
 
     public IReadOnlySet<string> AllowedTenantIds => _allowedTenantIds;
     public IReadOnlySet<string> AllowedSubscriptionIds => _allowedSubscriptionIds;
     public IReadOnlySet<string> AllowedVaultResourceIds => _allowedVaultResourceIds;
-    public bool RestrictsTenants => _allowedTenantIds.Count > 0;
+    public IReadOnlySet<string> ExcludedTenantIds => _excludedTenantIds;
+    public bool RestrictsTenants => _allowedTenantIds.Count > 0 || _excludedTenantIds.Count > 0;
     public bool RestrictsSubscriptions => _allowedSubscriptionIds.Count > 0;
     public bool RestrictsVaults => _allowedVaultResourceIds.Count > 0;
     public bool IsTargetedRetry => RestrictsSubscriptions || RestrictsVaults;
 
     public bool IsTenantAllowed(string tenantId) =>
-        !RestrictsTenants ||
-        _allowedTenantIds.Contains(tenantId);
+        IsTenantVisible(tenantId) &&
+        !_excludedTenantIds.Contains(tenantId);
+
+    public bool IsTenantVisible(string tenantId) =>
+        _allowedTenantIds.Count == 0 || _allowedTenantIds.Contains(tenantId);
 
     public bool IsSubscriptionAllowed(string subscriptionId) =>
         !RestrictsSubscriptions ||
@@ -238,6 +246,8 @@ public interface IMetadataRepository
     Task UpsertIdentityAsync(ConnectedIdentity identity, CancellationToken cancellationToken);
     Task RemoveIdentityAsync(Guid id, CancellationToken cancellationToken);
     Task<IReadOnlyList<TenantAccess>> GetTenantsAsync(Guid identityId, CancellationToken cancellationToken);
+    Task SetTenantSelectedAsync(Guid tenantAccessId, bool isSelected, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Tenant selection is not supported by this repository.");
     Task<IReadOnlyList<SubscriptionAccess>> GetSubscriptionsAsync(Guid identityId, CancellationToken cancellationToken);
     Task SetSubscriptionSelectedAsync(Guid subscriptionAccessId, bool isSelected, CancellationToken cancellationToken);
     Task<IReadOnlyList<VaultAccessSummary>> GetVaultAccessSummariesAsync(Guid identityId, CancellationToken cancellationToken);

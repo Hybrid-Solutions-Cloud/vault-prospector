@@ -13,7 +13,7 @@ public sealed class EncryptedSqliteMetadataRepository(
     string databasePath,
     IKeyMaterialProvider keyMaterial) : IMetadataRepository, IDisposable
 {
-    private const int CurrentSchemaVersion = 7;
+    private const int CurrentSchemaVersion = 8;
     private const int SqlCipherKeyLength = 32;
     private const int SqlCipherSaltLength = 16;
     private const int SqlCipherKdfIterations = 256_000;
@@ -123,6 +123,15 @@ public sealed class EncryptedSqliteMetadataRepository(
                     schemaVersion = 7;
                 }
 
+                if (schemaVersion == 7)
+                {
+                    await EnsureTenantSelectionColumnAsync(
+                        connection,
+                        transaction,
+                        cancellationToken);
+                    schemaVersion = 8;
+                }
+
                 if (schemaVersion != CurrentSchemaVersion)
                 {
                     throw new InvalidOperationException($"Migration failed. Expected version {CurrentSchemaVersion}, but ended up at {schemaVersion}.");
@@ -223,7 +232,7 @@ public sealed class EncryptedSqliteMetadataRepository(
         await using var connection = await OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT id,identity_id,tenant_id,display_name,tenant_type,last_validated,status
+            SELECT id,identity_id,tenant_id,display_name,tenant_type,last_validated,status,is_selected
             FROM tenants
             WHERE identity_id=$identity
             ORDER BY display_name COLLATE NOCASE,tenant_id
@@ -240,10 +249,26 @@ public sealed class EncryptedSqliteMetadataRepository(
                 reader.GetString(3),
                 reader.GetString(4),
                 DateTimeOffset.Parse(reader.GetString(5), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.GetString(6)));
+                reader.GetString(6),
+                reader.GetBoolean(7)));
         }
 
         return tenants;
+    }
+
+    public async Task SetTenantSelectedAsync(
+        Guid tenantAccessId,
+        bool isSelected,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await ExecuteAsync(
+            connection,
+            null,
+            "UPDATE tenants SET is_selected=$selected WHERE id=$id",
+            cancellationToken,
+            ("$selected", isSelected ? 1 : 0),
+            ("$id", tenantAccessId.ToString("D")));
     }
 
     public async Task SetSubscriptionSelectedAsync(
@@ -1391,7 +1416,7 @@ public sealed class EncryptedSqliteMetadataRepository(
         Dictionary<string, string[]> requiredSchema = new(StringComparer.Ordinal)
         {
             ["identities"] = ["id", "client_id", "account_identifier", "username_hint", "display_name", "home_tenant_id", "auth_state", "last_interactive", "is_enabled", "identity_type", "credential_data"],
-            ["tenants"] = ["id", "identity_id", "tenant_id", "display_name", "tenant_type", "last_validated", "status"],
+            ["tenants"] = ["id", "identity_id", "tenant_id", "display_name", "tenant_type", "last_validated", "status", "is_selected"],
             ["subscriptions"] = ["id", "tenant_access_id", "subscription_id", "display_name", "state", "is_selected", "last_discovered"],
             ["vaults"] = ["id", "resource_id", "name", "tenant_id", "subscription_id", "resource_group", "location", "tags", "vault_uri", "last_indexed"],
             ["vault_access"] = ["id", "vault_id", "identity_id", "tenant_id", "status", "last_validated", "failure_category", "preferred_rank", "is_selected"],
@@ -1528,7 +1553,7 @@ public sealed class EncryptedSqliteMetadataRepository(
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static Task UpsertTenantAsync(SqliteConnection c, SqliteTransaction t, TenantAccess x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO tenants(id,identity_id,tenant_id,display_name,tenant_type,last_validated,status) VALUES($id,$identity,$tenant,$name,$type,$last,$status) ON CONFLICT(id) DO UPDATE SET display_name=excluded.display_name,last_validated=excluded.last_validated,status=excluded.status", ct, ("$id", x.Id.ToString("D")), ("$identity", x.ConnectedIdentityId.ToString("D")), ("$tenant", x.TenantId), ("$name", x.DisplayName), ("$type", x.TenantType), ("$last", Format(x.LastValidatedAt)), ("$status", x.Status));
+    private static Task UpsertTenantAsync(SqliteConnection c, SqliteTransaction t, TenantAccess x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO tenants(id,identity_id,tenant_id,display_name,tenant_type,last_validated,status,is_selected) VALUES($id,$identity,$tenant,$name,$type,$last,$status,$selected) ON CONFLICT(id) DO UPDATE SET display_name=excluded.display_name,tenant_type=excluded.tenant_type,last_validated=excluded.last_validated,status=excluded.status", ct, ("$id", x.Id.ToString("D")), ("$identity", x.ConnectedIdentityId.ToString("D")), ("$tenant", x.TenantId), ("$name", x.DisplayName), ("$type", x.TenantType), ("$last", Format(x.LastValidatedAt)), ("$status", x.Status), ("$selected", x.IsSelected ? 1 : 0));
     private static Task UpsertSubscriptionAsync(SqliteConnection c, SqliteTransaction t, SubscriptionAccess x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO subscriptions(id,tenant_access_id,subscription_id,display_name,state,is_selected,last_discovered) VALUES($id,$tenant,$subscription,$name,$state,$selected,$last) ON CONFLICT(id) DO UPDATE SET display_name=excluded.display_name,state=excluded.state,last_discovered=excluded.last_discovered", ct, ("$id", x.Id.ToString("D")), ("$tenant", x.TenantAccessId.ToString("D")), ("$subscription", x.SubscriptionId), ("$name", x.DisplayName), ("$state", x.State), ("$selected", x.IsSelected ? 1 : 0), ("$last", Format(x.LastDiscoveredAt)));
     private static Task UpsertVaultAsync(SqliteConnection c, SqliteTransaction t, VaultResource x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO vaults(id,resource_id,name,tenant_id,subscription_id,resource_group,location,tags,vault_uri,last_indexed) VALUES($id,$resource,$name,$tenant,$subscription,$group,$location,$tags,$uri,$last) ON CONFLICT(id) DO UPDATE SET name=excluded.name,tags=excluded.tags,vault_uri=excluded.vault_uri,last_indexed=excluded.last_indexed", ct, ("$id", x.Id.ToString("D")), ("$resource", x.ProviderResourceId), ("$name", x.Name), ("$tenant", x.TenantId), ("$subscription", x.SubscriptionId), ("$group", x.ResourceGroup), ("$location", x.Location), ("$tags", JsonSerializer.Serialize(x.Tags, InfrastructureJsonContext.Default.DictionaryStringString)), ("$uri", x.VaultUri.ToString()), ("$last", Format(x.LastIndexedAt)));
     private static Task UpsertAccessAsync(SqliteConnection c, SqliteTransaction t, VaultAccess x, CancellationToken ct) => ExecuteAsync(c, t, "INSERT INTO vault_access(id,vault_id,identity_id,tenant_id,status,last_validated,failure_category,preferred_rank,is_selected) VALUES($id,$vault,$identity,$tenant,$status,$last,$failure,$rank,$selected) ON CONFLICT(id) DO UPDATE SET status=excluded.status,last_validated=excluded.last_validated,failure_category=excluded.failure_category,preferred_rank=excluded.preferred_rank", ct, ("$id", x.Id.ToString("D")), ("$vault", x.VaultId.ToString("D")), ("$identity", x.ConnectedIdentityId.ToString("D")), ("$tenant", x.TenantId), ("$status", x.AccessStatus), ("$last", Format(x.LastValidatedAt)), ("$failure", x.LastFailureCategory ?? (object)DBNull.Value), ("$rank", x.PreferredRank), ("$selected", x.IsSelected ? 1 : 0));
@@ -1691,6 +1716,15 @@ public sealed class EncryptedSqliteMetadataRepository(
         var exists = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture) > 0;
         if (!exists)
             await ExecuteAsync(connection, transaction, "ALTER TABLE vault_access ADD COLUMN is_selected INTEGER NOT NULL DEFAULT 1", cancellationToken);
+    }
+    private static async Task EnsureTenantSelectionColumnAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "SELECT COUNT(*) FROM pragma_table_info('tenants') WHERE name='is_selected'";
+        var exists = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture) > 0;
+        if (!exists)
+            await ExecuteAsync(connection, transaction, "ALTER TABLE tenants ADD COLUMN is_selected INTEGER NOT NULL DEFAULT 1", cancellationToken);
     }
 
     private static Task EnsureBrowserIntegrationTablesAsync(
@@ -1965,7 +1999,7 @@ public sealed class EncryptedSqliteMetadataRepository(
         """;
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS identities(id TEXT PRIMARY KEY,client_id TEXT NOT NULL,account_identifier TEXT NOT NULL UNIQUE,username_hint TEXT NOT NULL,display_name TEXT NOT NULL,home_tenant_id TEXT NOT NULL,auth_state INTEGER NOT NULL,last_interactive TEXT NOT NULL,is_enabled INTEGER NOT NULL,identity_type INTEGER NOT NULL DEFAULT 0,credential_data TEXT NOT NULL DEFAULT '');
-        CREATE TABLE IF NOT EXISTS tenants(id TEXT PRIMARY KEY,identity_id TEXT NOT NULL REFERENCES identities(id) ON DELETE CASCADE,tenant_id TEXT NOT NULL,display_name TEXT NOT NULL,tenant_type TEXT NOT NULL,last_validated TEXT NOT NULL,status TEXT NOT NULL,UNIQUE(identity_id,tenant_id));
+        CREATE TABLE IF NOT EXISTS tenants(id TEXT PRIMARY KEY,identity_id TEXT NOT NULL REFERENCES identities(id) ON DELETE CASCADE,tenant_id TEXT NOT NULL,display_name TEXT NOT NULL,tenant_type TEXT NOT NULL,last_validated TEXT NOT NULL,status TEXT NOT NULL,is_selected INTEGER NOT NULL DEFAULT 1,UNIQUE(identity_id,tenant_id));
         CREATE TABLE IF NOT EXISTS subscriptions(id TEXT PRIMARY KEY,tenant_access_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,subscription_id TEXT NOT NULL,display_name TEXT NOT NULL,state TEXT NOT NULL,is_selected INTEGER NOT NULL,last_discovered TEXT NOT NULL,UNIQUE(tenant_access_id,subscription_id));
         CREATE TABLE IF NOT EXISTS vaults(id TEXT PRIMARY KEY,resource_id TEXT NOT NULL UNIQUE,name TEXT NOT NULL,tenant_id TEXT NOT NULL,subscription_id TEXT NOT NULL,resource_group TEXT NOT NULL,location TEXT NOT NULL,tags TEXT NOT NULL,vault_uri TEXT NOT NULL,last_indexed TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS vault_access(id TEXT PRIMARY KEY,vault_id TEXT NOT NULL REFERENCES vaults(id) ON DELETE CASCADE,identity_id TEXT NOT NULL REFERENCES identities(id) ON DELETE CASCADE,tenant_id TEXT NOT NULL,status TEXT NOT NULL,last_validated TEXT NOT NULL,failure_category TEXT,preferred_rank INTEGER NOT NULL,is_selected INTEGER NOT NULL DEFAULT 1,UNIQUE(vault_id,identity_id,tenant_id));

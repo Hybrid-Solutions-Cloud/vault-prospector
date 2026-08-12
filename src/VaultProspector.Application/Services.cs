@@ -446,11 +446,18 @@ public sealed class SynchronizationService(
         var policy = (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance)
             .GetSnapshot();
         policy.EnsureIdentityAllowed(identity);
-        var constraints = new VaultDiscoveryConstraints(
-            policy.AllowedTenantIds);
         var started = clock.UtcNow;
         try
         {
+            var knownTenants = await repository.GetTenantsAsync(identity.Id, cancellationToken);
+            var excludedTenantIds = knownTenants
+                .Where(tenant => !tenant.IsSelected)
+                .Select(tenant => tenant.TenantId)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            var constraints = new VaultDiscoveryConstraints(
+                allowedTenantIds: policy.AllowedTenantIds,
+                excludedTenantIds: excludedTenantIds);
             var knownSubscriptions = await repository.GetSubscriptionsAsync(identity.Id, cancellationToken);
             var excludedSubscriptions = knownSubscriptions
                 .Where(subscription => !subscription.IsSelected)
@@ -475,7 +482,8 @@ public sealed class SynchronizationService(
             var retainedExcludedPaths = knownVaults
                 .Where(summary =>
                     !summary.Access.IsSelected ||
-                    excludedSubscriptions.Contains(summary.Vault.SubscriptionId, StringComparer.OrdinalIgnoreCase))
+                    excludedSubscriptions.Contains(summary.Vault.SubscriptionId, StringComparer.OrdinalIgnoreCase) ||
+                    excludedTenantIds.Contains(summary.Vault.TenantId, StringComparer.OrdinalIgnoreCase))
                 .ToArray();
             if (retainedExcludedPaths.Length > 0)
             {
@@ -486,7 +494,7 @@ public sealed class SynchronizationService(
                     Vaults = snapshot.Vaults
                         .Concat(retainedExcludedPaths
                             .Where(summary =>
-                                constraints.IsTenantAllowed(
+                                constraints.IsTenantVisible(
                                     summary.Vault.TenantId) &&
                                 discoveredVaultIds.Add(summary.Vault.Id))
                             .Select(summary => summary.Vault))
@@ -494,7 +502,7 @@ public sealed class SynchronizationService(
                     AccessPaths = snapshot.AccessPaths
                         .Concat(retainedExcludedPaths
                             .Where(summary =>
-                                constraints.IsTenantAllowed(
+                                constraints.IsTenantVisible(
                                     summary.Vault.TenantId) &&
                                 discoveredAccessIds.Add(summary.Access.Id))
                             .Select(summary => summary.Access))
@@ -580,10 +588,14 @@ public sealed class SynchronizationService(
 
         var policy = (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance).GetSnapshot();
         policy.EnsureIdentityAllowed(identity);
+        var knownTenants = await repository.GetTenantsAsync(identity.Id, cancellationToken);
         var constraints = new VaultDiscoveryConstraints(
-            policy.AllowedTenantIds,
-            subscriptionIds,
-            vaultResourceIds);
+            allowedTenantIds: policy.AllowedTenantIds,
+            allowedSubscriptionIds: subscriptionIds,
+            allowedVaultResourceIds: vaultResourceIds,
+            excludedTenantIds: knownTenants
+                .Where(tenant => !tenant.IsSelected)
+                .Select(tenant => tenant.TenantId));
         var started = clock.UtcNow;
         var snapshot = await provider.DiscoverAsync(
             identity,
@@ -697,9 +709,10 @@ public sealed class SynchronizationService(
 
         var tenants = snapshot.Tenants
             .Where(tenant =>
-                constraints.IsTenantAllowed(tenant.TenantId))
+                constraints.IsTenantVisible(tenant.TenantId))
             .ToArray();
         var tenantAccessIds = tenants
+            .Where(tenant => constraints.IsTenantAllowed(tenant.TenantId))
             .Select(tenant => tenant.Id)
             .ToHashSet();
         var subscriptions = snapshot.Subscriptions

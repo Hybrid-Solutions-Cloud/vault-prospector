@@ -610,7 +610,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             TestContext.Current.CancellationToken));
         Assert.Empty(await migrated.GetBrowserFillMappingsAsync(
             TestContext.Current.CancellationToken));
-        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(8, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -691,7 +691,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
         Assert.NotNull(restored);
         Assert.Equal(IdentityType.InteractiveUser, restored.Type);
         Assert.Equal(string.Empty, restored.CredentialData);
-        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(8, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -722,7 +722,42 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         Assert.Single(summaries);
         Assert.True(summaries[0].Access.IsSelected);
-        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(8, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+    }
+
+    [Fact]
+    public async Task VersionSevenDatabaseMigratesTenantSelectionAsIncluded()
+    {
+        var path = Path.Combine(_directory, "version-seven-tenant-selection.db");
+        var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = TestIdentity("version-seven-account");
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        var tenant = new TenantAccess(
+            Guid.NewGuid(),
+            identity.Id,
+            "tenant",
+            "Tenant",
+            "Home",
+            _clock.UtcNow,
+            "Available");
+        await repository.ApplyDiscoveryAsync(
+            identity.Id,
+            new DiscoverySnapshot([tenant], [], [], [], [], []),
+            new SyncRun(Guid.NewGuid(), "initial", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 0, 0, []),
+            TestContext.Current.CancellationToken);
+        await ExecuteDatabaseCommandAsync(path, """
+            ALTER TABLE tenants DROP COLUMN is_selected;
+            PRAGMA user_version=7;
+            """);
+
+        var migrated = new EncryptedSqliteMetadataRepository(path, _keys);
+        await migrated.InitializeAsync(TestContext.Current.CancellationToken);
+
+        Assert.True(Assert.Single(await migrated.GetTenantsAsync(
+            identity.Id,
+            TestContext.Current.CancellationToken)).IsSelected);
+        Assert.Equal(8, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -777,7 +812,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
     }
 
     [Fact]
-    public async Task SubscriptionSelectionPersistsAcrossRediscoveryAndIsScopedToIdentity()
+    public async Task TenantAndSubscriptionSelectionPersistAcrossRediscoveryAndAreScopedToIdentity()
     {
         var path = Path.Combine(_directory, "subscription-selection.db");
         var repository = new EncryptedSqliteMetadataRepository(path, _keys);
@@ -802,6 +837,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new SyncRun(Guid.NewGuid(), "other", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 0, 0, []),
             TestContext.Current.CancellationToken);
 
+        await repository.SetTenantSelectedAsync(selectedTenant.Id, false, TestContext.Current.CancellationToken);
         await repository.SetSubscriptionSelectedAsync(selectedSubscription.Id, false, TestContext.Current.CancellationToken);
         await repository.ApplyDiscoveryAsync(
             selectedIdentity.Id,
@@ -817,6 +853,10 @@ public sealed class EncryptedPersistenceTests : IDisposable
 
         var selectedSubscriptions = await repository.GetSubscriptionsAsync(selectedIdentity.Id, TestContext.Current.CancellationToken);
         var otherSubscriptions = await repository.GetSubscriptionsAsync(otherIdentity.Id, TestContext.Current.CancellationToken);
+        var selectedTenants = await repository.GetTenantsAsync(selectedIdentity.Id, TestContext.Current.CancellationToken);
+        var otherTenants = await repository.GetTenantsAsync(otherIdentity.Id, TestContext.Current.CancellationToken);
+        Assert.False(Assert.Single(selectedTenants).IsSelected);
+        Assert.True(Assert.Single(otherTenants).IsSelected);
         Assert.Single(selectedSubscriptions);
         Assert.Equal("Renamed", selectedSubscriptions[0].DisplayName);
         Assert.False(selectedSubscriptions[0].IsSelected);
@@ -1313,7 +1353,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(99, exception.ObservedVersion);
-        Assert.Equal(7, exception.SupportedVersion);
+        Assert.Equal(8, exception.SupportedVersion);
         Assert.Equal(before, SHA256.HashData(await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken)));
         Assert.Equal(99, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
@@ -1368,7 +1408,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name='sync_runs'"));
-        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(8, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     [Fact]
@@ -1382,7 +1422,7 @@ public sealed class EncryptedPersistenceTests : IDisposable
             new EncryptedSqliteMetadataRepository(path, _keys).InitializeAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(0, await ReadDatabaseScalarAsync<long>(path, "SELECT COUNT(*) FROM pragma_table_info('sync_runs') WHERE name='error_count'"));
-        Assert.Equal(7, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
+        Assert.Equal(8, await ReadDatabaseScalarAsync<int>(path, "PRAGMA user_version"));
     }
 
     private ConnectedIdentity TestIdentity(string accountIdentifier) => new(
