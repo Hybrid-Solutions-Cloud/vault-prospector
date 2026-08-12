@@ -2,10 +2,9 @@
 
 ## Current delivery state
 
-`0.3.0-preview.8` is the latest public, unsigned Windows Preview for non-production evaluation.
-Its immutable source tag points to `2582a44e50155c80205370c6ec90b9d19eb7a006`; this repository
-does not yet contain a dedicated Preview 8 release-evidence record, so Preview 6 remains the most
-recent release with complete retained artifact/provenance evidence in this backlog.
+`0.3.0-preview.12` is the latest public, unsigned Windows Preview for non-production evaluation.
+Its immutable source tag points to `c5fe6d39291233e5c87a88ce9f6da2830bdaacbd`; protected main
+CI and the tag release workflow passed, and the public release contains 16 artifacts.
 The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
 in the 0.2 Preview line and remain subject to the live, independent, Store, and GA validation
 gates recorded below.
@@ -23,12 +22,13 @@ reported on 2026-08-12. Local source now enumerates every ARM tenant available t
 account, acquires tenant-qualified tokens for subscription enumeration, isolates failures by
 tenant, and persists explicit tenant plus subscription inclusion choices. Exact installed-package
 validation across the product owner's multi-tenant account remains open.
-ADO Bug AB#7337 is the current P1/S1 release blocker. Installed Preview 10 cannot unlock an
-Entra-backed Windows user in Remote Desktop. Preview 11 proved that adding the `AzureAD` authority
-does not solve Conditional Access MFA (`AADSTS50076`) because password-only Windows logon cannot
-complete the required interaction. The revised fix uses fresh interactive Entra verification and
-binds the returned object ID to the current Windows cloud SID; exact Preview 12 MSI,
-protected-branch CI, and immutable public-release evidence remain required.
+ADO Bug AB#7337 was resolved in public Preview 12 for the specifically tested Entra-backed RDP
+VM/session/account/policy by using fresh interactive Entra verification bound to the current
+Windows cloud SID. Broader VDI coverage remains in release readiness.
+GitHub issue #100 / ADO Bug AB#7341 tracks the follow-on multi-tenant sync defect: ARM enumeration
+uses a tenant-scoped credential, but Preview 12 passes the original unscoped credential into Key
+Vault metadata enumeration. The local fix and deterministic home/guest tenant regression pass;
+exact Preview 13 validation across the same three connected identities remains required.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).
@@ -42,14 +42,14 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | --- | --- | --- | --- |
 | Normal Windows installer and update path | Implemented; installer-branding validation open | MSI, portable ZIP, immutable GitHub Preview releases, upgrade/repair/uninstall/rollback validation, and the Preview 8 installer-logo source correction | Exact-package installer visual lifecycle evidence, trusted signing, WinGet catalog acceptance, Chocolatey catalog acceptance |
 | Interactive Entra user login | Implemented | MSAL public-client system-browser authentication with app-owned token caches | Full live tenant/guest/MFA/Conditional Access evidence |
-| Local login/unlock and MFA boundary | Preview 10/11 Entra/RDP blocker; revised fix pending package validation | Fail-closed app unlock and sensitive operations use Windows verification; Entra remote sessions use fresh interactive MFA-capable verification bound to the current cloud SID, while local/domain sessions retain native SID verification | AB#7337 exact Preview 12 Entra/RDP validation, local/domain/Entra negative matrix, VDI/AVD coverage, Windows Hello/recovery coverage, and independent review |
+| Local login/unlock and MFA boundary | Preview 12 live Entra/RDP path passed on one VM; broader validation open | Fail-closed app unlock and sensitive operations use Windows verification; Entra remote sessions use fresh interactive MFA-capable verification bound to the current cloud SID, while local/domain sessions retain native SID verification | Local/domain/Entra negative matrix, broader VDI/AVD coverage, Windows Hello/recovery coverage, and independent review |
 | Mandatory local encryption | Implemented locally, review open | SQLCipher metadata and AES-GCM offline values with DPAPI keys; verified archive plus authenticated-journal all-or-rollback rotation engine; startup recovery; explicit verified per-archive retention/deletion UX; no plaintext toggle | User-exposed rotation only after independent review, live power-loss validation, supported cross-device decision remains resync |
 | Isolation from Azure CLI/PowerShell terminal context | Implemented | App-owned MSAL accounts and caches; no terminal-context credential provider | Broader live multi-account validation and clearer active identity/tenant UI |
 | Managed-identity authentication | Included in 0.2 Preview; validation open | Azure-host detection, profile UI, isolated credential flow, ARM-token validation, local disable/revoke controls, automated tests | Live Azure matrix, external assignment-revocation evidence, independent review |
 | Service-principal authentication | Included in 0.2 Preview; validation open | Certificate and federated-token-file profiles, private-key/token isolation, validate-first rotation, local revocation/cache purge, redacted lifecycle events, automated tests | Live Azure matrix, external issuer-revocation evidence, independent review |
 | List existing managed identities/SPNs | Current correction implemented locally; package validation open | Administration now offers subscriptions discovered across every ready interactive connection, labeled with subscription, tenant, and account; managed-identity discovery uses the real Azure subscription ID; explicit-consent Graph service-principal discovery and honest permission distinctions remain | Install the corrected package, repeat discovery across the three connected identities, complete inherited/deny/conditional RBAC analysis, live validation, and independent review |
 | Create a managed identity/SPN during setup | Preview implemented locally | User-reachable deterministic non-mutating managed-identity and service-principal plans with exact optional Key Vault/role scope; no execution command | Security gate, fresh write authorization, confirmation, encrypted audit, rollback, governed creation/live tests |
-| Discover accessible Key Vaults | Multi-tenant correction implemented locally; package validation open | Selected identity enumerates every accessible ARM tenant with tenant-qualified subscription discovery; explicit tenant/subscription/vault scope and per-vault observed permission display are user-accessible | Install the corrected package; verify the product owner's 5–6 tenant account and all expected Key Vaults; complete live human/workload Azure permission matrix and independent validation |
+| Discover accessible Key Vaults | Preview 12 data-plane tenant-routing defect; local fix pending package validation | Selected identity enumerates every accessible ARM tenant with tenant-qualified subscription discovery; the AB#7341 fix carries the same tenant context into Key Vault metadata enumeration | Install Preview 13; repeat the three-identity sync; verify expected counts and distinguish genuine permission/network errors; complete live human/workload Azure permission matrix and independent validation |
 | Machine-managed enterprise access policy | Implemented locally, validation open | HKLM/ADMX policy for allowed tenants, providers, and identity types plus clipboard/offline-cache boundaries; service-layer enforcement, safe Settings status, package templates, and automated fail-closed tests | Governed Group Policy/Intune deployment, live Azure administrator matrix, diagnostics review, independent review, exact Store candidate |
 | Read-only default | Implemented | Public/default builds expose no Key Vault mutation or Azure role-assignment path; all governed mutation code is dual-gated by an accepted-build release switch and exact machine policy | Independent policy/security validation |
 | Optional governed write mode | Implemented internally; release-gated | Separate secret create/version, RSA-3072 software-key version, and self-signed certificate-policy operations with exact policy, fresh reauthentication/authorization, Windows verification, immutable preview, one-time confirmation, concurrency, and hash-chained value-free audit controls | Disposable live-Azure matrix, accepted ADR, independent review, and explicit release enablement |

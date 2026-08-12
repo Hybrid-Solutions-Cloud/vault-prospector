@@ -43,6 +43,51 @@ public sealed class AzureVaultProviderDiscoveryTests
     }
 
     [Fact]
+    public async Task EnumeratesVaultMetadataUsingItsDiscoveredTenantContext()
+    {
+        var credential = new TenantRecordingCredential();
+        var handler = new MultiTenantArmHandler(includeVaults: true);
+        var observedTenantTokens =
+            new List<(string VaultTenantId, string Token)>();
+        var provider = CreateProvider(
+            credential,
+            handler,
+            async (
+                currentCredential,
+                vault,
+                _,
+                _,
+                cancellationToken) =>
+            {
+                var token = await currentCredential.GetTokenAsync(
+                    new TokenRequestContext(
+                        ["https://vault.azure.net/.default"]),
+                    cancellationToken);
+                observedTenantTokens.Add((vault.TenantId, token.Token));
+                return new AzureVaultProvider.VaultPermissionObservation(
+                    "Metadata access allowed.",
+                    null);
+            });
+
+        var snapshot = await provider.DiscoverAsync(
+            Identity(),
+            [],
+            [],
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, snapshot.Vaults.Count);
+        Assert.Equal(
+            [
+                (HomeTenant, $"token-{HomeTenant}"),
+                (GuestTenant, $"token-{GuestTenant}"),
+            ],
+            observedTenantTokens
+                .OrderBy(observation => observation.VaultTenantId)
+                .ToArray());
+        Assert.Empty(snapshot.Errors);
+    }
+
+    [Fact]
     public async Task ExcludedTenantRemainsVisibleButItsSubscriptionsAreNotRequested()
     {
         var credential = new TenantRecordingCredential();
@@ -85,7 +130,9 @@ public sealed class AzureVaultProviderDiscoveryTests
 
     private static AzureVaultProvider CreateProvider(
         TenantRecordingCredential credential,
-        HttpMessageHandler handler)
+        HttpMessageHandler handler,
+        AzureVaultProvider.VaultMetadataEnumerator? vaultMetadataEnumerator =
+            null)
     {
         var options = new ArmClientOptions
         {
@@ -97,7 +144,8 @@ public sealed class AzureVaultProviderDiscoveryTests
         };
         return new AzureVaultProvider(
             new StaticCredentialProvider(credential),
-            current => new ArmClient(current, null, options));
+            current => new ArmClient(current, null, options),
+            vaultMetadataEnumerator);
     }
 
     private static ConnectedIdentity Identity() => new(
@@ -143,7 +191,9 @@ public sealed class AzureVaultProviderDiscoveryTests
         }
     }
 
-    private sealed class MultiTenantArmHandler(string? failingTenantId = null)
+    private sealed class MultiTenantArmHandler(
+        string? failingTenantId = null,
+        bool includeVaults = false)
         : HttpMessageHandler
     {
         public List<string> SubscriptionRequestTenantIds { get; } = [];
@@ -179,7 +229,30 @@ public sealed class AzureVaultProviderDiscoveryTests
             }
 
             if (path.EndsWith("/resources", StringComparison.OrdinalIgnoreCase))
-                return Task.FromResult(Json(HttpStatusCode.OK, "{\"value\":[]}"));
+            {
+                if (!includeVaults)
+                    return Task.FromResult(Json(
+                        HttpStatusCode.OK,
+                        "{\"value\":[]}"));
+
+                var subscriptionId =
+                    string.Equals(
+                        tenantId,
+                        HomeTenant,
+                        StringComparison.OrdinalIgnoreCase)
+                        ? HomeSubscription
+                        : GuestSubscription;
+                var vaultName = $"vault-{tenantId[..4]}";
+                return Task.FromResult(Json(HttpStatusCode.OK, $$"""
+                    {"value":[{
+                      "id":"/subscriptions/{{subscriptionId}}/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/{{vaultName}}",
+                      "name":"{{vaultName}}",
+                      "type":"Microsoft.KeyVault/vaults",
+                      "location":"eastus",
+                      "tags":{}
+                    }]}
+                    """));
+            }
 
             return Task.FromResult(Json(HttpStatusCode.NotFound, "{\"error\":{\"code\":\"NotFound\",\"message\":\"unexpected test request\"}}"));
         }

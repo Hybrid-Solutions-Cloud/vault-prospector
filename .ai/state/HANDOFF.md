@@ -1,5 +1,23 @@
 # Session handoff
 
+## Tenant-scoped Key Vault metadata correction — 2026-08-12
+
+- After Preview 12 publication, the product owner synchronized three interactive identities on the
+  current VM. Safe diagnostics reported 170 items with 5–9 errors, 7 items with 7 errors, and 58
+  items with 45 errors. Most errors were authentication-category; 235 objects were found versus 250
+  on the product owner's laptop.
+- GitHub issue #100 and ADO Bug AB#7341 track the defect.
+- Root cause is in `AzureVaultProvider.DiscoverAsync`: each tenant's ARM client used
+  `TenantScopedCredential`, but `EnumerateVaultAsync` received the original unscoped credential.
+- The local fix passes the tenant credential through Key Vault metadata enumeration. A regression
+  returns a home-tenant and guest-tenant vault and proves each data-plane request receives the
+  matching tenant token context. The Azure provider suite passes 46/46 with zero warnings.
+- Next gate is the full Release build, followed by exact Preview 13 MSI installation and live sync
+  of the same three identities. Do not claim all isolated errors fixed; genuine 403/network/private
+  endpoint failures should remain visible.
+
+---
+
 ## Entra-backed RDP/VDI unlock correction — 2026-08-12
 
 - AB#7337 is the sole active priority by product-owner direction; defer all other defects and
@@ -23,8 +41,11 @@
   reason, token, or raw exception data. Added the exact installed version to the locked screen.
 - The revised Release gate passes locked restore, no vulnerable packages, formatting, zero
   warnings/errors, and 482/482 tests. Browser-extension tests and production build also pass.
-- Next gate is an exact locally packaged Preview 12 MSI installed and verified in this same
-  Entra/RDP session. Do not merge, tag, publish, or claim AB#7337 fixed until that passes.
+- Exact Preview 12 succeeded on the reported VM/session/account/policy and emitted the redacted
+  `authorized` event. PR #99 merged as `c5fe6d3`; main CI run 31626562579 and release run
+  31627184288 passed. The public release has 16 assets, and an independent MSI download matched
+  SHA-256 `D97627716A3188C004EC5BCDB5AED4128B46A5C1B5380A804D45BF458BD08EB2`.
+- AB#7337 is Resolved. Broader VDI/AVD coverage remains a release-readiness requirement.
 
 ---
 

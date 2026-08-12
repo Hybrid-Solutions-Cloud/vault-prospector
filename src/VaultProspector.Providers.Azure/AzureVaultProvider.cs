@@ -18,18 +18,25 @@ public sealed class AzureVaultProvider : IVaultProvider
 {
     private readonly IAzureCredentialProvider _identityProvider;
     private readonly Func<TokenCredential, ArmClient> _armClientFactory;
+    private readonly VaultMetadataEnumerator _vaultMetadataEnumerator;
 
     public AzureVaultProvider(IAzureCredentialProvider identityProvider)
-        : this(identityProvider, credential => new ArmClient(credential))
+        : this(
+            identityProvider,
+            credential => new ArmClient(credential),
+            EnumerateVaultAsync)
     {
     }
 
     internal AzureVaultProvider(
         IAzureCredentialProvider identityProvider,
-        Func<TokenCredential, ArmClient> armClientFactory)
+        Func<TokenCredential, ArmClient> armClientFactory,
+        VaultMetadataEnumerator? vaultMetadataEnumerator = null)
     {
         _identityProvider = identityProvider;
         _armClientFactory = armClientFactory;
+        _vaultMetadataEnumerator =
+            vaultMetadataEnumerator ?? EnumerateVaultAsync;
     }
 
     public Task<DiscoverySnapshot> DiscoverAsync(
@@ -99,8 +106,9 @@ public sealed class AzureVaultProvider : IVaultProvider
 
                 try
                 {
-                    var tenantArm = _armClientFactory(
-                        new TenantScopedCredential(credential, tenantId));
+                    var tenantCredential =
+                        new TenantScopedCredential(credential, tenantId);
+                    var tenantArm = _armClientFactory(tenantCredential);
                     await foreach (var subscription in tenantArm.GetSubscriptions().GetAllAsync(cancellationToken))
                     {
                         var subscriptionId = subscription.Data.SubscriptionId ?? subscription.Id.SubscriptionId ?? string.Empty;
@@ -120,7 +128,13 @@ public sealed class AzureVaultProvider : IVaultProvider
                                 var vaultId = Id(resource.Id.ToString());
                                 var vault = new VaultResource(vaultId, resource.Id.ToString(), resource.Data.Name, tenantId, subscriptionId, resource.Id.ResourceGroupName ?? string.Empty, resource.Data.Location.Name, ToTags(resource.Data.Tags), new Uri($"https://{resource.Data.Name}.vault.azure.net/"), now);
                                 vaults.Add(vault);
-                                var permissionObservation = await EnumerateVaultAsync(credential, vault, items, errors, cancellationToken);
+                                var permissionObservation =
+                                    await _vaultMetadataEnumerator(
+                                        tenantCredential,
+                                        vault,
+                                        items,
+                                        errors,
+                                        cancellationToken);
                                 accessPaths.Add(new VaultAccess(
                                     Id(vaultId, identity.Id),
                                     vaultId,
@@ -322,5 +336,14 @@ public sealed class AzureVaultProvider : IVaultProvider
                 context.ResourceRequestMethod);
     }
 
-    private sealed record VaultPermissionObservation(string Summary, string? FailureCategory);
+    internal delegate Task<VaultPermissionObservation> VaultMetadataEnumerator(
+        TokenCredential credential,
+        VaultResource vault,
+        List<VaultItem> items,
+        List<ProviderError> errors,
+        CancellationToken cancellationToken);
+
+    internal sealed record VaultPermissionObservation(
+        string Summary,
+        string? FailureCategory);
 }
