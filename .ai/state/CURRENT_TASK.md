@@ -1,5 +1,33 @@
 # Current task
 
+Fix and publish AB#7337 before resuming any other issue or feature work.
+
+Current implementation branch: `fix/entra-rdp-unlock` from public Preview 10 source
+`a0168c390568af1fa679ce6c02f6c43f46c66242`.
+
+- Exact installed Preview 10 fails at **Verify and continue** for the current Entra-backed Windows
+  account in RDP, before application Entra sign-in is reachable.
+- Windows Hello is unavailable in the remote session; remote credential policy is allowed; the
+  fallback returns `RemoteCredentialFailed`.
+- Root cause: Credential UI can return an unqualified Entra UPN/account alias, while the verifier
+  forwarded a null domain to `LogonUserW`. Windows 10/11 may require the `AzureAD` authority.
+- The fix supplies `AzureAD` only when the current process identity is already Entra-backed. The
+  returned token must still equal the current process SID, so other accounts remain rejected.
+- Redacted diagnostics now distinguish prompt unavailable, unpack failure, credential rejection,
+  SID mismatch, and native failure without recording user, tenant, reason, or credentials.
+- The Release gate passes locked restore, vulnerability inspection, formatting, a zero-warning
+  build, and all 471 tests.
+
+Next:
+
+1. Commit the exact reviewed source and package `0.3.0-preview.11`.
+2. Install that exact MSI on the current Entra-joined RDP VM and prove successful current-account
+   unlock plus a redacted authorized diagnostic event.
+3. Push, run protected-branch CI, merge only after the exact head passes, then tag and publish the
+   immutable Preview 11 artifacts.
+
+---
+
 Implement, deliver, and validate the 2026-08-12 multi-tenant discovery correction without claiming
 that a local build proves the installed Azure workflows.
 

@@ -51,7 +51,8 @@ public partial class App : Avalonia.Application
                             window?.TryGetPlatformHandle()?.Handle ?? 0),
                     new RemoteWindowsCredentialVerificationService(
                         () =>
-                            window?.TryGetPlatformHandle()?.Handle ?? 0),
+                            window?.TryGetPlatformHandle()?.Handle ?? 0,
+                        diagnostics),
                     enterprisePolicy);
             var revealVerificationSession =
                 new RevealVerificationSession(

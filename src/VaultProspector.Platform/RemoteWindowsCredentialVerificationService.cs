@@ -11,23 +11,28 @@ public sealed class RemoteWindowsCredentialVerificationService :
 {
     private readonly Func<nint> _windowHandleProvider;
     private readonly IRemoteWindowsCredentialInterop _interop;
+    private readonly IDiagnosticSink? _diagnostics;
 
     public RemoteWindowsCredentialVerificationService(
-        Func<nint> windowHandleProvider)
+        Func<nint> windowHandleProvider,
+        IDiagnosticSink? diagnostics = null)
         : this(
             windowHandleProvider,
-            new RemoteWindowsCredentialInterop())
+            new RemoteWindowsCredentialInterop(),
+            diagnostics)
     {
     }
 
     internal RemoteWindowsCredentialVerificationService(
         Func<nint> windowHandleProvider,
-        IRemoteWindowsCredentialInterop interop)
+        IRemoteWindowsCredentialInterop interop,
+        IDiagnosticSink? diagnostics = null)
     {
         ArgumentNullException.ThrowIfNull(windowHandleProvider);
         ArgumentNullException.ThrowIfNull(interop);
         _windowHandleProvider = windowHandleProvider;
         _interop = interop;
+        _diagnostics = diagnostics;
     }
 
     public bool IsAvailable => OperatingSystem.IsWindows();
@@ -39,18 +44,61 @@ public sealed class RemoteWindowsCredentialVerificationService :
         cancellationToken.ThrowIfCancellationRequested();
         var windowHandle = _windowHandleProvider();
         if (windowHandle == 0)
+        {
+            WriteDiagnostic(
+                new RemoteWindowsCredentialVerificationOutcome(
+                    UserVerificationResult.Unavailable,
+                    "failed",
+                    "prompt_unavailable"));
             return Task.FromResult(UserVerificationResult.Unavailable);
+        }
 
-        return Task.FromResult(
-            _interop.VerifyCurrentUser(windowHandle, reason));
+        var outcome = _interop.VerifyCurrentUser(windowHandle, reason);
+        WriteDiagnostic(outcome);
+        return Task.FromResult(outcome.Result);
+    }
+
+    private void WriteDiagnostic(
+        RemoteWindowsCredentialVerificationOutcome outcome)
+    {
+        if (_diagnostics is null)
+            return;
+
+        var fields = new Dictionary<string, object?>
+        {
+            ["status"] = outcome.Status,
+        };
+        if (outcome.ErrorCategory is not null)
+            fields["error_category"] = outcome.ErrorCategory;
+        _diagnostics.Information(
+            "windows_remote_verification_completed",
+            fields);
     }
 }
 
 internal interface IRemoteWindowsCredentialInterop
 {
-    UserVerificationResult VerifyCurrentUser(
+    RemoteWindowsCredentialVerificationOutcome VerifyCurrentUser(
         nint windowHandle,
         string reason);
+}
+
+internal sealed record RemoteWindowsCredentialVerificationOutcome(
+    UserVerificationResult Result,
+    string Status,
+    string? ErrorCategory)
+{
+    public static RemoteWindowsCredentialVerificationOutcome FromResult(
+        UserVerificationResult result) => result switch
+        {
+            UserVerificationResult.Verified =>
+                new(result, "authorized", null),
+            UserVerificationResult.Canceled =>
+                new(result, "cancelled", null),
+            UserVerificationResult.RemoteCredentialUnavailable =>
+                new(result, "failed", "prompt_unavailable"),
+            _ => new(result, "failed", "credential_rejected"),
+        };
 }
 
 internal sealed class RemoteWindowsCredentialInterop :
@@ -64,7 +112,7 @@ internal sealed class RemoteWindowsCredentialInterop :
     private const int MaximumDomainCharacters = 256;
     private const int MaximumPasswordCharacters = 256;
 
-    public UserVerificationResult VerifyCurrentUser(
+    public RemoteWindowsCredentialVerificationOutcome VerifyCurrentUser(
         nint windowHandle,
         string reason)
     {
@@ -96,9 +144,15 @@ internal sealed class RemoteWindowsCredentialInterop :
                 ref save,
                 CreduiwinGeneric);
             if (promptResult == ErrorCancelled)
-                return UserVerificationResult.Canceled;
+                return RemoteWindowsCredentialVerificationOutcome.FromResult(
+                    UserVerificationResult.Canceled);
             if (promptResult != 0)
-                return UserVerificationResult.RemoteCredentialUnavailable;
+            {
+                return new RemoteWindowsCredentialVerificationOutcome(
+                    UserVerificationResult.RemoteCredentialUnavailable,
+                    "failed",
+                    "prompt_unavailable");
+            }
 
             userNameBuffer = AllocateCharacters(
                 MaximumUserNameCharacters);
@@ -119,15 +173,38 @@ internal sealed class RemoteWindowsCredentialInterop :
                 passwordBuffer,
                 ref passwordLength);
             if (!unpacked)
-                return UserVerificationResult.RemoteCredentialFailed;
+            {
+                return new RemoteWindowsCredentialVerificationOutcome(
+                    UserVerificationResult.RemoteCredentialFailed,
+                    "failed",
+                    "credential_unpack_failed");
+            }
 
             var userName =
                 Marshal.PtrToStringUni(userNameBuffer) ?? string.Empty;
             var domain = Marshal.PtrToStringUni(domainBuffer);
             if (string.IsNullOrWhiteSpace(userName))
-                return UserVerificationResult.RemoteCredentialFailed;
+            {
+                return new RemoteWindowsCredentialVerificationOutcome(
+                    UserVerificationResult.RemoteCredentialFailed,
+                    "failed",
+                    "credential_unpack_failed");
+            }
 
             var logonName = NormalizeLogonName(userName, domain);
+            using var currentIdentity = WindowsIdentity.GetCurrent();
+            var currentSid = currentIdentity.User;
+            if (currentSid is null)
+            {
+                return new RemoteWindowsCredentialVerificationOutcome(
+                    UserVerificationResult.RemoteCredentialFailed,
+                    "failed",
+                    "native_failure");
+            }
+
+            logonName = NormalizeEntraLogonName(
+                logonName,
+                currentIdentity.Name);
             var loggedOn = LogonUser(
                     logonName.UserName,
                     logonName.Domain,
@@ -139,18 +216,24 @@ internal sealed class RemoteWindowsCredentialInterop :
             using (token)
             {
                 if (!loggedOn)
-                    return UserVerificationResult.RemoteCredentialFailed;
+                {
+                    return new RemoteWindowsCredentialVerificationOutcome(
+                        UserVerificationResult.RemoteCredentialFailed,
+                        "failed",
+                        "credential_rejected");
+                }
 
                 using var verifiedIdentity =
                     new WindowsIdentity(token.DangerousGetHandle());
-                using var currentIdentity = WindowsIdentity.GetCurrent();
                 var verifiedSid = verifiedIdentity.User;
-                var currentSid = currentIdentity.User;
                 return verifiedSid is not null &&
-                       currentSid is not null &&
                        verifiedSid.Equals(currentSid)
-                    ? UserVerificationResult.Verified
-                    : UserVerificationResult.RemoteCredentialFailed;
+                    ? RemoteWindowsCredentialVerificationOutcome.FromResult(
+                        UserVerificationResult.Verified)
+                    : new RemoteWindowsCredentialVerificationOutcome(
+                        UserVerificationResult.RemoteCredentialFailed,
+                        "failed",
+                        "sid_mismatch");
             }
         }
         catch (Exception exception) when (
@@ -159,7 +242,10 @@ internal sealed class RemoteWindowsCredentialInterop :
                 InvalidOperationException or
                 UnauthorizedAccessException)
         {
-            return UserVerificationResult.RemoteCredentialFailed;
+            return new RemoteWindowsCredentialVerificationOutcome(
+                UserVerificationResult.RemoteCredentialFailed,
+                "failed",
+                "native_failure");
         }
         finally
         {
@@ -199,6 +285,30 @@ internal sealed class RemoteWindowsCredentialInterop :
         return (
             userName[(separatorIndex + 1)..],
             userName[..separatorIndex]);
+    }
+
+    internal static (string UserName, string? Domain)
+        NormalizeEntraLogonName(
+            (string UserName, string? Domain) logonName,
+            string? currentIdentityName)
+    {
+        if (!string.IsNullOrWhiteSpace(logonName.Domain))
+            return logonName;
+
+        var currentName = NormalizeLogonName(
+            currentIdentityName ?? string.Empty,
+            null);
+        // Credential UI can return an Entra UPN or account alias without its
+        // authority. Windows 10/11 may reject that otherwise-valid credential
+        // unless AzureAD is supplied as the domain. This is applied only when
+        // the current process identity is already Entra-backed; the verified
+        // token must still match the current SID below.
+        return string.Equals(
+                currentName.Domain,
+                "AzureAD",
+                StringComparison.OrdinalIgnoreCase)
+            ? (logonName.UserName, "AzureAD")
+            : logonName;
     }
 
     private static nint AllocateCharacters(int characterCount) =>

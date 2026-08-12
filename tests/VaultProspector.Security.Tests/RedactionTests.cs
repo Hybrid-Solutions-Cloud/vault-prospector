@@ -113,6 +113,54 @@ public sealed class RedactionTests
     }
 
     [Fact]
+    public void RemoteVerificationDiagnosticsRetainOnlySafeOutcomeCategories()
+    {
+        var path = Path.Combine(
+            Path.GetTempPath(),
+            $"vault-prospector-log-{Guid.NewGuid():N}.jsonl");
+        try
+        {
+            var sink = new RedactingDiagnosticSink(path);
+            sink.Information(
+                "windows_remote_verification_completed",
+                new Dictionary<string, object?>
+                {
+                    ["status"] = "failed",
+                    ["error_category"] = "sid_mismatch",
+                    ["username"] = "person@example.invalid",
+                    ["reason"] = "private business reason",
+                });
+
+            var log = File.ReadAllText(path);
+            Assert.Contains(
+                "\"event_name\":\"windows_remote_verification_completed\"",
+                log,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "\"status\":\"failed\"",
+                log,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "\"error_category\":\"sid_mismatch\"",
+                log,
+                StringComparison.Ordinal);
+            Assert.DoesNotContain(
+                "person@example.invalid",
+                log,
+                StringComparison.Ordinal);
+            Assert.DoesNotContain(
+                "private business reason",
+                log,
+                StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void EveryProhibitedDataClassIsRemovedFromInformationAndErrorEvents()
     {
         var path = Path.Combine(

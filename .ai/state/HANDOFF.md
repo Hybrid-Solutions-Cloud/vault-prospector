@@ -1,5 +1,30 @@
 # Session handoff
 
+## Entra-backed RDP/VDI unlock correction — 2026-08-12
+
+- AB#7337 is the sole active priority by product-owner direction; defer all other defects and
+  feature work until the fix is published.
+- Public Preview 10 was reproduced on the current Entra-joined VM in RDP. The credential prompt
+  closes normally, then the app reports that the supplied credential did not verify the current
+  signed-in account (`RemoteCredentialFailed`). No pre-unlock diagnostic log was emitted.
+- The current process is Entra-backed, Windows Hello is not provisioned in RDP, the device has a
+  healthy PRT/WAM state, and no machine policy blocks the approved remote fallback. A separate
+  local-account session is not an acceptable VDI workaround and cannot unlock the Entra profile's
+  DPAPI-bound data.
+- Root cause is the missing Entra authority on Credential UI output. The fix binds an unqualified
+  credential to `AzureAD` only when the current process identity is already Entra-backed, then
+  retains the mandatory resulting-token/current-process SID equality check.
+- Added allowlisted categorical diagnostics for authorized, cancelled, prompt unavailable,
+  credential unpack failure, credential rejection, SID mismatch, and native failure. No account,
+  UPN, tenant, password, verification reason, or raw native error is logged.
+- Focused gates pass 97 platform tests and 4 privacy/security tests. The full governed Release gate
+  passes locked restore, no vulnerable packages, formatting, zero warnings/errors, and 471/471
+  tests.
+- Next gate is an exact locally packaged Preview 11 MSI installed and verified in this same
+  Entra/RDP session. Do not merge, tag, publish, or claim AB#7337 fixed until that passes.
+
+---
+
 ## Multi-tenant subscription and Key Vault correction — 2026-08-12
 
 - The product owner reported that one connected interactive account has access across 5–6 Entra
