@@ -1,10 +1,10 @@
 # Version 0.3 Preview scope
 
-Version [`0.3.0-preview.6`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.6)
-is the current unsigned Windows desktop Preview for non-production evaluation. It replaces withdrawn
-`0.3.0-preview.2` with the complete approved C · Atlas startup and secure-unlock hierarchy,
-including policy-controlled current-account verification for supported Remote Desktop and AVD
-sessions. It retains the first-run and desktop-verification corrections from the 0.2 line.
+Version [`0.3.0-preview.17`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.17)
+is the current unsigned Windows desktop Preview for non-production evaluation. It includes the
+approved C · Atlas shell, Entra-backed Remote Desktop unlock, silent multi-tenant metadata sync,
+actionable named sync targets, self-contained workspace editing, and unlocked-session clipboard
+Copy with an optional per-copy verification override.
 `0.1.0-preview.2` also remains withdrawn and must not be installed or resubmitted.
 
 ## Included
@@ -17,7 +17,8 @@ sessions. It retains the first-run and desktop-verification corrections from the
   certificates.
 - SQLCipher-encrypted local search, workspaces, favorites, access history, filters, and cancelable
   partial synchronization.
-- Explicit Windows Hello-gated reveal/copy and optional DPAPI/AES-GCM protected offline values.
+- Explicit verification for Reveal and optional DPAPI/AES-GCM protected offline values; Copy uses
+  the unlocked app session by default and can be configured to require fresh verification.
 - Local-data recovery, rotation, purge, and fail-closed corruption/tamper handling.
 - Read-only workload authorization assessment and deterministic provisioning previews; this
   release does not execute identity, RBAC, or Key Vault writes.

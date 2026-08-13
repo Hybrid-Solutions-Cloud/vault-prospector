@@ -1,9 +1,9 @@
 # Current task
 
-Fix and validate AB#7341 / GitHub issue #100 before resuming lower-priority work.
+Validate public Preview 17 feedback before resuming lower-priority work.
 
-Current implementation branch: `fix/tenant-scoped-key-vault-sync` from public Preview 12 source
-`c5fe6d39291233e5c87a88ce9f6da2830bdaacbd`.
+Current public source: merge commit `897bc08553871810a533a899683b2c5727db9458`, immutable tag
+`v0.3.0-preview.17`.
 
 - Three interactive identities synchronized with isolated errors on the exact installed Preview 12
   candidate. Safe logs show authentication-heavy failures; one identity found 15 vaults and
@@ -49,6 +49,10 @@ Current implementation branch: `fix/tenant-scoped-key-vault-sync` from public Pr
   three MSI validators and is installed. MSI SHA-256 is
   `950DDD29966319930375073D702D3CD65BA803773AD8021EB3A929EAF6F22C59`; Windows reports
   DisplayVersion `0.3.17`, and all five non-log state files remained byte-for-byte unchanged.
+- PR #103, exact-main CI run 31669818796, and immutable-tag release run 31670200914 passed. The
+  public release contains 16 immutable assets, and fresh public downloads matched all five adjacent
+  checksums. Public MSI SHA-256 is
+  `AE40CCEC74F680A733ECFD909BD1DB9AFA2D912612AE4532F5D670CA36D71C96`.
 
 Next:
 
@@ -60,7 +64,7 @@ Next:
    target rows in Connections; verify the About-page links from the installed binary.
 4. Preserve partial authorization errors honestly while designing any future tenant authorization
    as an explicit, user-initiated workflow with a preview of how many tenant prompts may be needed.
-5. Push, pass protected CI, merge, and publish only after exact-package live validation succeeds.
+5. Triage new privacy-safe logs and product-owner feedback against exact public Preview 17.
 
 ---
 

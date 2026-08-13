@@ -36,7 +36,7 @@ features:
 
 Read this before you download anything:
 
-- The current release is **`0.3.0-preview.3`** — a **preview**, published for non-production evaluation only.
+- The current release is **`0.3.0-preview.17`** — a **preview**, published for non-production evaluation only.
 - **Direct packages are unsigned.** Windows will display **Unknown Publisher** when you run the installer. You must [verify the published SHA-256 and Sigstore bundle](/release) before installing. A trusted, signed channel via the Microsoft Store is planned but not yet available.
 - Features land, change shape, and get replaced between previews. Expect breaking changes to the UI, the local database, and configuration between releases.
 - **CyberArk support and the native mobile apps are not implemented.** They exist as future-roadmap source in this repository and are not part of any current release.
@@ -47,10 +47,10 @@ If you hit a problem, [file feedback publicly](https://github.com/Hybrid-Solutio
 
 ## Download
 
-Current Preview: **`0.3.0-preview.3`**
+Current Preview: **`0.3.0-preview.17`**
 
-- [**Windows installer (MSI)**](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.3.0-preview.3/VaultProspector-0.3.0-preview.3-win-x64.msi) — start here
-- [**Portable ZIP**](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.3.0-preview.3/VaultProspector-0.3.0-preview.3-win-x64.zip) — no installer required
+- [**Windows installer (MSI)**](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.3.0-preview.17/VaultProspector-0.3.0-preview.17-win-x64.msi) — start here
+- [**Portable ZIP**](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.3.0-preview.17/VaultProspector-0.3.0-preview.17-win-x64.zip) — no installer required
 - [**All downloads**](/downloads) — MSIX, Chocolatey, WinGet manifests, checksums, signatures, SBOM
 
 **Verify before you install** — these packages are unsigned. The [release verification guide](/release) covers the checksum and Sigstore steps.

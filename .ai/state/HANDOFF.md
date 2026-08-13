@@ -1,5 +1,25 @@
 # Session handoff
 
+## Preview 17 publication — 2026-08-13
+
+- The product owner accepted the installed candidate as good enough for the next Preview and
+  explicitly directed publication.
+- PR [#103](https://github.com/Hybrid-Solutions-Cloud/vault-prospector/pull/103) passed protected CI
+  run 31669613544 and merged as `897bc08553871810a533a899683b2c5727db9458`.
+- Exact-main CI run 31669818796 passed Windows candidate, portable validation, and full-history
+  secret-scan jobs.
+- Immutable tag `v0.3.0-preview.17` triggered release run 31670200914, which passed and published
+  16 assets through the HCS GitHub App to the public binary repository.
+- Public release:
+  <https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.17>
+- Fresh public downloads of the MSI, MSIX, portable ZIP, WinGet manifest bundle, and Chocolatey
+  package matched all five adjacent SHA-256 files. Public MSI SHA-256 is
+  `AE40CCEC74F680A733ECFD909BD1DB9AFA2D912612AE4532F5D670CA36D71C96`.
+- The updater API returns Preview 17 as authored by `hcs-platform-app[bot]` with the required MSI
+  digest, checksum, and Sigstore asset. Remaining live Azure and GA gates stay open.
+
+---
+
 ## Unlocked-session Copy and self-contained management — 2026-08-13
 
 - Clipboard Copy now uses the already-unlocked Vault Prospector session by default. Settings has an
