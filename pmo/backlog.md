@@ -39,6 +39,12 @@ user guide, roadmap, changelog, release verification guide, and release history.
 validation of its interaction behavior remains open; these changes are not in public Preview 12.
 Exact local Preview 16 is installed on the current VM, all three MSI validators passed, and the
 five current non-log state files were preserved byte-for-byte through the upgrade.
+The next source candidate makes clipboard Copy use the current unlocked application session by
+default, with an explicit opt-in setting for fresh verification on every copy. It also replaces
+cross-page workspace selections with a self-contained editor and corrects workload discovery to
+use the tenant/account represented by the selected Administration subscription. The governed
+Release gate passes 495/495 tests with zero warnings or errors; exact-package validation remains
+open.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).
@@ -61,6 +67,8 @@ only documented. A backlog entry does **not** mean the feature is implemented.
 | Create a managed identity/SPN during setup | Preview implemented locally | User-reachable deterministic non-mutating managed-identity and service-principal plans with exact optional Key Vault/role scope; no execution command | Security gate, fresh write authorization, confirmation, encrypted audit, rollback, governed creation/live tests |
 | Discover accessible Key Vaults | Preview 13 tenant-routing correction passed local gates; Preview 14 automatic interaction was rejected and never published | Selected identity enumerates every accessible ARM tenant with tenant-qualified subscription and Key Vault metadata discovery; all synchronization and retry paths use silent token acquisition and isolate authorization failures without opening browser prompts | Validate the next exact candidate opens zero prompts during sync; design separately initiated tenant authorization with an interaction-count preview; verify expected counts and distinguish genuine permission/network errors; complete live human/workload Azure permission matrix and independent validation |
 | Public documentation from About | Implemented locally; package validation open | About links directly to the public user guide, roadmap, changelog, release verification guide, and release history; canonical HTTPS allowlisting and copyable launch-failure fallback are covered by tests | Install the exact candidate and verify each link opens the intended public page; publish only after the full release gate |
+| Copy without repeated authentication | Implemented locally; package validation open | While the app remains unlocked, Copy uses that unlocked session by default; Settings can require fresh verification for every copy; enterprise clipboard policy and automatic clearing remain enforced; Reveal remains separately controlled | Install the exact candidate and copy consecutive secrets in one unlocked session; verify the opt-in setting restores per-copy verification; complete independent security review |
+| Self-contained workspace editing | Implemented locally; package validation open | Workspaces display included resources and provide local identity, tenant, subscription, and vault pickers plus removal; no cross-page selection is required | Install the exact candidate and complete create/add/remove/policy workflows with the existing multi-tenant inventory |
 | Machine-managed enterprise access policy | Implemented locally, validation open | HKLM/ADMX policy for allowed tenants, providers, and identity types plus clipboard/offline-cache boundaries; service-layer enforcement, safe Settings status, package templates, and automated fail-closed tests | Governed Group Policy/Intune deployment, live Azure administrator matrix, diagnostics review, independent review, exact Store candidate |
 | Read-only default | Implemented | Public/default builds expose no Key Vault mutation or Azure role-assignment path; all governed mutation code is dual-gated by an accepted-build release switch and exact machine policy | Independent policy/security validation |
 | Optional governed write mode | Implemented internally; release-gated | Separate secret create/version, RSA-3072 software-key version, and self-signed certificate-policy operations with exact policy, fresh reauthentication/authorization, Windows verification, immutable preview, one-time confirmation, concurrency, and hash-chained value-free audit controls | Disposable live-Azure matrix, accepted ADR, independent review, and explicit release enablement |
@@ -418,10 +426,15 @@ As a user, I need to copy a value and have the application clear it from the cli
 Acceptance criteria:
 - Copied secrets are placed on the clipboard.
 - App clears clipboard automatically after a defined interval.
+- Copy does not prompt again while the application remains unlocked unless the user enables the
+  fresh-verification-per-copy setting.
+- Enterprise clipboard policy continues to fail closed independently of the user setting.
 
 Source evidence: `src/VaultProspector.App/AvaloniaClipboardService.cs`
 
-Implementation status: Delivered in `0.1.1-preview.1`; final platform validation remains open.
+Implementation status: The original secure-copy path was delivered in `0.1.1-preview.1`. The
+unlocked-session default and explicit per-copy verification override are implemented in the next
+local candidate; exact-package and independent validation remain open.
 
 ### Story: Mask values
 
@@ -546,8 +559,9 @@ Acceptance criteria:
 - Workspaces support direct assignment of tenants and subscriptions.
 - Each workspace allows editable, separate cache policies.
 
-Implementation status: Included in `0.2.0-preview.1`; validation remains open. Identity, tenant, subscription, and
-vault links are user-accessible. Each workspace has an editable encrypted-cache enablement,
+Implementation status: Included in `0.2.0-preview.1`; the next local candidate adds a self-contained
+editor that lists current members and exposes identity, tenant, subscription, and vault pickers plus
+removal on the same page. Each workspace has an editable encrypted-cache enablement,
 maximum lifetime, and clipboard policy; Windows verification remains mandatory. Workspace
 deletion removes its links transactionally and purges workspace-scoped offline values through the
 application workflow.
@@ -716,9 +730,10 @@ Source evidence: `src/VaultProspector.Providers.Azure/WorkloadIdentityDiscoveryS
 `docs/adr/0013-report-effective-azure-authorization-evidence.md`, and
 `docs/release-evidence/workload-authorization-evidence-2026-07-23.md`.
 
-Implementation status: In progress locally. Managed-identity discovery honors an exact subscription
-and returns application DTOs rather than SDK resources. Service-principal discovery requires an
-enabled interactive identity and a separate explicit delegated `Application.Read.All` consent
+Implementation status: In progress locally. Managed-identity discovery honors the exact tenant,
+subscription, and interactive administrator represented by the Administration picker and returns
+application DTOs rather than SDK resources. Service-principal discovery uses that same selected
+tenant/account and requires a separate explicit delegated `Application.Read.All` consent
 action; Graph pagination is HTTPS-host constrained, redirect-disabled, bounded, and tested. The
 Administration tab now performs an explicit read-only assessment for one candidate and exact Key
 Vault. Administrator capabilities use exact-resource caller permissions; candidate data access

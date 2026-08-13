@@ -977,12 +977,12 @@
                 <TextBlock Text="A workload identity is a non-human Azure identity used by an application, automation job, or Azure resource. This page helps an administrator inspect eligible customer-managed identities; it does not change Azure."
                            TextWrapping="Wrap"
                            FontWeight="SemiBold" />
-                <TextBlock Text="Select an enabled interactive identity on the Identities tab. Discovery uses only that explicit account; it never inherits Azure CLI, PowerShell, IDE, or terminal context." TextWrapping="Wrap" Opacity="0.75" />
+                <TextBlock Text="Choose the subscription, tenant, and connected administrator account below. Discovery uses only that explicit account and tenant; it never inherits Azure CLI, PowerShell, IDE, or terminal context." TextWrapping="Wrap" Opacity="0.75" />
                 <Button Content="Authorize Microsoft Graph directory read"
                         Command="{Binding AuthorizeDirectoryReadCommand}"
                         HorizontalAlignment="Left"
                         AutomationProperties.Name="Authorize service principal directory discovery" />
-                <TextBlock Text="Service-principal listing requests delegated Application.Read.All only after this explicit action. Microsoft Entra may require administrator consent. No Graph write permission is requested." TextWrapping="Wrap" Opacity="0.75" />
+                <TextBlock Text="Authorization applies to the tenant in the selected subscription below. Service-principal listing requests delegated Application.Read.All only after this explicit action. Microsoft Entra may require administrator consent. No Graph write permission is requested." TextWrapping="Wrap" Opacity="0.75" />
                 <TextBlock Text="Subscription and connected account" />
                 <ComboBox ItemsSource="{Binding AdministrationSubscriptionOptions}"
                           SelectedItem="{Binding SelectedAdministrationSubscription}"
@@ -1152,27 +1152,49 @@
           <TextBlock Classes="screen-description"
                      Text="Group customer, project, or environment sources without copying or changing anything in Azure." />
         </StackPanel>
-        <Grid x:Name="WorkspaceGrid" ColumnDefinitions="1*,1*" RowDefinitions="*" ColumnSpacing="14" RowSpacing="14">
+        <Grid x:Name="WorkspaceGrid" ColumnDefinitions="0.8*,1.4*" RowDefinitions="*" ColumnSpacing="14" RowSpacing="14">
           <Border Classes="atlas-panel">
             <StackPanel Spacing="10"><TextBlock Text="Your workspaces" Classes="section-title" />
               <TextBlock Text="A workspace is a local view that groups customer, project, or environment sources. It does not create, copy, move, or change anything in Azure."
                          TextWrapping="Wrap"
                          FontWeight="SemiBold" />
               <ListBox ItemsSource="{Binding Workspaces}" SelectedItem="{Binding SelectedWorkspace}" MinHeight="300" AutomationProperties.Name="Vault Prospector workspaces"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Margin="6" /></DataTemplate></ListBox.ItemTemplate></ListBox>
-              <WrapPanel>
-                <Button Content="Add selected vault" Command="{Binding AddSelectedVaultToWorkspaceCommand}" Margin="0,0,8,8" />
-                <Button Content="Add selected identity" Command="{Binding AddSelectedIdentityToWorkspaceCommand}" Margin="0,0,8,8" />
-                <Button Content="Add selected tenant" Command="{Binding AddSelectedTenantToWorkspaceCommand}" Margin="0,0,8,8" />
-                <Button Content="Add selected subscription" Command="{Binding AddSelectedSubscriptionToWorkspaceCommand}" Margin="0,0,8,8" />
-                <Button Content="Delete workspace" Command="{Binding RemoveWorkspaceCommand}" Margin="0,0,8,8" />
-              </WrapPanel>
+              <TextBlock Text="Create workspace" Classes="section-title" Margin="0,10,0,0" />
+              <TextBox Text="{Binding WorkspaceName}" PlaceholderText="Workspace name" AutomationProperties.Name="New workspace name" />
+              <WrapPanel><Button Classes="primary" Content="Create" Command="{Binding CreateWorkspaceCommand}" Margin="0,0,8,8" /><Button Content="Delete selected workspace" Command="{Binding RemoveWorkspaceCommand}" Margin="0,0,8,8" /></WrapPanel>
             </StackPanel>
           </Border>
-          <Border x:Name="CreateWorkspaceCard" Grid.Column="1" Classes="atlas-panel">
-            <StackPanel Spacing="10"><TextBlock Text="Create workspace" Classes="section-title" />
-              <TextBlock Text="Group identities, tenants, subscriptions, and vaults without duplicating indexed data." TextWrapping="Wrap" />
-              <TextBox Text="{Binding WorkspaceName}" PlaceholderText="Workspace name" AutomationProperties.Name="New workspace name" />
-              <Button Classes="primary" Content="Create" Command="{Binding CreateWorkspaceCommand}" HorizontalAlignment="Left" />
+          <Border x:Name="WorkspaceEditorCard" Grid.Column="1" Classes="atlas-panel" IsEnabled="{Binding HasSelectedWorkspace}">
+            <StackPanel Spacing="10"><TextBlock Text="Edit selected workspace" Classes="section-title" />
+              <TextBlock Text="Add and remove resources here. Every choice is visible on this page; selections from Find secrets, Connect identities, or Administration are not used." TextWrapping="Wrap" FontWeight="SemiBold" />
+              <TextBlock Text="Included resources" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" />
+              <ListBox ItemsSource="{Binding WorkspaceMembers}"
+                       SelectedItem="{Binding SelectedWorkspaceMember}"
+                       MinHeight="150"
+                       AutomationProperties.Name="Resources included in selected workspace">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:WorkspaceMemberRow">
+                    <StackPanel Margin="6" Spacing="2">
+                      <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                      <TextBlock Text="{Binding Kind}" Opacity="0.7" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <Button Content="Remove selected resource"
+                      Command="{Binding RemoveWorkspaceMemberCommand}"
+                      HorizontalAlignment="Left" />
+              <TextBlock Text="Add resources" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,10,0,0" />
+              <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                <ComboBox Grid.Row="0" ItemsSource="{Binding WorkspaceIdentityOptions}" SelectedItem="{Binding SelectedWorkspaceIdentityOption}" PlaceholderText="Choose a connected identity" AutomationProperties.Name="Workspace identity picker"><ComboBox.ItemTemplate><DataTemplate x:DataType="vm:WorkspaceIdentityOption"><TextBlock Text="{Binding Label}" TextWrapping="Wrap" /></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                <Button Grid.Row="0" Grid.Column="1" Content="Add identity" Command="{Binding AddWorkspaceIdentityCommand}" />
+                <ComboBox Grid.Row="1" ItemsSource="{Binding WorkspaceTenantOptions}" SelectedItem="{Binding SelectedWorkspaceTenantOption}" PlaceholderText="Choose a discovered tenant" AutomationProperties.Name="Workspace tenant picker"><ComboBox.ItemTemplate><DataTemplate x:DataType="vm:WorkspaceTenantOption"><TextBlock Text="{Binding Label}" TextWrapping="Wrap" /></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                <Button Grid.Row="1" Grid.Column="1" Content="Add tenant" Command="{Binding AddWorkspaceTenantCommand}" />
+                <ComboBox Grid.Row="2" ItemsSource="{Binding WorkspaceSubscriptionOptions}" SelectedItem="{Binding SelectedWorkspaceSubscriptionOption}" PlaceholderText="Choose a discovered subscription" AutomationProperties.Name="Workspace subscription picker"><ComboBox.ItemTemplate><DataTemplate x:DataType="vm:WorkspaceSubscriptionOption"><TextBlock Text="{Binding Label}" TextWrapping="Wrap" /></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                <Button Grid.Row="2" Grid.Column="1" Content="Add subscription" Command="{Binding AddWorkspaceSubscriptionCommand}" />
+                <ComboBox Grid.Row="3" ItemsSource="{Binding WorkspaceVaultOptions}" SelectedItem="{Binding SelectedWorkspaceVaultOption}" PlaceholderText="Choose a discovered vault" AutomationProperties.Name="Workspace vault picker"><ComboBox.ItemTemplate><DataTemplate x:DataType="vm:WorkspaceVaultOption"><TextBlock Text="{Binding Label}" TextWrapping="Wrap" /></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                <Button Grid.Row="3" Grid.Column="1" Content="Add vault" Command="{Binding AddWorkspaceVaultCommand}" />
+              </Grid>
               <TextBlock Text="Selected workspace cache policy" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,14,0,0" />
               <CheckBox Content="Allow encrypted offline cache for this workspace"
                         IsChecked="{Binding WorkspaceCacheEnabled}"
@@ -1854,10 +1876,16 @@
                        TextWrapping="Wrap"
                        Opacity="0.75"
                        AutomationProperties.LiveSetting="Polite" />
+            <CheckBox Content="Require Windows verification before every clipboard copy"
+                      IsChecked="{Binding RequireCopyVerification}"
+                      AutomationProperties.Name="Require fresh Windows verification before every clipboard copy" />
+            <TextBlock Text="Off by default. While Vault Prospector remains unlocked, Copy uses the existing app session and still follows clipboard policy and automatic clearing. Reveal has its own verification setting above."
+                       TextWrapping="Wrap"
+                       Opacity="0.75" />
             <CheckBox Content="Enable encrypted offline value cache"
                       IsChecked="{Binding OfflineCacheEnabled}"
                       IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}" />
-            <TextBlock Text="Offline values are disabled by default, encrypted separately, and always require independent Windows verification. Reveal grace never applies to cache, copy, recovery, browser fill, or administration." TextWrapping="Wrap" Opacity="0.75" />
+            <TextBlock Text="Offline values are disabled by default, encrypted separately, and always require independent Windows verification. Reveal grace never applies to cache, recovery, browser fill, or administration." TextWrapping="Wrap" Opacity="0.75" />
             <TextBlock Text="Maximum cache lifetime (hours)" /><NumericUpDown Value="{Binding MaximumCacheHours}" Minimum="1" Maximum="168" Increment="1" IsEnabled="{Binding IsEnterpriseOfflineCacheAllowed}" AutomationProperties.Name="Maximum offline cache lifetime in hours" />
             <TextBlock Text="Clipboard clear delay (seconds)" /><NumericUpDown Value="{Binding ClipboardClearSeconds}" Minimum="5" Maximum="300" Increment="5" IsEnabled="{Binding IsEnterpriseClipboardAllowed}" AutomationProperties.Name="Clipboard clear delay in seconds" />
             <TextBlock Text="When the main window closes" FontWeight="SemiBold" />

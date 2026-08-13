@@ -18,7 +18,8 @@ public sealed record AppSettings(
     CloseBehavior CloseBehavior = CloseBehavior.Ask,
     bool BackgroundMetadataSyncEnabled = false,
     bool MinimizeToNotificationArea = true,
-    int RevealVerificationGraceSeconds = 0)
+    int RevealVerificationGraceSeconds = 0,
+    bool RequireCopyVerification = false)
 {
     public static AppSettings Default { get; } = new(ProductIdentity.DefaultClientId);
 }

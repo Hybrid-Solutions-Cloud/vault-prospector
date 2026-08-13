@@ -598,6 +598,25 @@ public sealed class EncryptedSqliteMetadataRepository(
         return result;
     }
 
+    public async Task<IReadOnlyList<WorkspaceResourceLink>> GetWorkspaceLinksAsync(
+        Guid workspaceId,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT id,workspace_id,resource_type,resource_id FROM workspace_links WHERE workspace_id=$workspace ORDER BY resource_type,resource_id";
+        command.Parameters.AddWithValue("$workspace", workspaceId.ToString("D"));
+        var result = new List<WorkspaceResourceLink>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            result.Add(new WorkspaceResourceLink(
+                reader.GetGuid(0),
+                reader.GetGuid(1),
+                (ResourceLinkType)reader.GetInt32(2),
+                reader.GetString(3)));
+        return result;
+    }
+
     public async Task UpsertWorkspaceAsync(Workspace workspace, CancellationToken cancellationToken)
     {
         var policy = workspace.CachePolicyOverride ?? CachePolicy.SecureDefault;

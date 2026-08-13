@@ -1,5 +1,29 @@
 # Session handoff
 
+## Unlocked-session Copy and self-contained management — 2026-08-13
+
+- Clipboard Copy now uses the already-unlocked Vault Prospector session by default. Settings has an
+  explicit `Require Windows verification before every clipboard copy` override, off by default.
+  Reveal verification, enterprise clipboard allow/deny policy, cache policy, and automatic
+  clipboard clearing remain separate and enforced.
+- Workspaces now list included resources and expose identity, tenant, subscription, and vault
+  pickers plus removal on the same page. Creating a workspace selects it immediately; no selection
+  from another screen is required.
+- Administration workload discovery now uses the exact tenant/account represented by the selected
+  subscription for ARM managed identities, Graph authorization, and service-principal listing.
+  Privacy-safe managed-identity and service-principal completion/failure events are allowlisted.
+- The governed Release gate passes 495/495 tests with zero warnings/errors and no vulnerable NuGet
+  packages. Browser companion tests pass 6/6 and its production build succeeds.
+- The first Release invocation was killed by the command runner's two-minute timeout, leaving two
+  orphaned infrastructure-test processes. Their executable paths were verified under this worktree,
+  only those two processes were stopped, and the clean full rerun passed. This was tooling residue,
+  not a product or test failure.
+- Next: commit, package exact Preview 17, run all three MSI validators, prove state preservation,
+  install, and perform the live consecutive-copy/workspace/workload-discovery checks. Do not
+  publish until the exact installed candidate passes.
+
+---
+
 ## Actionable sync targets and About documentation — 2026-08-12
 
 - Commit `2cff4ec` removed every automatic interactive acquisition path from foreground sync,

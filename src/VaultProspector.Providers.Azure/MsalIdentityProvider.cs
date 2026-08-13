@@ -94,6 +94,15 @@ public sealed class MsalIdentityProvider(string cacheDirectory)
 
     public async Task<ConnectedIdentity> AuthorizeDirectoryReadAsync(
         ConnectedIdentity identity,
+        CancellationToken cancellationToken) =>
+        await AuthorizeDirectoryReadAsync(
+            identity,
+            identity.HomeTenantId,
+            cancellationToken);
+
+    public async Task<ConnectedIdentity> AuthorizeDirectoryReadAsync(
+        ConnectedIdentity identity,
+        string tenantId,
         CancellationToken cancellationToken)
     {
         if (identity.Type != IdentityType.InteractiveUser)
@@ -105,6 +114,7 @@ public sealed class MsalIdentityProvider(string cacheDirectory)
             .FirstOrDefault(candidate =>
                 candidate.HomeAccountId.Identifier == identity.AccountIdentifier);
         var builder = application.AcquireTokenInteractive(AzureAuthenticationScopes.GraphDirectoryRead)
+            .WithTenantId(tenantId)
             .WithPrompt(Prompt.SelectAccount);
         if (account is not null)
             builder = builder.WithAccount(account);

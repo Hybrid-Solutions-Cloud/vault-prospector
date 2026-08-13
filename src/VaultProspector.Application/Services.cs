@@ -240,12 +240,29 @@ public sealed class IdentityService
     {
         var identity = await _repository.GetIdentityAsync(identityId, cancellationToken)
             ?? throw new KeyNotFoundException("The selected identity no longer exists.");
+        await AuthorizeDirectoryReadAsync(
+            identityId,
+            identity.HomeTenantId,
+            cancellationToken);
+    }
+
+    public async Task AuthorizeDirectoryReadAsync(
+        Guid identityId,
+        string tenantId,
+        CancellationToken cancellationToken)
+    {
+        var identity = await _repository.GetIdentityAsync(identityId, cancellationToken)
+            ?? throw new KeyNotFoundException("The selected identity no longer exists.");
         if (identity.Type != IdentityType.InteractiveUser)
             throw new InvalidOperationException(
                 "Microsoft Graph directory discovery requires an explicit interactive administrator identity.");
         _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(identity);
+        _enterprisePolicy.GetSnapshot().EnsureTenantAllowed(tenantId);
 
-        var authorized = await _provider.AuthorizeDirectoryReadAsync(identity, cancellationToken);
+        var authorized = await _provider.AuthorizeDirectoryReadAsync(
+            identity,
+            tenantId,
+            cancellationToken);
         _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(authorized);
         var updated = authorized with
         {
@@ -879,7 +896,24 @@ public sealed class SecretAccessService(
         }
     }
 
-    public async Task RetrieveAndCopyAsync(Guid itemId, TimeSpan clearAfter, CachePolicy policy, CancellationToken cancellationToken)
+    public Task RetrieveAndCopyAsync(
+        Guid itemId,
+        TimeSpan clearAfter,
+        CachePolicy policy,
+        CancellationToken cancellationToken) =>
+        RetrieveAndCopyAsync(
+            itemId,
+            clearAfter,
+            policy,
+            requireFreshVerification: true,
+            cancellationToken);
+
+    public async Task RetrieveAndCopyAsync(
+        Guid itemId,
+        TimeSpan clearAfter,
+        CachePolicy policy,
+        bool requireFreshVerification,
+        CancellationToken cancellationToken)
     {
         var enterprise = EnterprisePolicy();
         enterprise.EnsureClipboardAllowed();
@@ -889,7 +923,11 @@ public sealed class SecretAccessService(
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be copied.");
         EnsureSourceAllowed(source, enterprise);
         EnsureOnlineIdentityIsUsable(source.Identity);
-        if (!verification.IsAvailable || await verification.VerifyAsync("Copy an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified)
+        if (requireFreshVerification &&
+            (!verification.IsAvailable ||
+             await verification.VerifyAsync(
+                 "Copy an Azure Key Vault secret",
+                 cancellationToken) != UserVerificationResult.Verified))
             throw new UnauthorizedAccessException("Local verification was not completed.");
 
         using var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
@@ -1265,6 +1303,11 @@ public sealed class BrowserFillService(
 public sealed class WorkspaceService(IMetadataRepository repository)
 {
     public Task<IReadOnlyList<Workspace>> GetAllAsync(CancellationToken cancellationToken) => repository.GetWorkspacesAsync(cancellationToken);
+
+    public Task<IReadOnlyList<WorkspaceResourceLink>> GetResourcesAsync(
+        Guid workspaceId,
+        CancellationToken cancellationToken) =>
+        repository.GetWorkspaceLinksAsync(workspaceId, cancellationToken);
 
     public Task SaveAsync(Workspace workspace, CancellationToken cancellationToken)
     {

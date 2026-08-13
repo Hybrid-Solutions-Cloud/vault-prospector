@@ -35,18 +35,31 @@ Current implementation branch: `fix/tenant-scoped-key-vault-sync` from public Pr
   packages at `c4bb415`. Browser tests pass 6/6 and its production build succeeds.
 - Preview 12 publicly resolved the preceding Entra RDP unlock blocker AB#7337 on the specifically
   tested VM/session/account/policy; broader VDI coverage remains open in release readiness.
+- The next source candidate removes redundant clipboard authentication by using the existing
+  unlocked application session for Copy by default. An explicit Settings override can require
+  fresh verification for each copy; Reveal, enterprise clipboard policy, and auto-clear remain
+  separate and enforced.
+- Workspaces now have a self-contained member editor with visible identity, tenant, subscription,
+  and vault pickers plus removal. Administration workload discovery uses the selected
+  subscription's tenant and account for both ARM managed identities and Graph service principals,
+  with privacy-safe operation-specific diagnostics.
+- The governed Release gate passes 495/495 tests with zero warnings/errors and no vulnerable NuGet
+  packages. Browser tests pass 6/6 and the production browser build succeeds.
 
 Next:
 
-1. Exact Preview 16 from documentation head `9c1967fff20654980423875c1dab444738354fe2`
-   is installed. Its MSI SHA-256 is
-   `94AD3F424BE64D54D20A39BDDF5DDE3A8C2D2108C2B68278CA21EF24C07E60C0`; all three
-   validators passed, and the five current non-log state files remained byte-for-byte unchanged.
-2. Sync the three existing identities and confirm zero browser/consent prompts plus named grouped
+1. Commit the validated source and package exact Preview 17 with immutable source provenance.
+2. Run all three MSI validators, preserve the current non-log state inventory through upgrade, and
+   install Preview 17 only after those checks pass.
+3. In one unlocked session, copy two secrets and confirm neither copy prompts; then enable the
+   explicit per-copy verification setting and confirm it restores the prompt.
+4. Validate the self-contained Workspace editor and repeat managed-identity/service-principal
+   discovery using the explicit Administration subscription/tenant/account picker.
+5. Sync the three existing identities and confirm zero browser/consent prompts plus named grouped
    target rows in Connections; verify the About-page links from the installed binary.
-3. Preserve partial authorization errors honestly while designing any future tenant authorization
+6. Preserve partial authorization errors honestly while designing any future tenant authorization
    as an explicit, user-initiated workflow with a preview of how many tenant prompts may be needed.
-4. Push, pass protected CI, merge, and publish only after exact-package live validation succeeds.
+7. Push, pass protected CI, merge, and publish only after exact-package live validation succeeds.
 
 ---
 

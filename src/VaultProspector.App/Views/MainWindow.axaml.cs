@@ -252,9 +252,9 @@ public partial class MainWindow : Window
         IdentityGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto" : "*");
         Place(ConnectIdentityCard, narrow ? 1 : 0, narrow ? 0 : 1);
 
-        WorkspaceGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "1*,1*");
+        WorkspaceGrid.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "0.8*,1.4*");
         WorkspaceGrid.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto" : "*");
-        Place(CreateWorkspaceCard, narrow ? 1 : 0, narrow ? 0 : 1);
+        Place(WorkspaceEditorCard, narrow ? 1 : 0, narrow ? 0 : 1);
 
         AdministrationGrid.ColumnDefinitions = new ColumnDefinitions(
             narrow

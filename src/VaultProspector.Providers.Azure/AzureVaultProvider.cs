@@ -312,33 +312,6 @@ public sealed class AzureVaultProvider : IVaultProvider
     private static string Pseudonym(Guid value) => value.ToString("N")[..12];
     private static Guid Id(params object[] values) { var input = string.Join('|', values.Select(x => x.ToString())); var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input)); return new Guid(hash.AsSpan(0, 16)); }
 
-    private sealed class TenantScopedCredential(
-        TokenCredential inner,
-        string tenantId) : TokenCredential
-    {
-        public override AccessToken GetToken(
-            TokenRequestContext requestContext,
-            CancellationToken cancellationToken) =>
-            inner.GetToken(WithTenant(requestContext), cancellationToken);
-
-        public override ValueTask<AccessToken> GetTokenAsync(
-            TokenRequestContext requestContext,
-            CancellationToken cancellationToken) =>
-            inner.GetTokenAsync(WithTenant(requestContext), cancellationToken);
-
-        private TokenRequestContext WithTenant(TokenRequestContext context) =>
-            new(
-                context.Scopes,
-                context.ParentRequestId,
-                context.Claims,
-                tenantId,
-                context.IsCaeEnabled,
-                context.IsProofOfPossessionEnabled,
-                context.ProofOfPossessionNonce,
-                context.ResourceRequestUri,
-                context.ResourceRequestMethod);
-    }
-
     internal delegate Task<VaultPermissionObservation> VaultMetadataEnumerator(
         TokenCredential credential,
         VaultResource vault,

@@ -1005,6 +1005,39 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task CopyCanUseTheAlreadyUnlockedApplicationSession()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity)
+        {
+            Resolved = (item, Vault(), identity),
+        };
+        var provider = new FakeProvider();
+        var clipboard = new FakeClipboard();
+        var verification = new CountingVerify();
+        var service = new SecretAccessService(
+            provider,
+            repository,
+            new FakeValueStore(),
+            clipboard,
+            verification,
+            new FixedClock());
+
+        await service.RetrieveAndCopyAsync(
+            item.Id,
+            TimeSpan.FromSeconds(30),
+            new CachePolicy(false, TimeSpan.FromHours(8), true, true),
+            requireFreshVerification: false,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, verification.Calls);
+        Assert.Equal(1, provider.RetrieveCalls);
+        Assert.Equal(1, clipboard.CopyCalls);
+        Assert.Equal("value", clipboard.CopiedValue);
+    }
+
+    [Fact]
     public async Task DisabledOfflinePolicyRejectsBeforeVerificationOrAzureRetrieval()
     {
         var identity = Identity();

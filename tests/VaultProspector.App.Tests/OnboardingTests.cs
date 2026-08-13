@@ -58,6 +58,7 @@ public sealed class OnboardingTests : IDisposable
         Assert.Equal(ProductIdentity.DefaultClientId, settings.ClientId);
         Assert.False(settings.UseCustomClientId);
         Assert.Equal(0, settings.RevealVerificationGraceSeconds);
+        Assert.False(settings.RequireCopyVerification);
     }
 
     [Fact]
@@ -112,6 +113,7 @@ public sealed class OnboardingTests : IDisposable
             BackgroundMetadataSyncEnabled = true,
             MinimizeToNotificationArea = false,
             RevealVerificationGraceSeconds = 60,
+            RequireCopyVerification = true,
         };
 
         await store.SaveAsync(expected, TestContext.Current.CancellationToken);
@@ -121,6 +123,7 @@ public sealed class OnboardingTests : IDisposable
         Assert.True(restored.BackgroundMetadataSyncEnabled);
         Assert.False(restored.MinimizeToNotificationArea);
         Assert.Equal(60, restored.RevealVerificationGraceSeconds);
+        Assert.True(restored.RequireCopyVerification);
     }
 
     [Theory]
@@ -799,6 +802,23 @@ public sealed class OnboardingTests : IDisposable
             {
                 ServicePrincipals = candidates,
             };
+        var administrator = CreateIdentity();
+        var tenant = new TenantAccess(
+            Guid.NewGuid(),
+            administrator.Id,
+            administrator.HomeTenantId,
+            "Administrator tenant",
+            "Home",
+            DateTimeOffset.UtcNow,
+            "Available");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            tenant.Id,
+            "11111111-1111-1111-1111-111111111111",
+            "Administration subscription",
+            "Enabled",
+            true,
+            DateTimeOffset.UtcNow);
         var viewModel = new MainViewModel(
             null!,
             null!,
@@ -813,7 +833,12 @@ public sealed class OnboardingTests : IDisposable
             null!,
             administration)
         {
-            SelectedIdentity = CreateIdentity(),
+            SelectedIdentity = administrator,
+            SelectedAdministrationSubscription =
+                new AdministrationSubscriptionOption(
+                    administrator,
+                    tenant,
+                    subscription),
         };
 
         await viewModel.DiscoverServicePrincipalsCommand
@@ -1471,6 +1496,66 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public async Task WorkspaceEditorAddsListsAndRemovesResourcesWithoutCrossPageSelection()
+    {
+        var identity = CreateIdentity();
+        var tenant = new TenantAccess(
+            Guid.NewGuid(),
+            identity.Id,
+            "tenant-id",
+            "Tenant",
+            "Home",
+            DateTimeOffset.UtcNow,
+            "Available");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            tenant.Id,
+            "subscription-id",
+            "Subscription",
+            "Enabled",
+            true,
+            DateTimeOffset.UtcNow);
+        var repository = new SubscriptionRepository(identity, subscription);
+        var workspace = new Workspace(
+            Guid.NewGuid(),
+            "Operations",
+            string.Empty,
+            0);
+        var viewModel = new MainViewModel(
+            repository,
+            null!,
+            null!,
+            new SearchService(repository, new TestClock()),
+            null!,
+            new WorkspaceService(repository),
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!)
+        {
+            SelectedWorkspace = workspace,
+            SelectedWorkspaceIdentityOption =
+                new WorkspaceIdentityOption(identity),
+        };
+        viewModel.WorkspaceIdentityOptions.Add(
+            viewModel.SelectedWorkspaceIdentityOption);
+
+        Assert.True(viewModel.AddWorkspaceIdentityCommand.CanExecute(null));
+        await viewModel.AddWorkspaceIdentityCommand.ExecuteAsync(null);
+
+        var member = Assert.Single(viewModel.WorkspaceMembers);
+        Assert.Contains(identity.DisplayName, member.Label, StringComparison.Ordinal);
+        viewModel.SelectedWorkspaceMember = member;
+        Assert.True(viewModel.RemoveWorkspaceMemberCommand.CanExecute(null));
+
+        await viewModel.RemoveWorkspaceMemberCommand.ExecuteAsync(null);
+
+        Assert.Empty(viewModel.WorkspaceMembers);
+        Assert.Empty(repository.WorkspaceLinks);
+    }
+
+    [Fact]
     public async Task RecoveryArchiveDeletionRequiresSelectionPhraseAndVerification()
     {
         var archive = new LocalRecoveryArchive(
@@ -1601,6 +1686,7 @@ public sealed class OnboardingTests : IDisposable
         public IReadOnlyList<Workspace> Workspaces { get; set; } = [];
         public Workspace? SavedWorkspace { get; private set; }
         public List<WorkspaceResourceLink> AddedLinks { get; } = [];
+        public List<WorkspaceResourceLink> WorkspaceLinks { get; } = [];
         public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<ConnectedIdentity>>([identity]);
@@ -1652,6 +1738,11 @@ public sealed class OnboardingTests : IDisposable
         public Task SetFavoriteAsync(Guid itemId, bool isFavorite, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<IReadOnlyList<Workspace>> GetWorkspacesAsync(CancellationToken cancellationToken) =>
             Task.FromResult(Workspaces);
+        public Task<IReadOnlyList<WorkspaceResourceLink>> GetWorkspaceLinksAsync(
+            Guid workspaceId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<WorkspaceResourceLink>>(
+                WorkspaceLinks.Where(link => link.WorkspaceId == workspaceId).ToArray());
         public Task UpsertWorkspaceAsync(Workspace workspace, CancellationToken cancellationToken)
         {
             SavedWorkspace = workspace;
@@ -1662,9 +1753,21 @@ public sealed class OnboardingTests : IDisposable
         public Task AddWorkspaceLinkAsync(WorkspaceResourceLink link, CancellationToken cancellationToken)
         {
             AddedLinks.Add(link);
+            if (!WorkspaceLinks.Any(candidate =>
+                    candidate.WorkspaceId == link.WorkspaceId &&
+                    candidate.ResourceType == link.ResourceType &&
+                    candidate.ResourceId == link.ResourceId))
+                WorkspaceLinks.Add(link);
             return Task.CompletedTask;
         }
-        public Task RemoveWorkspaceLinkAsync(Guid workspaceId, ResourceLinkType resourceType, string resourceId, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task RemoveWorkspaceLinkAsync(Guid workspaceId, ResourceLinkType resourceType, string resourceId, CancellationToken cancellationToken)
+        {
+            WorkspaceLinks.RemoveAll(link =>
+                link.WorkspaceId == workspaceId &&
+                link.ResourceType == resourceType &&
+                link.ResourceId == resourceId);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class EmptyRepository : IMetadataRepository

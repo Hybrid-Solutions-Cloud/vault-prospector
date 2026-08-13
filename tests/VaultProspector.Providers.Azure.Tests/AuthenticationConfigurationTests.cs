@@ -334,6 +334,42 @@ public sealed class AuthenticationConfigurationTests
         Assert.Equal("Customer Automation", candidate.DisplayName);
     }
 
+    [Fact]
+    public async Task GraphDiscoveryUsesTheExplicitResourceTenant()
+    {
+        const string resourceTenant =
+            "33333333-3333-3333-3333-333333333333";
+        var handler = new GraphSequenceHandler(
+            $$"""
+            {
+              "value": [
+                {
+                  "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                  "appId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                  "displayName": "Resource Tenant Automation",
+                  "servicePrincipalType": "Application",
+                  "accountEnabled": true,
+                  "appOwnerOrganizationId": "{{resourceTenant}}"
+                }
+              ]
+            }
+            """);
+        var credential = new StaticTokenCredential();
+        var service = new WorkloadIdentityDiscoveryService(
+            credential,
+            new HttpClient(handler));
+
+        var candidates = await service.ListServicePrincipalsAsync(
+            InteractiveAdministrator(),
+            resourceTenant,
+            TestContext.Current.CancellationToken);
+
+        var candidate = Assert.Single(candidates);
+        Assert.Equal(resourceTenant, credential.LastTenantId);
+        Assert.Equal(resourceTenant, candidate.TenantId);
+        Assert.Equal("Resource Tenant Automation", candidate.DisplayName);
+    }
+
     [Theory]
     [InlineData("https://attacker.invalid/collect")]
     [InlineData("https://graph.microsoft.com:444/v1.0/servicePrincipals")]
