@@ -20,6 +20,36 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void AboutSurfaceExposesAllCanonicalPublicDocumentationLinks()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var about = document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "TabItem" &&
+                Attribute(element, "Header")?.Value.Contains(
+                    "About",
+                    StringComparison.Ordinal) == true);
+        var commands = about
+            .Descendants()
+            .Select(element => Attribute(element, "Command")?.Value)
+            .Where(value => value is not null)
+            .ToArray();
+
+        Assert.Contains("{Binding OpenUserGuideCommand}", commands);
+        Assert.Contains("{Binding OpenRoadmapCommand}", commands);
+        Assert.Contains("{Binding OpenChangelogCommand}", commands);
+        Assert.Contains("{Binding OpenReleaseGuideCommand}", commands);
+        Assert.Contains("{Binding OpenReleaseHistoryCommand}", commands);
+        Assert.All(
+            about.Descendants().Where(element => element.Name.LocalName == "Button"),
+            button => Assert.Contains(
+                "default browser",
+                Attribute(button, "AutomationProperties.Name")?.Value ?? string.Empty,
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void AtlasUsesOneLightControlThemeAcrossEveryWindowsColorMode()
     {
         var application = XDocument.Load(
@@ -191,6 +221,60 @@ public sealed class AccessibilityMarkupTests
             Attribute(
                 status,
                 "AutomationProperties.LiveSetting")?.Value);
+    }
+
+    [Fact]
+    public void WorkspaceEditorOwnsItsResourcePickersAndMembershipList()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var workspace = document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "TabItem" &&
+                Attribute(element, "Header")?.Value.Contains(
+                    "Workspaces",
+                    StringComparison.Ordinal) == true);
+        var automationNames = workspace
+            .Descendants()
+            .Select(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value)
+            .Where(value => value is not null)
+            .Cast<string>()
+            .ToHashSet(StringComparer.Ordinal);
+        var buttonContent = workspace
+            .Descendants()
+            .Where(element => element.Name.LocalName == "Button")
+            .Select(element => Attribute(element, "Content")?.Value)
+            .Where(value => value is not null)
+            .Cast<string>()
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains("Resources included in selected workspace", automationNames);
+        Assert.Contains("Workspace identity picker", automationNames);
+        Assert.Contains("Workspace tenant picker", automationNames);
+        Assert.Contains("Workspace subscription picker", automationNames);
+        Assert.Contains("Workspace vault picker", automationNames);
+        Assert.Contains("Remove selected resource", buttonContent);
+        Assert.DoesNotContain("Add selected identity", buttonContent);
+        Assert.DoesNotContain("Add selected tenant", buttonContent);
+        Assert.DoesNotContain("Add selected subscription", buttonContent);
+        Assert.DoesNotContain("Add selected vault", buttonContent);
+    }
+
+    [Fact]
+    public void ClipboardCopyVerificationOverrideIsExplicitAndSeparateFromReveal()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var setting = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "AutomationProperties.Name")?.Value ==
+                "Require fresh Windows verification before every clipboard copy");
+
+        Assert.Equal("CheckBox", setting.Name.LocalName);
+        Assert.Equal(
+            "{Binding RequireCopyVerification}",
+            Attribute(setting, "IsChecked")?.Value);
     }
 
     [Fact]

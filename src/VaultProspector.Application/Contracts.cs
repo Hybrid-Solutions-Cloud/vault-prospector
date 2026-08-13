@@ -11,6 +11,11 @@ public interface IIdentityProvider
     Task<ConnectedIdentity> SignInAsync(string clientId, string displayName, CancellationToken cancellationToken);
     Task<ConnectedIdentity> ReauthenticateAsync(ConnectedIdentity identity, CancellationToken cancellationToken);
     Task<ConnectedIdentity> AuthorizeDirectoryReadAsync(ConnectedIdentity identity, CancellationToken cancellationToken);
+    Task<ConnectedIdentity> AuthorizeDirectoryReadAsync(
+        ConnectedIdentity identity,
+        string tenantId,
+        CancellationToken cancellationToken) =>
+        AuthorizeDirectoryReadAsync(identity, cancellationToken);
     Task RemoveAsync(ConnectedIdentity identity, CancellationToken cancellationToken);
 }
 
@@ -79,9 +84,25 @@ public interface IWorkloadIdentityAdministrationService
         string subscriptionId,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<WorkloadIdentityCandidate>> ListManagedIdentitiesAsync(
+        ConnectedIdentity administrator,
+        string tenantId,
+        string subscriptionId,
+        CancellationToken cancellationToken) =>
+        ListManagedIdentitiesAsync(
+            administrator,
+            subscriptionId,
+            cancellationToken);
+
     Task<IReadOnlyList<WorkloadIdentityCandidate>> ListServicePrincipalsAsync(
         ConnectedIdentity administrator,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<WorkloadIdentityCandidate>> ListServicePrincipalsAsync(
+        ConnectedIdentity administrator,
+        string tenantId,
+        CancellationToken cancellationToken) =>
+        ListServicePrincipalsAsync(administrator, cancellationToken);
 
     Task<WorkloadIdentityCandidate> AssessPermissionsAsync(
         ConnectedIdentity administrator,
@@ -276,6 +297,10 @@ public interface IMetadataRepository
     Task RecordAccessAsync(Guid itemId, DateTimeOffset accessedAt, CancellationToken cancellationToken);
     Task SetFavoriteAsync(Guid itemId, bool isFavorite, CancellationToken cancellationToken);
     Task<IReadOnlyList<Workspace>> GetWorkspacesAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<WorkspaceResourceLink>> GetWorkspaceLinksAsync(
+        Guid workspaceId,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<WorkspaceResourceLink>>([]);
     Task UpsertWorkspaceAsync(Workspace workspace, CancellationToken cancellationToken);
     Task RemoveWorkspaceAsync(Guid id, CancellationToken cancellationToken);
     Task AddWorkspaceLinkAsync(WorkspaceResourceLink link, CancellationToken cancellationToken);

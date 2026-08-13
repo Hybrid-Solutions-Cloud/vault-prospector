@@ -935,6 +935,12 @@ public sealed class EncryptedPersistenceTests : IDisposable
         await repository.UpsertWorkspaceAsync(workspace, TestContext.Current.CancellationToken);
         await repository.AddWorkspaceLinkAsync(new WorkspaceResourceLink(Guid.NewGuid(), workspace.Id, ResourceLinkType.Vault, vault.Id.ToString("D")), TestContext.Current.CancellationToken);
 
+        var links = await repository.GetWorkspaceLinksAsync(
+            workspace.Id,
+            TestContext.Current.CancellationToken);
+        Assert.Single(links);
+        Assert.Equal(ResourceLinkType.Vault, links[0].ResourceType);
+        Assert.Equal(vault.Id.ToString("D"), links[0].ResourceId);
         Assert.Single(await repository.SearchAsync(new SearchRequest(WorkspaceId: workspace.Id), _clock.UtcNow, TestContext.Current.CancellationToken));
 
         await repository.RemoveWorkspaceLinkAsync(workspace.Id, ResourceLinkType.Vault, vault.Id.ToString("D"), TestContext.Current.CancellationToken);

@@ -205,7 +205,8 @@ public partial class App : Avalonia.Application
                     identityProvider,
                     graphHttpClient,
                     authorizationHttpClient,
-                    enterprisePolicy),
+                    enterprisePolicy,
+                    diagnostics),
                 new LocalEncryptionRotationEngine(
                     VaultProspectorPaths.DataDirectory,
                     VaultProspectorPaths.DatabasePath,

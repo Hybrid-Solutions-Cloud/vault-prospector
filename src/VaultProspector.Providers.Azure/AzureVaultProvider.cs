@@ -18,18 +18,25 @@ public sealed class AzureVaultProvider : IVaultProvider
 {
     private readonly IAzureCredentialProvider _identityProvider;
     private readonly Func<TokenCredential, ArmClient> _armClientFactory;
+    private readonly VaultMetadataEnumerator _vaultMetadataEnumerator;
 
     public AzureVaultProvider(IAzureCredentialProvider identityProvider)
-        : this(identityProvider, credential => new ArmClient(credential))
+        : this(
+            identityProvider,
+            credential => new ArmClient(credential),
+            EnumerateVaultAsync)
     {
     }
 
     internal AzureVaultProvider(
         IAzureCredentialProvider identityProvider,
-        Func<TokenCredential, ArmClient> armClientFactory)
+        Func<TokenCredential, ArmClient> armClientFactory,
+        VaultMetadataEnumerator? vaultMetadataEnumerator = null)
     {
         _identityProvider = identityProvider;
         _armClientFactory = armClientFactory;
+        _vaultMetadataEnumerator =
+            vaultMetadataEnumerator ?? EnumerateVaultAsync;
     }
 
     public Task<DiscoverySnapshot> DiscoverAsync(
@@ -52,7 +59,9 @@ public sealed class AzureVaultProvider : IVaultProvider
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(constraints);
-        var credential = await _identityProvider.GetCredentialAsync(identity, cancellationToken);
+        var credential = await _identityProvider.GetCredentialAsync(
+            identity,
+            cancellationToken);
         var arm = _armClientFactory(credential);
         var tenants = new List<TenantAccess>();
         var subscriptions = new List<SubscriptionAccess>();
@@ -99,8 +108,9 @@ public sealed class AzureVaultProvider : IVaultProvider
 
                 try
                 {
-                    var tenantArm = _armClientFactory(
-                        new TenantScopedCredential(credential, tenantId));
+                    var tenantCredential =
+                        new TenantScopedCredential(credential, tenantId);
+                    var tenantArm = _armClientFactory(tenantCredential);
                     await foreach (var subscription in tenantArm.GetSubscriptions().GetAllAsync(cancellationToken))
                     {
                         var subscriptionId = subscription.Data.SubscriptionId ?? subscription.Id.SubscriptionId ?? string.Empty;
@@ -120,7 +130,13 @@ public sealed class AzureVaultProvider : IVaultProvider
                                 var vaultId = Id(resource.Id.ToString());
                                 var vault = new VaultResource(vaultId, resource.Id.ToString(), resource.Data.Name, tenantId, subscriptionId, resource.Id.ResourceGroupName ?? string.Empty, resource.Data.Location.Name, ToTags(resource.Data.Tags), new Uri($"https://{resource.Data.Name}.vault.azure.net/"), now);
                                 vaults.Add(vault);
-                                var permissionObservation = await EnumerateVaultAsync(credential, vault, items, errors, cancellationToken);
+                                var permissionObservation =
+                                    await _vaultMetadataEnumerator(
+                                        tenantCredential,
+                                        vault,
+                                        items,
+                                        errors,
+                                        cancellationToken);
                                 accessPaths.Add(new VaultAccess(
                                     Id(vaultId, identity.Id),
                                     vaultId,
@@ -145,7 +161,8 @@ public sealed class AzureVaultProvider : IVaultProvider
                 {
                     errors.Add(SafeError(
                         $"tenant:{Pseudonym(tenantAccess.Id)}:subscriptions",
-                        ex));
+                        ex,
+                        new ProviderRetryScope(TenantId: tenantId)));
                 }
             }
         }
@@ -295,32 +312,14 @@ public sealed class AzureVaultProvider : IVaultProvider
     private static string Pseudonym(Guid value) => value.ToString("N")[..12];
     private static Guid Id(params object[] values) { var input = string.Join('|', values.Select(x => x.ToString())); var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input)); return new Guid(hash.AsSpan(0, 16)); }
 
-    private sealed class TenantScopedCredential(
-        TokenCredential inner,
-        string tenantId) : TokenCredential
-    {
-        public override AccessToken GetToken(
-            TokenRequestContext requestContext,
-            CancellationToken cancellationToken) =>
-            inner.GetToken(WithTenant(requestContext), cancellationToken);
+    internal delegate Task<VaultPermissionObservation> VaultMetadataEnumerator(
+        TokenCredential credential,
+        VaultResource vault,
+        List<VaultItem> items,
+        List<ProviderError> errors,
+        CancellationToken cancellationToken);
 
-        public override ValueTask<AccessToken> GetTokenAsync(
-            TokenRequestContext requestContext,
-            CancellationToken cancellationToken) =>
-            inner.GetTokenAsync(WithTenant(requestContext), cancellationToken);
-
-        private TokenRequestContext WithTenant(TokenRequestContext context) =>
-            new(
-                context.Scopes,
-                context.ParentRequestId,
-                context.Claims,
-                tenantId,
-                context.IsCaeEnabled,
-                context.IsProofOfPossessionEnabled,
-                context.ProofOfPossessionNonce,
-                context.ResourceRequestUri,
-                context.ResourceRequestMethod);
-    }
-
-    private sealed record VaultPermissionObservation(string Summary, string? FailureCategory);
+    internal sealed record VaultPermissionObservation(
+        string Summary,
+        string? FailureCategory);
 }

@@ -6,6 +6,16 @@ namespace VaultProspector.Application.Tests;
 public sealed class ApplicationServiceTests
 {
     [Fact]
+    public void SynchronizationProviderContractHasNoInteractiveDiscoveryPath()
+    {
+        Assert.DoesNotContain(
+            typeof(IVaultProvider).GetMethods(),
+            method => method.Name.Contains(
+                "Interactive",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task LocalDataRecoveryRejectsIncorrectConfirmationBeforeVerification()
     {
         var verification = new CountingVerify();
@@ -624,6 +634,34 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task SynchronizationRetriesOnlySelectedFailedTenantAsPatch()
+    {
+        var identity = Identity();
+        var repository = new FakeRepository(identity);
+        var provider = new FakeProvider();
+        var service = new SynchronizationService(
+            provider,
+            repository,
+            new FixedClock(),
+            new FakeDiagnostics());
+        var tenantId = "22222222-2222-2222-2222-222222222222";
+        var failed = new SyncErrorDetail(
+            "tenant:redacted:subscriptions",
+            "RequestFailedException",
+            "Azure request failed.",
+            "Retry.",
+            RetryScope: new ProviderRetryScope(TenantId: tenantId));
+
+        await service.RetryFailedScopesAsync(
+            identity,
+            [failed],
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal([tenantId], provider.Constraints?.AllowedTenantIds);
+        Assert.Equal(1, repository.ApplyPatchCalls);
+    }
+
+    [Fact]
     public async Task SynchronizationDoesNotPersistAuthenticationExceptionMessages()
     {
         var identity = Identity();
@@ -961,6 +999,39 @@ public sealed class ApplicationServiceTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal(1, verification.Calls);
+        Assert.Equal(1, provider.RetrieveCalls);
+        Assert.Equal(1, clipboard.CopyCalls);
+        Assert.Equal("value", clipboard.CopiedValue);
+    }
+
+    [Fact]
+    public async Task CopyCanUseTheAlreadyUnlockedApplicationSession()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity)
+        {
+            Resolved = (item, Vault(), identity),
+        };
+        var provider = new FakeProvider();
+        var clipboard = new FakeClipboard();
+        var verification = new CountingVerify();
+        var service = new SecretAccessService(
+            provider,
+            repository,
+            new FakeValueStore(),
+            clipboard,
+            verification,
+            new FixedClock());
+
+        await service.RetrieveAndCopyAsync(
+            item.Id,
+            TimeSpan.FromSeconds(30),
+            new CachePolicy(false, TimeSpan.FromHours(8), true, true),
+            requireFreshVerification: false,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, verification.Calls);
         Assert.Equal(1, provider.RetrieveCalls);
         Assert.Equal(1, clipboard.CopyCalls);
         Assert.Equal("value", clipboard.CopiedValue);

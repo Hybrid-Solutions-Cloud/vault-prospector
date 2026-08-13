@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using VaultProspector.App;
 using VaultProspector.Application;
 using VaultProspector.Domain;
 using VaultProspector.Platform;
@@ -30,7 +31,8 @@ public sealed partial class MainViewModel(
     IRevealVerificationSession? revealVerificationSession = null,
     IReleaseUpdateService? releaseUpdateService = null,
     IBrowserIntegrationDiagnostics? browserIntegrationDiagnostics = null,
-    GovernedAzureMutationService? governedAzureMutationService = null) : ViewModelBase
+    GovernedAzureMutationService? governedAzureMutationService = null,
+    IExternalUriLauncher? externalUriLauncher = null) : ViewModelBase
 {
     private static readonly IdentityType[] SupportedIdentityTypes =
     [
@@ -47,6 +49,7 @@ public sealed partial class MainViewModel(
     private bool _isReloadingIdentities;
     private bool _managedIdentityHostSupported;
     private int _subscriptionLoadVersion;
+    private int _workspaceLoadVersion;
     private int _sensitivePresentationEpoch;
     private readonly List<WorkloadIdentityCandidate>
         _allWorkloadIdentityCandidates = [];
@@ -65,6 +68,11 @@ public sealed partial class MainViewModel(
     public ObservableCollection<SyncErrorRow> SyncErrors { get; } = [];
     public ObservableCollection<DiagnosticEventRow> DiagnosticEvents { get; } = [];
     public ObservableCollection<Workspace> Workspaces { get; } = [];
+    public ObservableCollection<WorkspaceIdentityOption> WorkspaceIdentityOptions { get; } = [];
+    public ObservableCollection<WorkspaceTenantOption> WorkspaceTenantOptions { get; } = [];
+    public ObservableCollection<WorkspaceSubscriptionOption> WorkspaceSubscriptionOptions { get; } = [];
+    public ObservableCollection<WorkspaceVaultOption> WorkspaceVaultOptions { get; } = [];
+    public ObservableCollection<WorkspaceMemberRow> WorkspaceMembers { get; } = [];
     public ObservableCollection<LocalRecoveryArchiveRow> RecoveryArchives { get; } = [];
     public ObservableCollection<SearchFilterOption> TenantFilterOptions { get; } =
         [SearchFilterOption.All("All tenants")];
@@ -97,6 +105,34 @@ public sealed partial class MainViewModel(
         SelectedSubscription is null
             ? "Subscription filter: all"
             : $"Selected subscription: {SelectedSubscription.DisplayName}";
+
+    [RelayCommand]
+    private void OpenUserGuide() =>
+        OpenPublicDocumentation(PublicDocumentation.UserGuide, "User guide");
+
+    [RelayCommand]
+    private void OpenRoadmap() =>
+        OpenPublicDocumentation(PublicDocumentation.Roadmap, "Roadmap");
+
+    [RelayCommand]
+    private void OpenChangelog() =>
+        OpenPublicDocumentation(PublicDocumentation.Changelog, "Changelog");
+
+    [RelayCommand]
+    private void OpenReleaseGuide() =>
+        OpenPublicDocumentation(PublicDocumentation.ReleaseGuide, "Release verification guide");
+
+    [RelayCommand]
+    private void OpenReleaseHistory() =>
+        OpenPublicDocumentation(PublicDocumentation.ReleaseHistory, "Release history");
+
+    private void OpenPublicDocumentation(Uri uri, string label)
+    {
+        var launcher = externalUriLauncher ?? SystemExternalUriLauncher.Instance;
+        StatusText = launcher.TryOpen(uri)
+            ? $"Opened {label} in the default browser."
+            : $"Could not open {label}. Copy this address into a browser: {uri.AbsoluteUri}";
+    }
 
     [ObservableProperty] private IdentityType _selectedIdentityType = IdentityType.InteractiveUser;
     [ObservableProperty] private string _credentialData = string.Empty;
@@ -194,6 +230,15 @@ public sealed partial class MainViewModel(
     [ObservableProperty]
     private WorkloadIdentityCandidateRow? _selectedWorkloadIdentityCandidate;
     [ObservableProperty] private Workspace? _selectedWorkspace;
+    [ObservableProperty]
+    private WorkspaceIdentityOption? _selectedWorkspaceIdentityOption;
+    [ObservableProperty]
+    private WorkspaceTenantOption? _selectedWorkspaceTenantOption;
+    [ObservableProperty]
+    private WorkspaceSubscriptionOption? _selectedWorkspaceSubscriptionOption;
+    [ObservableProperty]
+    private WorkspaceVaultOption? _selectedWorkspaceVaultOption;
+    [ObservableProperty] private WorkspaceMemberRow? _selectedWorkspaceMember;
     [ObservableProperty] private bool _workspaceCacheEnabled;
     [ObservableProperty] private int _workspaceMaximumCacheHours = 8;
     [ObservableProperty] private bool _workspaceAllowClipboard = true;
@@ -204,6 +249,7 @@ public sealed partial class MainViewModel(
     private RevealVerificationGraceOption
         _selectedRevealVerificationGrace =
             RevealVerificationGraceOption.Off;
+    [ObservableProperty] private bool _requireCopyVerification;
     [ObservableProperty] private bool _isCloseChoiceVisible;
     [ObservableProperty] private SearchResultRow? _selectedResult;
     [ObservableProperty] private string _secretPreview = "Select a secret to reveal or copy.";
@@ -350,6 +396,7 @@ public sealed partial class MainViewModel(
                         option.Seconds ==
                         settings.RevealVerificationGraceSeconds) ??
                 RevealVerificationGraceOption.Off;
+            RequireCopyVerification = settings.RequireCopyVerification;
             ApplyEnterprisePolicyToPreferences();
             await ConfigureManagedIdentityAvailabilityAsync(cancellationToken);
 
@@ -560,9 +607,13 @@ public sealed partial class MainViewModel(
     [RelayCommand(CanExecute = nameof(CanAdministerWorkloadIdentities))]
     private Task AuthorizeDirectoryReadAsync() => RunAsync(async cancellationToken =>
     {
-        if (SelectedIdentity is null) return;
-        var identityId = SelectedIdentity.Id;
-        await identityService.AuthorizeDirectoryReadAsync(identityId, cancellationToken);
+        if (SelectedAdministrationSubscription is not { } target)
+            return;
+        var identityId = target.Identity.Id;
+        await identityService.AuthorizeDirectoryReadAsync(
+            identityId,
+            target.Tenant.TenantId,
+            cancellationToken);
         await ReloadIdentitiesAsync(cancellationToken);
         var refreshedIdentity =
             Identities.First(identity => identity.Id == identityId);
@@ -575,6 +626,7 @@ public sealed partial class MainViewModel(
             candidates = await workloadIdentityAdministrationService
                 .ListServicePrincipalsAsync(
                     refreshedIdentity,
+                    target.Tenant.TenantId,
                     cancellationToken);
         }
         ReplaceWorkloadCandidates(candidates);
@@ -591,6 +643,7 @@ public sealed partial class MainViewModel(
             return;
         var candidates = await workloadIdentityAdministrationService.ListManagedIdentitiesAsync(
             target.Identity,
+            target.Tenant.TenantId,
             target.Subscription.SubscriptionId,
             cancellationToken);
         ReplaceWorkloadCandidates(candidates);
@@ -602,9 +655,12 @@ public sealed partial class MainViewModel(
     [RelayCommand(CanExecute = nameof(CanDiscoverServicePrincipals))]
     private Task DiscoverServicePrincipalsAsync() => RunAsync(async cancellationToken =>
     {
-        if (SelectedIdentity is null || workloadIdentityAdministrationService is null) return;
+        if (SelectedAdministrationSubscription is not { } target ||
+            workloadIdentityAdministrationService is null)
+            return;
         var candidates = await workloadIdentityAdministrationService.ListServicePrincipalsAsync(
-            SelectedIdentity,
+            target.Identity,
+            target.Tenant.TenantId,
             cancellationToken);
         ReplaceWorkloadCandidates(candidates);
         WorkloadIdentityFilterStatus =
@@ -693,9 +749,14 @@ public sealed partial class MainViewModel(
     {
         if (SelectedIdentity is null) throw new InvalidOperationException("Select an identity before synchronizing.");
         StatusText = $"Synchronizing {SelectedIdentity.DisplayName}…";
-        var run = await synchronizationService.SynchronizeAsync(SelectedIdentity, cancellationToken);
+        var run = await synchronizationService.SynchronizeAsync(
+            SelectedIdentity,
+            cancellationToken);
         await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
         await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
+        await ReloadWorkspaceResourceCatalogAsync(cancellationToken);
+        if (SelectedWorkspace is not null)
+            await ReloadWorkspaceMembersAsync(SelectedWorkspace.Id, cancellationToken);
         await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
         ReplaceSyncErrors(run);
@@ -726,15 +787,18 @@ public sealed partial class MainViewModel(
         if (SelectedIdentity is null || SelectedSyncError is null)
             return;
 
-        StatusText = $"Retrying {SelectedSyncError.Scope}…";
+        StatusText = $"Retrying {SelectedSyncError.Target}…";
         var run = await synchronizationService.RetryFailedScopesAsync(
             SelectedIdentity,
-            [SelectedSyncError.Detail],
+            SelectedSyncError.Details,
             cancellationToken);
         await ReloadSubscriptionsCoreAsync(
             SelectedIdentity.Id,
             cancellationToken);
         await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
+        await ReloadWorkspaceResourceCatalogAsync(cancellationToken);
+        if (SelectedWorkspace is not null)
+            await ReloadWorkspaceMembersAsync(SelectedWorkspace.Id, cancellationToken);
         await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
         ReplaceSyncErrors(run);
@@ -745,7 +809,7 @@ public sealed partial class MainViewModel(
         StatusText = run.NonSensitiveErrors.Count == 0
             ? $"Retry completed: {run.VaultCount} vaults and {run.ItemCount} objects refreshed."
             : $"Retry completed with {run.NonSensitiveErrors.Count} isolated errors. Successful results remain available.";
-    }, $"Retrying {SelectedSyncError?.Scope ?? "the selected failed scope"}");
+    }, $"Retrying {SelectedSyncError?.Target ?? "the selected failed target"}");
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task RefreshSubscriptionsAsync() => RunAsync(async cancellationToken =>
@@ -753,6 +817,9 @@ public sealed partial class MainViewModel(
         if (SelectedIdentity is null) return;
         await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
         await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
+        await ReloadWorkspaceResourceCatalogAsync(cancellationToken);
+        if (SelectedWorkspace is not null)
+            await ReloadWorkspaceMembersAsync(SelectedWorkspace.Id, cancellationToken);
         StatusText = $"{Subscriptions.Count} discovered subscriptions loaded for {SelectedIdentity.DisplayName}.";
     });
 
@@ -1014,7 +1081,12 @@ public sealed partial class MainViewModel(
     private Task CopyAsync() => RunAsync(async cancellationToken =>
     {
         if (SelectedResult is null) return;
-        await secretAccessService.RetrieveAndCopyAsync(SelectedResult.Id, TimeSpan.FromSeconds(Math.Clamp(ClipboardClearSeconds, 5, 300)), EffectivePolicy(), cancellationToken);
+        await secretAccessService.RetrieveAndCopyAsync(
+            SelectedResult.Id,
+            TimeSpan.FromSeconds(Math.Clamp(ClipboardClearSeconds, 5, 300)),
+            EffectivePolicy(),
+            RequireCopyVerification,
+            cancellationToken);
         StatusText = $"Copied. Clipboard clears after {Math.Clamp(ClipboardClearSeconds, 5, 300)} seconds if unchanged.";
     });
 
@@ -1077,6 +1149,8 @@ public sealed partial class MainViewModel(
         await workspaceService.SaveAsync(workspace, cancellationToken);
         WorkspaceName = string.Empty;
         await ReloadWorkspacesAsync(cancellationToken);
+        SelectedWorkspace = Workspaces.FirstOrDefault(candidate =>
+            candidate.Id == workspace.Id);
         StatusText = $"Workspace {workspace.Name} created.";
     });
 
@@ -1114,6 +1188,68 @@ public sealed partial class MainViewModel(
         await workspaceService.AddResourceAsync(SelectedWorkspace.Id, ResourceLinkType.Subscription, SelectedSubscription.SubscriptionId, cancellationToken);
         await SearchCoreAsync(cancellationToken);
         StatusText = $"Added subscription {SelectedSubscription.DisplayName} to {SelectedWorkspace.Name}.";
+    });
+
+    [RelayCommand(CanExecute = nameof(CanAddWorkspaceIdentity))]
+    private Task AddWorkspaceIdentityAsync() => AddWorkspaceResourceAsync(
+        ResourceLinkType.Identity,
+        SelectedWorkspaceIdentityOption?.ResourceId,
+        SelectedWorkspaceIdentityOption?.Label);
+
+    [RelayCommand(CanExecute = nameof(CanAddWorkspaceTenant))]
+    private Task AddWorkspaceTenantAsync() => AddWorkspaceResourceAsync(
+        ResourceLinkType.Tenant,
+        SelectedWorkspaceTenantOption?.ResourceId,
+        SelectedWorkspaceTenantOption?.Label);
+
+    [RelayCommand(CanExecute = nameof(CanAddWorkspaceSubscription))]
+    private Task AddWorkspaceSubscriptionAsync() => AddWorkspaceResourceAsync(
+        ResourceLinkType.Subscription,
+        SelectedWorkspaceSubscriptionOption?.ResourceId,
+        SelectedWorkspaceSubscriptionOption?.Label);
+
+    [RelayCommand(CanExecute = nameof(CanAddWorkspaceVault))]
+    private Task AddWorkspaceVaultAsync() => AddWorkspaceResourceAsync(
+        ResourceLinkType.Vault,
+        SelectedWorkspaceVaultOption?.ResourceId,
+        SelectedWorkspaceVaultOption?.Label);
+
+    private Task AddWorkspaceResourceAsync(
+        ResourceLinkType resourceType,
+        string? resourceId,
+        string? label) =>
+        RunAsync(async cancellationToken =>
+        {
+            if (SelectedWorkspace is null || string.IsNullOrWhiteSpace(resourceId))
+                return;
+            await workspaceService.AddResourceAsync(
+                SelectedWorkspace.Id,
+                resourceType,
+                resourceId,
+                cancellationToken);
+            await ReloadWorkspaceMembersAsync(
+                SelectedWorkspace.Id,
+                cancellationToken);
+            await SearchCoreAsync(cancellationToken);
+            StatusText = $"{label ?? "Resource"} is included in {SelectedWorkspace.Name}.";
+        });
+
+    [RelayCommand(CanExecute = nameof(CanRemoveWorkspaceMember))]
+    private Task RemoveWorkspaceMemberAsync() => RunAsync(async cancellationToken =>
+    {
+        if (SelectedWorkspace is null || SelectedWorkspaceMember is null)
+            return;
+        var removed = SelectedWorkspaceMember;
+        await workspaceService.RemoveResourceAsync(
+            SelectedWorkspace.Id,
+            removed.Link.ResourceType,
+            removed.Link.ResourceId,
+            cancellationToken);
+        await ReloadWorkspaceMembersAsync(
+            SelectedWorkspace.Id,
+            cancellationToken);
+        await SearchCoreAsync(cancellationToken);
+        StatusText = $"Removed {removed.Label} from {SelectedWorkspace.Name}.";
     });
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedWorkspace))]
@@ -1216,8 +1352,15 @@ public sealed partial class MainViewModel(
                     message,
                     "Use the safe category shown here to correct the affected scope, then retry synchronization."))
                 .ToArray();
-        foreach (var detail in details)
-            SyncErrors.Add(new SyncErrorRow(detail));
+        foreach (var group in details.GroupBy(SyncErrorRow.GroupKey))
+        {
+            SyncErrors.Add(new SyncErrorRow(
+                group.ToArray(),
+                SelectedIdentity?.DisplayName ?? run.Scope,
+                Tenants,
+                Subscriptions,
+                VaultAccessPaths));
+        }
         OnPropertyChanged(nameof(HasSyncErrors));
     }
 
@@ -1475,7 +1618,206 @@ public sealed partial class MainViewModel(
         Workspaces.Clear();
         foreach (var workspace in await workspaceService.GetAllAsync(cancellationToken)) Workspaces.Add(workspace);
         if (SelectedWorkspace is not null) SelectedWorkspace = Workspaces.FirstOrDefault(x => x.Id == SelectedWorkspace.Id);
+        await ReloadWorkspaceResourceCatalogAsync(cancellationToken);
+        if (SelectedWorkspace is not null)
+            await ReloadWorkspaceMembersAsync(
+                SelectedWorkspace.Id,
+                cancellationToken);
     }
+
+    private async Task ReloadWorkspaceResourceCatalogAsync(
+        CancellationToken cancellationToken)
+    {
+        var selectedIdentityId = SelectedWorkspaceIdentityOption?.ResourceId;
+        var selectedTenantId = SelectedWorkspaceTenantOption?.ResourceId;
+        var selectedSubscriptionId = SelectedWorkspaceSubscriptionOption?.ResourceId;
+        var selectedVaultId = SelectedWorkspaceVaultOption?.ResourceId;
+        var tenantCandidates = new List<(ConnectedIdentity Identity, TenantAccess Tenant)>();
+        var subscriptionCandidates = new List<(
+            ConnectedIdentity Identity,
+            TenantAccess? Tenant,
+            SubscriptionAccess Subscription)>();
+        var vaultCandidates = new List<VaultAccessSummary>();
+        var enterprise = EnterprisePolicy();
+
+        WorkspaceIdentityOptions.Clear();
+        foreach (var identity in Identities.Where(identity => identity.IsEnabled))
+        {
+            WorkspaceIdentityOptions.Add(new WorkspaceIdentityOption(identity));
+            var tenants = await repository.GetTenantsAsync(
+                identity.Id,
+                cancellationToken);
+            var visibleTenants = tenants
+                .Where(tenant =>
+                    !enterprise.RestrictsTenants ||
+                    enterprise.AllowedTenantIds.Contains(tenant.TenantId))
+                .ToArray();
+            tenantCandidates.AddRange(visibleTenants.Select(tenant =>
+                (identity, tenant)));
+            var tenantById = visibleTenants.ToDictionary(tenant => tenant.Id);
+            var subscriptions = await repository.GetSubscriptionsAsync(
+                identity.Id,
+                cancellationToken);
+            subscriptionCandidates.AddRange(subscriptions
+                .Where(subscription =>
+                    tenantById.ContainsKey(subscription.TenantAccessId))
+                .Select(subscription =>
+                    (identity,
+                     tenantById.GetValueOrDefault(subscription.TenantAccessId),
+                     subscription)));
+            vaultCandidates.AddRange((await repository
+                    .GetVaultAccessSummariesAsync(
+                        identity.Id,
+                        cancellationToken))
+                .Where(summary =>
+                    !enterprise.RestrictsTenants ||
+                    enterprise.AllowedTenantIds.Contains(
+                        summary.Vault.TenantId)));
+        }
+
+        WorkspaceTenantOptions.Clear();
+        foreach (var group in tenantCandidates.GroupBy(
+                     candidate => candidate.Tenant.TenantId,
+                     StringComparer.OrdinalIgnoreCase))
+            WorkspaceTenantOptions.Add(new WorkspaceTenantOption(
+                group.First().Tenant,
+                AccountLabels(group.Select(candidate => candidate.Identity))));
+
+        WorkspaceSubscriptionOptions.Clear();
+        foreach (var group in subscriptionCandidates.GroupBy(
+                     candidate => candidate.Subscription.SubscriptionId,
+                     StringComparer.OrdinalIgnoreCase))
+        {
+            var first = group.First();
+            WorkspaceSubscriptionOptions.Add(new WorkspaceSubscriptionOption(
+                first.Subscription,
+                first.Tenant,
+                AccountLabels(group.Select(candidate => candidate.Identity))));
+        }
+
+        WorkspaceVaultOptions.Clear();
+        foreach (var group in vaultCandidates.GroupBy(
+                     candidate => candidate.Vault.Id))
+            WorkspaceVaultOptions.Add(new WorkspaceVaultOption(
+                group.First(),
+                string.Join(", ", group
+                    .Select(candidate => candidate.IdentityDisplayName)
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                    .Order(StringComparer.CurrentCultureIgnoreCase))));
+
+        SelectedWorkspaceIdentityOption = WorkspaceIdentityOptions
+            .FirstOrDefault(option => option.ResourceId == selectedIdentityId) ??
+            WorkspaceIdentityOptions.FirstOrDefault();
+        SelectedWorkspaceTenantOption = WorkspaceTenantOptions
+            .FirstOrDefault(option => string.Equals(
+                option.ResourceId,
+                selectedTenantId,
+                StringComparison.OrdinalIgnoreCase)) ??
+            WorkspaceTenantOptions.FirstOrDefault();
+        SelectedWorkspaceSubscriptionOption = WorkspaceSubscriptionOptions
+            .FirstOrDefault(option => string.Equals(
+                option.ResourceId,
+                selectedSubscriptionId,
+                StringComparison.OrdinalIgnoreCase)) ??
+            WorkspaceSubscriptionOptions.FirstOrDefault();
+        SelectedWorkspaceVaultOption = WorkspaceVaultOptions
+            .FirstOrDefault(option => option.ResourceId == selectedVaultId) ??
+            WorkspaceVaultOptions.FirstOrDefault();
+    }
+
+    private async Task ReloadWorkspaceMembersAsync(
+        Guid workspaceId,
+        CancellationToken cancellationToken)
+    {
+        var links = await workspaceService.GetResourcesAsync(
+            workspaceId,
+            cancellationToken);
+        ReplaceWorkspaceMembers(links);
+    }
+
+    private void ReplaceWorkspaceMembers(
+        IReadOnlyList<WorkspaceResourceLink> links)
+    {
+        var selectedLinkId = SelectedWorkspaceMember?.Link.Id;
+        WorkspaceMembers.Clear();
+        foreach (var link in links)
+            WorkspaceMembers.Add(ResolveWorkspaceMember(link));
+        SelectedWorkspaceMember = WorkspaceMembers.FirstOrDefault(member =>
+            member.Link.Id == selectedLinkId);
+    }
+
+    private async Task ReloadWorkspaceMembersAfterSelectionAsync(
+        Guid? workspaceId,
+        int loadVersion)
+    {
+        try
+        {
+            if (workspaceId is null)
+            {
+                WorkspaceMembers.Clear();
+                SelectedWorkspaceMember = null;
+                return;
+            }
+            var links = await workspaceService.GetResourcesAsync(
+                workspaceId.Value,
+                CancellationToken.None);
+            if (loadVersion != _workspaceLoadVersion ||
+                SelectedWorkspace?.Id != workspaceId)
+                return;
+            ReplaceWorkspaceMembers(links);
+        }
+        catch (Exception ex)
+        {
+            if (loadVersion != _workspaceLoadVersion)
+                return;
+            var error = UserFacingErrorMapper.From(ex);
+            ErrorTitle = error.Title;
+            ErrorMessage = error.Message;
+            RecoveryText = error.Recovery;
+            HasActionableError = true;
+            ErrorAnnouncement =
+                $"{error.Title}. {error.Message} {error.Recovery}";
+        }
+    }
+
+    private WorkspaceMemberRow ResolveWorkspaceMember(
+        WorkspaceResourceLink link) =>
+        link.ResourceType switch
+        {
+            ResourceLinkType.Identity => WorkspaceMemberRow.From(
+                link,
+                WorkspaceIdentityOptions.FirstOrDefault(option =>
+                    option.ResourceId == link.ResourceId)?.Label),
+            ResourceLinkType.Tenant => WorkspaceMemberRow.From(
+                link,
+                WorkspaceTenantOptions.FirstOrDefault(option =>
+                    string.Equals(
+                        option.ResourceId,
+                        link.ResourceId,
+                        StringComparison.OrdinalIgnoreCase))?.Label),
+            ResourceLinkType.Subscription => WorkspaceMemberRow.From(
+                link,
+                WorkspaceSubscriptionOptions.FirstOrDefault(option =>
+                    string.Equals(
+                        option.ResourceId,
+                        link.ResourceId,
+                        StringComparison.OrdinalIgnoreCase))?.Label),
+            ResourceLinkType.Vault => WorkspaceMemberRow.From(
+                link,
+                WorkspaceVaultOptions.FirstOrDefault(option =>
+                    option.ResourceId == link.ResourceId)?.Label),
+            _ => WorkspaceMemberRow.From(link, null),
+        };
+
+    private static string AccountLabels(
+        IEnumerable<ConnectedIdentity> identities) =>
+        string.Join(", ", identities
+            .Select(identity => string.IsNullOrWhiteSpace(identity.DisplayName)
+                ? identity.UsernameHint
+                : identity.DisplayName)
+            .Distinct(StringComparer.CurrentCultureIgnoreCase)
+            .Order(StringComparer.CurrentCultureIgnoreCase));
 
     private async Task SaveSettingsCoreAsync(CancellationToken cancellationToken)
     {
@@ -1488,7 +1830,8 @@ public sealed partial class MainViewModel(
             SelectedCloseBehavior,
             BackgroundMetadataSyncEnabled,
             MinimizeToNotificationArea,
-            SelectedRevealVerificationGrace.Seconds), cancellationToken);
+            SelectedRevealVerificationGrace.Seconds,
+            RequireCopyVerification), cancellationToken);
     }
 
     private async Task ReloadRecoveryArchivesCoreAsync(
@@ -1627,6 +1970,16 @@ public sealed partial class MainViewModel(
     private bool CanAddSelectedIdentityToWorkspace() => SelectedWorkspace is not null && SelectedIdentity is not null && !IsBusy;
     private bool CanAddSelectedTenantToWorkspace() => SelectedWorkspace is not null && SelectedTenant is not null && !IsBusy;
     private bool CanAddSelectedSubscriptionToWorkspace() => SelectedWorkspace is not null && SelectedSubscription is not null && !IsBusy;
+    private bool CanAddWorkspaceIdentity() =>
+        SelectedWorkspace is not null && SelectedWorkspaceIdentityOption is not null && !IsBusy;
+    private bool CanAddWorkspaceTenant() =>
+        SelectedWorkspace is not null && SelectedWorkspaceTenantOption is not null && !IsBusy;
+    private bool CanAddWorkspaceSubscription() =>
+        SelectedWorkspace is not null && SelectedWorkspaceSubscriptionOption is not null && !IsBusy;
+    private bool CanAddWorkspaceVault() =>
+        SelectedWorkspace is not null && SelectedWorkspaceVaultOption is not null && !IsBusy;
+    private bool CanRemoveWorkspaceMember() =>
+        SelectedWorkspace is not null && SelectedWorkspaceMember is not null && !IsBusy;
     private bool CanExcludeTenant() => SelectedTenant is { IsSelected: true } && !IsBusy;
     private bool CanIncludeTenant() => SelectedTenant is { IsSelected: false } && !IsBusy;
     private bool CanExcludeSubscription() => SelectedSubscription is { IsSelected: true } && !IsBusy;
@@ -1769,6 +2122,11 @@ public sealed partial class MainViewModel(
         AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddWorkspaceIdentityCommand.NotifyCanExecuteChanged();
+        AddWorkspaceTenantCommand.NotifyCanExecuteChanged();
+        AddWorkspaceSubscriptionCommand.NotifyCanExecuteChanged();
+        AddWorkspaceVaultCommand.NotifyCanExecuteChanged();
+        RemoveWorkspaceMemberCommand.NotifyCanExecuteChanged();
         RemoveWorkspaceCommand.NotifyCanExecuteChanged();
         SaveWorkspacePolicyCommand.NotifyCanExecuteChanged();
         if (value is not null)
@@ -1781,7 +2139,31 @@ public sealed partial class MainViewModel(
         }
         CopyCommand.NotifyCanExecuteChanged();
         CacheSelectedCommand.NotifyCanExecuteChanged();
+        var workspaceLoadVersion = ++_workspaceLoadVersion;
+        _ = ReloadWorkspaceMembersAfterSelectionAsync(
+            value?.Id,
+            workspaceLoadVersion);
     }
+
+    partial void OnSelectedWorkspaceIdentityOptionChanged(
+        WorkspaceIdentityOption? value) =>
+        AddWorkspaceIdentityCommand.NotifyCanExecuteChanged();
+
+    partial void OnSelectedWorkspaceTenantOptionChanged(
+        WorkspaceTenantOption? value) =>
+        AddWorkspaceTenantCommand.NotifyCanExecuteChanged();
+
+    partial void OnSelectedWorkspaceSubscriptionOptionChanged(
+        WorkspaceSubscriptionOption? value) =>
+        AddWorkspaceSubscriptionCommand.NotifyCanExecuteChanged();
+
+    partial void OnSelectedWorkspaceVaultOptionChanged(
+        WorkspaceVaultOption? value) =>
+        AddWorkspaceVaultCommand.NotifyCanExecuteChanged();
+
+    partial void OnSelectedWorkspaceMemberChanged(
+        WorkspaceMemberRow? value) =>
+        RemoveWorkspaceMemberCommand.NotifyCanExecuteChanged();
 
     partial void OnSelectedTenantFilterOptionChanged(SearchFilterOption? value) =>
         TenantFilter = value?.Value ?? string.Empty;
@@ -1860,6 +2242,11 @@ public sealed partial class MainViewModel(
         AddSelectedIdentityToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedTenantToWorkspaceCommand.NotifyCanExecuteChanged();
         AddSelectedSubscriptionToWorkspaceCommand.NotifyCanExecuteChanged();
+        AddWorkspaceIdentityCommand.NotifyCanExecuteChanged();
+        AddWorkspaceTenantCommand.NotifyCanExecuteChanged();
+        AddWorkspaceSubscriptionCommand.NotifyCanExecuteChanged();
+        AddWorkspaceVaultCommand.NotifyCanExecuteChanged();
+        RemoveWorkspaceMemberCommand.NotifyCanExecuteChanged();
         RemoveWorkspaceCommand.NotifyCanExecuteChanged();
         SaveWorkspacePolicyCommand.NotifyCanExecuteChanged();
         SaveSettingsCommand.NotifyCanExecuteChanged();
@@ -2376,24 +2763,132 @@ public sealed record SearchFilterOption(string Value, string Label)
     public static SearchFilterOption All(string label) => new(string.Empty, label);
 }
 
-public sealed class SyncErrorRow(SyncErrorDetail detail)
+public sealed class SyncErrorRow
 {
-    public SyncErrorDetail Detail { get; } = detail;
-    public string Scope { get; } = detail.Scope;
-    public string Category { get; } = detail.Category;
-    public string Message { get; } = detail.Message;
-    public string Recovery { get; } = detail.Recovery;
-    public string Timestamp { get; } = detail.OccurredAt is null
+    public SyncErrorRow(
+        IReadOnlyList<SyncErrorDetail> details,
+        string identityDisplayName,
+        IEnumerable<TenantSelectionRow> tenants,
+        IEnumerable<SubscriptionSelectionRow> subscriptions,
+        IEnumerable<VaultAccessRow> vaults)
+    {
+        if (details.Count == 0)
+            throw new ArgumentException("At least one synchronization error is required.", nameof(details));
+
+        Details = details;
+        var first = details[0];
+        var retry = first.RetryScope;
+        var vault = string.IsNullOrWhiteSpace(retry?.VaultResourceId)
+            ? null
+            : vaults.FirstOrDefault(candidate => string.Equals(
+                candidate.Summary.Vault.ProviderResourceId,
+                retry.VaultResourceId,
+                StringComparison.OrdinalIgnoreCase));
+        var subscriptionId = retry?.SubscriptionId ?? vault?.Subscription;
+        var subscription = string.IsNullOrWhiteSpace(subscriptionId)
+            ? null
+            : subscriptions.FirstOrDefault(candidate => string.Equals(
+                candidate.SubscriptionId,
+                subscriptionId,
+                StringComparison.OrdinalIgnoreCase));
+        var tenantId = retry?.TenantId ??
+            vault?.Summary.Vault.TenantId ??
+            subscription?.TenantId;
+        var tenant = string.IsNullOrWhiteSpace(tenantId)
+            ? null
+            : tenants.FirstOrDefault(candidate => string.Equals(
+                candidate.TenantId,
+                tenantId,
+                StringComparison.OrdinalIgnoreCase));
+
+        var subscriptionLabel = subscription is null
+            ? subscriptionId
+            : $"{subscription.DisplayName} ({subscription.SubscriptionId})";
+        Target = vault is not null
+            ? $"{identityDisplayName} · {vault.Tenant} · {vault.Vault} · subscription {subscriptionLabel}"
+            : subscription is not null
+                ? $"{identityDisplayName} · {subscription.TenantDisplayName} · {subscription.DisplayName} · subscription {subscription.SubscriptionId}"
+                : tenant is not null
+                    ? $"{identityDisplayName} · {tenant.DisplayName} · tenant {tenant.TenantId}"
+                    : $"{identityDisplayName} · {first.Scope}";
+        Operations = string.Join(", ", details
+            .Select(detail => OperationLabel(detail.Scope))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Order(StringComparer.OrdinalIgnoreCase));
+        Category = string.Join(", ", details
+            .Select(detail => detail.Category)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Order(StringComparer.OrdinalIgnoreCase));
+        Message = string.Join(" ", details
+            .Select(detail => detail.Message)
+            .Distinct(StringComparer.Ordinal));
+        Recovery = string.Join(" ", details
+            .Select(detail => detail.Recovery)
+            .Distinct(StringComparer.Ordinal));
+        var occurredAt = details
+            .Select(detail => detail.OccurredAt)
+            .Where(value => value.HasValue)
+            .OrderByDescending(value => value)
+            .FirstOrDefault();
+        Timestamp = occurredAt is null
         ? "Time unavailable"
-        : detail.OccurredAt.Value.ToLocalTime().ToString(
+        : occurredAt.Value.ToLocalTime().ToString(
             "yyyy-MM-dd HH:mm:ss zzz",
             System.Globalization.CultureInfo.InvariantCulture);
-    public string CorrelationId { get; } = string.IsNullOrWhiteSpace(detail.CorrelationId)
-        ? "Unavailable"
-        : detail.CorrelationId;
-    public bool CanRetry { get; } = detail.RetryScope is not null &&
-        (!string.IsNullOrWhiteSpace(detail.RetryScope.SubscriptionId) ||
-         !string.IsNullOrWhiteSpace(detail.RetryScope.VaultResourceId));
+        CorrelationId = string.Join(", ", details
+            .Select(detail => detail.CorrelationId)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal));
+        if (string.IsNullOrWhiteSpace(CorrelationId))
+            CorrelationId = "Unavailable";
+        CanRetry = details.Any(detail => detail.RetryScope is { } scope &&
+            (!string.IsNullOrWhiteSpace(scope.TenantId) ||
+             !string.IsNullOrWhiteSpace(scope.SubscriptionId) ||
+             !string.IsNullOrWhiteSpace(scope.VaultResourceId)));
+    }
+
+    public IReadOnlyList<SyncErrorDetail> Details { get; }
+    public string Target { get; }
+    public string Scope => Target;
+    public string Operations { get; }
+    public string Category { get; }
+    public string Message { get; }
+    public string Recovery { get; }
+    public string Timestamp { get; }
+    public string CorrelationId { get; private set; }
+    public bool CanRetry { get; }
+
+    public static string GroupKey(SyncErrorDetail detail)
+    {
+        if (!string.IsNullOrWhiteSpace(detail.RetryScope?.VaultResourceId))
+            return $"vault|{detail.RetryScope.VaultResourceId}";
+        if (!string.IsNullOrWhiteSpace(detail.RetryScope?.SubscriptionId))
+            return $"subscription|{detail.RetryScope.SubscriptionId}";
+        if (!string.IsNullOrWhiteSpace(detail.RetryScope?.TenantId))
+            return $"tenant|{detail.RetryScope.TenantId}";
+        return $"scope|{detail.Scope}";
+    }
+
+    private static string OperationLabel(string scope)
+    {
+        if (scope.EndsWith(":secret_versions", StringComparison.OrdinalIgnoreCase))
+            return "secret versions";
+        if (scope.EndsWith(":secrets", StringComparison.OrdinalIgnoreCase))
+            return "secrets";
+        if (scope.EndsWith(":key_versions", StringComparison.OrdinalIgnoreCase))
+            return "key versions";
+        if (scope.EndsWith(":keys", StringComparison.OrdinalIgnoreCase))
+            return "keys";
+        if (scope.EndsWith(":certificate_versions", StringComparison.OrdinalIgnoreCase))
+            return "certificate versions";
+        if (scope.EndsWith(":certificates", StringComparison.OrdinalIgnoreCase))
+            return "certificates";
+        if (scope.EndsWith(":subscriptions", StringComparison.OrdinalIgnoreCase))
+            return "discover subscriptions";
+        if (scope.StartsWith("subscription:", StringComparison.OrdinalIgnoreCase))
+            return "discover Key Vaults";
+        return "metadata discovery";
+    }
 }
 
 public sealed class DiagnosticEventRow(
@@ -2470,6 +2965,65 @@ public sealed class VaultAccessRow(VaultAccessSummary summary)
     public string FailureCategory => Summary.Access.LastFailureCategory ?? "None";
     public bool IsSelected => Summary.Access.IsSelected;
     public string InclusionState => IsSelected ? "Included" : "Excluded";
+}
+
+public sealed class WorkspaceIdentityOption(ConnectedIdentity identity)
+{
+    public ConnectedIdentity Identity { get; } = identity;
+    public string ResourceId => Identity.Id.ToString("D");
+    public string Label =>
+        $"{Identity.DisplayName} · {Identity.UsernameHint} · {Identity.Type}";
+}
+
+public sealed class WorkspaceTenantOption(
+    TenantAccess tenant,
+    string accountLabels)
+{
+    public TenantAccess Tenant { get; } = tenant;
+    public string ResourceId => Tenant.TenantId;
+    public string Label =>
+        $"{Tenant.DisplayName} · tenant {Tenant.TenantId} · {accountLabels}";
+}
+
+public sealed class WorkspaceSubscriptionOption(
+    SubscriptionAccess subscription,
+    TenantAccess? tenant,
+    string accountLabels)
+{
+    public SubscriptionAccess Subscription { get; } = subscription;
+    public string ResourceId => Subscription.SubscriptionId;
+    public string Label =>
+        $"{Subscription.DisplayName} · subscription {Subscription.SubscriptionId} · " +
+        $"{tenant?.DisplayName ?? "Unknown tenant"} · {accountLabels}";
+}
+
+public sealed class WorkspaceVaultOption(
+    VaultAccessSummary summary,
+    string accountLabels)
+{
+    public VaultAccessSummary Summary { get; } = summary;
+    public string ResourceId => Summary.Vault.Id.ToString("D");
+    public string Label =>
+        $"{Summary.Vault.Name} · {Summary.TenantDisplayName} · " +
+        $"subscription {Summary.Vault.SubscriptionId} · {accountLabels}";
+}
+
+public sealed class WorkspaceMemberRow(
+    WorkspaceResourceLink link,
+    string label)
+{
+    public WorkspaceResourceLink Link { get; } = link;
+    public string Kind => Link.ResourceType.ToString();
+    public string Label { get; } = label;
+
+    public static WorkspaceMemberRow From(
+        WorkspaceResourceLink link,
+        string? resolvedLabel) =>
+        new(
+            link,
+            string.IsNullOrWhiteSpace(resolvedLabel)
+                ? $"Unavailable {link.ResourceType.ToString().ToLowerInvariant()}"
+                : resolvedLabel);
 }
 
 public sealed class WorkloadIdentityCandidateRow(WorkloadIdentityCandidate candidate)

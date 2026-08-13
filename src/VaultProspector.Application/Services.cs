@@ -240,12 +240,29 @@ public sealed class IdentityService
     {
         var identity = await _repository.GetIdentityAsync(identityId, cancellationToken)
             ?? throw new KeyNotFoundException("The selected identity no longer exists.");
+        await AuthorizeDirectoryReadAsync(
+            identityId,
+            identity.HomeTenantId,
+            cancellationToken);
+    }
+
+    public async Task AuthorizeDirectoryReadAsync(
+        Guid identityId,
+        string tenantId,
+        CancellationToken cancellationToken)
+    {
+        var identity = await _repository.GetIdentityAsync(identityId, cancellationToken)
+            ?? throw new KeyNotFoundException("The selected identity no longer exists.");
         if (identity.Type != IdentityType.InteractiveUser)
             throw new InvalidOperationException(
                 "Microsoft Graph directory discovery requires an explicit interactive administrator identity.");
         _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(identity);
+        _enterprisePolicy.GetSnapshot().EnsureTenantAllowed(tenantId);
 
-        var authorized = await _provider.AuthorizeDirectoryReadAsync(identity, cancellationToken);
+        var authorized = await _provider.AuthorizeDirectoryReadAsync(
+            identity,
+            tenantId,
+            cancellationToken);
         _enterprisePolicy.GetSnapshot().EnsureIdentityAllowed(authorized);
         var updated = authorized with
         {
@@ -438,7 +455,9 @@ public sealed class SynchronizationService(
     IDiagnosticSink diagnostics,
     IEnterprisePolicy? enterprisePolicy = null)
 {
-    public async Task<SyncRun> SynchronizeAsync(ConnectedIdentity identity, CancellationToken cancellationToken)
+    public async Task<SyncRun> SynchronizeAsync(
+        ConnectedIdentity identity,
+        CancellationToken cancellationToken)
     {
         identity = await repository.GetIdentityAsync(identity.Id, cancellationToken)
             ?? throw new KeyNotFoundException("The selected identity no longer exists.");
@@ -571,6 +590,12 @@ public sealed class SynchronizationService(
             .Where(scope => scope is not null)
             .Cast<ProviderRetryScope>()
             .ToArray();
+        var tenantIds = retryScopes
+            .Select(scope => scope.TenantId)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
         var subscriptionIds = retryScopes
             .Select(scope => scope.SubscriptionId)
             .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -583,14 +608,18 @@ public sealed class SynchronizationService(
             .Cast<string>()
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        if (subscriptionIds.Length == 0 && vaultResourceIds.Length == 0)
+        if (tenantIds.Length == 0 &&
+            subscriptionIds.Length == 0 &&
+            vaultResourceIds.Length == 0)
             throw new InvalidOperationException("The selected synchronization error does not expose a retryable Azure scope.");
 
         var policy = (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance).GetSnapshot();
         policy.EnsureIdentityAllowed(identity);
         var knownTenants = await repository.GetTenantsAsync(identity.Id, cancellationToken);
         var constraints = new VaultDiscoveryConstraints(
-            allowedTenantIds: policy.AllowedTenantIds,
+            allowedTenantIds: tenantIds.Length > 0
+                ? tenantIds
+                : policy.AllowedTenantIds,
             allowedSubscriptionIds: subscriptionIds,
             allowedVaultResourceIds: vaultResourceIds,
             excludedTenantIds: knownTenants
@@ -867,7 +896,24 @@ public sealed class SecretAccessService(
         }
     }
 
-    public async Task RetrieveAndCopyAsync(Guid itemId, TimeSpan clearAfter, CachePolicy policy, CancellationToken cancellationToken)
+    public Task RetrieveAndCopyAsync(
+        Guid itemId,
+        TimeSpan clearAfter,
+        CachePolicy policy,
+        CancellationToken cancellationToken) =>
+        RetrieveAndCopyAsync(
+            itemId,
+            clearAfter,
+            policy,
+            requireFreshVerification: true,
+            cancellationToken);
+
+    public async Task RetrieveAndCopyAsync(
+        Guid itemId,
+        TimeSpan clearAfter,
+        CachePolicy policy,
+        bool requireFreshVerification,
+        CancellationToken cancellationToken)
     {
         var enterprise = EnterprisePolicy();
         enterprise.EnsureClipboardAllowed();
@@ -877,7 +923,11 @@ public sealed class SecretAccessService(
         if (source.Item.ObjectType != VaultObjectType.Secret) throw new InvalidOperationException("Only secret values can be copied.");
         EnsureSourceAllowed(source, enterprise);
         EnsureOnlineIdentityIsUsable(source.Identity);
-        if (!verification.IsAvailable || await verification.VerifyAsync("Copy an Azure Key Vault secret", cancellationToken) != UserVerificationResult.Verified)
+        if (requireFreshVerification &&
+            (!verification.IsAvailable ||
+             await verification.VerifyAsync(
+                 "Copy an Azure Key Vault secret",
+                 cancellationToken) != UserVerificationResult.Verified))
             throw new UnauthorizedAccessException("Local verification was not completed.");
 
         using var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
@@ -1253,6 +1303,11 @@ public sealed class BrowserFillService(
 public sealed class WorkspaceService(IMetadataRepository repository)
 {
     public Task<IReadOnlyList<Workspace>> GetAllAsync(CancellationToken cancellationToken) => repository.GetWorkspacesAsync(cancellationToken);
+
+    public Task<IReadOnlyList<WorkspaceResourceLink>> GetResourcesAsync(
+        Guid workspaceId,
+        CancellationToken cancellationToken) =>
+        repository.GetWorkspaceLinksAsync(workspaceId, cancellationToken);
 
     public Task SaveAsync(Workspace workspace, CancellationToken cancellationToken)
     {

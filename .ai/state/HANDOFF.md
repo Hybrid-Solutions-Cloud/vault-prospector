@@ -1,5 +1,100 @@
 # Session handoff
 
+## Unlocked-session Copy and self-contained management — 2026-08-13
+
+- Clipboard Copy now uses the already-unlocked Vault Prospector session by default. Settings has an
+  explicit `Require Windows verification before every clipboard copy` override, off by default.
+  Reveal verification, enterprise clipboard allow/deny policy, cache policy, and automatic
+  clipboard clearing remain separate and enforced.
+- Workspaces now list included resources and expose identity, tenant, subscription, and vault
+  pickers plus removal on the same page. Creating a workspace selects it immediately; no selection
+  from another screen is required.
+- Administration workload discovery now uses the exact tenant/account represented by the selected
+  subscription for ARM managed identities, Graph authorization, and service-principal listing.
+  Privacy-safe managed-identity and service-principal completion/failure events are allowlisted.
+- The governed Release gate passes 495/495 tests with zero warnings/errors and no vulnerable NuGet
+  packages. Browser companion tests pass 6/6 and its production build succeeds.
+- The first Release invocation was killed by the command runner's two-minute timeout, leaving two
+  orphaned infrastructure-test processes. Their executable paths were verified under this worktree,
+  only those two processes were stopped, and the clean full rerun passed. This was tooling residue,
+  not a product or test failure.
+- Implementation and project-state documentation were committed as `f4c76cc`. Exact Preview 17
+  built from full source commit `f4c76ccf41691cff8579c8d732b753b177a2aa6d`; its MSI SHA-256 is
+  `950DDD29966319930375073D702D3CD65BA803773AD8021EB3A929EAF6F22C59` and all three installer
+  validators passed.
+- Preview 17 installed with exit code 0 and DisplayVersion `0.3.17`. All five current non-log state
+  files remained byte-for-byte unchanged, and the installed executable was launched from Program
+  Files.
+- Next: perform the live consecutive-copy/workspace/workload-discovery checks. Do not publish until
+  the exact installed candidate passes.
+
+---
+
+## Actionable sync targets and About documentation — 2026-08-12
+
+- Commit `2cff4ec` removed every automatic interactive acquisition path from foreground sync,
+  background sync, and failed-scope retry. Structural tests prevent those entry points from
+  regaining browser/consent behavior.
+- Exact local Preview 15 from `2cff4ec` passed its package/installer gates and is installed on the
+  current VM. The latest three syncs logged 200 items / 23 raw failed operations, 178 / 5, and
+  88 / 75. The raw counts are per metadata operation: one vault can fail secrets, secret versions,
+  keys, key versions, certificates, and certificate versions separately.
+- Commit `c4bb415` changes the UI count to distinct connection targets, groups every target's
+  operations, and resolves retry scope to the locally encrypted identity, tenant, subscription,
+  and vault display data. Logs/support bundles remain pseudonymous.
+- `c4bb415` also implements GitHub issue #102 in the About page with public links for the user
+  guide, roadmap, changelog, install/release verification, and release history. The launcher only
+  accepts the canonical HTTPS hosts and exposes the URL in status text if the default browser
+  cannot be opened. All five public URLs returned HTTP 200 during validation.
+- At `c4bb415`, formatting passes; the governed Release build passes 490/490 tests, zero warnings
+  or errors, and no vulnerable direct/transitive NuGet packages; browser tests pass 6/6 and the
+  production browser build succeeds.
+- Exact Preview 16 was rebuilt with correct provenance from documentation head
+  `9c1967fff20654980423875c1dab444738354fe2`. All three MSI validators passed; SHA-256 is
+  `94AD3F424BE64D54D20A39BDDF5DDE3A8C2D2108C2B68278CA21EF24C07E60C0`. It upgraded
+  Preview 15 successfully to MSI DisplayVersion `0.3.16`, preserving all five current non-log state
+  files byte-for-byte. The installed product was launched.
+- Next: live-check zero sync prompts, named/grouped connection targets, and every About link. Do
+  not publish or close AB#7341/#100/#102 before that evidence.
+
+---
+
+## Preview 14 repeated-auth regression and rollback — 2026-08-12
+
+- Exact local Preview 14 (`71db50d`, MSI SHA-256
+  `57C165B0D39A50E40EAF49A1A6BCD279391AC750432468AA6709CD92508DE5A0`) passed all automated and
+  installer gates but failed live UX validation.
+- A single foreground sync opened at least four system-browser authentication/consent prompts for
+  the same visible connected account. Internally these were distinct tenant/resource token
+  requests, but routine synchronization must not initiate an unbounded authentication cascade.
+- The app was stopped immediately. Preview 14 was never pushed or published. The VM was restored
+  to exact public Preview 12 (`c5fe6d3`, MSI SHA-256
+  `D97627716A3188C004EC5BCDB5AED4128B46A5C1B5380A804D45BF458BD08EB2`). The local data inventory
+  remained six files / 572,133 bytes before and after rollback.
+- The automatic interactive path is being removed from foreground sync, background sync, and
+  failed-scope retry. Future tenant authorization must be a separate explicit action that previews
+  the possible tenant interactions; no sync button may open a browser or consent prompt.
+
+---
+
+## Tenant-scoped Key Vault metadata correction — 2026-08-12
+
+- After Preview 12 publication, the product owner synchronized three interactive identities on the
+  current VM. Safe diagnostics reported 170 items with 5–9 errors, 7 items with 7 errors, and 58
+  items with 45 errors. Most errors were authentication-category; 235 objects were found versus 250
+  on the product owner's laptop.
+- GitHub issue #100 and ADO Bug AB#7341 track the defect.
+- Root cause is in `AzureVaultProvider.DiscoverAsync`: each tenant's ARM client used
+  `TenantScopedCredential`, but `EnumerateVaultAsync` received the original unscoped credential.
+- The local fix passes the tenant credential through Key Vault metadata enumeration. A regression
+  returns a home-tenant and guest-tenant vault and proves each data-plane request receives the
+  matching tenant token context. The Azure provider suite passes 46/46 with zero warnings.
+- Next gate is the full Release build, followed by exact Preview 13 MSI installation and live sync
+  of the same three identities. Do not claim all isolated errors fixed; genuine 403/network/private
+  endpoint failures should remain visible.
+
+---
+
 ## Entra-backed RDP/VDI unlock correction — 2026-08-12
 
 - AB#7337 is the sole active priority by product-owner direction; defer all other defects and
@@ -23,8 +118,11 @@
   reason, token, or raw exception data. Added the exact installed version to the locked screen.
 - The revised Release gate passes locked restore, no vulnerable packages, formatting, zero
   warnings/errors, and 482/482 tests. Browser-extension tests and production build also pass.
-- Next gate is an exact locally packaged Preview 12 MSI installed and verified in this same
-  Entra/RDP session. Do not merge, tag, publish, or claim AB#7337 fixed until that passes.
+- Exact Preview 12 succeeded on the reported VM/session/account/policy and emitted the redacted
+  `authorized` event. PR #99 merged as `c5fe6d3`; main CI run 31626562579 and release run
+  31627184288 passed. The public release has 16 assets, and an independent MSI download matched
+  SHA-256 `D97627716A3188C004EC5BCDB5AED4128B46A5C1B5380A804D45BF458BD08EB2`.
+- AB#7337 is Resolved. Broader VDI/AVD coverage remains a release-readiness requirement.
 
 ---
 
@@ -1190,3 +1288,24 @@ the repository and must not be committed.
   documentation, governance, build-environments, and project-management standards. Its drift
   endpoint still returns `Path not found` for the registered Windows checkout; no drift pass is
   claimed.
+## Guest-tenant Key Vault synchronization — 2026-08-12
+
+- Branch `fix/tenant-scoped-key-vault-sync` is in
+  `D:\tmp\vault-prospector-tenant-scoped-sync` and tracks GitHub #100 / ADO AB#7341.
+- Public Preview 12 passed Entra-backed RDP unlock on the current VM but three connected identities
+  synchronized with authentication-heavy partial errors and only 235 discovered objects versus
+  250 on the product owner's laptop.
+- Preview 13 carried the tenant-scoped ARM credential into Key Vault metadata calls and passed all
+  local and exact-MSI gates. Live validation on the first identity remained unchanged at 7 items,
+  2 Azure-request errors, and 5 authentication errors, so Preview 13 was not published.
+- The second root cause is silent MSAL acquisition in the correctly selected guest/resource
+  tenant returning interaction-required. The provider previously isolated every result without
+  giving a foreground sync an interactive recovery path.
+- Foreground sync and failed-scope retry now permit tenant-targeted system-browser Entra recovery;
+  one credential deduplicates prompts by tenant/resource scope. Background metadata sync remains
+  silent. Automated tests cover both boundaries, successful recovery, and failure deduplication.
+- The exact local Release gate passes 487/487 tests with zero warnings and no vulnerable NuGet
+  dependencies. Browser extension tests (6/6) and build pass. Preview 14 packaging and exact-MSI
+  live validation are next; do not publish or resolve AB#7341 before that evidence exists.
+- Direct feedback was recorded separately as GitHub #101 (configurable secure-copy verification
+  grace, independent from Reveal) and #102 (public guide/roadmap/changelog/release links on About).

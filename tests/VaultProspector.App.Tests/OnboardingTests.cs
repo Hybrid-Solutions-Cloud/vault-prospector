@@ -14,6 +14,33 @@ public sealed class OnboardingTests : IDisposable
     private readonly string _directory = Path.Combine(Path.GetTempPath(), $"vault-prospector-app-tests-{Guid.NewGuid():N}");
 
     [Fact]
+    public void PublicDocumentationLinksAreCanonicalHttpsTargets()
+    {
+        Assert.Equal(5, PublicDocumentation.All.Count);
+        Assert.All(PublicDocumentation.All, uri =>
+        {
+            Assert.Equal(Uri.UriSchemeHttps, uri.Scheme);
+            Assert.True(PublicDocumentation.IsCanonical(uri));
+        });
+        Assert.DoesNotContain(
+            PublicDocumentation.All,
+            uri => uri.Host.Contains("internal", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void AboutDocumentationLaunchFailureProvidesCopyableCanonicalAddress()
+    {
+        var launcher = new RecordingUriLauncher(false);
+        var viewModel = CreateViewModel(externalUriLauncher: launcher);
+
+        viewModel.OpenRoadmapCommand.Execute(null);
+
+        Assert.Equal(PublicDocumentation.Roadmap, launcher.LastUri);
+        Assert.Contains("Could not open Roadmap", viewModel.StatusText, StringComparison.Ordinal);
+        Assert.Contains(PublicDocumentation.Roadmap.AbsoluteUri, viewModel.StatusText, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void CyberArkRoadmapFeatureIsNotVisibleInTheWindowsRelease()
     {
         var viewModel = CreateViewModel();
@@ -31,6 +58,7 @@ public sealed class OnboardingTests : IDisposable
         Assert.Equal(ProductIdentity.DefaultClientId, settings.ClientId);
         Assert.False(settings.UseCustomClientId);
         Assert.Equal(0, settings.RevealVerificationGraceSeconds);
+        Assert.False(settings.RequireCopyVerification);
     }
 
     [Fact]
@@ -85,6 +113,7 @@ public sealed class OnboardingTests : IDisposable
             BackgroundMetadataSyncEnabled = true,
             MinimizeToNotificationArea = false,
             RevealVerificationGraceSeconds = 60,
+            RequireCopyVerification = true,
         };
 
         await store.SaveAsync(expected, TestContext.Current.CancellationToken);
@@ -94,6 +123,7 @@ public sealed class OnboardingTests : IDisposable
         Assert.True(restored.BackgroundMetadataSyncEnabled);
         Assert.False(restored.MinimizeToNotificationArea);
         Assert.Equal(60, restored.RevealVerificationGraceSeconds);
+        Assert.True(restored.RequireCopyVerification);
     }
 
     [Theory]
@@ -772,6 +802,23 @@ public sealed class OnboardingTests : IDisposable
             {
                 ServicePrincipals = candidates,
             };
+        var administrator = CreateIdentity();
+        var tenant = new TenantAccess(
+            Guid.NewGuid(),
+            administrator.Id,
+            administrator.HomeTenantId,
+            "Administrator tenant",
+            "Home",
+            DateTimeOffset.UtcNow,
+            "Available");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            tenant.Id,
+            "11111111-1111-1111-1111-111111111111",
+            "Administration subscription",
+            "Enabled",
+            true,
+            DateTimeOffset.UtcNow);
         var viewModel = new MainViewModel(
             null!,
             null!,
@@ -786,7 +833,12 @@ public sealed class OnboardingTests : IDisposable
             null!,
             administration)
         {
-            SelectedIdentity = CreateIdentity(),
+            SelectedIdentity = administrator,
+            SelectedAdministrationSubscription =
+                new AdministrationSubscriptionOption(
+                    administrator,
+                    tenant,
+                    subscription),
         };
 
         await viewModel.DiscoverServicePrincipalsCommand
@@ -1444,6 +1496,66 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public async Task WorkspaceEditorAddsListsAndRemovesResourcesWithoutCrossPageSelection()
+    {
+        var identity = CreateIdentity();
+        var tenant = new TenantAccess(
+            Guid.NewGuid(),
+            identity.Id,
+            "tenant-id",
+            "Tenant",
+            "Home",
+            DateTimeOffset.UtcNow,
+            "Available");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            tenant.Id,
+            "subscription-id",
+            "Subscription",
+            "Enabled",
+            true,
+            DateTimeOffset.UtcNow);
+        var repository = new SubscriptionRepository(identity, subscription);
+        var workspace = new Workspace(
+            Guid.NewGuid(),
+            "Operations",
+            string.Empty,
+            0);
+        var viewModel = new MainViewModel(
+            repository,
+            null!,
+            null!,
+            new SearchService(repository, new TestClock()),
+            null!,
+            new WorkspaceService(repository),
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!)
+        {
+            SelectedWorkspace = workspace,
+            SelectedWorkspaceIdentityOption =
+                new WorkspaceIdentityOption(identity),
+        };
+        viewModel.WorkspaceIdentityOptions.Add(
+            viewModel.SelectedWorkspaceIdentityOption);
+
+        Assert.True(viewModel.AddWorkspaceIdentityCommand.CanExecute(null));
+        await viewModel.AddWorkspaceIdentityCommand.ExecuteAsync(null);
+
+        var member = Assert.Single(viewModel.WorkspaceMembers);
+        Assert.Contains(identity.DisplayName, member.Label, StringComparison.Ordinal);
+        viewModel.SelectedWorkspaceMember = member;
+        Assert.True(viewModel.RemoveWorkspaceMemberCommand.CanExecute(null));
+
+        await viewModel.RemoveWorkspaceMemberCommand.ExecuteAsync(null);
+
+        Assert.Empty(viewModel.WorkspaceMembers);
+        Assert.Empty(repository.WorkspaceLinks);
+    }
+
+    [Fact]
     public async Task RecoveryArchiveDeletionRequiresSelectionPhraseAndVerification()
     {
         var archive = new LocalRecoveryArchive(
@@ -1503,7 +1615,8 @@ public sealed class OnboardingTests : IDisposable
     }
 
     private static MainViewModel CreateViewModel(
-        IRevealVerificationSession? revealVerificationSession = null) =>
+        IRevealVerificationSession? revealVerificationSession = null,
+        IExternalUriLauncher? externalUriLauncher = null) =>
         new(
             null!,
             null!,
@@ -1517,7 +1630,19 @@ public sealed class OnboardingTests : IDisposable
             null!,
             null!,
             revealVerificationSession:
-                revealVerificationSession);
+                revealVerificationSession,
+            externalUriLauncher: externalUriLauncher);
+
+    private sealed class RecordingUriLauncher(bool result) : IExternalUriLauncher
+    {
+        public Uri? LastUri { get; private set; }
+
+        public bool TryOpen(Uri uri)
+        {
+            LastUri = uri;
+            return result;
+        }
+    }
 
     private sealed class UnavailableVerificationService : IUserVerificationService
     {
@@ -1561,6 +1686,7 @@ public sealed class OnboardingTests : IDisposable
         public IReadOnlyList<Workspace> Workspaces { get; set; } = [];
         public Workspace? SavedWorkspace { get; private set; }
         public List<WorkspaceResourceLink> AddedLinks { get; } = [];
+        public List<WorkspaceResourceLink> WorkspaceLinks { get; } = [];
         public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<ConnectedIdentity>>([identity]);
@@ -1612,6 +1738,11 @@ public sealed class OnboardingTests : IDisposable
         public Task SetFavoriteAsync(Guid itemId, bool isFavorite, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<IReadOnlyList<Workspace>> GetWorkspacesAsync(CancellationToken cancellationToken) =>
             Task.FromResult(Workspaces);
+        public Task<IReadOnlyList<WorkspaceResourceLink>> GetWorkspaceLinksAsync(
+            Guid workspaceId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<WorkspaceResourceLink>>(
+                WorkspaceLinks.Where(link => link.WorkspaceId == workspaceId).ToArray());
         public Task UpsertWorkspaceAsync(Workspace workspace, CancellationToken cancellationToken)
         {
             SavedWorkspace = workspace;
@@ -1622,9 +1753,21 @@ public sealed class OnboardingTests : IDisposable
         public Task AddWorkspaceLinkAsync(WorkspaceResourceLink link, CancellationToken cancellationToken)
         {
             AddedLinks.Add(link);
+            if (!WorkspaceLinks.Any(candidate =>
+                    candidate.WorkspaceId == link.WorkspaceId &&
+                    candidate.ResourceType == link.ResourceType &&
+                    candidate.ResourceId == link.ResourceId))
+                WorkspaceLinks.Add(link);
             return Task.CompletedTask;
         }
-        public Task RemoveWorkspaceLinkAsync(Guid workspaceId, ResourceLinkType resourceType, string resourceId, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task RemoveWorkspaceLinkAsync(Guid workspaceId, ResourceLinkType resourceType, string resourceId, CancellationToken cancellationToken)
+        {
+            WorkspaceLinks.RemoveAll(link =>
+                link.WorkspaceId == workspaceId &&
+                link.ResourceType == resourceType &&
+                link.ResourceId == resourceId);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class EmptyRepository : IMetadataRepository
@@ -2016,6 +2159,80 @@ public sealed class OnboardingTests : IDisposable
         "tenant",
         AuthenticationState.Ready,
         DateTimeOffset.UtcNow);
+
+    [Fact]
+    public void SyncErrorsGroupOperationsByNamedLocalVaultTarget()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var resourceId =
+            "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/vault-one";
+        var vault = new VaultResource(
+            Guid.NewGuid(),
+            resourceId,
+            "vault-one",
+            "tenant-1",
+            "sub-1",
+            "rg",
+            "eastus",
+            new Dictionary<string, string>(),
+            new Uri("https://vault-one.vault.azure.net/"),
+            now);
+        var details = new[]
+        {
+            new SyncErrorDetail(
+                "vault:redacted:secrets",
+                "RequestFailedException",
+                "Azure request failed with status 403 (Forbidden).",
+                "Review metadata-list access.",
+                OccurredAt: now,
+                CorrelationId: "ONE",
+                RetryScope: new ProviderRetryScope(VaultResourceId: resourceId)),
+            new SyncErrorDetail(
+                "vault:redacted:keys",
+                "RequestFailedException",
+                "Azure request failed with status 403 (Forbidden).",
+                "Review metadata-list access.",
+                OccurredAt: now,
+                CorrelationId: "TWO",
+                RetryScope: new ProviderRetryScope(VaultResourceId: resourceId)),
+        };
+        var row = new SyncErrorRow(
+            details,
+            "Connected account",
+            [new TenantSelectionRow(new TenantAccess(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "tenant-1",
+                "Tenant One",
+                "AAD",
+                now,
+                "Available"))],
+            [],
+            [new VaultAccessRow(new VaultAccessSummary(
+                vault,
+                new VaultAccess(
+                    Guid.NewGuid(),
+                    vault.Id,
+                    Guid.NewGuid(),
+                    "tenant-1",
+                    "Visible",
+                    now,
+                    null,
+                    0),
+                "Connected account",
+                "Tenant One"))]);
+
+        Assert.Contains("Connected account", row.Target, StringComparison.Ordinal);
+        Assert.Contains("Tenant One", row.Target, StringComparison.Ordinal);
+        Assert.Contains("vault-one", row.Target, StringComparison.Ordinal);
+        Assert.Contains("sub-1", row.Target, StringComparison.Ordinal);
+        Assert.Equal("keys, secrets", row.Operations);
+        Assert.Equal(2, row.Details.Count);
+        Assert.True(row.CanRetry);
+        Assert.Equal(
+            SyncErrorRow.GroupKey(details[0]),
+            SyncErrorRow.GroupKey(details[1]));
+    }
 
     private static SearchResultRow CreateResult(VaultObjectType objectType)
     {

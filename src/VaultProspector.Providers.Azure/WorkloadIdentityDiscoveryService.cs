@@ -22,17 +22,20 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
     private readonly HttpClient _graphClient;
     private readonly AzureAuthorizationEvidenceEvaluator _authorizationEvaluator;
     private readonly IEnterprisePolicy _enterprisePolicy;
+    private readonly IDiagnosticSink _diagnostics;
 
     public WorkloadIdentityDiscoveryService(
         IAzureCredentialProvider identityProvider,
         HttpClient graphClient,
         HttpClient authorizationClient,
-        IEnterprisePolicy? enterprisePolicy = null)
+        IEnterprisePolicy? enterprisePolicy = null,
+        IDiagnosticSink? diagnostics = null)
         : this(
             identityProvider.GetCredentialAsync,
             graphClient,
             new AzureAuthorizationEvidenceEvaluator(authorizationClient),
-            enterprisePolicy)
+            enterprisePolicy,
+            diagnostics)
     {
     }
 
@@ -40,13 +43,15 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         TokenCredential credential,
         HttpClient? graphClient = null,
         HttpClient? authorizationClient = null,
-        IEnterprisePolicy? enterprisePolicy = null)
+        IEnterprisePolicy? enterprisePolicy = null,
+        IDiagnosticSink? diagnostics = null)
         : this(
             (_, _) => Task.FromResult(credential),
             graphClient ?? new HttpClient(),
             new AzureAuthorizationEvidenceEvaluator(
                 authorizationClient ?? graphClient ?? new HttpClient()),
-            enterprisePolicy)
+            enterprisePolicy,
+            diagnostics)
     {
     }
 
@@ -54,112 +59,179 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
         Func<ConnectedIdentity, CancellationToken, Task<TokenCredential>> credentialResolver,
         HttpClient graphClient,
         AzureAuthorizationEvidenceEvaluator authorizationEvaluator,
-        IEnterprisePolicy? enterprisePolicy)
+        IEnterprisePolicy? enterprisePolicy,
+        IDiagnosticSink? diagnostics)
     {
         _credentialResolver = credentialResolver;
         _graphClient = graphClient;
         _authorizationEvaluator = authorizationEvaluator;
         _enterprisePolicy =
             enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance;
+        _diagnostics = diagnostics ?? NullDiagnosticSink.Instance;
     }
 
     public async Task<IReadOnlyList<WorkloadIdentityCandidate>> ListManagedIdentitiesAsync(
         ConnectedIdentity administrator,
+        string subscriptionId,
+        CancellationToken cancellationToken) =>
+        await ListManagedIdentitiesAsync(
+            administrator,
+            administrator.HomeTenantId,
+            subscriptionId,
+            cancellationToken);
+
+    public async Task<IReadOnlyList<WorkloadIdentityCandidate>> ListManagedIdentitiesAsync(
+        ConnectedIdentity administrator,
+        string tenantId,
         string subscriptionId,
         CancellationToken cancellationToken)
     {
         EnsureInteractiveAdministrator(administrator);
         EnsureAdministratorAllowed(administrator);
         Policy().EnsureIdentityTypeAllowed(IdentityType.ManagedIdentity);
+        var normalizedTenantId = NormalizeGuid(tenantId, nameof(tenantId));
+        Policy().EnsureTenantAllowed(normalizedTenantId);
         var normalizedSubscriptionId = NormalizeGuid(subscriptionId, nameof(subscriptionId));
-        var credential = await _credentialResolver(administrator, cancellationToken);
-        var armClient = new ArmClient(credential);
-        var subscription = armClient.GetSubscriptionResource(
-            new ResourceIdentifier($"/subscriptions/{normalizedSubscriptionId}"));
-        var candidates = new List<WorkloadIdentityCandidate>();
-
-        await foreach (var identity in subscription
-            .GetUserAssignedIdentitiesAsync(cancellationToken)
-            .WithCancellation(cancellationToken))
+        try
         {
-            candidates.Add(new WorkloadIdentityCandidate(
-                "User-assigned managed identity",
-                administrator.HomeTenantId,
-                normalizedSubscriptionId,
-                identity.Id.ResourceGroupName ?? string.Empty,
-                identity.Data.Name,
-                identity.Id.ToString(),
-                identity.Data.ClientId?.ToString("D") ?? string.Empty,
-                identity.Data.PrincipalId?.ToString("D") ?? string.Empty,
-                identity.Data.Location.Name,
-                true,
-                ReadOnlyDiscoveryAssessment()));
-        }
+            var credential = await _credentialResolver(
+                administrator,
+                cancellationToken);
+            var armClient = new ArmClient(
+                new TenantScopedCredential(
+                    credential,
+                    normalizedTenantId));
+            var subscription = armClient.GetSubscriptionResource(
+                new ResourceIdentifier($"/subscriptions/{normalizedSubscriptionId}"));
+            var candidates = new List<WorkloadIdentityCandidate>();
 
-        return candidates;
+            await foreach (var identity in subscription
+                .GetUserAssignedIdentitiesAsync(cancellationToken)
+                .WithCancellation(cancellationToken))
+            {
+                candidates.Add(new WorkloadIdentityCandidate(
+                    "User-assigned managed identity",
+                    normalizedTenantId,
+                    normalizedSubscriptionId,
+                    identity.Id.ResourceGroupName ?? string.Empty,
+                    identity.Data.Name,
+                    identity.Id.ToString(),
+                    identity.Data.ClientId?.ToString("D") ?? string.Empty,
+                    identity.Data.PrincipalId?.ToString("D") ?? string.Empty,
+                    identity.Data.Location.Name,
+                    true,
+                    ReadOnlyDiscoveryAssessment()));
+            }
+
+            RecordDiscovery(
+                "managed_identity_discovery_completed",
+                administrator,
+                $"{normalizedTenantId}|{normalizedSubscriptionId}",
+                "completed");
+            return candidates;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            RecordDiscoveryFailure(
+                "managed_identity_discovery_failed",
+                administrator,
+                $"{normalizedTenantId}|{normalizedSubscriptionId}",
+                exception);
+            throw;
+        }
     }
 
     public async Task<IReadOnlyList<WorkloadIdentityCandidate>> ListServicePrincipalsAsync(
         ConnectedIdentity administrator,
+        CancellationToken cancellationToken) =>
+        await ListServicePrincipalsAsync(
+            administrator,
+            administrator.HomeTenantId,
+            cancellationToken);
+
+    public async Task<IReadOnlyList<WorkloadIdentityCandidate>> ListServicePrincipalsAsync(
+        ConnectedIdentity administrator,
+        string tenantId,
         CancellationToken cancellationToken)
     {
         EnsureInteractiveAdministrator(administrator);
         EnsureAdministratorAllowed(administrator);
         Policy().EnsureIdentityTypeAllowed(IdentityType.ServicePrincipal);
-        var credential = await _credentialResolver(administrator, cancellationToken);
-        var token = await credential.GetTokenAsync(
-            new TokenRequestContext(
-                AzureAuthenticationScopes.GraphDirectoryRead.ToArray(),
-                tenantId: administrator.HomeTenantId),
-            cancellationToken);
-        var candidates = new List<WorkloadIdentityCandidate>();
-        Uri? pageUri = GraphServicePrincipalsUri;
-
-        for (var page = 0; pageUri is not null && page < MaximumGraphPages; page++)
+        var normalizedTenantId = NormalizeGuid(tenantId, nameof(tenantId));
+        Policy().EnsureTenantAllowed(normalizedTenantId);
+        try
         {
-            EnsureTrustedGraphUri(pageUri);
-            using var request = new HttpRequestMessage(HttpMethod.Get, pageUri);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-            using var response = await _graphClient.SendAsync(
-                request,
-                HttpCompletionOption.ResponseHeadersRead,
+            var credential = await _credentialResolver(
+                administrator,
                 cancellationToken);
-            if (!response.IsSuccessStatusCode)
-                throw new HttpRequestException(
-                    $"Microsoft Graph service-principal discovery failed with HTTP {(int)response.StatusCode}.",
-                    null,
-                    response.StatusCode);
-
-            using var document = await BoundedJsonDocument.ReadAsync(
-                response.Content,
-                "Microsoft Graph",
+            var token = await credential.GetTokenAsync(
+                new TokenRequestContext(
+                    AzureAuthenticationScopes.GraphDirectoryRead.ToArray(),
+                    tenantId: normalizedTenantId),
                 cancellationToken);
-            if (!document.RootElement.TryGetProperty("value", out var values) ||
-                values.ValueKind != JsonValueKind.Array)
-            {
-                throw new InvalidDataException(
-                    "Microsoft Graph returned an invalid service-principal list.");
-            }
+            var candidates = new List<WorkloadIdentityCandidate>();
+            Uri? pageUri = GraphServicePrincipalsUri;
 
-            foreach (var value in values.EnumerateArray())
+            for (var page = 0; pageUri is not null && page < MaximumGraphPages; page++)
             {
-                if (!IsEligibleServicePrincipal(
-                        value,
-                        administrator.HomeTenantId))
-                    continue;
-                if (candidates.Count >= MaximumGraphCandidates)
+                EnsureTrustedGraphUri(pageUri);
+                using var request = new HttpRequestMessage(HttpMethod.Get, pageUri);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+                using var response = await _graphClient.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                    throw new HttpRequestException(
+                        $"Microsoft Graph service-principal discovery failed with HTTP {(int)response.StatusCode}.",
+                        null,
+                        response.StatusCode);
+
+                using var document = await BoundedJsonDocument.ReadAsync(
+                    response.Content,
+                    "Microsoft Graph",
+                    cancellationToken);
+                if (!document.RootElement.TryGetProperty("value", out var values) ||
+                    values.ValueKind != JsonValueKind.Array)
+                {
                     throw new InvalidDataException(
-                        "Microsoft Graph returned more service principals than the safe display limit.");
-                candidates.Add(ToServicePrincipalCandidate(administrator.HomeTenantId, value));
+                        "Microsoft Graph returned an invalid service-principal list.");
+                }
+
+                foreach (var value in values.EnumerateArray())
+                {
+                    if (!IsEligibleServicePrincipal(
+                            value,
+                            normalizedTenantId))
+                        continue;
+                    if (candidates.Count >= MaximumGraphCandidates)
+                        throw new InvalidDataException(
+                            "Microsoft Graph returned more service principals than the safe display limit.");
+                    candidates.Add(ToServicePrincipalCandidate(normalizedTenantId, value));
+                }
+
+                pageUri = ReadNextGraphPage(document.RootElement);
             }
 
-            pageUri = ReadNextGraphPage(document.RootElement);
+            if (pageUri is not null)
+                throw new InvalidDataException(
+                    "Microsoft Graph pagination exceeded the safe page limit.");
+            RecordDiscovery(
+                "service_principal_discovery_completed",
+                administrator,
+                normalizedTenantId,
+                "completed");
+            return candidates;
         }
-
-        if (pageUri is not null)
-            throw new InvalidDataException(
-                "Microsoft Graph pagination exceeded the safe page limit.");
-        return candidates;
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            RecordDiscoveryFailure(
+                "service_principal_discovery_failed",
+                administrator,
+                normalizedTenantId,
+                exception);
+            throw;
+        }
     }
 
     private static bool IsEligibleServicePrincipal(
@@ -584,6 +656,38 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
     private EnterprisePolicySnapshot Policy() =>
         _enterprisePolicy.GetSnapshot();
 
+    private void RecordDiscovery(
+        string eventName,
+        ConnectedIdentity administrator,
+        string scope,
+        string status) =>
+        _diagnostics.Information(
+            eventName,
+            new Dictionary<string, object?>
+            {
+                ["identity_id"] = administrator.Id,
+                ["identity_type"] = administrator.Type.ToString(),
+                ["scope_id"] = scope,
+                ["status"] = status,
+            });
+
+    private void RecordDiscoveryFailure(
+        string eventName,
+        ConnectedIdentity administrator,
+        string scope,
+        Exception exception) =>
+        _diagnostics.WriteError(
+            eventName,
+            exception,
+            new Dictionary<string, object?>
+            {
+                ["identity_id"] = administrator.Id,
+                ["identity_type"] = administrator.Type.ToString(),
+                ["scope_id"] = scope,
+                ["status"] = "failed",
+                ["error_category"] = exception.GetType().Name,
+            });
+
     private static string NormalizeGuid(string value, string parameterName)
     {
         if (!Guid.TryParse(value, out var parsed))
@@ -627,5 +731,23 @@ public sealed class WorkloadIdentityDiscoveryService : IWorkloadIdentityAdminist
                 parameterName);
         }
         return resourceId.ToString();
+    }
+
+    private sealed class NullDiagnosticSink : IDiagnosticSink
+    {
+        public static NullDiagnosticSink Instance { get; } = new();
+
+        public void Information(
+            string eventName,
+            IReadOnlyDictionary<string, object?> fields)
+        {
+        }
+
+        public void WriteError(
+            string eventName,
+            Exception exception,
+            IReadOnlyDictionary<string, object?> fields)
+        {
+        }
     }
 }

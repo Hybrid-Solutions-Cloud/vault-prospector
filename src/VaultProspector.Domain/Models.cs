@@ -149,7 +149,8 @@ public sealed record SyncErrorDetail(
 
 public sealed record ProviderRetryScope(
     string? SubscriptionId = null,
-    string? VaultResourceId = null);
+    string? VaultResourceId = null,
+    string? TenantId = null);
 
 public sealed record CachePolicy(
     bool IsEnabled,

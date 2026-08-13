@@ -13,6 +13,18 @@ namespace VaultProspector.Providers.Azure.Tests;
 public sealed class AuthenticationConfigurationTests
 {
     [Fact]
+    public void SynchronizationCredentialContractHasNoInteractiveAcquisitionPath()
+    {
+        var method = Assert.Single(
+            typeof(IAzureCredentialProvider).GetMethods());
+
+        Assert.Equal("GetCredentialAsync", method.Name);
+        Assert.DoesNotContain(
+            method.GetParameters(),
+            parameter => parameter.ParameterType == typeof(bool));
+    }
+
+    [Fact]
     public void InteractiveSignInUsesOneResourceAudience()
     {
         Assert.Equal([AzureAuthenticationScopes.ArmDelegated], AzureAuthenticationScopes.InteractiveSignIn);
@@ -320,6 +332,42 @@ public sealed class AuthenticationConfigurationTests
 
         var candidate = Assert.Single(candidates);
         Assert.Equal("Customer Automation", candidate.DisplayName);
+    }
+
+    [Fact]
+    public async Task GraphDiscoveryUsesTheExplicitResourceTenant()
+    {
+        const string resourceTenant =
+            "33333333-3333-3333-3333-333333333333";
+        var handler = new GraphSequenceHandler(
+            $$"""
+            {
+              "value": [
+                {
+                  "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                  "appId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                  "displayName": "Resource Tenant Automation",
+                  "servicePrincipalType": "Application",
+                  "accountEnabled": true,
+                  "appOwnerOrganizationId": "{{resourceTenant}}"
+                }
+              ]
+            }
+            """);
+        var credential = new StaticTokenCredential();
+        var service = new WorkloadIdentityDiscoveryService(
+            credential,
+            new HttpClient(handler));
+
+        var candidates = await service.ListServicePrincipalsAsync(
+            InteractiveAdministrator(),
+            resourceTenant,
+            TestContext.Current.CancellationToken);
+
+        var candidate = Assert.Single(candidates);
+        Assert.Equal(resourceTenant, credential.LastTenantId);
+        Assert.Equal(resourceTenant, candidate.TenantId);
+        Assert.Equal("Resource Tenant Automation", candidate.DisplayName);
     }
 
     [Theory]

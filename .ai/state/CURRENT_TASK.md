@@ -1,33 +1,66 @@
 # Current task
 
-Fix and publish AB#7337 before resuming any other issue or feature work.
+Fix and validate AB#7341 / GitHub issue #100 before resuming lower-priority work.
 
-Current implementation branch: `fix/entra-rdp-unlock` from public Preview 10 source
-`a0168c390568af1fa679ce6c02f6c43f46c66242`.
+Current implementation branch: `fix/tenant-scoped-key-vault-sync` from public Preview 12 source
+`c5fe6d39291233e5c87a88ce9f6da2830bdaacbd`.
 
-- Exact installed Preview 10 fails at **Verify and continue** for the current Entra-backed Windows
-  account in RDP, before application Entra sign-in is reachable.
-- Windows Hello is unavailable in the remote session; remote credential policy is allowed; the
-  fallback returns `RemoteCredentialFailed`.
-- Preview 11 proved that supplying the missing `AzureAD` authority was insufficient. Windows
-  Security and AAD Operational events showed `0xC0000250`, `interaction_required`, and
-  `AADSTS50076`: Conditional Access required MFA, which password-only `LogonUserW` cannot perform.
-- Entra-backed remote sessions now use a fresh system-browser Entra sign-in that can satisfy MFA.
-  The authenticated Entra object ID must equal the object ID encoded in the current Windows cloud
-  SID. A different account cannot unlock the current profile, and the unlock token is not persisted.
-- Local and Active Directory domain sessions retain the native credential verifier. They are not a
-  prerequisite or workaround for Entra-only VDI estates.
-- The locked screen now displays the exact installed informational version.
-- The revised Release gate passes locked restore, vulnerability inspection, formatting, a
-  zero-warning build, and all 482 tests. Browser-extension tests and production build also pass.
+- Three interactive identities synchronized with isolated errors on the exact installed Preview 12
+  candidate. Safe logs show authentication-heavy failures; one identity found 15 vaults and
+  emitted exactly 45 authentication-category scope failures.
+- Preview 13 passed the full local build/package/installer gate and proved each Key Vault request
+  receives the matching tenant context, but live validation did not improve the first identity:
+  it still produced 7 items and 7 isolated errors (2 Azure-request, 5 authentication). Preview 13
+  remains unpublished.
+- The remaining failure occurs when correctly tenant-scoped silent MSAL acquisition reports that
+  the guest/resource tenant requires interaction. Preview 12/13 convert each such result into a
+  partial metadata error and never let a user-triggered sync satisfy that tenant policy.
+- Preview 14 attempted automatic interactive recovery from foreground sync. One sync opened at
+  least four system-browser prompts for the same visible account because it crossed multiple
+  tenant/resource authorization contexts. The product owner rejected that behavior; Preview 14
+  was stopped, never published, and the VM was restored to exact public Preview 12 with all six
+  local data files preserved byte-for-byte.
+- Automatic interactive authentication is removed from normal sync, background sync, and
+  failed-scope retry in `2cff4ec`. All three paths are constrained to silent token acquisition and
+  may report partial authorization errors without opening a browser or consent window.
+- Exact local Preview 15 from `2cff4ec` passed all package/installer gates and is installed on the
+  VM. Its three latest syncs completed without an observed prompt cascade and reported 200 objects
+  / 23 raw operation errors, 178 / 5, and 88 / 75. Those counts represent individual failed
+  metadata operations, not 23, 5, or 75 distinct Azure targets.
+- Commit `c4bb415` groups failures by tenant, subscription, or vault; resolves pseudonymous log
+  scopes to locally encrypted display names; labels the failed operations; and retries the complete
+  selected target. It also implements About-page buttons for the public user guide, roadmap,
+  changelog, release verification guide, and release history. All five URLs returned HTTP 200.
+- The governed Release gate passes 490/490 tests, zero warnings/errors, and no vulnerable NuGet
+  packages at `c4bb415`. Browser tests pass 6/6 and its production build succeeds.
+- Preview 12 publicly resolved the preceding Entra RDP unlock blocker AB#7337 on the specifically
+  tested VM/session/account/policy; broader VDI coverage remains open in release readiness.
+- The next source candidate removes redundant clipboard authentication by using the existing
+  unlocked application session for Copy by default. An explicit Settings override can require
+  fresh verification for each copy; Reveal, enterprise clipboard policy, and auto-clear remain
+  separate and enforced.
+- Workspaces now have a self-contained member editor with visible identity, tenant, subscription,
+  and vault pickers plus removal. Administration workload discovery uses the selected
+  subscription's tenant and account for both ARM managed identities and Graph service principals,
+  with privacy-safe operation-specific diagnostics.
+- The governed Release gate passes 495/495 tests with zero warnings/errors and no vulnerable NuGet
+  packages. Browser tests pass 6/6 and the production browser build succeeds.
+- Exact Preview 17 from source commit `f4c76ccf41691cff8579c8d732b753b177a2aa6d` passed all
+  three MSI validators and is installed. MSI SHA-256 is
+  `950DDD29966319930375073D702D3CD65BA803773AD8021EB3A929EAF6F22C59`; Windows reports
+  DisplayVersion `0.3.17`, and all five non-log state files remained byte-for-byte unchanged.
 
 Next:
 
-1. Commit the exact reviewed source and package `0.3.0-preview.12`.
-2. Install that exact MSI on the current Entra-joined RDP VM and prove successful current-account
-   MFA unlock plus a redacted authorized diagnostic event.
-3. Push, run protected-branch CI, merge only after the exact head passes, then tag and publish the
-   immutable Preview 12 artifacts.
+1. In one unlocked session, copy two secrets and confirm neither copy prompts; then enable the
+   explicit per-copy verification setting and confirm it restores the prompt.
+2. Validate the self-contained Workspace editor and repeat managed-identity/service-principal
+   discovery using the explicit Administration subscription/tenant/account picker.
+3. Sync the three existing identities and confirm zero browser/consent prompts plus named grouped
+   target rows in Connections; verify the About-page links from the installed binary.
+4. Preserve partial authorization errors honestly while designing any future tenant authorization
+   as an explicit, user-initiated workflow with a preview of how many tenant prompts may be needed.
+5. Push, pass protected CI, merge, and publish only after exact-package live validation succeeds.
 
 ---
 
