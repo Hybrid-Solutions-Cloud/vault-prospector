@@ -1,6 +1,6 @@
 # Session handoff
 
-## Preview 18 audit hardening candidate — 2026-08-13
+## Preview 18 audit hardening publication — 2026-08-13
 
 - Branch `fix/preview18-security-hardening` starts at public-main commit
   `e6511cf79016d0527417e8ec8ae20d16dbd99bc6`.
@@ -12,15 +12,22 @@
   already retrieved value to the clipboard. The value is disposed on rejection.
 - `pwsh ./scripts/Build.ps1 -Configuration Release` passed 496/496 tests, zero warnings/errors,
   and no known vulnerable NuGet packages. Browser tests passed 6/6 and the production build passed.
-- Exact local candidate `0.3.0-preview.18` MSI SHA-256 is
+- Local candidate `0.3.0-preview.18` MSI SHA-256 is
   `A854FF37B99B0A233D0916E39F564ACD6D8426BBC41E449201E6941C080CB2CA`; rollback-safe upgrade
   sequencing, Start-menu icon, and browser-host installer validators all passed.
-- The exact candidate upgraded installed Preview 17 with MSI exit code 0. Windows reports
+- The local candidate upgraded installed Preview 17 with MSI exit code 0. Windows reports
   DisplayVersion `0.3.18`; all five non-log local-state files retained their exact pre-upgrade
   hashes; and the installed executable launched from Program Files.
-- Remaining work: commit, push with the HCS GitHub App, merge only after protected CI, tag
-  `v0.3.0-preview.18`, verify the immutable public release and downloads, then publish exact release
-  evidence and update current-version documentation.
+- PR #105 passed protected CI run 31753497956 and merged as
+  `f98174b9211b4889e635558cc7237d102c7f0730`. Exact-main CI run 31753731408 passed all Windows,
+  portable, readiness, and full-history secret-scan jobs.
+- Immutable tag `v0.3.0-preview.18` triggered release run 31754264358, which passed and published
+  16 assets through the HCS GitHub App. Fresh public downloads of all five packages matched their
+  adjacent SHA-256 files and passed Cosign verification against the exact tagged workflow identity
+  and GitHub OIDC issuer. Public MSI SHA-256 is
+  `B3D87A95ED664ACD5323A74730FEE2A763B6ACDBED2E40F10346A81557E164C7`.
+- Exact-public-package installed validation and the remaining live Azure, independent security,
+  accessibility/usability, and trusted-signing gates remain open.
 
 ## Preview 17 publication — 2026-08-13
 
