@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace VaultProspector.Application;
@@ -24,32 +23,14 @@ public sealed record ReleaseUpdateInfo(
     string ExpectedSha256,
     DateTimeOffset PublishedAt);
 
-public sealed record VerifiedReleaseUpdate(
-    ReleaseUpdateInfo Release,
-    string InstallerPath,
-    string Sha256);
-
-public interface IUpdateInstallerLauncher
-{
-    void Launch(string installerPath);
-}
-
 public interface IReleaseUpdateService
 {
     Task<ReleaseUpdateInfo> CheckAsync(CancellationToken cancellationToken);
-    Task<VerifiedReleaseUpdate> DownloadAndVerifyAsync(
-        ReleaseUpdateInfo release,
-        CancellationToken cancellationToken);
-    Task LaunchAsync(
-        VerifiedReleaseUpdate update,
-        CancellationToken cancellationToken);
 }
 
 public sealed class GitHubReleaseUpdateService(
     HttpClient httpClient,
-    string updateDirectory,
-    string currentVersion,
-    IUpdateInstallerLauncher installerLauncher) : IReleaseUpdateService
+    string currentVersion) : IReleaseUpdateService
 {
     private const string ExpectedPublisher = "hcs-platform-app[bot]";
     private const string ReleaseRepository =
@@ -60,9 +41,6 @@ public sealed class GitHubReleaseUpdateService(
         $"https://github.com/{ReleaseRepository}/releases/download/";
     private static readonly string ReleasePagePrefix =
         $"https://github.com/{ReleaseRepository}/releases/tag/";
-    private readonly string _updateDirectory =
-        Path.GetFullPath(updateDirectory);
-
     public async Task<ReleaseUpdateInfo> CheckAsync(
         CancellationToken cancellationToken)
     {
@@ -144,209 +122,6 @@ public sealed class GitHubReleaseUpdateService(
             selected.PackageSize,
             selected.ExpectedSha256,
             selected.PublishedAt);
-    }
-
-    public async Task<VerifiedReleaseUpdate> DownloadAndVerifyAsync(
-        ReleaseUpdateInfo release,
-        CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(release);
-        if (release.Availability !=
-            ReleaseUpdateAvailability.Available)
-        {
-            throw new InvalidOperationException(
-                "Only a newer trusted release can be downloaded.");
-        }
-
-        ValidateReleaseInfo(release);
-        var checksumText = await ReadSmallTextAsync(
-            release.ChecksumUri,
-            cancellationToken);
-        var checksum = ParseChecksum(
-            checksumText,
-            release.PackageName);
-        if (!string.Equals(
-                checksum,
-                release.ExpectedSha256,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidDataException(
-                "The release checksum did not match the authenticated GitHub asset digest.");
-        }
-
-        var versionDirectory = Path.GetFullPath(
-            Path.Combine(
-                _updateDirectory,
-                release.LatestVersion));
-        EnsureContainedPath(
-            _updateDirectory,
-            versionDirectory);
-        Directory.CreateDirectory(_updateDirectory);
-        RejectReparsePoint(_updateDirectory);
-        Directory.CreateDirectory(versionDirectory);
-        RejectReparsePoint(versionDirectory);
-        var installerPath = Path.GetFullPath(
-            Path.Combine(
-                versionDirectory,
-                release.PackageName));
-        EnsureContainedPath(
-            versionDirectory,
-            installerPath);
-
-        if (File.Exists(installerPath))
-        {
-            var existingHash = await HashFileAsync(
-                installerPath,
-                cancellationToken);
-            if (string.Equals(
-                    existingHash,
-                    checksum,
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                return new VerifiedReleaseUpdate(
-                    release,
-                    installerPath,
-                    existingHash);
-            }
-        }
-
-        var partialPath = Path.Combine(
-            versionDirectory,
-            $".{Guid.NewGuid():N}.partial");
-        try
-        {
-            using var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                release.PackageUri);
-            request.Headers.Accept.ParseAdd(
-                "application/octet-stream");
-            request.Headers.UserAgent.ParseAdd(
-                "VaultProspector-UpdateClient/1.0");
-            using var response = await httpClient.SendAsync(
-                request,
-                HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken);
-            response.EnsureSuccessStatusCode();
-            if (response.Content.Headers.ContentLength is { } contentLength &&
-                contentLength != release.PackageSize)
-            {
-                throw new InvalidDataException(
-                    "The downloaded installer size did not match authenticated release metadata.");
-            }
-
-            string actualHash;
-            await using (var source =
-                         await response.Content.ReadAsStreamAsync(
-                             cancellationToken))
-            await using (var target = new FileStream(
-                             partialPath,
-                             FileMode.CreateNew,
-                             FileAccess.Write,
-                             FileShare.None,
-                             131_072,
-                             FileOptions.Asynchronous |
-                             FileOptions.SequentialScan |
-                             FileOptions.WriteThrough))
-            using (var hash = IncrementalHash.CreateHash(
-                       HashAlgorithmName.SHA256))
-            {
-                var buffer = new byte[131_072];
-                long totalBytes = 0;
-                while (true)
-                {
-                    var bytesRead = await source.ReadAsync(
-                        buffer,
-                        cancellationToken);
-                    if (bytesRead == 0)
-                        break;
-                    totalBytes += bytesRead;
-                    if (totalBytes > release.PackageSize)
-                    {
-                        throw new InvalidDataException(
-                            "The downloaded installer exceeded its authenticated size.");
-                    }
-
-                    hash.AppendData(
-                        buffer,
-                        0,
-                        bytesRead);
-                    await target.WriteAsync(
-                        buffer.AsMemory(0, bytesRead),
-                        cancellationToken);
-                }
-
-                await target.FlushAsync(cancellationToken);
-                if (totalBytes != release.PackageSize)
-                {
-                    throw new InvalidDataException(
-                        "The downloaded installer was incomplete.");
-                }
-
-                actualHash = Convert.ToHexString(
-                    hash.GetHashAndReset());
-                if (!CryptographicOperations.FixedTimeEquals(
-                        Convert.FromHexString(actualHash),
-                        Convert.FromHexString(checksum)))
-                {
-                    throw new InvalidDataException(
-                        "The downloaded installer failed SHA-256 verification.");
-                }
-            }
-
-            File.Move(
-                partialPath,
-                installerPath,
-                true);
-            return new VerifiedReleaseUpdate(
-                release,
-                installerPath,
-                actualHash);
-        }
-        finally
-        {
-            if (File.Exists(partialPath))
-                File.Delete(partialPath);
-        }
-    }
-
-    public async Task LaunchAsync(
-        VerifiedReleaseUpdate update,
-        CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(update);
-        ValidateReleaseInfo(update.Release);
-        var installerPath = Path.GetFullPath(
-            update.InstallerPath);
-        EnsureContainedPath(
-            _updateDirectory,
-            installerPath);
-        if (!string.Equals(
-                Path.GetFileName(installerPath),
-                update.Release.PackageName,
-                StringComparison.Ordinal) ||
-            !File.Exists(installerPath))
-        {
-            throw new InvalidDataException(
-                "The verified installer is no longer available.");
-        }
-
-        var actualHash = await HashFileAsync(
-            installerPath,
-            cancellationToken);
-        if (!string.Equals(
-                actualHash,
-                update.Sha256,
-                StringComparison.OrdinalIgnoreCase) ||
-            !string.Equals(
-                actualHash,
-                update.Release.ExpectedSha256,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidDataException(
-                "The installer changed after verification.");
-        }
-
-        installerLauncher.Launch(installerPath);
     }
 
     private static ReleaseCandidate? TryReadCandidate(
@@ -496,47 +271,6 @@ public sealed class GitHubReleaseUpdateService(
         }
     }
 
-    private async Task<string> ReadSmallTextAsync(
-        Uri uri,
-        CancellationToken cancellationToken)
-    {
-        ValidateDownloadUri(uri);
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            uri);
-        request.Headers.Accept.ParseAdd(
-            "application/octet-stream");
-        request.Headers.UserAgent.ParseAdd(
-            "VaultProspector-UpdateClient/1.0");
-        using var response = await httpClient.SendAsync(
-            request,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken);
-        response.EnsureSuccessStatusCode();
-        if (response.Content.Headers.ContentLength is > 4096)
-        {
-            throw new InvalidDataException(
-                "The release checksum exceeded the supported size.");
-        }
-
-        await using var stream =
-            await response.Content.ReadAsStreamAsync(
-                cancellationToken);
-        using var reader = new StreamReader(
-            stream,
-            detectEncodingFromByteOrderMarks: false,
-            leaveOpen: false);
-        var text = await reader.ReadToEndAsync(
-            cancellationToken);
-        if (text.Length > 4096)
-        {
-            throw new InvalidDataException(
-                "The release checksum exceeded the supported size.");
-        }
-
-        return text;
-    }
-
     private static Uri ReadTrustedDownloadUri(
         JsonElement asset)
     {
@@ -546,34 +280,6 @@ public sealed class GitHubReleaseUpdateService(
             UriKind.Absolute);
         ValidateDownloadUri(uri);
         return uri;
-    }
-
-    private static void ValidateReleaseInfo(
-        ReleaseUpdateInfo release)
-    {
-        var version = ProductVersion.TryParse(
-            release.LatestVersion);
-        if (version is null ||
-            !string.Equals(
-                release.PackageName,
-                $"VaultProspector-{release.LatestVersion}-win-x64.msi",
-                StringComparison.Ordinal) ||
-            release.PackageSize is < 1 or > 536_870_912 ||
-            !IsSha256(release.ExpectedSha256))
-        {
-            throw new InvalidDataException(
-                "Release metadata failed validation.");
-        }
-
-        ValidateDownloadUri(release.PackageUri);
-        ValidateDownloadUri(release.ChecksumUri);
-        if (!release.ReleasePageUri.AbsoluteUri.StartsWith(
-                ReleasePagePrefix,
-                StringComparison.Ordinal))
-        {
-            throw new InvalidDataException(
-                "The release page is outside the trusted repository.");
-        }
     }
 
     private static void ValidateDownloadUri(Uri uri)
@@ -587,45 +293,6 @@ public sealed class GitHubReleaseUpdateService(
             throw new InvalidDataException(
                 "A release asset URI was outside the trusted repository.");
         }
-    }
-
-    private static string ParseChecksum(
-        string text,
-        string packageName)
-    {
-        var parts = text.Trim().Split(
-            [' ', '\t', '\r', '\n'],
-            StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length != 2 ||
-            !IsSha256(parts[0]) ||
-            !string.Equals(
-                parts[1].TrimStart('*'),
-                packageName,
-                StringComparison.Ordinal))
-        {
-            throw new InvalidDataException(
-                "The release checksum file was malformed.");
-        }
-
-        return parts[0].ToUpperInvariant();
-    }
-
-    private static async Task<string> HashFileAsync(
-        string path,
-        CancellationToken cancellationToken)
-    {
-        await using var stream = new FileStream(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            131_072,
-            FileOptions.Asynchronous |
-            FileOptions.SequentialScan);
-        var hash = await SHA256.HashDataAsync(
-            stream,
-            cancellationToken);
-        return Convert.ToHexString(hash);
     }
 
     private static bool IsSha256(string value) =>
@@ -652,36 +319,6 @@ public sealed class GitHubReleaseUpdateService(
         return buildIndex >= 0
             ? normalized[..buildIndex]
             : normalized;
-    }
-
-    private static void EnsureContainedPath(
-        string root,
-        string candidate)
-    {
-        var normalizedRoot =
-            Path.TrimEndingDirectorySeparator(
-                Path.GetFullPath(root)) +
-            Path.DirectorySeparatorChar;
-        var normalizedCandidate =
-            Path.GetFullPath(candidate);
-        if (!normalizedCandidate.StartsWith(
-                normalizedRoot,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidDataException(
-                "The update path escaped the controlled update directory.");
-        }
-    }
-
-    private static void RejectReparsePoint(
-        string path)
-    {
-        if ((File.GetAttributes(path) &
-             FileAttributes.ReparsePoint) != 0)
-        {
-            throw new InvalidDataException(
-                "The update directory cannot be a reparse point.");
-        }
     }
 
     private sealed record ReleaseCandidate(

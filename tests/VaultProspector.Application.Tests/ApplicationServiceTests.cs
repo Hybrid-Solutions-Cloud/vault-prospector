@@ -1016,13 +1016,16 @@ public sealed class ApplicationServiceTests
         var provider = new FakeProvider();
         var clipboard = new FakeClipboard();
         var verification = new CountingVerify();
+        var applicationSession = new ApplicationSessionAuthorization();
+        applicationSession.Authorize();
         var service = new SecretAccessService(
             provider,
             repository,
             new FakeValueStore(),
             clipboard,
             verification,
-            new FixedClock());
+            new FixedClock(),
+            applicationSessionAuthorization: applicationSession);
 
         await service.RetrieveAndCopyAsync(
             item.Id,
@@ -1035,6 +1038,81 @@ public sealed class ApplicationServiceTests
         Assert.Equal(1, provider.RetrieveCalls);
         Assert.Equal(1, clipboard.CopyCalls);
         Assert.Equal("value", clipboard.CopiedValue);
+    }
+
+    [Fact]
+    public async Task CopyWithoutFreshVerificationRejectsAnInvalidatedApplicationSession()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity)
+        {
+            Resolved = (item, Vault(), identity),
+        };
+        var provider = new FakeProvider();
+        var clipboard = new FakeClipboard();
+        var verification = new CountingVerify();
+        var applicationSession = new ApplicationSessionAuthorization();
+        applicationSession.Authorize();
+        applicationSession.Invalidate();
+        var service = new SecretAccessService(
+            provider,
+            repository,
+            new FakeValueStore(),
+            clipboard,
+            verification,
+            new FixedClock(),
+            applicationSessionAuthorization: applicationSession);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.RetrieveAndCopyAsync(
+                item.Id,
+                TimeSpan.FromSeconds(30),
+                new CachePolicy(false, TimeSpan.FromHours(8), true, true),
+                requireFreshVerification: false,
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, verification.Calls);
+        Assert.Equal(0, provider.RetrieveCalls);
+        Assert.Equal(0, clipboard.CopyCalls);
+    }
+
+    [Fact]
+    public async Task CopyWithoutFreshVerificationRejectsSessionInvalidatedDuringRetrieval()
+    {
+        var identity = Identity();
+        var item = Item(VaultObjectType.Secret);
+        var repository = new FakeRepository(identity)
+        {
+            Resolved = (item, Vault(), identity),
+        };
+        var applicationSession = new ApplicationSessionAuthorization();
+        applicationSession.Authorize();
+        var provider = new FakeProvider
+        {
+            OnRetrieve = applicationSession.Invalidate,
+        };
+        var clipboard = new FakeClipboard();
+        var service = new SecretAccessService(
+            provider,
+            repository,
+            new FakeValueStore(),
+            clipboard,
+            new CountingVerify(),
+            new FixedClock(),
+            applicationSessionAuthorization: applicationSession);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.RetrieveAndCopyAsync(
+                item.Id,
+                TimeSpan.FromSeconds(30),
+                new CachePolicy(false, TimeSpan.FromHours(8), true, true),
+                requireFreshVerification: false,
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal(1, provider.RetrieveCalls);
+        Assert.Equal(0, clipboard.CopyCalls);
+        Assert.True(provider.LastRetrievedValue?.IsDisposed);
     }
 
     [Fact]
@@ -1492,6 +1570,7 @@ public sealed class ApplicationServiceTests
         public bool HonorCancellation { get; init; }
         public int DiscoveryCalls { get; private set; }
         public int RetrieveCalls { get; private set; }
+        public Action? OnRetrieve { get; init; }
         public SensitiveValue? LastRetrievedValue { get; private set; }
         public IReadOnlyList<string> ExcludedSubscriptions { get; private set; } = [];
         public IReadOnlyList<string> ExcludedVaultResourceIds { get; private set; } = [];
@@ -1527,6 +1606,7 @@ public sealed class ApplicationServiceTests
         public Task<SensitiveValue> RetrieveSecretAsync(ConnectedIdentity identity, VaultResource vault, VaultItem item, CancellationToken cancellationToken)
         {
             RetrieveCalls++;
+            OnRetrieve?.Invoke();
             LastRetrievedValue = new SensitiveValue("value");
             return Task.FromResult(LastRetrievedValue);
         }

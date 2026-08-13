@@ -958,6 +958,138 @@ public sealed class EncryptedPersistenceTests : IDisposable
     }
 
     [Fact]
+    public async Task IdentityWorkspaceIncludesSharedVaultWhenAnotherIdentityIsPreferred()
+    {
+        var repository = new EncryptedSqliteMetadataRepository(
+            Path.Combine(_directory, "workspace-shared-vault.db"),
+            _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var workspaceIdentity = TestIdentity("workspace-shared-secondary") with
+        {
+            DisplayName = "Workspace identity",
+        };
+        var preferredIdentity = TestIdentity("workspace-shared-preferred") with
+        {
+            DisplayName = "Preferred identity",
+        };
+        await repository.UpsertIdentityAsync(
+            workspaceIdentity,
+            TestContext.Current.CancellationToken);
+        await repository.UpsertIdentityAsync(
+            preferredIdentity,
+            TestContext.Current.CancellationToken);
+        var workspaceTenant = new TenantAccess(
+            Guid.NewGuid(),
+            workspaceIdentity.Id,
+            "shared-tenant",
+            "Workspace tenant",
+            "Home",
+            _clock.UtcNow,
+            "Available");
+        var preferredTenant = new TenantAccess(
+            Guid.NewGuid(),
+            preferredIdentity.Id,
+            "shared-tenant",
+            "Preferred tenant",
+            "Home",
+            _clock.UtcNow,
+            "Available");
+        var subscription = new SubscriptionAccess(
+            Guid.NewGuid(),
+            workspaceTenant.Id,
+            "shared-subscription",
+            "Shared subscription",
+            "Enabled",
+            true,
+            _clock.UtcNow);
+        var vault = new VaultResource(
+            Guid.NewGuid(),
+            "/subscriptions/shared-subscription/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/shared-workspace-vault",
+            "shared-workspace-vault",
+            "shared-tenant",
+            "shared-subscription",
+            "rg",
+            "eastus",
+            new Dictionary<string, string>(),
+            new Uri("https://shared-workspace-vault.vault.azure.net/"),
+            _clock.UtcNow);
+        var workspaceAccess = new VaultAccess(
+            Guid.NewGuid(),
+            vault.Id,
+            workspaceIdentity.Id,
+            "shared-tenant",
+            "Secondary",
+            _clock.UtcNow,
+            null,
+            5);
+        var preferredAccess = new VaultAccess(
+            Guid.NewGuid(),
+            vault.Id,
+            preferredIdentity.Id,
+            "shared-tenant",
+            "Preferred",
+            _clock.UtcNow,
+            null,
+            1);
+        var item = new VaultItem(
+            Guid.NewGuid(),
+            vault.Id,
+            "shared-workspace-secret",
+            VaultObjectType.Secret,
+            true,
+            new Dictionary<string, string>(),
+            null,
+            null,
+            null,
+            null,
+            "v1",
+            "shared-workspace-fingerprint",
+            _clock.UtcNow);
+        await repository.ApplyDiscoveryAsync(
+            workspaceIdentity.Id,
+            new DiscoverySnapshot(
+                [workspaceTenant, preferredTenant],
+                [subscription],
+                [vault],
+                [workspaceAccess, preferredAccess],
+                [item],
+                []),
+            new SyncRun(
+                Guid.NewGuid(),
+                "shared workspace",
+                _clock.UtcNow,
+                _clock.UtcNow,
+                SyncStatus.Completed,
+                1,
+                1,
+                []),
+            TestContext.Current.CancellationToken);
+        var workspace = new Workspace(
+            Guid.NewGuid(),
+            "Shared identity workspace",
+            string.Empty,
+            0);
+        await repository.UpsertWorkspaceAsync(
+            workspace,
+            TestContext.Current.CancellationToken);
+        await repository.AddWorkspaceLinkAsync(
+            new WorkspaceResourceLink(
+                Guid.NewGuid(),
+                workspace.Id,
+                ResourceLinkType.Identity,
+                workspaceIdentity.Id.ToString("D")),
+            TestContext.Current.CancellationToken);
+
+        var result = Assert.Single(await repository.SearchAsync(
+            new SearchRequest(WorkspaceId: workspace.Id),
+            _clock.UtcNow,
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(item.Id, result.Item.Id);
+        Assert.Equal("Preferred identity", result.IdentityDisplayName);
+    }
+
+    [Fact]
     public async Task ProtectedValueCanBePurgedByWorkspaceWithoutAffectingOtherWorkspaces()
     {
         var store = new EncryptedFileValueStore(Path.Combine(_directory, "workspace-values"), _keys, _clock);

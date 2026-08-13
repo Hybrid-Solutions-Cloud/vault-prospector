@@ -62,6 +62,8 @@ public partial class App : Avalonia.Application
                 new RevealVerificationSession(
                     verification,
                     enterprisePolicy);
+            var applicationSessionAuthorization =
+                new ApplicationSessionAuthorization();
             var secretAccessService = new SecretAccessService(
                 azureProvider,
                 repository,
@@ -70,7 +72,8 @@ public partial class App : Avalonia.Application
                 verification,
                 clock,
                 enterprisePolicy,
-                revealVerificationSession);
+                revealVerificationSession,
+                applicationSessionAuthorization);
             var browserFillService = new BrowserFillService(
                 repository,
                 secretAccessService,
@@ -139,19 +142,17 @@ public partial class App : Avalonia.Application
             var updateHttpClient = new HttpClient(
                 new SocketsHttpHandler
                 {
-                    AllowAutoRedirect = true,
+                    AllowAutoRedirect = false,
                     AutomaticDecompression =
                         System.Net.DecompressionMethods.All,
                 })
             {
-                Timeout = TimeSpan.FromMinutes(10),
+                Timeout = TimeSpan.FromSeconds(30),
             };
             var releaseUpdateService =
                 new GitHubReleaseUpdateService(
                     updateHttpClient,
-                    VaultProspectorPaths.UpdateDirectory,
-                    currentVersion,
-                    new WindowsUpdateInstallerLauncher());
+                    currentVersion);
             var cyberArkService = new CyberArkService(
                 cyberArkProvider,
                 new WindowsCyberArkCredentialStore(
@@ -229,7 +230,8 @@ public partial class App : Avalonia.Application
                 releaseUpdateService,
                 new WindowsBrowserIntegrationDiagnostics(
                     AppContext.BaseDirectory),
-                governedMutationService);
+                governedMutationService,
+                applicationSessionAuthorization: applicationSessionAuthorization);
             window = new MainWindow { DataContext = viewModel };
             BrowserBrokerServer? browserBrokerServer = null;
             async Task StartBrowserBrokerAsync()

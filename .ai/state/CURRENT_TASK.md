@@ -1,9 +1,26 @@
 # Current task
 
-Validate public Preview 17 feedback before resuming lower-priority work.
+Publish and verify the Preview 18 audit-hardening release before resuming lower-priority work.
 
 Current public source: merge commit `897bc08553871810a533a899683b2c5727db9458`, immutable tag
 `v0.3.0-preview.17`.
+
+Current candidate branch: `fix/preview18-security-hardening` from public-main commit
+`e6511cf79016d0527417e8ec8ae20d16dbd99bc6`.
+
+- Preview 18 removes in-app package download, retention, elevation, and launch. Settings performs
+  bounded discovery only and links to the public release history and verification guide.
+- Identity-workspace search now checks every enabled, non-removed access row for the linked
+  identity instead of applying the link after choosing the preferred display/retrieval identity.
+- Clipboard Copy without fresh verification requires a shared application-session authorization
+  in the service layer and rechecks it after Azure retrieval before clipboard output.
+- Object-details copy now distinguishes the unlocked-session Copy boundary from Reveal's
+  configured verification policy.
+- Release validation passes 496/496 tests, zero warnings/errors, and dependency audit; browser
+  validation passes 6/6 plus production build. Exact local Preview 18 MSI SHA-256 is
+  `A854FF37B99B0A233D0916E39F564ACD6D8426BBC41E449201E6941C080CB2CA`; all three MSI validators
+  passed. It upgraded installed Preview 17 with exit code 0, Windows reports `0.3.18`, all five
+  non-log state hashes are unchanged, and the Program Files executable launches.
 
 - Three interactive identities synchronized with isolated errors on the exact installed Preview 12
   candidate. Safe logs show authentication-heavy failures; one identity found 15 vaults and

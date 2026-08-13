@@ -32,7 +32,8 @@ public sealed partial class MainViewModel(
     IReleaseUpdateService? releaseUpdateService = null,
     IBrowserIntegrationDiagnostics? browserIntegrationDiagnostics = null,
     GovernedAzureMutationService? governedAzureMutationService = null,
-    IExternalUriLauncher? externalUriLauncher = null) : ViewModelBase
+    IExternalUriLauncher? externalUriLauncher = null,
+    ApplicationSessionAuthorization? applicationSessionAuthorization = null) : ViewModelBase
 {
     private static readonly IdentityType[] SupportedIdentityTypes =
     [
@@ -333,6 +334,7 @@ public sealed partial class MainViewModel(
     [RelayCommand]
     public async Task InitializeAsync()
     {
+        applicationSessionAuthorization?.Invalidate();
         await RunAsync(async cancellationToken =>
         {
             if (IsRecoveryComplete)
@@ -418,13 +420,14 @@ public sealed partial class MainViewModel(
             await SearchCoreAsync(cancellationToken);
             await ReloadBrowserIntegrationAsync(cancellationToken);
             await ReloadCyberArkProfilesAsync(cancellationToken);
-            IsApplicationReady = true;
             await ReloadRecoveryArchivesCoreAsync(cancellationToken);
             StatusText = recoveredInterruptedRotation
                 ? "Ready — an interrupted local encryption rotation was rolled back to its verified pre-rotation archive."
                 : IsFirstRun
                     ? "Local unlock complete — connect your first Microsoft Entra identity to begin."
                     : "Ready — metadata search works offline.";
+            IsApplicationReady = true;
+            applicationSessionAuthorization?.Authorize();
         });
     }
 
@@ -441,6 +444,7 @@ public sealed partial class MainViewModel(
             CanResetLocalData = false;
             IsRecoveryComplete = true;
             IsApplicationReady = false;
+            applicationSessionAuthorization?.Invalidate();
             StatusText = "Encrypted local state was archived. Close and reopen Vault Prospector to create fresh local state.";
         });
     }
@@ -912,6 +916,7 @@ public sealed partial class MainViewModel(
     [RelayCommand]
     private void LockNow()
     {
+        applicationSessionAuthorization?.Invalidate();
         revealVerificationSession?.Invalidate();
         ClearBrowserDestinationCapture();
         CancelPendingBrowserFill(
@@ -928,6 +933,7 @@ public sealed partial class MainViewModel(
 
     public void LockForBackground()
     {
+        applicationSessionAuthorization?.Invalidate();
         revealVerificationSession?.Invalidate();
         ClearBrowserDestinationCapture();
         CancelPendingBrowserFill("Browser fill was cancelled because Vault Prospector moved to the notification area.");
@@ -943,6 +949,7 @@ public sealed partial class MainViewModel(
 
     public void LockForSystemBoundary()
     {
+        applicationSessionAuthorization?.Invalidate();
         revealVerificationSession?.Invalidate();
         ClearBrowserDestinationCapture();
         CancelPendingBrowserFill("Browser fill was cancelled by a Windows security boundary.");
@@ -1959,7 +1966,11 @@ public sealed partial class MainViewModel(
         !IsBusy;
     private bool CanUseSelectedResult() => SelectedResult is not null && !IsBusy;
     private bool CanUseSelectedSecret() => SelectedResult?.Result.Item.ObjectType is VaultObjectType.Secret && !IsBusy;
-    private bool CanCopySelectedSecret() => EffectivePolicy().AllowClipboard && CanUseSelectedSecret();
+    private bool CanCopySelectedSecret() =>
+        IsUnlocked &&
+        IsApplicationReady &&
+        EffectivePolicy().AllowClipboard &&
+        CanUseSelectedSecret();
     private bool CanCacheSelectedSecret() => EffectivePolicy().IsEnabled && CanUseSelectedSecret();
     private bool CanOpenOfflineSecret() =>
         EnterprisePolicy().AllowOfflineCache &&
@@ -2256,6 +2267,12 @@ public sealed partial class MainViewModel(
         PrepareGovernedMutationCommand.NotifyCanExecuteChanged();
         ExecuteGovernedMutationCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnIsUnlockedChanged(bool value) =>
+        CopyCommand.NotifyCanExecuteChanged();
+
+    partial void OnIsApplicationReadyChanged(bool value) =>
+        CopyCommand.NotifyCanExecuteChanged();
 
     partial void OnSelectedRecoveryArchiveChanged(
         LocalRecoveryArchiveRow? value)

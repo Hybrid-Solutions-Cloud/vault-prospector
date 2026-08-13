@@ -1871,7 +1871,23 @@ public sealed class EncryptedSqliteMetadataRepository(
           AND ($vault IS NULL OR v.id=$vault) AND ($vault_name IS NULL OR v.name LIKE '%'||$vault_name||'%' ESCAPE '\') AND ($type IS NULL OR i.object_type=$type) AND ($enabled IS NULL OR i.enabled=$enabled)
           AND ($favorites=0 OR EXISTS(SELECT 1 FROM favorites f WHERE f.item_id=i.id)) AND ($expired=0 OR (i.expires_at IS NOT NULL AND i.expires_at<$now))
           AND ($stale=0 OR julianday($now)-julianday(i.last_indexed)>1)
-          AND ($workspace IS NULL OR EXISTS(SELECT 1 FROM workspace_links wl WHERE wl.workspace_id=$workspace AND ((wl.resource_type=0 AND wl.resource_id=ra.identity_id) OR (wl.resource_type=1 AND wl.resource_id=v.tenant_id) OR (wl.resource_type=2 AND wl.resource_id=v.subscription_id) OR (wl.resource_type=3 AND wl.resource_id=v.id))))
+          AND ($workspace IS NULL OR EXISTS(
+              SELECT 1
+              FROM workspace_links wl
+              WHERE wl.workspace_id=$workspace
+                AND (
+                    (wl.resource_type=0 AND EXISTS(
+                        SELECT 1
+                        FROM vault_access workspace_access
+                        JOIN identities workspace_identity
+                          ON workspace_identity.id=workspace_access.identity_id
+                        WHERE workspace_access.vault_id=v.id
+                          AND workspace_access.identity_id=wl.resource_id
+                          AND workspace_access.status!='Removed'
+                          AND workspace_identity.is_enabled=1))
+                    OR (wl.resource_type=1 AND wl.resource_id=v.tenant_id)
+                    OR (wl.resource_type=2 AND wl.resource_id=v.subscription_id)
+                    OR (wl.resource_type=3 AND wl.resource_id=v.id))))
         ORDER BY CASE WHEN $recent_first=1 AND a.last_accessed IS NULL THEN 1 ELSE 0 END,CASE WHEN $recent_first=1 THEN a.last_accessed END DESC,i.name COLLATE NOCASE,v.name COLLATE NOCASE,i.provider_version DESC LIMIT $limit
         """;
     private const string ResolveSql = """

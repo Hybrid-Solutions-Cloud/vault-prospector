@@ -816,7 +816,8 @@ public sealed class SecretAccessService(
     IUserVerificationService verification,
     IClock clock,
     IEnterprisePolicy? enterprisePolicy = null,
-    IRevealVerificationSession? revealVerificationSession = null)
+    IRevealVerificationSession? revealVerificationSession = null,
+    ApplicationSessionAuthorization? applicationSessionAuthorization = null)
 {
     public Task<SensitiveValue> RetrieveAsync(
         Guid itemId,
@@ -915,6 +916,8 @@ public sealed class SecretAccessService(
         bool requireFreshVerification,
         CancellationToken cancellationToken)
     {
+        EnsureApplicationSessionAuthorized(requireFreshVerification);
+
         var enterprise = EnterprisePolicy();
         enterprise.EnsureClipboardAllowed();
         policy = enterprise.Constrain(policy);
@@ -932,6 +935,7 @@ public sealed class SecretAccessService(
 
         using var value = await provider.RetrieveSecretAsync(source.Identity, source.Vault, source.Item, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
+        EnsureApplicationSessionAuthorized(requireFreshVerification);
         await clipboard.CopyWithAutoClearAsync(value, clearAfter, cancellationToken);
         await repository.RecordAccessAsync(itemId, clock.UtcNow, cancellationToken);
     }
@@ -990,6 +994,17 @@ public sealed class SecretAccessService(
     private EnterprisePolicySnapshot EnterprisePolicy() =>
         (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance)
             .GetSnapshot();
+
+    private void EnsureApplicationSessionAuthorized(
+        bool requireFreshVerification)
+    {
+        if (!requireFreshVerification &&
+            applicationSessionAuthorization?.IsAuthorized != true)
+        {
+            throw new UnauthorizedAccessException(
+                "The unlocked application session is no longer authorized.");
+        }
+    }
 
     private void EnsureSourceAllowed(
         (VaultItem Item, VaultResource Vault, ConnectedIdentity Identity) source,

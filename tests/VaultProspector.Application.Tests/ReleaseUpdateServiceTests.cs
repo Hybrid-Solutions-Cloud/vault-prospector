@@ -6,16 +6,11 @@ using VaultProspector.Application;
 
 namespace VaultProspector.Application.Tests;
 
-public sealed class ReleaseUpdateServiceTests : IDisposable
+public sealed class ReleaseUpdateServiceTests
 {
     private const string Version = "0.2.0-preview.6";
     private const string PackageName =
         "VaultProspector-0.2.0-preview.6-win-x64.msi";
-    private readonly string _updateDirectory = Path.Combine(
-        Path.GetTempPath(),
-        "VaultProspector.Tests",
-        Guid.NewGuid().ToString("N"));
-
     [Fact]
     public async Task CheckSelectsNewestTrustedRelease()
     {
@@ -65,8 +60,7 @@ public sealed class ReleaseUpdateServiceTests : IDisposable
                 publisher: "someone-else"));
         var service = CreateService(
             handler,
-            "0.2.0-preview.5",
-            new FakeLauncher());
+            "0.2.0-preview.5");
 
         await Assert.ThrowsAsync<InvalidDataException>(
             () => service.CheckAsync(
@@ -82,8 +76,7 @@ public sealed class ReleaseUpdateServiceTests : IDisposable
             """{"unexpected":"object"}""");
         var service = CreateService(
             handler,
-            "0.2.0-preview.5",
-            new FakeLauncher());
+            "0.2.0-preview.5");
 
         await Assert.ThrowsAsync<InvalidDataException>(
             () => service.CheckAsync(
@@ -91,152 +84,35 @@ public sealed class ReleaseUpdateServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task DownloadVerifiesAndLaunchRehashesInstaller()
+    public void UpdateContractExposesDiscoveryOnly()
     {
-        var package = Encoding.UTF8.GetBytes("trusted installer");
-        var launcher = new FakeLauncher();
-        var service = CreateService(
-            package,
-            currentVersion: "0.2.0-preview.5",
-            launcher);
-        var release = await service.CheckAsync(
-            TestContext.Current.CancellationToken);
+        var methods = typeof(IReleaseUpdateService).GetMethods();
 
-        var verified = await service.DownloadAndVerifyAsync(
-            release,
-            TestContext.Current.CancellationToken);
-        await service.LaunchAsync(
-            verified,
-            TestContext.Current.CancellationToken);
-
-        Assert.True(File.Exists(verified.InstallerPath));
-        Assert.Equal(verified.InstallerPath, launcher.InstallerPath);
-        Assert.Equal(
-            release.ExpectedSha256,
-            verified.Sha256,
-            ignoreCase: true);
+        Assert.Single(methods);
+        Assert.Equal(nameof(IReleaseUpdateService.CheckAsync), methods[0].Name);
     }
 
-    [Fact]
-    public async Task TamperedDownloadIsRejectedWithoutRetainedPackage()
-    {
-        var trustedPackage = Encoding.UTF8.GetBytes("trusted installer");
-        var tamperedPackage = Encoding.UTF8.GetBytes("tampered installe");
-        var handler = CreateHandler(
-            trustedPackage,
-            downloadedPackage: tamperedPackage);
-        var service = CreateService(
-            handler,
-            "0.2.0-preview.5",
-            new FakeLauncher());
-        var release = await service.CheckAsync(
-            TestContext.Current.CancellationToken);
-
-        await Assert.ThrowsAsync<InvalidDataException>(
-            () => service.DownloadAndVerifyAsync(
-                release,
-                TestContext.Current.CancellationToken));
-
-        Assert.False(
-            File.Exists(
-                Path.Combine(
-                    _updateDirectory,
-                    Version,
-                    PackageName)));
-        if (Directory.Exists(_updateDirectory))
-        {
-            Assert.Empty(
-                Directory.EnumerateFiles(
-                    _updateDirectory,
-                    "*.partial",
-                    SearchOption.AllDirectories));
-        }
-    }
-
-    [Fact]
-    public async Task ChangedInstallerIsNotLaunched()
-    {
-        var package = Encoding.UTF8.GetBytes("trusted installer");
-        var launcher = new FakeLauncher();
-        var service = CreateService(
-            package,
-            currentVersion: "0.2.0-preview.5",
-            launcher);
-        var release = await service.CheckAsync(
-            TestContext.Current.CancellationToken);
-        var verified = await service.DownloadAndVerifyAsync(
-            release,
-            TestContext.Current.CancellationToken);
-        await File.WriteAllTextAsync(
-            verified.InstallerPath,
-            "changed",
-            TestContext.Current.CancellationToken);
-
-        await Assert.ThrowsAsync<InvalidDataException>(
-            () => service.LaunchAsync(
-                verified,
-                TestContext.Current.CancellationToken));
-
-        Assert.Null(launcher.InstallerPath);
-    }
-
-    public void Dispose()
-    {
-        if (!Directory.Exists(_updateDirectory))
-            return;
-
-        var resolvedRoot = Path.GetFullPath(
-            Path.Combine(
-                Path.GetTempPath(),
-                "VaultProspector.Tests"));
-        var resolvedTarget = Path.GetFullPath(
-            _updateDirectory);
-        if (resolvedTarget.StartsWith(
-                resolvedRoot +
-                Path.DirectorySeparatorChar,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            Directory.Delete(
-                resolvedTarget,
-                recursive: true);
-        }
-    }
-
-    private GitHubReleaseUpdateService CreateService(
+    private static GitHubReleaseUpdateService CreateService(
         byte[] package,
-        string currentVersion,
-        FakeLauncher? launcher = null) =>
+        string currentVersion) =>
         CreateService(
             CreateHandler(package),
-            currentVersion,
-            launcher ?? new FakeLauncher());
+            currentVersion);
 
-    private GitHubReleaseUpdateService CreateService(
+    private static GitHubReleaseUpdateService CreateService(
         RouteHandler handler,
-        string currentVersion,
-        FakeLauncher launcher) =>
+        string currentVersion) =>
         new(
             new HttpClient(handler),
-            _updateDirectory,
-            currentVersion,
-            launcher);
+            currentVersion);
 
     private static RouteHandler CreateHandler(
-        byte[] trustedPackage,
-        byte[]? downloadedPackage = null)
+        byte[] trustedPackage)
     {
-        var hash = Convert.ToHexString(
-            SHA256.HashData(trustedPackage));
         var handler = new RouteHandler();
         handler.AddJson(
             ReleasesApi,
             CreateReleaseJson(trustedPackage));
-        handler.AddText(
-            ChecksumUri,
-            $"{hash}  {PackageName}");
-        handler.AddBytes(
-            PackageUri,
-            downloadedPackage ?? trustedPackage);
         return handler;
     }
 
@@ -299,14 +175,6 @@ public sealed class ReleaseUpdateServiceTests : IDisposable
     private const string ReleasePageUri =
         "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.6";
 
-    private sealed class FakeLauncher : IUpdateInstallerLauncher
-    {
-        public string? InstallerPath { get; private set; }
-
-        public void Launch(string installerPath) =>
-            InstallerPath = installerPath;
-    }
-
     private sealed class RouteHandler : HttpMessageHandler
     {
         private readonly Dictionary<string, Func<HttpResponseMessage>>
@@ -319,22 +187,6 @@ public sealed class ReleaseUpdateServiceTests : IDisposable
                 uri,
                 Encoding.UTF8.GetBytes(json),
                 "application/json");
-
-        public void AddText(
-            string uri,
-            string value) =>
-            Add(
-                uri,
-                Encoding.UTF8.GetBytes(value),
-                "text/plain");
-
-        public void AddBytes(
-            string uri,
-            byte[] value) =>
-            Add(
-                uri,
-                value,
-                "application/octet-stream");
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
