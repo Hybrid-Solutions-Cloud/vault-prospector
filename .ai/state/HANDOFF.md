@@ -18,9 +18,15 @@
   orphaned infrastructure-test processes. Their executable paths were verified under this worktree,
   only those two processes were stopped, and the clean full rerun passed. This was tooling residue,
   not a product or test failure.
-- Next: commit, package exact Preview 17, run all three MSI validators, prove state preservation,
-  install, and perform the live consecutive-copy/workspace/workload-discovery checks. Do not
-  publish until the exact installed candidate passes.
+- Implementation and project-state documentation were committed as `f4c76cc`. Exact Preview 17
+  built from full source commit `f4c76ccf41691cff8579c8d732b753b177a2aa6d`; its MSI SHA-256 is
+  `950DDD29966319930375073D702D3CD65BA803773AD8021EB3A929EAF6F22C59` and all three installer
+  validators passed.
+- Preview 17 installed with exit code 0 and DisplayVersion `0.3.17`. All five current non-log state
+  files remained byte-for-byte unchanged, and the installed executable was launched from Program
+  Files.
+- Next: perform the live consecutive-copy/workspace/workload-discovery checks. Do not publish until
+  the exact installed candidate passes.
 
 ---
 

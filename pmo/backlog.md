@@ -39,12 +39,13 @@ user guide, roadmap, changelog, release verification guide, and release history.
 validation of its interaction behavior remains open; these changes are not in public Preview 12.
 Exact local Preview 16 is installed on the current VM, all three MSI validators passed, and the
 five current non-log state files were preserved byte-for-byte through the upgrade.
-The next source candidate makes clipboard Copy use the current unlocked application session by
+Exact local Preview 17 makes clipboard Copy use the current unlocked application session by
 default, with an explicit opt-in setting for fresh verification on every copy. It also replaces
 cross-page workspace selections with a self-contained editor and corrects workload discovery to
 use the tenant/account represented by the selected Administration subscription. The governed
-Release gate passes 495/495 tests with zero warnings or errors; exact-package validation remains
-open.
+Release gate passes 495/495 tests with zero warnings or errors; all three MSI validators passed,
+the upgrade preserved all five non-log state files byte-for-byte, and Windows reports version
+`0.3.17`. Live workflow validation remains open.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).

@@ -45,21 +45,22 @@ Current implementation branch: `fix/tenant-scoped-key-vault-sync` from public Pr
   with privacy-safe operation-specific diagnostics.
 - The governed Release gate passes 495/495 tests with zero warnings/errors and no vulnerable NuGet
   packages. Browser tests pass 6/6 and the production browser build succeeds.
+- Exact Preview 17 from source commit `f4c76ccf41691cff8579c8d732b753b177a2aa6d` passed all
+  three MSI validators and is installed. MSI SHA-256 is
+  `950DDD29966319930375073D702D3CD65BA803773AD8021EB3A929EAF6F22C59`; Windows reports
+  DisplayVersion `0.3.17`, and all five non-log state files remained byte-for-byte unchanged.
 
 Next:
 
-1. Commit the validated source and package exact Preview 17 with immutable source provenance.
-2. Run all three MSI validators, preserve the current non-log state inventory through upgrade, and
-   install Preview 17 only after those checks pass.
-3. In one unlocked session, copy two secrets and confirm neither copy prompts; then enable the
+1. In one unlocked session, copy two secrets and confirm neither copy prompts; then enable the
    explicit per-copy verification setting and confirm it restores the prompt.
-4. Validate the self-contained Workspace editor and repeat managed-identity/service-principal
+2. Validate the self-contained Workspace editor and repeat managed-identity/service-principal
    discovery using the explicit Administration subscription/tenant/account picker.
-5. Sync the three existing identities and confirm zero browser/consent prompts plus named grouped
+3. Sync the three existing identities and confirm zero browser/consent prompts plus named grouped
    target rows in Connections; verify the About-page links from the installed binary.
-6. Preserve partial authorization errors honestly while designing any future tenant authorization
+4. Preserve partial authorization errors honestly while designing any future tenant authorization
    as an explicit, user-initiated workflow with a preview of how many tenant prompts may be needed.
-7. Push, pass protected CI, merge, and publish only after exact-package live validation succeeds.
+5. Push, pass protected CI, merge, and publish only after exact-package live validation succeeds.
 
 ---
 
