@@ -20,18 +20,29 @@ Current implementation branch: `fix/tenant-scoped-key-vault-sync` from public Pr
   tenant/resource authorization contexts. The product owner rejected that behavior; Preview 14
   was stopped, never published, and the VM was restored to exact public Preview 12 with all six
   local data files preserved byte-for-byte.
-- Automatic interactive authentication is now removed from normal sync, background sync, and
-  failed-scope retry. All three paths are constrained to silent token acquisition and may report
-  partial authorization errors without opening a browser or consent window.
+- Automatic interactive authentication is removed from normal sync, background sync, and
+  failed-scope retry in `2cff4ec`. All three paths are constrained to silent token acquisition and
+  may report partial authorization errors without opening a browser or consent window.
+- Exact local Preview 15 from `2cff4ec` passed all package/installer gates and is installed on the
+  VM. Its three latest syncs completed without an observed prompt cascade and reported 200 objects
+  / 23 raw operation errors, 178 / 5, and 88 / 75. Those counts represent individual failed
+  metadata operations, not 23, 5, or 75 distinct Azure targets.
+- Commit `c4bb415` groups failures by tenant, subscription, or vault; resolves pseudonymous log
+  scopes to locally encrypted display names; labels the failed operations; and retries the complete
+  selected target. It also implements About-page buttons for the public user guide, roadmap,
+  changelog, release verification guide, and release history. All five URLs returned HTTP 200.
+- The governed Release gate passes 490/490 tests, zero warnings/errors, and no vulnerable NuGet
+  packages at `c4bb415`. Browser tests pass 6/6 and its production build succeeds.
 - Preview 12 publicly resolved the preceding Entra RDP unlock blocker AB#7337 on the specifically
   tested VM/session/account/policy; broader VDI coverage remains open in release readiness.
 
 Next:
 
-1. Add regression coverage for the no-interactive-sync boundary and rerun the governed gate.
-2. Package the next candidate, install it on the current VM, and prove a complete sync attempt
-   opens zero browser/consent prompts.
-3. Preserve partial authentication errors honestly while designing any future tenant authorization
+1. Package exact Preview 16 from `c4bb415`, run all three MSI validators, and install it without
+   changing the six-file encrypted local state.
+2. Sync the three existing identities and confirm zero browser/consent prompts plus named grouped
+   target rows in Connections; verify the About-page links from the installed binary.
+3. Preserve partial authorization errors honestly while designing any future tenant authorization
    as an explicit, user-initiated workflow with a preview of how many tenant prompts may be needed.
 4. Push, pass protected CI, merge, and publish only after exact-package live validation succeeds.
 

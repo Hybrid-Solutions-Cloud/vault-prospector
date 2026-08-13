@@ -1,5 +1,30 @@
 # Session handoff
 
+## Actionable sync targets and About documentation — 2026-08-12
+
+- Commit `2cff4ec` removed every automatic interactive acquisition path from foreground sync,
+  background sync, and failed-scope retry. Structural tests prevent those entry points from
+  regaining browser/consent behavior.
+- Exact local Preview 15 from `2cff4ec` passed its package/installer gates and is installed on the
+  current VM. The latest three syncs logged 200 items / 23 raw failed operations, 178 / 5, and
+  88 / 75. The raw counts are per metadata operation: one vault can fail secrets, secret versions,
+  keys, key versions, certificates, and certificate versions separately.
+- Commit `c4bb415` changes the UI count to distinct connection targets, groups every target's
+  operations, and resolves retry scope to the locally encrypted identity, tenant, subscription,
+  and vault display data. Logs/support bundles remain pseudonymous.
+- `c4bb415` also implements GitHub issue #102 in the About page with public links for the user
+  guide, roadmap, changelog, install/release verification, and release history. The launcher only
+  accepts the canonical HTTPS hosts and exposes the URL in status text if the default browser
+  cannot be opened. All five public URLs returned HTTP 200 during validation.
+- At `c4bb415`, formatting passes; the governed Release build passes 490/490 tests, zero warnings
+  or errors, and no vulnerable direct/transitive NuGet packages; browser tests pass 6/6 and the
+  production browser build succeeds.
+- Next: package exact Preview 16, validate the exact MSI with all three installer scripts, install
+  while preserving local state, then live-check zero sync prompts, named/grouped connection
+  targets, and every About link. Do not publish or close AB#7341/#100/#102 before that evidence.
+
+---
+
 ## Preview 14 repeated-auth regression and rollback — 2026-08-12
 
 - Exact local Preview 14 (`71db50d`, MSI SHA-256
