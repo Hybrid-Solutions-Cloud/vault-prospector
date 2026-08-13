@@ -20,6 +20,36 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void AboutSurfaceExposesAllCanonicalPublicDocumentationLinks()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var about = document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "TabItem" &&
+                Attribute(element, "Header")?.Value.Contains(
+                    "About",
+                    StringComparison.Ordinal) == true);
+        var commands = about
+            .Descendants()
+            .Select(element => Attribute(element, "Command")?.Value)
+            .Where(value => value is not null)
+            .ToArray();
+
+        Assert.Contains("{Binding OpenUserGuideCommand}", commands);
+        Assert.Contains("{Binding OpenRoadmapCommand}", commands);
+        Assert.Contains("{Binding OpenChangelogCommand}", commands);
+        Assert.Contains("{Binding OpenReleaseGuideCommand}", commands);
+        Assert.Contains("{Binding OpenReleaseHistoryCommand}", commands);
+        Assert.All(
+            about.Descendants().Where(element => element.Name.LocalName == "Button"),
+            button => Assert.Contains(
+                "default browser",
+                Attribute(button, "AutomationProperties.Name")?.Value ?? string.Empty,
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void AtlasUsesOneLightControlThemeAcrossEveryWindowsColorMode()
     {
         var application = XDocument.Load(

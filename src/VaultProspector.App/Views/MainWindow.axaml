@@ -725,9 +725,9 @@
                       AutomationProperties.Name="Actionable isolated synchronization errors"
                       AutomationProperties.LiveSetting="Polite">
                 <StackPanel Spacing="8">
-                  <TextBlock Text="{Binding SyncErrors.Count, StringFormat={}{0} synchronized scopes need attention}"
+                  <TextBlock Text="{Binding SyncErrors.Count, StringFormat={}{0} connection targets need attention}"
                              FontWeight="SemiBold" />
-                  <TextBlock Text="Usable results were preserved. Correct only the affected scope, then retry synchronization."
+                  <TextBlock Text="Usable results were preserved. Each target below names the tenant, subscription, vault, and metadata operations that could not be synchronized."
                              TextWrapping="Wrap" />
                   <ListBox ItemsSource="{Binding SyncErrors}"
                            SelectedItem="{Binding SelectedSyncError}"
@@ -736,7 +736,8 @@
                     <ListBox.ItemTemplate>
                       <DataTemplate x:DataType="vm:SyncErrorRow">
                         <StackPanel Margin="4,6" Spacing="2">
-                          <TextBlock Text="{Binding Scope}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Target}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Operations, StringFormat={}Failed operations: {0}}" TextWrapping="Wrap" />
                           <TextBlock Text="{Binding Category}" Opacity="0.75" />
                           <TextBlock Text="{Binding Timestamp, StringFormat={}Observed {0}}" Opacity="0.75" />
                           <TextBlock Text="{Binding CorrelationId, StringFormat={}Correlation {0}}" Opacity="0.75" />
@@ -1927,6 +1928,15 @@
             <TextBlock Text="A local-first Azure Key Vault discovery, search, and secure retrieval desktop application." TextWrapping="Wrap" />
             <TextBlock Text="This preview never creates role assignments, rotates secrets, or silently caches values. Azure remains the source of truth." TextWrapping="Wrap" />
             <TextBlock Text="Mobile apps are intentionally deferred and tracked on the roadmap." TextWrapping="Wrap" Opacity="0.75" />
+            <TextBlock Text="Public documentation" FontSize="{StaticResource VaultFontSize17}" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <TextBlock Text="These links open the canonical public documentation in your default browser." TextWrapping="Wrap" Opacity="0.75" />
+            <WrapPanel>
+              <Button Content="User guide ↗" Command="{Binding OpenUserGuideCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector user guide in the default browser" />
+              <Button Content="Roadmap ↗" Command="{Binding OpenRoadmapCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector roadmap in the default browser" />
+              <Button Content="Changelog ↗" Command="{Binding OpenChangelogCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector changelog in the default browser" />
+              <Button Content="Install &amp; verify releases ↗" Command="{Binding OpenReleaseGuideCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector release verification guide in the default browser" />
+              <Button Content="Release history ↗" Command="{Binding OpenReleaseHistoryCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector release history in the default browser" />
+            </WrapPanel>
           </StackPanel>
         </Border>
         </StackPanel>

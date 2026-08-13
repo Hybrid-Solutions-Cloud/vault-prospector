@@ -573,6 +573,12 @@ public sealed class SynchronizationService(
             .Where(scope => scope is not null)
             .Cast<ProviderRetryScope>()
             .ToArray();
+        var tenantIds = retryScopes
+            .Select(scope => scope.TenantId)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
         var subscriptionIds = retryScopes
             .Select(scope => scope.SubscriptionId)
             .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -585,14 +591,18 @@ public sealed class SynchronizationService(
             .Cast<string>()
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        if (subscriptionIds.Length == 0 && vaultResourceIds.Length == 0)
+        if (tenantIds.Length == 0 &&
+            subscriptionIds.Length == 0 &&
+            vaultResourceIds.Length == 0)
             throw new InvalidOperationException("The selected synchronization error does not expose a retryable Azure scope.");
 
         var policy = (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance).GetSnapshot();
         policy.EnsureIdentityAllowed(identity);
         var knownTenants = await repository.GetTenantsAsync(identity.Id, cancellationToken);
         var constraints = new VaultDiscoveryConstraints(
-            allowedTenantIds: policy.AllowedTenantIds,
+            allowedTenantIds: tenantIds.Length > 0
+                ? tenantIds
+                : policy.AllowedTenantIds,
             allowedSubscriptionIds: subscriptionIds,
             allowedVaultResourceIds: vaultResourceIds,
             excludedTenantIds: knownTenants

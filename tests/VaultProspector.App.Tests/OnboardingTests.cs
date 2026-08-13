@@ -14,6 +14,33 @@ public sealed class OnboardingTests : IDisposable
     private readonly string _directory = Path.Combine(Path.GetTempPath(), $"vault-prospector-app-tests-{Guid.NewGuid():N}");
 
     [Fact]
+    public void PublicDocumentationLinksAreCanonicalHttpsTargets()
+    {
+        Assert.Equal(5, PublicDocumentation.All.Count);
+        Assert.All(PublicDocumentation.All, uri =>
+        {
+            Assert.Equal(Uri.UriSchemeHttps, uri.Scheme);
+            Assert.True(PublicDocumentation.IsCanonical(uri));
+        });
+        Assert.DoesNotContain(
+            PublicDocumentation.All,
+            uri => uri.Host.Contains("internal", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void AboutDocumentationLaunchFailureProvidesCopyableCanonicalAddress()
+    {
+        var launcher = new RecordingUriLauncher(false);
+        var viewModel = CreateViewModel(externalUriLauncher: launcher);
+
+        viewModel.OpenRoadmapCommand.Execute(null);
+
+        Assert.Equal(PublicDocumentation.Roadmap, launcher.LastUri);
+        Assert.Contains("Could not open Roadmap", viewModel.StatusText, StringComparison.Ordinal);
+        Assert.Contains(PublicDocumentation.Roadmap.AbsoluteUri, viewModel.StatusText, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void CyberArkRoadmapFeatureIsNotVisibleInTheWindowsRelease()
     {
         var viewModel = CreateViewModel();
@@ -1503,7 +1530,8 @@ public sealed class OnboardingTests : IDisposable
     }
 
     private static MainViewModel CreateViewModel(
-        IRevealVerificationSession? revealVerificationSession = null) =>
+        IRevealVerificationSession? revealVerificationSession = null,
+        IExternalUriLauncher? externalUriLauncher = null) =>
         new(
             null!,
             null!,
@@ -1517,7 +1545,19 @@ public sealed class OnboardingTests : IDisposable
             null!,
             null!,
             revealVerificationSession:
-                revealVerificationSession);
+                revealVerificationSession,
+            externalUriLauncher: externalUriLauncher);
+
+    private sealed class RecordingUriLauncher(bool result) : IExternalUriLauncher
+    {
+        public Uri? LastUri { get; private set; }
+
+        public bool TryOpen(Uri uri)
+        {
+            LastUri = uri;
+            return result;
+        }
+    }
 
     private sealed class UnavailableVerificationService : IUserVerificationService
     {
@@ -2016,6 +2056,80 @@ public sealed class OnboardingTests : IDisposable
         "tenant",
         AuthenticationState.Ready,
         DateTimeOffset.UtcNow);
+
+    [Fact]
+    public void SyncErrorsGroupOperationsByNamedLocalVaultTarget()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var resourceId =
+            "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/vault-one";
+        var vault = new VaultResource(
+            Guid.NewGuid(),
+            resourceId,
+            "vault-one",
+            "tenant-1",
+            "sub-1",
+            "rg",
+            "eastus",
+            new Dictionary<string, string>(),
+            new Uri("https://vault-one.vault.azure.net/"),
+            now);
+        var details = new[]
+        {
+            new SyncErrorDetail(
+                "vault:redacted:secrets",
+                "RequestFailedException",
+                "Azure request failed with status 403 (Forbidden).",
+                "Review metadata-list access.",
+                OccurredAt: now,
+                CorrelationId: "ONE",
+                RetryScope: new ProviderRetryScope(VaultResourceId: resourceId)),
+            new SyncErrorDetail(
+                "vault:redacted:keys",
+                "RequestFailedException",
+                "Azure request failed with status 403 (Forbidden).",
+                "Review metadata-list access.",
+                OccurredAt: now,
+                CorrelationId: "TWO",
+                RetryScope: new ProviderRetryScope(VaultResourceId: resourceId)),
+        };
+        var row = new SyncErrorRow(
+            details,
+            "Connected account",
+            [new TenantSelectionRow(new TenantAccess(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "tenant-1",
+                "Tenant One",
+                "AAD",
+                now,
+                "Available"))],
+            [],
+            [new VaultAccessRow(new VaultAccessSummary(
+                vault,
+                new VaultAccess(
+                    Guid.NewGuid(),
+                    vault.Id,
+                    Guid.NewGuid(),
+                    "tenant-1",
+                    "Visible",
+                    now,
+                    null,
+                    0),
+                "Connected account",
+                "Tenant One"))]);
+
+        Assert.Contains("Connected account", row.Target, StringComparison.Ordinal);
+        Assert.Contains("Tenant One", row.Target, StringComparison.Ordinal);
+        Assert.Contains("vault-one", row.Target, StringComparison.Ordinal);
+        Assert.Contains("sub-1", row.Target, StringComparison.Ordinal);
+        Assert.Equal("keys, secrets", row.Operations);
+        Assert.Equal(2, row.Details.Count);
+        Assert.True(row.CanRetry);
+        Assert.Equal(
+            SyncErrorRow.GroupKey(details[0]),
+            SyncErrorRow.GroupKey(details[1]));
+    }
 
     private static SearchResultRow CreateResult(VaultObjectType objectType)
     {

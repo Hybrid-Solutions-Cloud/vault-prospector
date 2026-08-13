@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using VaultProspector.App;
 using VaultProspector.Application;
 using VaultProspector.Domain;
 using VaultProspector.Platform;
@@ -30,7 +31,8 @@ public sealed partial class MainViewModel(
     IRevealVerificationSession? revealVerificationSession = null,
     IReleaseUpdateService? releaseUpdateService = null,
     IBrowserIntegrationDiagnostics? browserIntegrationDiagnostics = null,
-    GovernedAzureMutationService? governedAzureMutationService = null) : ViewModelBase
+    GovernedAzureMutationService? governedAzureMutationService = null,
+    IExternalUriLauncher? externalUriLauncher = null) : ViewModelBase
 {
     private static readonly IdentityType[] SupportedIdentityTypes =
     [
@@ -97,6 +99,34 @@ public sealed partial class MainViewModel(
         SelectedSubscription is null
             ? "Subscription filter: all"
             : $"Selected subscription: {SelectedSubscription.DisplayName}";
+
+    [RelayCommand]
+    private void OpenUserGuide() =>
+        OpenPublicDocumentation(PublicDocumentation.UserGuide, "User guide");
+
+    [RelayCommand]
+    private void OpenRoadmap() =>
+        OpenPublicDocumentation(PublicDocumentation.Roadmap, "Roadmap");
+
+    [RelayCommand]
+    private void OpenChangelog() =>
+        OpenPublicDocumentation(PublicDocumentation.Changelog, "Changelog");
+
+    [RelayCommand]
+    private void OpenReleaseGuide() =>
+        OpenPublicDocumentation(PublicDocumentation.ReleaseGuide, "Release verification guide");
+
+    [RelayCommand]
+    private void OpenReleaseHistory() =>
+        OpenPublicDocumentation(PublicDocumentation.ReleaseHistory, "Release history");
+
+    private void OpenPublicDocumentation(Uri uri, string label)
+    {
+        var launcher = externalUriLauncher ?? SystemExternalUriLauncher.Instance;
+        StatusText = launcher.TryOpen(uri)
+            ? $"Opened {label} in the default browser."
+            : $"Could not open {label}. Copy this address into a browser: {uri.AbsoluteUri}";
+    }
 
     [ObservableProperty] private IdentityType _selectedIdentityType = IdentityType.InteractiveUser;
     [ObservableProperty] private string _credentialData = string.Empty;
@@ -728,10 +758,10 @@ public sealed partial class MainViewModel(
         if (SelectedIdentity is null || SelectedSyncError is null)
             return;
 
-        StatusText = $"Retrying {SelectedSyncError.Scope}…";
+        StatusText = $"Retrying {SelectedSyncError.Target}…";
         var run = await synchronizationService.RetryFailedScopesAsync(
             SelectedIdentity,
-            [SelectedSyncError.Detail],
+            SelectedSyncError.Details,
             cancellationToken);
         await ReloadSubscriptionsCoreAsync(
             SelectedIdentity.Id,
@@ -747,7 +777,7 @@ public sealed partial class MainViewModel(
         StatusText = run.NonSensitiveErrors.Count == 0
             ? $"Retry completed: {run.VaultCount} vaults and {run.ItemCount} objects refreshed."
             : $"Retry completed with {run.NonSensitiveErrors.Count} isolated errors. Successful results remain available.";
-    }, $"Retrying {SelectedSyncError?.Scope ?? "the selected failed scope"}");
+    }, $"Retrying {SelectedSyncError?.Target ?? "the selected failed target"}");
 
     [RelayCommand(CanExecute = nameof(CanUseSelectedIdentity))]
     private Task RefreshSubscriptionsAsync() => RunAsync(async cancellationToken =>
@@ -1218,8 +1248,15 @@ public sealed partial class MainViewModel(
                     message,
                     "Use the safe category shown here to correct the affected scope, then retry synchronization."))
                 .ToArray();
-        foreach (var detail in details)
-            SyncErrors.Add(new SyncErrorRow(detail));
+        foreach (var group in details.GroupBy(SyncErrorRow.GroupKey))
+        {
+            SyncErrors.Add(new SyncErrorRow(
+                group.ToArray(),
+                SelectedIdentity?.DisplayName ?? run.Scope,
+                Tenants,
+                Subscriptions,
+                VaultAccessPaths));
+        }
         OnPropertyChanged(nameof(HasSyncErrors));
     }
 
@@ -2378,24 +2415,132 @@ public sealed record SearchFilterOption(string Value, string Label)
     public static SearchFilterOption All(string label) => new(string.Empty, label);
 }
 
-public sealed class SyncErrorRow(SyncErrorDetail detail)
+public sealed class SyncErrorRow
 {
-    public SyncErrorDetail Detail { get; } = detail;
-    public string Scope { get; } = detail.Scope;
-    public string Category { get; } = detail.Category;
-    public string Message { get; } = detail.Message;
-    public string Recovery { get; } = detail.Recovery;
-    public string Timestamp { get; } = detail.OccurredAt is null
+    public SyncErrorRow(
+        IReadOnlyList<SyncErrorDetail> details,
+        string identityDisplayName,
+        IEnumerable<TenantSelectionRow> tenants,
+        IEnumerable<SubscriptionSelectionRow> subscriptions,
+        IEnumerable<VaultAccessRow> vaults)
+    {
+        if (details.Count == 0)
+            throw new ArgumentException("At least one synchronization error is required.", nameof(details));
+
+        Details = details;
+        var first = details[0];
+        var retry = first.RetryScope;
+        var vault = string.IsNullOrWhiteSpace(retry?.VaultResourceId)
+            ? null
+            : vaults.FirstOrDefault(candidate => string.Equals(
+                candidate.Summary.Vault.ProviderResourceId,
+                retry.VaultResourceId,
+                StringComparison.OrdinalIgnoreCase));
+        var subscriptionId = retry?.SubscriptionId ?? vault?.Subscription;
+        var subscription = string.IsNullOrWhiteSpace(subscriptionId)
+            ? null
+            : subscriptions.FirstOrDefault(candidate => string.Equals(
+                candidate.SubscriptionId,
+                subscriptionId,
+                StringComparison.OrdinalIgnoreCase));
+        var tenantId = retry?.TenantId ??
+            vault?.Summary.Vault.TenantId ??
+            subscription?.TenantId;
+        var tenant = string.IsNullOrWhiteSpace(tenantId)
+            ? null
+            : tenants.FirstOrDefault(candidate => string.Equals(
+                candidate.TenantId,
+                tenantId,
+                StringComparison.OrdinalIgnoreCase));
+
+        var subscriptionLabel = subscription is null
+            ? subscriptionId
+            : $"{subscription.DisplayName} ({subscription.SubscriptionId})";
+        Target = vault is not null
+            ? $"{identityDisplayName} · {vault.Tenant} · {vault.Vault} · subscription {subscriptionLabel}"
+            : subscription is not null
+                ? $"{identityDisplayName} · {subscription.TenantDisplayName} · {subscription.DisplayName} · subscription {subscription.SubscriptionId}"
+                : tenant is not null
+                    ? $"{identityDisplayName} · {tenant.DisplayName} · tenant {tenant.TenantId}"
+                    : $"{identityDisplayName} · {first.Scope}";
+        Operations = string.Join(", ", details
+            .Select(detail => OperationLabel(detail.Scope))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Order(StringComparer.OrdinalIgnoreCase));
+        Category = string.Join(", ", details
+            .Select(detail => detail.Category)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Order(StringComparer.OrdinalIgnoreCase));
+        Message = string.Join(" ", details
+            .Select(detail => detail.Message)
+            .Distinct(StringComparer.Ordinal));
+        Recovery = string.Join(" ", details
+            .Select(detail => detail.Recovery)
+            .Distinct(StringComparer.Ordinal));
+        var occurredAt = details
+            .Select(detail => detail.OccurredAt)
+            .Where(value => value.HasValue)
+            .OrderByDescending(value => value)
+            .FirstOrDefault();
+        Timestamp = occurredAt is null
         ? "Time unavailable"
-        : detail.OccurredAt.Value.ToLocalTime().ToString(
+        : occurredAt.Value.ToLocalTime().ToString(
             "yyyy-MM-dd HH:mm:ss zzz",
             System.Globalization.CultureInfo.InvariantCulture);
-    public string CorrelationId { get; } = string.IsNullOrWhiteSpace(detail.CorrelationId)
-        ? "Unavailable"
-        : detail.CorrelationId;
-    public bool CanRetry { get; } = detail.RetryScope is not null &&
-        (!string.IsNullOrWhiteSpace(detail.RetryScope.SubscriptionId) ||
-         !string.IsNullOrWhiteSpace(detail.RetryScope.VaultResourceId));
+        CorrelationId = string.Join(", ", details
+            .Select(detail => detail.CorrelationId)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal));
+        if (string.IsNullOrWhiteSpace(CorrelationId))
+            CorrelationId = "Unavailable";
+        CanRetry = details.Any(detail => detail.RetryScope is { } scope &&
+            (!string.IsNullOrWhiteSpace(scope.TenantId) ||
+             !string.IsNullOrWhiteSpace(scope.SubscriptionId) ||
+             !string.IsNullOrWhiteSpace(scope.VaultResourceId)));
+    }
+
+    public IReadOnlyList<SyncErrorDetail> Details { get; }
+    public string Target { get; }
+    public string Scope => Target;
+    public string Operations { get; }
+    public string Category { get; }
+    public string Message { get; }
+    public string Recovery { get; }
+    public string Timestamp { get; }
+    public string CorrelationId { get; private set; }
+    public bool CanRetry { get; }
+
+    public static string GroupKey(SyncErrorDetail detail)
+    {
+        if (!string.IsNullOrWhiteSpace(detail.RetryScope?.VaultResourceId))
+            return $"vault|{detail.RetryScope.VaultResourceId}";
+        if (!string.IsNullOrWhiteSpace(detail.RetryScope?.SubscriptionId))
+            return $"subscription|{detail.RetryScope.SubscriptionId}";
+        if (!string.IsNullOrWhiteSpace(detail.RetryScope?.TenantId))
+            return $"tenant|{detail.RetryScope.TenantId}";
+        return $"scope|{detail.Scope}";
+    }
+
+    private static string OperationLabel(string scope)
+    {
+        if (scope.EndsWith(":secret_versions", StringComparison.OrdinalIgnoreCase))
+            return "secret versions";
+        if (scope.EndsWith(":secrets", StringComparison.OrdinalIgnoreCase))
+            return "secrets";
+        if (scope.EndsWith(":key_versions", StringComparison.OrdinalIgnoreCase))
+            return "key versions";
+        if (scope.EndsWith(":keys", StringComparison.OrdinalIgnoreCase))
+            return "keys";
+        if (scope.EndsWith(":certificate_versions", StringComparison.OrdinalIgnoreCase))
+            return "certificate versions";
+        if (scope.EndsWith(":certificates", StringComparison.OrdinalIgnoreCase))
+            return "certificates";
+        if (scope.EndsWith(":subscriptions", StringComparison.OrdinalIgnoreCase))
+            return "discover subscriptions";
+        if (scope.StartsWith("subscription:", StringComparison.OrdinalIgnoreCase))
+            return "discover Key Vaults";
+        return "metadata discovery";
+    }
 }
 
 public sealed class DiagnosticEventRow(

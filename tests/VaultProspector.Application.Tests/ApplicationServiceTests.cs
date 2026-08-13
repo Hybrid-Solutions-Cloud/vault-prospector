@@ -634,6 +634,34 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task SynchronizationRetriesOnlySelectedFailedTenantAsPatch()
+    {
+        var identity = Identity();
+        var repository = new FakeRepository(identity);
+        var provider = new FakeProvider();
+        var service = new SynchronizationService(
+            provider,
+            repository,
+            new FixedClock(),
+            new FakeDiagnostics());
+        var tenantId = "22222222-2222-2222-2222-222222222222";
+        var failed = new SyncErrorDetail(
+            "tenant:redacted:subscriptions",
+            "RequestFailedException",
+            "Azure request failed.",
+            "Retry.",
+            RetryScope: new ProviderRetryScope(TenantId: tenantId));
+
+        await service.RetryFailedScopesAsync(
+            identity,
+            [failed],
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal([tenantId], provider.Constraints?.AllowedTenantIds);
+        Assert.Equal(1, repository.ApplyPatchCalls);
+    }
+
+    [Fact]
     public async Task SynchronizationDoesNotPersistAuthenticationExceptionMessages()
     {
         var identity = Identity();

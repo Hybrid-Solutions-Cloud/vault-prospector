@@ -126,6 +126,7 @@ public sealed class AzureVaultProviderDiscoveryTests
         var error = Assert.Single(snapshot.Errors);
         Assert.Contains("tenant:", error.Scope, StringComparison.Ordinal);
         Assert.DoesNotContain(GuestTenant, error.Scope, StringComparison.Ordinal);
+        Assert.Equal(GuestTenant, error.RetryScope?.TenantId);
     }
 
     private static AzureVaultProvider CreateProvider(

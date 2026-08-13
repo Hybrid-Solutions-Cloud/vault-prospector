@@ -161,7 +161,8 @@ public sealed class AzureVaultProvider : IVaultProvider
                 {
                     errors.Add(SafeError(
                         $"tenant:{Pseudonym(tenantAccess.Id)}:subscriptions",
-                        ex));
+                        ex,
+                        new ProviderRetryScope(TenantId: tenantId)));
                 }
             }
         }
