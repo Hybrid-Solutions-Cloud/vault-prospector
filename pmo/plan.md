@@ -36,9 +36,9 @@ Status terms used in PMO reporting:
 
 ## Current product state
 
-- Latest public version: `0.3.0-preview.8`, unsigned and restricted to non-production evaluation.
-  The immutable tag points to `2582a44e50155c80205370c6ec90b9d19eb7a006`; a dedicated Preview 8
-  release-evidence record is still missing, so the release-readiness matrix must retain that gap.
+- Latest public version: `0.3.0-preview.17`, unsigned and restricted to non-production evaluation.
+  The immutable tag points to merge commit `897bc08553871810a533a899683b2c5727db9458`;
+  exact-source, workflow, artifact-hash, and independent public-download evidence is retained.
 - Core implemented path: interactive Entra sign-in, multiple app-owned MSAL identities,
   subscription and Key Vault discovery, secret/key/certificate metadata indexing, search, explicit
   value retrieval, verified copy, encrypted optional offline access, workspaces, and read-only Azure

@@ -2,8 +2,8 @@
 
 ## Current delivery state
 
-`0.3.0-preview.12` is the latest public, unsigned Windows Preview for non-production evaluation.
-Its immutable source tag points to `c5fe6d39291233e5c87a88ce9f6da2830bdaacbd`; protected main
+`0.3.0-preview.17` is the latest public, unsigned Windows Preview for non-production evaluation.
+Its immutable source tag points to `897bc08553871810a533a899683b2c5727db9458`; protected main
 CI and the tag release workflow passed, and the public release contains 16 artifacts.
 The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
 in the 0.2 Preview line and remain subject to the live, independent, Store, and GA validation
@@ -32,20 +32,22 @@ acquisition. Preview 14's attempted foreground recovery opened at least four bro
 one visible account and was rejected, rolled back, and never published. Synchronization and retry
 must remain silent; any future tenant authorization is a separate explicit workflow that previews
 the possible interactions before the user starts it.
-The next local candidate groups raw failed operations into named tenant, subscription, or vault
+Preview 17 groups raw failed operations into named tenant, subscription, or vault
 targets using the encrypted local inventory, lists the affected metadata operations, and retries
 the whole selected target. It also implements GitHub issue #102 with About-page links to the public
 user guide, roadmap, changelog, release verification guide, and release history. Exact-package
-validation of its interaction behavior remains open; these changes are not in public Preview 12.
+validation of its interaction behavior remains open.
 Exact local Preview 16 is installed on the current VM, all three MSI validators passed, and the
 five current non-log state files were preserved byte-for-byte through the upgrade.
-Exact local Preview 17 makes clipboard Copy use the current unlocked application session by
+Public Preview 17 makes clipboard Copy use the current unlocked application session by
 default, with an explicit opt-in setting for fresh verification on every copy. It also replaces
 cross-page workspace selections with a self-contained editor and corrects workload discovery to
 use the tenant/account represented by the selected Administration subscription. The governed
 Release gate passes 495/495 tests with zero warnings or errors; all three MSI validators passed,
 the upgrade preserved all five non-log state files byte-for-byte, and Windows reports version
-`0.3.17`. Live workflow validation remains open.
+`0.3.17`. Protected PR CI, exact-main CI, and the immutable-tag release workflow passed; the
+public release has 16 assets and all five public package downloads matched their checksums. Live
+workflow validation remains open.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).
