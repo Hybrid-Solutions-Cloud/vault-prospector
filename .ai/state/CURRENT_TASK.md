@@ -38,8 +38,10 @@ Current implementation branch: `fix/tenant-scoped-key-vault-sync` from public Pr
 
 Next:
 
-1. Package exact Preview 16 from `c4bb415`, run all three MSI validators, and install it without
-   changing the six-file encrypted local state.
+1. Exact Preview 16 from documentation head `9c1967fff20654980423875c1dab444738354fe2`
+   is installed. Its MSI SHA-256 is
+   `94AD3F424BE64D54D20A39BDDF5DDE3A8C2D2108C2B68278CA21EF24C07E60C0`; all three
+   validators passed, and the five current non-log state files remained byte-for-byte unchanged.
 2. Sync the three existing identities and confirm zero browser/consent prompts plus named grouped
    target rows in Connections; verify the About-page links from the installed binary.
 3. Preserve partial authorization errors honestly while designing any future tenant authorization

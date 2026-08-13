@@ -36,7 +36,9 @@ The next local candidate groups raw failed operations into named tenant, subscri
 targets using the encrypted local inventory, lists the affected metadata operations, and retries
 the whole selected target. It also implements GitHub issue #102 with About-page links to the public
 user guide, roadmap, changelog, release verification guide, and release history. Exact-package
-installed validation remains open; these changes are not in public Preview 12.
+validation of its interaction behavior remains open; these changes are not in public Preview 12.
+Exact local Preview 16 is installed on the current VM, all three MSI validators passed, and the
+five current non-log state files were preserved byte-for-byte through the upgrade.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).

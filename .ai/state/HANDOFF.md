@@ -19,9 +19,13 @@
 - At `c4bb415`, formatting passes; the governed Release build passes 490/490 tests, zero warnings
   or errors, and no vulnerable direct/transitive NuGet packages; browser tests pass 6/6 and the
   production browser build succeeds.
-- Next: package exact Preview 16, validate the exact MSI with all three installer scripts, install
-  while preserving local state, then live-check zero sync prompts, named/grouped connection
-  targets, and every About link. Do not publish or close AB#7341/#100/#102 before that evidence.
+- Exact Preview 16 was rebuilt with correct provenance from documentation head
+  `9c1967fff20654980423875c1dab444738354fe2`. All three MSI validators passed; SHA-256 is
+  `94AD3F424BE64D54D20A39BDDF5DDE3A8C2D2108C2B68278CA21EF24C07E60C0`. It upgraded
+  Preview 15 successfully to MSI DisplayVersion `0.3.16`, preserving all five current non-log state
+  files byte-for-byte. The installed product was launched.
+- Next: live-check zero sync prompts, named/grouped connection targets, and every About link. Do
+  not publish or close AB#7341/#100/#102 before that evidence.
 
 ---
 
