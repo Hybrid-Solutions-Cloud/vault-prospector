@@ -74,7 +74,7 @@ export default defineConfig({
         text: 'Releases',
         items: [
           { text: 'Changelog', link: '/changelog' },
-          { text: 'Latest release notes', link: '/release-notes/0.3.0-preview.3' },
+          { text: 'Latest release notes', link: '/release-notes/0.3.0-preview.18' },
           {
             text: 'All releases on GitHub',
             link: 'https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases',
@@ -126,6 +126,10 @@ export default defineConfig({
             text: 'Release notes',
             collapsed: true,
             items: [
+              { text: '0.3.0-preview.18', link: '/release-notes/0.3.0-preview.18' },
+              { text: '0.3.0-preview.17', link: '/release-notes/0.3.0-preview.17' },
+              { text: '0.3.0-preview.6', link: '/release-notes/0.3.0-preview.6' },
+              { text: '0.3.0-preview.5', link: '/release-notes/0.3.0-preview.5' },
               { text: '0.3.0-preview.3', link: '/release-notes/0.3.0-preview.3' },
               { text: '0.2.0-preview.5', link: '/release-notes/0.2.0-preview.5' },
               { text: '0.2.0-preview.4', link: '/release-notes/0.2.0-preview.4' },
