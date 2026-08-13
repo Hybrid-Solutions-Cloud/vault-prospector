@@ -2,8 +2,8 @@
 
 ## Current delivery state
 
-`0.3.0-preview.17` is the latest public, unsigned Windows Preview for non-production evaluation.
-Its immutable source tag points to `897bc08553871810a533a899683b2c5727db9458`; protected main
+`0.3.0-preview.18` is the latest public, unsigned Windows Preview for non-production evaluation.
+Its immutable source tag points to `f98174b9211b4889e635558cc7237d102c7f0730`; protected main
 CI and the tag release workflow passed, and the public release contains 16 artifacts.
 The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
 in the 0.2 Preview line and remain subject to the live, independent, Store, and GA validation
@@ -56,6 +56,9 @@ the clipboard write; and the object-details verification copy now reflects the a
 The governed build passes 496/496 tests with zero warnings/errors and no known vulnerable NuGet
 packages. Browser tests pass 6/6, all three exact MSI validators pass, and the local Preview 18 MSI
 upgraded installed Preview 17 with exit code 0 while preserving all five non-log state files.
+Protected PR CI, exact-main CI, and immutable-tag release run 31754264358 passed. The public
+release has 16 assets; fresh downloads of all five packages matched their adjacent checksums and
+passed keyless Sigstore verification against the exact tagged workflow identity.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).

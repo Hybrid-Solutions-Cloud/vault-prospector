@@ -1,12 +1,9 @@
 # Current task
 
-Publish and verify the Preview 18 audit-hardening release before resuming lower-priority work.
+Validate public Preview 18 feedback before resuming lower-priority work.
 
-Current public source: merge commit `897bc08553871810a533a899683b2c5727db9458`, immutable tag
-`v0.3.0-preview.17`.
-
-Current candidate branch: `fix/preview18-security-hardening` from public-main commit
-`e6511cf79016d0527417e8ec8ae20d16dbd99bc6`.
+Current public source: merge commit `f98174b9211b4889e635558cc7237d102c7f0730`, immutable tag
+`v0.3.0-preview.18`.
 
 - Preview 18 removes in-app package download, retention, elevation, and launch. Settings performs
   bounded discovery only and links to the public release history and verification guide.
@@ -17,10 +14,14 @@ Current candidate branch: `fix/preview18-security-hardening` from public-main co
 - Object-details copy now distinguishes the unlocked-session Copy boundary from Reveal's
   configured verification policy.
 - Release validation passes 496/496 tests, zero warnings/errors, and dependency audit; browser
-  validation passes 6/6 plus production build. Exact local Preview 18 MSI SHA-256 is
+  validation passes 6/6 plus production build. Local Preview 18 candidate MSI SHA-256 is
   `A854FF37B99B0A233D0916E39F564ACD6D8426BBC41E449201E6941C080CB2CA`; all three MSI validators
   passed. It upgraded installed Preview 17 with exit code 0, Windows reports `0.3.18`, all five
   non-log state hashes are unchanged, and the Program Files executable launches.
+- PR #105, exact-main CI run 31753731408, and immutable-tag release run 31754264358 passed. The
+  public release contains 16 immutable assets. Fresh downloads of all five packages matched their
+  adjacent checksums and passed keyless Sigstore verification. Public MSI SHA-256 is
+  `B3D87A95ED664ACD5323A74730FEE2A763B6ACDBED2E40F10346A81557E164C7`.
 
 - Three interactive identities synchronized with isolated errors on the exact installed Preview 12
   candidate. Safe logs show authentication-heavy failures; one identity found 15 vaults and

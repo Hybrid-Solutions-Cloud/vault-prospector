@@ -4,6 +4,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+## [0.3.0-preview.18] - 2026-08-13
+
 ### Fixed
 
 - Remove application-managed download and elevation of unsigned Preview installers; update checks
@@ -14,6 +16,13 @@ All notable changes to Vault Prospector are documented here. The project follows
   authorization check immediately before the clipboard write.
 - Describe Reveal and Copy verification accurately instead of claiming Windows Hello is required
   for every value action.
+
+### Release
+
+- Publish the unsigned manual-test Preview from merge commit
+  `f98174b9211b4889e635558cc7237d102c7f0730`.
+- Pass protected PR, exact-main, and immutable-tag build, test, packaging, lifecycle, readiness,
+  SBOM, checksum, Sigstore, and public-download verification gates.
 
 ## [0.3.0-preview.6] - 2026-07-27
 
