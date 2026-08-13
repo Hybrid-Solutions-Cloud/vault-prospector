@@ -1,44 +1,46 @@
 # In-app update threat model
 
-Status: implemented for Windows Preview; exact installed-package lifecycle validation remains a release gate.
+Status: update discovery is implemented for Windows Preview; the application does not download or
+launch Preview installers.
 
 ## Trust boundary
 
-Vault Prospector never updates silently. The Settings page performs three separate user-controlled
-actions: check, download and verify, and launch the verified installer. Release metadata and binaries
-come only from the public, binary-only
-`Hybrid-Solutions-Cloud/vault-prospector-releases` repository.
+Vault Prospector never updates silently. **Settings > Product updates** performs one bounded,
+read-only action: it checks public release metadata and reports whether a newer supported Preview
+exists. It provides links to the exact public release history and the installation and verification
+guide.
 
-The client accepts a release only when:
+The client accepts metadata only when:
 
-- the GitHub Releases API response is successful over HTTPS;
+- the GitHub Releases API response is successful over HTTPS without redirects;
 - the release publisher is exactly `hcs-platform-app[bot]`;
-- the release, asset, checksum, and release-page URLs remain under the exact release repository;
+- the release, asset, checksum, Sigstore-bundle, and release-page URLs remain under the exact public
+  `Hybrid-Solutions-Cloud/vault-prospector-releases` repository;
 - the release is not a draft or marked withdrawn;
 - the exact versioned MSI, checksum, and Sigstore bundle are all present;
-- the MSI's authenticated GitHub `sha256:` asset digest is valid; and
+- the MSI's GitHub `sha256:` asset digest is valid; and
 - package names, versions, sizes, and semantic ordering satisfy bounded parsing rules.
 
-The source repository remains private. The update client reads no source artifact and receives no
+The source repository remains private. The discovery client reads no source artifact and receives no
 GitHub credential.
 
-## Package verification and handoff
+## Download, verification, and installation
 
-The MSI is streamed into a new partial file in
-`%LOCALAPPDATA%\VaultProspector\updates\<version>`. The client rejects size mismatches and compares
-the streamed SHA-256 digest with both the authenticated GitHub asset digest and the separately
-published checksum. A failed or cancelled operation removes its partial file.
+Unsigned Preview installers are not downloaded, retained, verified, elevated, or launched by Vault
+Prospector. This removes the local writable-file and privileged installer handoff from the
+application's trust boundary. Users download only from the linked public binary release, validate
+the adjacent SHA-256 checksum and keyless Sigstore provenance using the public guide, and explicitly
+start the MSI through Windows.
 
-Before launch, Vault Prospector hashes the retained MSI again and rejects a missing, renamed, moved,
-or changed package. Only then does it start `msiexec.exe /i <exact-path>` with Windows elevation.
-The application locks and exits after Windows Installer starts. Installation decisions and any
-elevation prompt remain under user and Windows control.
+A managed in-app installation flow must not be restored until the installed package has a trusted
+Windows signature or store identity and the design has a race-free privileged handoff with
+independent security evidence.
 
 ## Failure behavior
 
-Offline, malformed, untrusted, withdrawn, oversized, redirected-outside-repository, incomplete, or
-tampered input fails closed. No installer is launched, unverified release notes are not displayed,
-and the rest of Vault Prospector remains usable.
+Offline, malformed, untrusted, withdrawn, oversized, or redirected release metadata fails closed.
+No installer is downloaded or launched, untrusted release notes are not displayed, and the rest of
+Vault Prospector remains usable.
 
 ## Local-data lifecycle
 

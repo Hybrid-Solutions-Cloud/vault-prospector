@@ -563,7 +563,7 @@
                   <Button Content="Open offline" Command="{Binding OpenOfflineCommand}" Margin="0,0,8,8" />
                   <Button Content="Purge offline copy" Command="{Binding PurgeSelectedCachedValueCommand}" Margin="0,0,8,8" />
                 </StackPanel>
-                <TextBlock Text="Values are retrieved only after explicit action and Windows Hello verification." FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" TextWrapping="Wrap" />
+                <TextBlock Text="Reveal and Copy require an unlocked Vault Prospector session. Reveal performs its configured verification; Copy can optionally require fresh verification before every use." FontSize="{StaticResource VaultFontSize11}" Opacity="0.7" TextWrapping="Wrap" />
               </StackPanel>
               </ScrollViewer>
             </Border>
@@ -1786,7 +1786,7 @@
             <TextBlock Text="Product updates"
                        FontSize="{StaticResource VaultFontSize22}"
                        FontWeight="SemiBold" />
-            <TextBlock Text="Updates are user controlled. Vault Prospector reads trusted release metadata, then downloads and verifies the exact Windows installer before Windows Installer can be started."
+            <TextBlock Text="Updates are user controlled. Vault Prospector checks bounded metadata from the public binary-release repository, but it never downloads or elevates a preview installer."
                        TextWrapping="Wrap"
                        Opacity="0.8" />
             <Grid ColumnDefinitions="Auto,*"
@@ -1829,26 +1829,21 @@
                 </ScrollViewer>
               </StackPanel>
             </Border>
-            <TextBlock Text="{Binding UpdateVerificationStatus}"
-                       TextWrapping="Wrap"
-                       AutomationProperties.Name="Update package verification status"
-                       AutomationProperties.LiveSetting="Polite" />
             <WrapPanel>
               <Button Content="Check for updates"
                       Command="{Binding CheckForUpdatesCommand}"
                       Margin="0,0,8,8"
                       AutomationProperties.Name="Check for trusted Vault Prospector updates" />
-              <Button Content="Download and verify"
-                      Command="{Binding DownloadUpdateCommand}"
+              <Button Content="Release history ↗"
+                      Command="{Binding OpenReleaseHistoryCommand}"
                       Margin="0,0,8,8"
-                      AutomationProperties.Name="Download and verify the selected Vault Prospector update" />
-              <Button Classes="primary"
-                      Content="Launch verified installer"
-                      Command="{Binding LaunchVerifiedUpdateCommand}"
+                      AutomationProperties.Name="Open public Vault Prospector release history in the default browser" />
+              <Button Content="Install &amp; verify releases ↗"
+                      Command="{Binding OpenReleaseGuideCommand}"
                       Margin="0,0,8,8"
-                      AutomationProperties.Name="Launch the verified Vault Prospector Windows installer" />
+                      AutomationProperties.Name="Open public Vault Prospector release verification guide in the default browser" />
             </WrapPanel>
-            <TextBlock Text="The same Windows account retains encrypted local settings and metadata during an in-place upgrade or reinstall. Moving data to another account or device is unsupported. Windows may request administrator approval; the application locks and exits only after a verified installer starts."
+            <TextBlock Text="Download only from the linked public release, verify its checksum and Sigstore provenance using the guide, and then let Windows handle installation. The same Windows account retains encrypted local settings and metadata during an in-place upgrade or reinstall. Moving data to another account or device is unsupported."
                        TextWrapping="Wrap"
                        FontSize="{StaticResource VaultFontSize11}"
                        Opacity="0.72" />

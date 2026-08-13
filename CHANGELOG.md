@@ -4,6 +4,17 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Remove application-managed download and elevation of unsigned Preview installers; update checks
+  are discovery-only and link to the public release and verification guide.
+- Include a vault in an identity workspace whenever that workspace identity has usable access,
+  even when another connected identity ranks first for display and retrieval.
+- Enforce the unlocked application-session boundary inside clipboard retrieval, including a second
+  authorization check immediately before the clipboard write.
+- Describe Reveal and Copy verification accurately instead of claiming Windows Hello is required
+  for every value action.
+
 ## [0.3.0-preview.6] - 2026-07-27
 
 ### Fixed

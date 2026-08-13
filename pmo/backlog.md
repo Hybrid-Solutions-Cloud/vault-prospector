@@ -48,6 +48,14 @@ the upgrade preserved all five non-log state files byte-for-byte, and Windows re
 `0.3.17`. Protected PR CI, exact-main CI, and the immutable-tag release workflow passed; the
 public release has 16 assets and all five public package downloads matched their checksums. Live
 workflow validation remains open.
+The Preview 18 audit candidate closes four code-review findings: unsigned in-app MSI download and
+elevation have been removed in favor of discovery-only release checks; identity workspaces match
+all usable identity access rather than only the preferred display row; no-fresh-verification Copy
+requires a live application-session authorization at the service boundary and rechecks it before
+the clipboard write; and the object-details verification copy now reflects the actual policy.
+The governed build passes 496/496 tests with zero warnings/errors and no known vulnerable NuGet
+packages. Browser tests pass 6/6, all three exact MSI validators pass, and the local Preview 18 MSI
+upgraded installed Preview 17 with exit code 0 while preserving all five non-log state files.
 The implementation-first [execution plan](plan.md) governs sequencing. Release evidence remains in
 the [release-readiness matrix](../docs/product/release-readiness.md), and the capability-level view
 remains in the [roadmap](../docs/product/roadmap.md).

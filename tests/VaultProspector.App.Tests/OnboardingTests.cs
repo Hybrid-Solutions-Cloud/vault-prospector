@@ -994,10 +994,19 @@ public sealed class OnboardingTests : IDisposable
         viewModel.SelectedResult = CreateResult(VaultObjectType.Secret);
 
         Assert.True(viewModel.RevealCommand.CanExecute(null));
-        Assert.True(viewModel.CopyCommand.CanExecute(null));
+        Assert.False(viewModel.CopyCommand.CanExecute(null));
         Assert.True(viewModel.OpenOfflineCommand.CanExecute(null));
         Assert.True(viewModel.PurgeSelectedCachedValueCommand.CanExecute(null));
         Assert.False(viewModel.CacheSelectedCommand.CanExecute(null));
+
+        viewModel.IsUnlocked = true;
+        viewModel.IsApplicationReady = true;
+
+        Assert.True(viewModel.CopyCommand.CanExecute(null));
+
+        viewModel.LockForSystemBoundary();
+
+        Assert.False(viewModel.CopyCommand.CanExecute(null));
 
         viewModel.OfflineCacheEnabled = true;
 

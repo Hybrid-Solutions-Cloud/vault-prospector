@@ -1,5 +1,27 @@
 # Session handoff
 
+## Preview 18 audit hardening candidate — 2026-08-13
+
+- Branch `fix/preview18-security-hardening` starts at public-main commit
+  `e6511cf79016d0527417e8ec8ae20d16dbd99bc6`.
+- Four audit findings are fixed: the unsigned Preview updater is discovery-only with no local MSI
+  download/elevation; identity workspaces consider all usable access rows; clipboard Copy's
+  no-fresh-verification mode requires and rechecks a live application session in the service
+  layer; and object-details verification text matches the actual Reveal/Copy policy.
+- A focused audit added the post-retrieval session check so a concurrent lock cannot write the
+  already retrieved value to the clipboard. The value is disposed on rejection.
+- `pwsh ./scripts/Build.ps1 -Configuration Release` passed 496/496 tests, zero warnings/errors,
+  and no known vulnerable NuGet packages. Browser tests passed 6/6 and the production build passed.
+- Exact local candidate `0.3.0-preview.18` MSI SHA-256 is
+  `A854FF37B99B0A233D0916E39F564ACD6D8426BBC41E449201E6941C080CB2CA`; rollback-safe upgrade
+  sequencing, Start-menu icon, and browser-host installer validators all passed.
+- The exact candidate upgraded installed Preview 17 with MSI exit code 0. Windows reports
+  DisplayVersion `0.3.18`; all five non-log local-state files retained their exact pre-upgrade
+  hashes; and the installed executable launched from Program Files.
+- Remaining work: commit, push with the HCS GitHub App, merge only after protected CI, tag
+  `v0.3.0-preview.18`, verify the immutable public release and downloads, then publish exact release
+  evidence and update current-version documentation.
+
 ## Preview 17 publication — 2026-08-13
 
 - The product owner accepted the installed candidate as good enough for the next Preview and
