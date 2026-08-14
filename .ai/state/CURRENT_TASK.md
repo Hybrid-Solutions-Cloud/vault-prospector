@@ -22,6 +22,10 @@ Current public source: merge commit `f98174b9211b4889e635558cc7237d102c7f0730`, 
   public release contains 16 immutable assets. Fresh downloads of all five packages matched their
   adjacent checksums and passed keyless Sigstore verification. Public MSI SHA-256 is
   `B3D87A95ED664ACD5323A74730FEE2A763B6ACDBED2E40F10346A81557E164C7`.
+- The exact public MSI was installed after removing the same-version local candidate. Both MSI
+  operations returned exit code 0; the installed executable identifies merge `f98174b9`,
+  byte-matches the verified public ZIP executable, all five non-log state hashes remained
+  unchanged, and the app launched from Program Files.
 
 - Three interactive identities synchronized with isolated errors on the exact installed Preview 12
   candidate. Safe logs show authentication-heavy failures; one identity found 15 vaults and
