@@ -26,8 +26,12 @@
   adjacent SHA-256 files and passed Cosign verification against the exact tagged workflow identity
   and GitHub OIDC issuer. Public MSI SHA-256 is
   `B3D87A95ED664ACD5323A74730FEE2A763B6ACDBED2E40F10346A81557E164C7`.
-- Exact-public-package installed validation and the remaining live Azure, independent security,
-  accessibility/usability, and trusted-signing gates remain open.
+- The same-version local candidate was then removed and the exact public MSI installed with exit
+  code 0. Windows reports `0.3.18`; the installed executable identifies merge `f98174b9` and
+  byte-matches the verified public ZIP executable; all five non-log state hashes were preserved;
+  and the app launched from Program Files.
+- Remaining live Azure, independent security, accessibility/usability, and trusted-signing gates
+  remain open.
 
 ## Preview 17 publication — 2026-08-13
 
