@@ -1,20 +1,25 @@
 # Current task
 
-Deliver the product-owner-requested in-app verified installer workflow as the next public Preview.
+Validate the published product-owner-requested in-app verified installer workflow and collect
+installed/live evidence when a later Preview is available.
 
-Current public source: merge commit `7b191d541cb7987798b8c41de1a85789d947dc46`, immutable tag
-`v0.3.0-preview.19`.
+Current public source: merge commit `cb09f8ee2b3008cfbc93407771a7d70977e623d0`, immutable tag
+`v0.3.0-preview.20`.
 
-- Preview 19 corrects the 250-result presentation ceiling and adds selected/all-identity sync.
-- The current branch `fix/in-app-verified-update` changes **Install and verify update** from a
-  documentation link into one explicit check, download, digest/checksum verification, launch-time
-  rehash, Windows elevation, lock, and exit workflow.
+- Preview 20 changes **Install and verify update** from a documentation link into one explicit
+  check, download, digest/checksum verification, launch-time rehash, Windows elevation, lock, and
+  exit workflow. Preview 19 cannot receive that behavior retroactively, so installing Preview 20
+  requires one final manual public download; Preview 20 can install later updates in-app.
 - Unsigned Preview risk is explicitly accepted by the product owner for non-production evaluation;
   Windows still displays Unknown Publisher. Trusted signing/Store identity and independent review
   remain GA gates.
-- Focused application tests pass 107/107 and app tests pass 126/126. The governed build before the
-  final redirect-boundary regression passed 503/503 with zero warnings/errors and no known
-  vulnerable packages; repeat the complete gate before publication.
+- PR #113 passed protected CI and merged at the source above. Exact-main CI run 34056831827 passed
+  all 504 tests and release run 34057241910 published 16 assets. Fresh public downloads of all five
+  packages matched their GitHub digests and adjacent checksums and passed Cosign verification.
+- Public MSI SHA-256 is
+  `7D3212D046FDF89E06A441A97742D0BE9F8DFB77F1CC8FF64881B26D7B9429C1`.
+- The exact public Preview 20 MSI has not been installed, and no Preview 20-to-later release exists
+  for a live in-app update test. Neither result is claimed.
 
 Historical context follows.
 

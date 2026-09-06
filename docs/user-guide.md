@@ -2,7 +2,11 @@
 
 ## Install on Windows
 
-Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.19), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
+Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.20), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
+
+Preview 19 has a discovery-only update button, so the Preview 19-to-20 upgrade still requires this
+one manual installation. Preview 20's **Install and verify update** action completes future available
+updates inside the app.
 
 After installation, **Settings > Product updates** can check bounded metadata from the public
 binary-release repository. Select **Install and verify update** to check for the newest trusted

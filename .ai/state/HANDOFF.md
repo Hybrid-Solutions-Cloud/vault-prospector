@@ -2,6 +2,22 @@
 
 ## In-app verified installer correction — 2026-09-06
 
+- PR #113 passed protected CI run 34056669059 and merged as
+  `cb09f8ee2b3008cfbc93407771a7d70977e623d0`. Exact-main CI run 34056831827 passed all
+  504 tests and packaging/release gates.
+- Immutable tag `v0.3.0-preview.20` triggered release run 34057241910, which passed and published
+  16 assets to the [public Preview 20 release](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.20).
+- Fresh public downloads of the MSI, MSIX, portable ZIP, WinGet bundle, and Chocolatey NUPKG
+  matched GitHub asset digests and adjacent checksums. Cosign verified all five Sigstore bundles
+  against the tagged release workflow identity and GitHub Actions OIDC issuer. Public MSI SHA-256:
+  `7D3212D046FDF89E06A441A97742D0BE9F8DFB77F1CC8FF64881B26D7B9429C1`.
+- Preview 19 cannot acquire new updater code retroactively, so moving from Preview 19 to Preview 20
+  requires one final manual public download. Once Preview 20 is installed, **Install and verify
+  update** performs the later update workflow in-app.
+- The exact public Preview 20 MSI and a real Preview 20-to-later update have not been exercised;
+  installed/live success is not claimed. Branch `docs/preview20-release-evidence` publishes this
+  limitation and the completed release evidence to the website.
+
 - The product owner clarified that **Install and verify release** must install the available update
   inside the application instead of opening a website for manual download and installation.
 - Branch `fix/in-app-verified-update` restores the bounded updater behind one explicit action:
@@ -17,8 +33,8 @@
 - Regression coverage proves one-click check/download/verify/launch/exit, tampered-download and
   changed-retained-file rejection, redirect rejection, the three-method service contract, and the
   accessible Atlas action. Focused application tests pass 107/107 and app tests pass 126/126.
-- A complete governed build before the final redirect-boundary regression passed 503/503 with zero
-  warnings/errors and no known vulnerable NuGet packages. Repeat the full gate before packaging.
+- The final governed build passed 504/504 with zero warnings/errors and no known vulnerable NuGet
+  packages; exact-main and immutable-tag gates repeated the build and packaging checks.
 
 ## Preview 19 public release — 2026-09-06
 

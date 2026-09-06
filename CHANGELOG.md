@@ -4,12 +4,21 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+## [0.3.0-preview.20] - 2026-09-06
+
 ### Added
 
 - Make **Install and verify update** complete the in-app update workflow: discover the newest
   trusted release, download the exact MSI, verify the GitHub digest and adjacent checksum, rehash
   before launch, request Windows administrator approval, and exit only after Windows Installer
   starts.
+
+### Release
+
+- Publish the unsigned manual-test Preview from merge commit
+  `cb09f8ee2b3008cfbc93407771a7d70977e623d0`.
+- Pass protected PR, exact-main, and immutable-tag build, test, packaging, lifecycle, readiness,
+  SBOM, checksum, Sigstore, and public-download verification gates.
 
 ## [0.3.0-preview.19] - 2026-09-06
 
@@ -294,6 +303,7 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.3.0-preview.20]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.20
 [0.3.0-preview.19]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.19
 [0.3.0-preview.18]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.18
 [0.3.0-preview.6]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.6
