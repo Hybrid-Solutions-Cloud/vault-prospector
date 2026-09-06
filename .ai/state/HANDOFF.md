@@ -1,5 +1,50 @@
 # Session handoff
 
+## Desktop search 250-result ceiling correction — 2026-09-06
+
+- Product-owner testing of exact public Preview 18 reported that repeated scans always appeared to
+  find exactly 250 objects.
+- Root cause is local presentation/query paging, not Azure SDK discovery pagination: the desktop
+  issued the default `SearchRequest` with a 250-row limit and then presented the returned row count
+  as the complete indexed-object count.
+- Branch `fix/desktop-search-result-limit` adds deterministic offset paging, reports the complete
+  filtered match count from the encrypted query, and exposes a visible `Load more results` action
+  while retaining a responsive 250-row initial page.
+- Enterprise allowed-tenant policy is pushed into the encrypted query so the reported total and
+  subsequent pages cannot include or count policy-denied tenants.
+- A 275-item encrypted repository regression proves 250 first-page rows, 25 second-page rows, a
+  complete total of 275, and no overlap. Application policy and Atlas structural/baseline tests
+  cover the other changed boundaries.
+- `pwsh ./scripts/Build.ps1 -Configuration Release` passes all 497 tests, zero warnings/errors,
+  and the NuGet vulnerability audit. This is source-level evidence only; the correction has not
+  been packaged, installed, or validated against the product owner's live Azure inventory.
+- HCS profile validation returned the expected reasoning-only app checks. Drift validation still
+  returns `Path not found` for this registered checkout, so no drift pass is claimed.
+
+## Foreground selected/all identity synchronization — 2026-09-06
+
+- Product-owner feedback requested an explicit choice between synchronizing the selected identity
+  and synchronizing all connected identities.
+- The existing `Sync selected` path remains unchanged. Connections now also exposes `Sync all
+  identities` in both the identity action row and the discovery card.
+- Foreground all-identity sync processes every enabled, ready, policy-allowed connection, isolates
+  a failure to its identity, aggregates complete/partial/failed, vault, object, and error counts,
+  and reports identities skipped because they are disabled, require sign-in, or are policy-blocked.
+- Multi-identity error rows retain their owning identity so retry targets the correct connection
+  even when it is not the currently selected identity. No secret values are retrieved by either
+  metadata synchronization choice.
+- The existing background-sync implementation now shares the same multi-identity execution path.
+  A focused foreground regression proves that two ready identities run and one disabled identity is
+  skipped without any value retrieval.
+- `pwsh ./scripts/Build.ps1 -Configuration Release` passes all 498 tests, zero warnings/errors,
+  and the NuGet vulnerability audit.
+- Local candidate `0.3.0-preview.19` was packaged from implementation commit `3042006`. MSI:
+  `artifacts-preview19/VaultProspector-0.3.0-preview.19-win-x64.msi`; SHA-256:
+  `56D9F6EEC216E32D6F1CE510A604121F5B3F82324FE9D8BCE453093221E083B0`. Browser tests pass 6/6,
+  its production build passes, and the rollback-safe upgrade, Start-menu icon, and browser-host
+  installer validators all pass. The candidate has not been installed; installed/live behavior
+  remains unverified.
+
 ## Preview 18 audit hardening publication — 2026-08-13
 
 - Branch `fix/preview18-security-hardening` starts at public-main commit

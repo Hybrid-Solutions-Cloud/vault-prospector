@@ -515,7 +515,20 @@ public sealed class EncryptedSqliteMetadataRepository(
     {
         await using var connection = await OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
-        command.CommandText = SearchSql;
+        var allowedTenantIds = request.AllowedTenantIds?
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var tenantPolicyClause = allowedTenantIds switch
+        {
+            null => string.Empty,
+            { Length: 0 } => "AND 0=1",
+            _ => $"AND v.tenant_id IN ({string.Join(',', allowedTenantIds.Select((_, index) => $"$allowed_tenant_{index}"))})",
+        };
+        command.CommandText = SearchSql.Replace(
+            "/* tenant-policy */",
+            tenantPolicyClause,
+            StringComparison.Ordinal);
         command.Parameters.AddWithValue("$now", Format(now));
         command.Parameters.AddWithValue("$text", EscapeLike(request.Text.Trim()));
         AddNullable(command, "$identity", request.IdentityId?.ToString("D"));
@@ -531,6 +544,12 @@ public sealed class EncryptedSqliteMetadataRepository(
         command.Parameters.AddWithValue("$stale", request.StaleOnly ? 1 : 0);
         command.Parameters.AddWithValue("$recent_first", request.RecentlyAccessedFirst ? 1 : 0);
         command.Parameters.AddWithValue("$limit", request.Limit);
+        command.Parameters.AddWithValue("$offset", request.Offset);
+        if (allowedTenantIds is not null)
+        {
+            for (var index = 0; index < allowedTenantIds.Length; index++)
+                command.Parameters.AddWithValue($"$allowed_tenant_{index}", allowedTenantIds[index]);
+        }
 
         var results = new List<SearchResult>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -538,7 +557,7 @@ public sealed class EncryptedSqliteMetadataRepository(
         {
             var item = ReadItem(reader, 0);
             var vault = ReadVault(reader, 14, item.VaultId);
-            results.Add(new SearchResult(item, vault, reader.GetString(23), reader.GetString(24), reader.GetBoolean(25), ReadDate(reader, 26), reader.GetBoolean(27), reader.GetString(28)));
+            results.Add(new SearchResult(item, vault, reader.GetString(23), reader.GetString(24), reader.GetBoolean(25), ReadDate(reader, 26), reader.GetBoolean(27), reader.GetString(28), reader.GetInt32(29)));
         }
         return results;
     }
@@ -1860,13 +1879,14 @@ public sealed class EncryptedSqliteMetadataRepository(
         SELECT i.id,i.vault_id,i.name,i.object_type,i.enabled,i.tags,i.content_type,i.created_at,i.updated_at,i.expires_at,i.provider_version,i.fingerprint,i.last_indexed,i.is_deleted,
                v.resource_id,v.name,v.tenant_id,v.subscription_id,v.resource_group,v.location,v.tags,v.vault_uri,v.last_indexed,
                ra.display_name,COALESCE(t.display_name,v.tenant_id),EXISTS(SELECT 1 FROM favorites f WHERE f.item_id=i.id),a.last_accessed,
-               CASE WHEN julianday($now)-julianday(i.last_indexed)>1 THEN 1 ELSE 0 END,ra.status
+               CASE WHEN julianday($now)-julianday(i.last_indexed)>1 THEN 1 ELSE 0 END,ra.status,COUNT(*) OVER()
         FROM items i
         JOIN vaults v ON v.id=i.vault_id
         JOIN ranked_access ra ON ra.vault_id=v.id AND ra.access_rank=1
         LEFT JOIN tenants t ON t.identity_id=ra.identity_id AND t.tenant_id=v.tenant_id
         LEFT JOIN access_history a ON a.item_id=i.id
         WHERE i.is_deleted=0 AND ($text='' OR i.name LIKE '%'||$text||'%' ESCAPE '\' OR i.tags LIKE '%'||$text||'%' ESCAPE '\')
+          /* tenant-policy */
           AND ($tenant IS NULL OR v.tenant_id LIKE '%'||$tenant||'%' ESCAPE '\') AND ($subscription IS NULL OR v.subscription_id LIKE '%'||$subscription||'%' ESCAPE '\')
           AND ($vault IS NULL OR v.id=$vault) AND ($vault_name IS NULL OR v.name LIKE '%'||$vault_name||'%' ESCAPE '\') AND ($type IS NULL OR i.object_type=$type) AND ($enabled IS NULL OR i.enabled=$enabled)
           AND ($favorites=0 OR EXISTS(SELECT 1 FROM favorites f WHERE f.item_id=i.id)) AND ($expired=0 OR (i.expires_at IS NOT NULL AND i.expires_at<$now))
@@ -1888,7 +1908,7 @@ public sealed class EncryptedSqliteMetadataRepository(
                     OR (wl.resource_type=1 AND wl.resource_id=v.tenant_id)
                     OR (wl.resource_type=2 AND wl.resource_id=v.subscription_id)
                     OR (wl.resource_type=3 AND wl.resource_id=v.id))))
-        ORDER BY CASE WHEN $recent_first=1 AND a.last_accessed IS NULL THEN 1 ELSE 0 END,CASE WHEN $recent_first=1 THEN a.last_accessed END DESC,i.name COLLATE NOCASE,v.name COLLATE NOCASE,i.provider_version DESC LIMIT $limit
+        ORDER BY CASE WHEN $recent_first=1 AND a.last_accessed IS NULL THEN 1 ELSE 0 END,CASE WHEN $recent_first=1 THEN a.last_accessed END DESC,i.name COLLATE NOCASE,v.name COLLATE NOCASE,i.provider_version DESC,i.id LIMIT $limit OFFSET $offset
         """;
     private const string ResolveSql = """
         SELECT i.id,i.vault_id,i.name,i.object_type,i.enabled,i.tags,i.content_type,i.created_at,i.updated_at,i.expires_at,i.provider_version,i.fingerprint,i.last_indexed,i.is_deleted,

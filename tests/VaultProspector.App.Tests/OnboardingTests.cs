@@ -1262,6 +1262,56 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public async Task ForegroundSyncAllProcessesEveryReadyIdentityAndSkipsDisabledIdentity()
+    {
+        var firstIdentity = CreateIdentity();
+        var secondIdentity = CreateIdentity() with
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Second account",
+        };
+        var disabledIdentity = CreateIdentity() with
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Disabled account",
+            IsEnabled = false,
+        };
+        var repository = new EmptyRepository();
+        repository.Identities.AddRange(
+            [firstIdentity, secondIdentity, disabledIdentity]);
+        var provider = new BackgroundProvider();
+        var viewModel = new MainViewModel(
+            repository,
+            null!,
+            new SynchronizationService(provider, repository, new TestClock(), new TestDiagnostics()),
+            new SearchService(repository, new TestClock()),
+            null!,
+            null!,
+            null!,
+            null!,
+            new UnavailableVerificationService(),
+            null!,
+            null!)
+        {
+            SelectedIdentity = firstIdentity,
+        };
+        viewModel.Identities.Add(firstIdentity);
+        viewModel.Identities.Add(secondIdentity);
+        viewModel.Identities.Add(disabledIdentity);
+
+        Assert.True(viewModel.SynchronizeAllIdentitiesCommand.CanExecute(null));
+        await viewModel.SynchronizeAllIdentitiesCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, provider.DiscoveryCalls);
+        Assert.Equal(
+            [firstIdentity.Id, secondIdentity.Id],
+            provider.DiscoveredIdentityIds);
+        Assert.Equal(0, provider.RetrievalCalls);
+        Assert.Contains("2 ready identities", viewModel.StatusText, StringComparison.Ordinal);
+        Assert.Contains("1 skipped", viewModel.StatusText, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SelectingDiscoveredSubscriptionUsesAzureIdAndAssociatedAccount()
     {
         var identity = CreateIdentity();
@@ -2207,6 +2257,7 @@ public sealed class OnboardingTests : IDisposable
         };
         var row = new SyncErrorRow(
             details,
+            Guid.NewGuid(),
             "Connected account",
             [new TenantSelectionRow(new TenantAccess(
                 Guid.NewGuid(),

@@ -407,7 +407,7 @@
                          Foreground="{DynamicResource VaultColorGood}"
                          FontSize="{StaticResource VaultFontSize16}"
                          FontWeight="Bold" />
-              <TextBlock Text="{Binding Results.Count, StringFormat={}{0} objects available}"
+              <TextBlock Text="{Binding SearchResultCount, StringFormat={}{0} objects available}"
                          Foreground="{DynamicResource VaultColorMuted}"
                          FontSize="{StaticResource VaultFontSize11}"
                          HorizontalAlignment="Right" />
@@ -495,10 +495,10 @@
           <Grid x:Name="SearchResultsGrid" Grid.Row="1" ColumnDefinitions="2.2*,1*" RowDefinitions="*" MinHeight="360" ColumnSpacing="14" RowSpacing="14">
             <Border Classes="atlas-panel" Padding="0">
               <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-              <Grid RowDefinitions="Auto,Auto,*" MinWidth="650">
+              <Grid RowDefinitions="Auto,Auto,*,Auto" MinWidth="650">
                 <Grid Margin="14,12" ColumnDefinitions="*,Auto">
                   <StackPanel>
-                    <TextBlock Text="{Binding Results.Count, StringFormat={}{0} results}"
+                    <TextBlock Text="{Binding SearchResultCount, StringFormat={}{0} results}"
                                FontSize="{StaticResource VaultFontSize16}"
                                FontWeight="Bold" />
                     <TextBlock Text="Workspace: all accessible sources"
@@ -537,6 +537,13 @@
                     </DataTemplate>
                   </ListBox.ItemTemplate>
                 </ListBox>
+                <Button Grid.Row="3"
+                        Content="Load more results"
+                        Command="{Binding LoadMoreSearchResultsCommand}"
+                        IsVisible="{Binding HasMoreSearchResults}"
+                        HorizontalAlignment="Center"
+                        Margin="12"
+                        AutomationProperties.Name="Load more vault search results" />
               </Grid>
               </ScrollViewer>
             </Border>
@@ -685,6 +692,7 @@
               </ListBox>
               <WrapPanel>
                 <Button Classes="primary" Content="Sync selected" Command="{Binding SynchronizeCommand}" Margin="0,0,8,8" />
+                <Button Content="Sync all identities" Command="{Binding SynchronizeAllIdentitiesCommand}" Margin="0,0,8,8" />
                 <Button Content="Cancel" Command="{Binding CancelOperationCommand}" IsEnabled="{Binding IsBusy}" Margin="0,0,8,8" />
                 <Button Content="Reauthenticate" Command="{Binding ReauthenticateIdentityCommand}" Margin="0,0,8,8" />
                 <Button Content="Disable" Command="{Binding DisableIdentityCommand}" IsVisible="{Binding IsSelectedIdentityEnabled}" Margin="0,0,8,8" />
@@ -884,6 +892,9 @@
                       Command="{Binding SynchronizeCommand}"
                       HorizontalAlignment="Stretch"
                       Margin="0,8,0,0" />
+              <Button Content="Synchronize all identities"
+                      Command="{Binding SynchronizeAllIdentitiesCommand}"
+                      HorizontalAlignment="Stretch" />
               <Button Content="Continue to Find secrets"
                       Command="{Binding ContinueToSearchCommand}"
                       HorizontalAlignment="Stretch" />

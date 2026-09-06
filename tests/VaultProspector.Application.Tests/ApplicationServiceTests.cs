@@ -1556,6 +1556,9 @@ public sealed class ApplicationServiceTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal(allowedVault.Id, Assert.Single(results).Vault.Id);
+        Assert.Equal(
+            ["11111111-1111-1111-1111-111111111111"],
+            repository.LastSearchRequest?.AllowedTenantIds);
     }
 
     private static ConnectedIdentity Identity() => new(Guid.NewGuid(), "11111111-1111-1111-1111-111111111111", "account", "user@example.invalid", "Test", "tenant", AuthenticationState.Ready, DateTimeOffset.UtcNow);
@@ -1629,6 +1632,7 @@ public sealed class ApplicationServiceTests
         public IReadOnlyList<VaultAccessSummary> VaultAccessSummaries { get; init; } = [];
         public IReadOnlyList<Guid> VaultIds { get; init; } = [];
         public IReadOnlyList<SearchResult> SearchResults { get; init; } = [];
+        public SearchRequest? LastSearchRequest { get; private set; }
         public Guid? RequestedSubscriptionIdentityId { get; private set; }
         public Task InitializeAsync(CancellationToken c) => Task.CompletedTask;
         public Task<IReadOnlyList<ConnectedIdentity>> GetIdentitiesAsync(CancellationToken c) => Task.FromResult<IReadOnlyList<ConnectedIdentity>>([identity]);
@@ -1654,7 +1658,11 @@ public sealed class ApplicationServiceTests
         public Task SetVaultSelectedAsync(Guid vaultAccessId, bool isSelected, CancellationToken c) => Task.CompletedTask;
         public Task ApplyDiscoveryAsync(Guid id, DiscoverySnapshot snapshot, SyncRun run, CancellationToken c) { ApplyFullCalls++; AppliedSnapshot = snapshot; return Task.CompletedTask; }
         public Task ApplyDiscoveryPatchAsync(Guid id, DiscoverySnapshot snapshot, SyncRun run, CancellationToken c) { ApplyPatchCalls++; AppliedSnapshot = snapshot; return Task.CompletedTask; }
-        public Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest r, DateTimeOffset n, CancellationToken c) => Task.FromResult(SearchResults);
+        public Task<IReadOnlyList<SearchResult>> SearchAsync(SearchRequest r, DateTimeOffset n, CancellationToken c)
+        {
+            LastSearchRequest = r;
+            return Task.FromResult(SearchResults);
+        }
         public Task<(VaultItem Item, VaultResource Vault, ConnectedIdentity Identity)?> ResolveItemAsync(Guid id, CancellationToken c) => Task.FromResult(Resolved);
         public Task RecordAccessAsync(Guid id, DateTimeOffset at, CancellationToken c)
         {
