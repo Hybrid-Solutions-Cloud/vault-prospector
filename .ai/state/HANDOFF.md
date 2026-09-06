@@ -37,8 +37,13 @@
   A focused foreground regression proves that two ready identities run and one disabled identity is
   skipped without any value retrieval.
 - `pwsh ./scripts/Build.ps1 -Configuration Release` passes all 498 tests, zero warnings/errors,
-  and the NuGet vulnerability audit. This remains source evidence; no new MSI has been packaged or
-  installed.
+  and the NuGet vulnerability audit.
+- Local candidate `0.3.0-preview.19` was packaged from implementation commit `3042006`. MSI:
+  `artifacts-preview19/VaultProspector-0.3.0-preview.19-win-x64.msi`; SHA-256:
+  `56D9F6EEC216E32D6F1CE510A604121F5B3F82324FE9D8BCE453093221E083B0`. Browser tests pass 6/6,
+  its production build passes, and the rollback-safe upgrade, Start-menu icon, and browser-host
+  installer validators all pass. The candidate has not been installed; installed/live behavior
+  remains unverified.
 
 ## Preview 18 audit hardening publication — 2026-08-13
 
