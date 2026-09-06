@@ -1,5 +1,24 @@
 # Session handoff
 
+## Preview 19 public release — 2026-09-06
+
+- PR #111 passed protected CI run 34050106080 and merged as
+  `7b191d541cb7987798b8c41de1a85789d947dc46`. Exact-main CI run 34050263379 passed
+  Windows candidate, installer lifecycle, portable, readiness, and full-history secret-scan jobs.
+- Immutable tag `v0.3.0-preview.19` triggered release run 34050735118, which passed and published
+  16 assets through the HCS GitHub App to the public binary repository:
+  <https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.19>.
+- Fresh public downloads of all five packages matched their GitHub digests and adjacent SHA-256
+  files. Cosign 3.1.3 verified all five bundles against the exact tagged workflow identity and
+  GitHub Actions OIDC issuer. Public MSI SHA-256 is
+  `E461C4B11E0FCEFAE7321F187392CD0EC4F56F29A4075C4C78B34B9F301D5E27`.
+- The in-app updater dynamically discovers the public Preview 19 release. Branch
+  `docs/preview19-release-evidence` updates the website's previously hard-coded release links and
+  records publication evidence.
+- The exact public Preview 19 MSI has not been installed or exercised against the product owner's
+  live Azure inventory. Upgrade behavior, totals above 250, and selected/all identity sync remain
+  pending manual-test objectives; no installed/live pass is claimed.
+
 ## Desktop search 250-result ceiling correction — 2026-09-06
 
 - Product-owner testing of exact public Preview 18 reported that repeated scans always appeared to
