@@ -36,8 +36,8 @@ Status terms used in PMO reporting:
 
 ## Current product state
 
-- Latest public version: `0.3.0-preview.19`, unsigned and restricted to non-production evaluation.
-  The immutable tag points to merge commit `7b191d541cb7987798b8c41de1a85789d947dc46`;
+- Latest public version: `0.3.0-preview.20`, unsigned and restricted to non-production evaluation.
+  The immutable tag points to merge commit `cb09f8ee2b3008cfbc93407771a7d70977e623d0`;
   exact-source, workflow, artifact-hash, and independent public-download evidence is retained.
 - Core implemented path: interactive Entra sign-in, multiple app-owned MSAL identities,
   subscription and Key Vault discovery, secret/key/certificate metadata indexing, search, explicit

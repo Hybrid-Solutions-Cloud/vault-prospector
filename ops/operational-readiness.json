@@ -43,9 +43,9 @@
   },
   "supportedRelease": {
     "channel": "preview",
-    "currentVersion": "0.3.0-preview.19",
+    "currentVersion": "0.3.0-preview.20",
     "supportedVersions": [
-      "0.3.0-preview.19"
+      "0.3.0-preview.20"
     ],
     "productionSupported": false
   },
