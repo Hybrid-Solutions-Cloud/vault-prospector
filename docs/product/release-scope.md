@@ -6,7 +6,9 @@ approved C · Atlas shell, Entra-backed Remote Desktop unlock, silent multi-tena
 actionable named sync targets, self-contained workspace editing, session-authorized clipboard
 Copy with an optional per-copy verification override, identity-workspace access correction, and
 discovery-only unsigned Preview update checks, complete search match totals with additional result
-pages, and explicit selected/all-identity synchronization.
+pages, and explicit selected/all-identity synchronization. The next candidate restores an explicit,
+verified in-app installer handoff under the accepted unsigned-Preview risk documented in the update
+threat model; it is not part of Preview 19.
 `0.1.0-preview.2` also remains withdrawn and must not be installed or resubmitted.
 
 ## Included

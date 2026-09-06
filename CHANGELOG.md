@@ -4,6 +4,13 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+### Added
+
+- Make **Install and verify update** complete the in-app update workflow: discover the newest
+  trusted release, download the exact MSI, verify the GitHub digest and adjacent checksum, rehash
+  before launch, request Windows administrator approval, and exit only after Windows Installer
+  starts.
+
 ## [0.3.0-preview.19] - 2026-09-06
 
 ### Added

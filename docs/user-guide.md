@@ -5,10 +5,11 @@
 Download the Windows x64 MSI for the [current Preview](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.19), verify its published SHA-256 checksum, and run it. The installer requires administrator approval, installs to `C:\Program Files\Vault Prospector`, and adds **Vault Prospector** to the Start menu. This Preview is intentionally unsigned, so Windows displays **Unknown Publisher**; confirm that the downloaded filename and checksum match the release before approving installation. Trusted Windows signing remains required for GA.
 
 After installation, **Settings > Product updates** can check bounded metadata from the public
-binary-release repository. Vault Prospector never updates silently and does not download, retain,
-elevate, or launch an unsigned Preview installer. Open **Release history** to download from the
-public binary release, then follow **Install & verify releases** to validate the adjacent SHA-256
-checksum and keyless Sigstore provenance before starting the MSI through Windows.
+binary-release repository. Select **Install and verify update** to check for the newest trusted
+release, download its exact MSI, verify its GitHub digest and adjacent SHA-256 checksum, recheck the
+retained file, and start Windows Installer. Windows displays **Unknown Publisher** for the unsigned
+Preview and asks for administrator approval. Vault Prospector locks and exits only after Windows
+accepts the installer launch. It never updates silently.
 
 An upgrade or reinstall under the same Windows account retains encrypted settings and discovered
 metadata in `%LOCALAPPDATA%\VaultProspector`. Moving that data to another account or device is not
