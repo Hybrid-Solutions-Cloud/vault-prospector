@@ -47,6 +47,55 @@ public sealed class EncryptedPersistenceTests : IDisposable
     }
 
     [Fact]
+    public async Task SearchReportsTotalMatchesAndPagesBeyondDefaultLimit()
+    {
+        var path = Path.Combine(_directory, "paged-search.db");
+        using var repository = new EncryptedSqliteMetadataRepository(path, _keys);
+        await repository.InitializeAsync(TestContext.Current.CancellationToken);
+        var identity = TestIdentity("paged-search-account");
+        await repository.UpsertIdentityAsync(identity, TestContext.Current.CancellationToken);
+        var tenant = new TenantAccess(Guid.NewGuid(), identity.Id, "tenant", "Tenant", "Home", _clock.UtcNow, "Available");
+        var subscription = new SubscriptionAccess(Guid.NewGuid(), tenant.Id, "subscription", "Subscription", "Enabled", true, _clock.UtcNow);
+        var vault = new VaultResource(Guid.NewGuid(), "/vaults/paged", "paged", "tenant", "subscription", "rg", "eastus", new Dictionary<string, string>(), new Uri("https://paged.vault.azure.net/"), _clock.UtcNow);
+        var access = new VaultAccess(Guid.NewGuid(), vault.Id, identity.Id, "tenant", "Ready", _clock.UtcNow, null, 0);
+        var items = Enumerable.Range(0, 275)
+            .Select(index => new VaultItem(
+                Guid.NewGuid(),
+                vault.Id,
+                $"item-{index:D3}",
+                VaultObjectType.Secret,
+                true,
+                new Dictionary<string, string>(),
+                null,
+                null,
+                null,
+                null,
+                "v1",
+                $"fingerprint-{index:D3}",
+                _clock.UtcNow))
+            .ToArray();
+        await repository.ApplyDiscoveryAsync(
+            identity.Id,
+            new DiscoverySnapshot([tenant], [subscription], [vault], [access], items, []),
+            new SyncRun(Guid.NewGuid(), "paged", _clock.UtcNow, _clock.UtcNow, SyncStatus.Completed, 1, items.Length, []),
+            TestContext.Current.CancellationToken);
+
+        var firstPage = await repository.SearchAsync(
+            new SearchRequest(),
+            _clock.UtcNow,
+            TestContext.Current.CancellationToken);
+        var secondPage = await repository.SearchAsync(
+            new SearchRequest(Offset: 250),
+            _clock.UtcNow,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(250, firstPage.Count);
+        Assert.Equal(25, secondPage.Count);
+        Assert.All(firstPage.Concat(secondPage), result => Assert.Equal(275, result.TotalMatches));
+        Assert.Empty(firstPage.Select(result => result.Item.Id).Intersect(secondPage.Select(result => result.Item.Id)));
+    }
+
+    [Fact]
     public async Task GovernedMutationAuditIsAppendOnlyAndTamperingFailsStartup()
     {
         var path = Path.Combine(

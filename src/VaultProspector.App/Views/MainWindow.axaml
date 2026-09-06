@@ -407,7 +407,7 @@
                          Foreground="{DynamicResource VaultColorGood}"
                          FontSize="{StaticResource VaultFontSize16}"
                          FontWeight="Bold" />
-              <TextBlock Text="{Binding Results.Count, StringFormat={}{0} objects available}"
+              <TextBlock Text="{Binding SearchResultCount, StringFormat={}{0} objects available}"
                          Foreground="{DynamicResource VaultColorMuted}"
                          FontSize="{StaticResource VaultFontSize11}"
                          HorizontalAlignment="Right" />
@@ -495,10 +495,10 @@
           <Grid x:Name="SearchResultsGrid" Grid.Row="1" ColumnDefinitions="2.2*,1*" RowDefinitions="*" MinHeight="360" ColumnSpacing="14" RowSpacing="14">
             <Border Classes="atlas-panel" Padding="0">
               <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-              <Grid RowDefinitions="Auto,Auto,*" MinWidth="650">
+              <Grid RowDefinitions="Auto,Auto,*,Auto" MinWidth="650">
                 <Grid Margin="14,12" ColumnDefinitions="*,Auto">
                   <StackPanel>
-                    <TextBlock Text="{Binding Results.Count, StringFormat={}{0} results}"
+                    <TextBlock Text="{Binding SearchResultCount, StringFormat={}{0} results}"
                                FontSize="{StaticResource VaultFontSize16}"
                                FontWeight="Bold" />
                     <TextBlock Text="Workspace: all accessible sources"
@@ -537,6 +537,13 @@
                     </DataTemplate>
                   </ListBox.ItemTemplate>
                 </ListBox>
+                <Button Grid.Row="3"
+                        Content="Load more results"
+                        Command="{Binding LoadMoreSearchResultsCommand}"
+                        IsVisible="{Binding HasMoreSearchResults}"
+                        HorizontalAlignment="Center"
+                        Margin="12"
+                        AutomationProperties.Name="Load more vault search results" />
               </Grid>
               </ScrollViewer>
             </Border>

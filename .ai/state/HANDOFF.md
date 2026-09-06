@@ -1,5 +1,26 @@
 # Session handoff
 
+## Desktop search 250-result ceiling correction — 2026-09-06
+
+- Product-owner testing of exact public Preview 18 reported that repeated scans always appeared to
+  find exactly 250 objects.
+- Root cause is local presentation/query paging, not Azure SDK discovery pagination: the desktop
+  issued the default `SearchRequest` with a 250-row limit and then presented the returned row count
+  as the complete indexed-object count.
+- Branch `fix/desktop-search-result-limit` adds deterministic offset paging, reports the complete
+  filtered match count from the encrypted query, and exposes a visible `Load more results` action
+  while retaining a responsive 250-row initial page.
+- Enterprise allowed-tenant policy is pushed into the encrypted query so the reported total and
+  subsequent pages cannot include or count policy-denied tenants.
+- A 275-item encrypted repository regression proves 250 first-page rows, 25 second-page rows, a
+  complete total of 275, and no overlap. Application policy and Atlas structural/baseline tests
+  cover the other changed boundaries.
+- `pwsh ./scripts/Build.ps1 -Configuration Release` passes all 497 tests, zero warnings/errors,
+  and the NuGet vulnerability audit. This is source-level evidence only; the correction has not
+  been packaged, installed, or validated against the product owner's live Azure inventory.
+- HCS profile validation returned the expected reasoning-only app checks. Drift validation still
+  returns `Path not found` for this registered checkout, so no drift pass is claimed.
+
 ## Preview 18 audit hardening publication — 2026-08-13
 
 - Branch `fix/preview18-security-hardening` starts at public-main commit

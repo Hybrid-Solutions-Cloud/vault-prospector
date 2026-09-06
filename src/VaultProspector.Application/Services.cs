@@ -786,6 +786,7 @@ public sealed class SearchService(
         CancellationToken cancellationToken)
     {
         if (request.Limit is < 1 or > 1000) throw new ArgumentOutOfRangeException(nameof(request), "Search limit must be between 1 and 1000.");
+        if (request.Offset < 0) throw new ArgumentOutOfRangeException(nameof(request), "Search offset cannot be negative.");
         var policy = (enterprisePolicy ?? UnmanagedEnterprisePolicy.Instance)
             .GetSnapshot();
         if (!policy.AllowedProviders.Contains(
@@ -794,8 +795,11 @@ public sealed class SearchService(
             return [];
         }
 
+        var effectiveRequest = policy.RestrictsTenants
+            ? request with { AllowedTenantIds = policy.AllowedTenantIds.ToArray() }
+            : request with { AllowedTenantIds = null };
         var results = await repository.SearchAsync(
-            request,
+            effectiveRequest,
             clock.UtcNow,
             cancellationToken);
         return policy.RestrictsTenants

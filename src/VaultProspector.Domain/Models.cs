@@ -192,7 +192,9 @@ public sealed record SearchRequest(
     bool ExpiredOnly = false,
     bool StaleOnly = false,
     bool RecentlyAccessedFirst = false,
-    int Limit = 250);
+    int Limit = 250,
+    int Offset = 0,
+    IReadOnlyCollection<string>? AllowedTenantIds = null);
 
 public sealed record SearchResult(
     VaultItem Item,
@@ -202,7 +204,8 @@ public sealed record SearchResult(
     bool IsFavorite,
     DateTimeOffset? LastAccessedAt,
     bool IsStale,
-    string AccessStatus = "Permission assessment unavailable");
+    string AccessStatus = "Permission assessment unavailable",
+    int TotalMatches = 0);
 
 public sealed record ProviderError(
     string Scope,

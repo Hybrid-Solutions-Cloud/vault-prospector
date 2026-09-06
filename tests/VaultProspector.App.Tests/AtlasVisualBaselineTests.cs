@@ -211,6 +211,22 @@ public sealed class AtlasVisualBaselineTests
             production.Descendants(),
             element =>
                 element.Name.LocalName == "Button" &&
+                Attribute(element, "Content") == "Load more results" &&
+                Attribute(element, "Command") ==
+                    "{Binding LoadMoreSearchResultsCommand}" &&
+                Attribute(element, "IsVisible") ==
+                    "{Binding HasMoreSearchResults}");
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "TextBlock" &&
+                (Attribute(element, "Text") ?? string.Empty).Contains(
+                    "SearchResultCount",
+                    StringComparison.Ordinal));
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "Button" &&
                 Attribute(element, "Content") == "Reveal safely" &&
                 Attribute(element, "Command") == "{Binding RevealCommand}");
         Assert.Contains(

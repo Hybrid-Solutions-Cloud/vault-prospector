@@ -35,6 +35,7 @@ public sealed partial class MainViewModel(
     IExternalUriLauncher? externalUriLauncher = null,
     ApplicationSessionAuthorization? applicationSessionAuthorization = null) : ViewModelBase
 {
+    private const int SearchPageSize = 250;
     private static readonly IdentityType[] SupportedIdentityTypes =
     [
         IdentityType.InteractiveUser,
@@ -217,6 +218,8 @@ public sealed partial class MainViewModel(
     [ObservableProperty] private bool _filterSelectedIdentity;
     [ObservableProperty] private bool _filterSelectedWorkspace;
     [ObservableProperty] private bool _recentlyAccessedFirst;
+    [ObservableProperty] private int _searchResultCount;
+    [ObservableProperty] private bool _hasMoreSearchResults;
     [ObservableProperty] private string _statusText = "Starting securely…";
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _activeOperationText = string.Empty;
@@ -1327,8 +1330,37 @@ public sealed partial class MainViewModel(
 
     private async Task SearchCoreAsync(CancellationToken cancellationToken)
     {
+        var results = await SearchPageAsync(0, cancellationToken);
+        SelectedResult = null;
+        Results.Clear();
+        foreach (var result in results) Results.Add(new SearchResultRow(result));
+        SearchResultCount = results.Count == 0 ? 0 : results[0].TotalMatches;
+        UpdateSearchPagingState();
+        StatusText = SearchResultCount > Results.Count
+            ? $"{SearchResultCount} indexed objects match. Showing the first {Results.Count}; load more to continue. Values were not retrieved."
+            : $"{SearchResultCount} indexed objects match. Values were not retrieved.";
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLoadMoreSearchResults))]
+    private Task LoadMoreSearchResultsAsync() => RunAsync(async cancellationToken =>
+    {
+        var results = await SearchPageAsync(Results.Count, cancellationToken);
+        foreach (var result in results) Results.Add(new SearchResultRow(result));
+        if (results.Count > 0)
+            SearchResultCount = results[0].TotalMatches;
+        UpdateSearchPagingState();
+        StatusText = $"Showing {Results.Count} of {SearchResultCount} matching indexed objects. Values were not retrieved.";
+    });
+
+    private bool CanLoadMoreSearchResults() =>
+        !IsBusy && HasMoreSearchResults;
+
+    private async Task<IReadOnlyList<SearchResult>> SearchPageAsync(
+        int offset,
+        CancellationToken cancellationToken)
+    {
         VaultObjectType? type = Enum.TryParse<VaultObjectType>(SelectedObjectType, out var parsed) ? parsed : null;
-        var results = await searchService.SearchAsync(new SearchRequest(
+        return await searchService.SearchAsync(new SearchRequest(
             SearchText,
             WorkspaceId: FilterSelectedWorkspace ? SelectedWorkspace?.Id : null,
             IdentityId: FilterSelectedIdentity ? SelectedIdentity?.Id : null,
@@ -1340,11 +1372,15 @@ public sealed partial class MainViewModel(
             FavoritesOnly: FavoritesOnly,
             ExpiredOnly: ExpiredOnly,
             StaleOnly: StaleOnly,
-            RecentlyAccessedFirst: RecentlyAccessedFirst), cancellationToken);
-        SelectedResult = null;
-        Results.Clear();
-        foreach (var result in results) Results.Add(new SearchResultRow(result));
-        StatusText = $"{Results.Count} indexed objects. Values were not retrieved.";
+            RecentlyAccessedFirst: RecentlyAccessedFirst,
+            Limit: SearchPageSize,
+            Offset: offset), cancellationToken);
+    }
+
+    private void UpdateSearchPagingState()
+    {
+        HasMoreSearchResults = Results.Count < SearchResultCount;
+        LoadMoreSearchResultsCommand.NotifyCanExecuteChanged();
     }
 
     private void ReplaceSyncErrors(SyncRun run)
@@ -2237,6 +2273,7 @@ public sealed partial class MainViewModel(
         ExcludeVaultCommand.NotifyCanExecuteChanged();
         IncludeVaultCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
+        LoadMoreSearchResultsCommand.NotifyCanExecuteChanged();
         CreateSupportBundleCommand.NotifyCanExecuteChanged();
         RefreshDiagnosticsCommand.NotifyCanExecuteChanged();
         ToggleFavoriteCommand.NotifyCanExecuteChanged();
