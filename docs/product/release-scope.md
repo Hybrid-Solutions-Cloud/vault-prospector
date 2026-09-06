@@ -1,11 +1,12 @@
 # Version 0.3 Preview scope
 
-Version [`0.3.0-preview.18`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.18)
+Version [`0.3.0-preview.19`](https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.19)
 is the current unsigned Windows desktop Preview for non-production evaluation. It includes the
 approved C · Atlas shell, Entra-backed Remote Desktop unlock, silent multi-tenant metadata sync,
 actionable named sync targets, self-contained workspace editing, session-authorized clipboard
 Copy with an optional per-copy verification override, identity-workspace access correction, and
-discovery-only unsigned Preview update checks.
+discovery-only unsigned Preview update checks, complete search match totals with additional result
+pages, and explicit selected/all-identity synchronization.
 `0.1.0-preview.2` also remains withdrawn and must not be installed or resubmitted.
 
 ## Included

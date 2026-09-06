@@ -8,7 +8,7 @@ Discovers and searches Azure Key Vault metadata across multiple Microsoft Entra
 identities, tenants, and subscriptions. Secret values are retrieved only after an
 explicit action and Windows Hello verification.
 
-**Release status:** `0.3.0-preview.18` is the current unsigned Windows Preview for
+**Release status:** `0.3.0-preview.19` is the current unsigned Windows Preview for
 non-production evaluation — Windows shows "Unknown Publisher"; verify the
 published SHA-256 before installing.
 
@@ -34,4 +34,4 @@ encrypted local metadata storage.
 
 ## Status
 
-Active, preview release (`0.3.0-preview.18`), pre-1.0.
+Active, preview release (`0.3.0-preview.19`), pre-1.0.

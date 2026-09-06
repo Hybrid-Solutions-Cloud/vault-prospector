@@ -4,6 +4,25 @@ All notable changes to Vault Prospector are documented here. The project follows
 
 ## [Unreleased]
 
+## [0.3.0-preview.19] - 2026-09-06
+
+### Added
+
+- Add explicit foreground synchronization for either the selected identity or every enabled,
+  ready, policy-allowed identity, with isolated failures and correct retry ownership.
+
+### Fixed
+
+- Report the complete filtered search match count and load additional stable 250-row pages instead
+  of presenting the first page as the total indexed-object count.
+
+### Release
+
+- Publish the unsigned manual-test Preview from merge commit
+  `7b191d541cb7987798b8c41de1a85789d947dc46`.
+- Pass protected PR, exact-main, and immutable-tag build, test, packaging, lifecycle, readiness,
+  SBOM, checksum, Sigstore, and public-download verification gates.
+
 ## [0.3.0-preview.18] - 2026-08-13
 
 ### Fixed
@@ -268,6 +287,8 @@ All notable changes to Vault Prospector are documented here. The project follows
 - Redacted diagnostics, cancelable/partial synchronization, automated tests, CI security analysis, and reproducible Windows packaging.
 - Deferred Apple/iOS and Google/Android delivery plan.
 
+[0.3.0-preview.19]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.19
+[0.3.0-preview.18]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.18
 [0.3.0-preview.6]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.6
 [0.3.0-preview.5]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.5
 [0.3.0-preview.3]: https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.3
