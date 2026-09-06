@@ -1,18 +1,18 @@
 # In-app update threat model
 
-Status: update discovery is implemented for Windows Preview; the application does not download or
-launch Preview installers.
+Status: explicit verified update installation is implemented for Windows Preview. It remains a
+user-initiated, non-production path for an unsigned package.
 
 ## Trust boundary
 
-Vault Prospector never updates silently. **Settings > Product updates** performs one bounded,
-read-only action: it checks public release metadata and reports whether a newer supported Preview
-exists. It provides links to the exact public release history and the installation and verification
-guide.
+Vault Prospector never updates silently. **Settings > Product updates** can check public release
+metadata independently. **Install and verify update** is a separate explicit action that checks for
+the newest trusted release, downloads its exact MSI into the app-owned local update directory,
+verifies it, re-verifies it immediately before launch, and requests Windows administrator approval.
 
 The client accepts metadata only when:
 
-- the GitHub Releases API response is successful over HTTPS without redirects;
+- the GitHub Releases API response is successful over HTTPS;
 - the release publisher is exactly `hcs-platform-app[bot]`;
 - the release, asset, checksum, Sigstore-bundle, and release-page URLs remain under the exact public
   `Hybrid-Solutions-Cloud/vault-prospector-releases` repository;
@@ -26,21 +26,31 @@ GitHub credential.
 
 ## Download, verification, and installation
 
-Unsigned Preview installers are not downloaded, retained, verified, elevated, or launched by Vault
-Prospector. This removes the local writable-file and privileged installer handoff from the
-application's trust boundary. Users download only from the linked public binary release, validate
-the adjacent SHA-256 checksum and keyless Sigstore provenance using the public guide, and explicitly
-start the MSI through Windows.
+The app accepts only the exact versioned MSI named by trusted release metadata. Before retaining the
+installer, it requires agreement between the GitHub asset SHA-256 digest, the adjacent checksum file,
+the expected package name, the authenticated byte size, and the hash computed while streaming the
+download. Partial or oversized files are deleted. The app stores the verified MSI only under
+`%LOCALAPPDATA%\VaultProspector\updates`, rejects reparse-point update directories, and contains
+every resolved path under that root.
 
-A managed in-app installation flow must not be restored until the installed package has a trusted
-Windows signature or store identity and the design has a race-free privileged handoff with
-independent security evidence.
+Immediately before launch, the app resolves and contains the path again, confirms the file exists
+under its exact release filename, and rehashes the bytes. Any change fails closed. Only then does it
+invoke `msiexec.exe /i` with `runas`; Windows owns the administrator-consent prompt. Vault Prospector
+locks and exits only after Windows accepts the process launch. Cancellation or rejection leaves the
+app open.
+
+The release must include a Sigstore bundle, and the public verification guide remains available for
+independent provenance validation. The client does not itself perform Fulcio/Rekor verification.
+Because Preview MSIs are not Authenticode-signed, Windows displays **Unknown Publisher**. The product
+owner accepted this disclosed non-production risk on 2026-09-06 to make the explicit in-app update
+action complete the installation workflow. Trusted signing or Store identity and independent
+security review remain mandatory GA gates.
 
 ## Failure behavior
 
-Offline, malformed, untrusted, withdrawn, oversized, or redirected release metadata fails closed.
-No installer is downloaded or launched, untrusted release notes are not displayed, and the rest of
-Vault Prospector remains usable.
+Offline, malformed, untrusted, withdrawn, oversized, incomplete, or hash-mismatched releases fail
+closed. A changed retained installer is not launched, partial files are removed, untrusted release
+notes are not displayed, and the rest of Vault Prospector remains usable.
 
 ## Local-data lifecycle
 

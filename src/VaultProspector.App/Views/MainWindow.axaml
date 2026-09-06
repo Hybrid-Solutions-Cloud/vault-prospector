@@ -1797,7 +1797,7 @@
             <TextBlock Text="Product updates"
                        FontSize="{StaticResource VaultFontSize22}"
                        FontWeight="SemiBold" />
-            <TextBlock Text="Updates are user controlled. Vault Prospector checks bounded metadata from the public binary-release repository, but it never downloads or elevates a preview installer."
+            <TextBlock Text="Updates are user controlled. Vault Prospector downloads only the exact trusted release MSI, verifies it against the authenticated GitHub digest and adjacent SHA-256 checksum, then asks Windows for administrator approval before installation."
                        TextWrapping="Wrap"
                        Opacity="0.8" />
             <Grid ColumnDefinitions="Auto,*"
@@ -1845,16 +1845,21 @@
                       Command="{Binding CheckForUpdatesCommand}"
                       Margin="0,0,8,8"
                       AutomationProperties.Name="Check for trusted Vault Prospector updates" />
+              <Button Classes="primary"
+                      Content="Install and verify update"
+                      Command="{Binding InstallReleaseUpdateCommand}"
+                      Margin="0,0,8,8"
+                      AutomationProperties.Name="Download, verify, and install the latest trusted Vault Prospector update" />
               <Button Content="Release history ↗"
                       Command="{Binding OpenReleaseHistoryCommand}"
                       Margin="0,0,8,8"
                       AutomationProperties.Name="Open public Vault Prospector release history in the default browser" />
-              <Button Content="Install &amp; verify releases ↗"
+              <Button Content="Verification guide ↗"
                       Command="{Binding OpenReleaseGuideCommand}"
                       Margin="0,0,8,8"
                       AutomationProperties.Name="Open public Vault Prospector release verification guide in the default browser" />
             </WrapPanel>
-            <TextBlock Text="Download only from the linked public release, verify its checksum and Sigstore provenance using the guide, and then let Windows handle installation. The same Windows account retains encrypted local settings and metadata during an in-place upgrade or reinstall. Moving data to another account or device is unsupported."
+            <TextBlock Text="The app stores the verified MSI under your local Vault Prospector update directory and rechecks it immediately before Windows Installer starts. Windows may show Unknown Publisher and request administrator approval because Preview packages are not Authenticode-signed. The app locks and exits only after Windows Installer starts. The same Windows account retains encrypted local settings and metadata during an in-place upgrade or reinstall."
                        TextWrapping="Wrap"
                        FontSize="{StaticResource VaultFontSize11}"
                        Opacity="0.72" />
@@ -1968,7 +1973,7 @@
               <Button Content="User guide ↗" Command="{Binding OpenUserGuideCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector user guide in the default browser" />
               <Button Content="Roadmap ↗" Command="{Binding OpenRoadmapCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector roadmap in the default browser" />
               <Button Content="Changelog ↗" Command="{Binding OpenChangelogCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector changelog in the default browser" />
-              <Button Content="Install &amp; verify releases ↗" Command="{Binding OpenReleaseGuideCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector release verification guide in the default browser" />
+              <Button Content="Release verification guide ↗" Command="{Binding OpenReleaseGuideCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector release verification guide in the default browser" />
               <Button Content="Release history ↗" Command="{Binding OpenReleaseHistoryCommand}" Margin="0,0,8,8" AutomationProperties.Name="Open public Vault Prospector release history in the default browser" />
             </WrapPanel>
           </StackPanel>

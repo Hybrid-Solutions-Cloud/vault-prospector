@@ -6,11 +6,15 @@ using VaultProspector.Application;
 
 namespace VaultProspector.Application.Tests;
 
-public sealed class ReleaseUpdateServiceTests
+public sealed class ReleaseUpdateServiceTests : IDisposable
 {
     private const string Version = "0.2.0-preview.6";
     private const string PackageName =
         "VaultProspector-0.2.0-preview.6-win-x64.msi";
+    private readonly string _updateDirectory = Path.Combine(
+        Path.GetTempPath(),
+        "VaultProspector.Tests",
+        Guid.NewGuid().ToString("N"));
     [Fact]
     public async Task CheckSelectsNewestTrustedRelease()
     {
@@ -84,35 +88,175 @@ public sealed class ReleaseUpdateServiceTests
     }
 
     [Fact]
-    public void UpdateContractExposesDiscoveryOnly()
+    public async Task ReleaseMetadataRedirectIsRejected()
     {
-        var methods = typeof(IReleaseUpdateService).GetMethods();
+        var handler = CreateHandler(
+            Encoding.UTF8.GetBytes("trusted installer"));
+        handler.ResponseUriOverride =
+            new Uri("https://example.invalid/releases");
+        var service = CreateService(
+            handler,
+            "0.2.0-preview.5");
 
-        Assert.Single(methods);
-        Assert.Equal(nameof(IReleaseUpdateService.CheckAsync), methods[0].Name);
+        await Assert.ThrowsAsync<InvalidDataException>(
+            () => service.CheckAsync(
+                TestContext.Current.CancellationToken));
     }
 
-    private static GitHubReleaseUpdateService CreateService(
+    [Fact]
+    public void UpdateContractExposesVerifiedInstallation()
+    {
+        var methods = typeof(IReleaseUpdateService)
+            .GetMethods()
+            .Select(method => method.Name)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            [
+                nameof(IReleaseUpdateService.CheckAsync),
+                nameof(IReleaseUpdateService.DownloadAndVerifyAsync),
+                nameof(IReleaseUpdateService.LaunchAsync),
+            ],
+            methods);
+    }
+
+    [Fact]
+    public async Task DownloadVerifiesAndLaunchRehashesInstaller()
+    {
+        var package = Encoding.UTF8.GetBytes("trusted installer");
+        var launcher = new FakeLauncher();
+        var service = CreateService(
+            package,
+            currentVersion: "0.2.0-preview.5",
+            launcher);
+        var release = await service.CheckAsync(
+            TestContext.Current.CancellationToken);
+
+        var verified = await service.DownloadAndVerifyAsync(
+            release,
+            TestContext.Current.CancellationToken);
+        await service.LaunchAsync(
+            verified,
+            TestContext.Current.CancellationToken);
+
+        Assert.True(File.Exists(verified.InstallerPath));
+        Assert.Equal(verified.InstallerPath, launcher.InstallerPath);
+        Assert.Equal(
+            release.ExpectedSha256,
+            verified.Sha256,
+            ignoreCase: true);
+    }
+
+    [Fact]
+    public async Task TamperedDownloadIsRejectedWithoutRetainedPackage()
+    {
+        var trustedPackage = Encoding.UTF8.GetBytes("trusted installer");
+        var tamperedPackage = Encoding.UTF8.GetBytes("tampered installe");
+        var handler = CreateHandler(
+            trustedPackage,
+            tamperedPackage);
+        var service = CreateService(
+            handler,
+            "0.2.0-preview.5");
+        var release = await service.CheckAsync(
+            TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<InvalidDataException>(
+            () => service.DownloadAndVerifyAsync(
+                release,
+                TestContext.Current.CancellationToken));
+
+        Assert.False(File.Exists(Path.Combine(
+            _updateDirectory,
+            Version,
+            PackageName)));
+        if (Directory.Exists(_updateDirectory))
+        {
+            Assert.Empty(Directory.EnumerateFiles(
+                _updateDirectory,
+                "*.partial",
+                SearchOption.AllDirectories));
+        }
+    }
+
+    [Fact]
+    public async Task ChangedInstallerIsNotLaunched()
+    {
+        var package = Encoding.UTF8.GetBytes("trusted installer");
+        var launcher = new FakeLauncher();
+        var service = CreateService(
+            package,
+            "0.2.0-preview.5",
+            launcher);
+        var release = await service.CheckAsync(
+            TestContext.Current.CancellationToken);
+        var verified = await service.DownloadAndVerifyAsync(
+            release,
+            TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(
+            verified.InstallerPath,
+            "changed",
+            TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<InvalidDataException>(
+            () => service.LaunchAsync(
+                verified,
+                TestContext.Current.CancellationToken));
+
+        Assert.Null(launcher.InstallerPath);
+    }
+
+    public void Dispose()
+    {
+        if (!Directory.Exists(_updateDirectory))
+            return;
+        var resolvedRoot = Path.GetFullPath(Path.Combine(
+            Path.GetTempPath(),
+            "VaultProspector.Tests"));
+        var resolvedTarget = Path.GetFullPath(_updateDirectory);
+        if (resolvedTarget.StartsWith(
+                resolvedRoot + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            Directory.Delete(resolvedTarget, recursive: true);
+        }
+    }
+
+    private GitHubReleaseUpdateService CreateService(
         byte[] package,
-        string currentVersion) =>
+        string currentVersion,
+        FakeLauncher? launcher = null) =>
         CreateService(
             CreateHandler(package),
-            currentVersion);
+            currentVersion,
+            launcher);
 
-    private static GitHubReleaseUpdateService CreateService(
+    private GitHubReleaseUpdateService CreateService(
         RouteHandler handler,
-        string currentVersion) =>
+        string currentVersion,
+        FakeLauncher? launcher = null) =>
         new(
             new HttpClient(handler),
-            currentVersion);
+            _updateDirectory,
+            currentVersion,
+            launcher ?? new FakeLauncher());
 
     private static RouteHandler CreateHandler(
-        byte[] trustedPackage)
+        byte[] trustedPackage,
+        byte[]? downloadedPackage = null)
     {
+        var hash = Convert.ToHexString(SHA256.HashData(trustedPackage));
         var handler = new RouteHandler();
         handler.AddJson(
             ReleasesApi,
             CreateReleaseJson(trustedPackage));
+        handler.AddText(
+            ChecksumUri,
+            $"{hash}  {PackageName}");
+        handler.AddBytes(
+            PackageUri,
+            downloadedPackage ?? trustedPackage);
         return handler;
     }
 
@@ -175,10 +319,20 @@ public sealed class ReleaseUpdateServiceTests
     private const string ReleasePageUri =
         "https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.2.0-preview.6";
 
+    private sealed class FakeLauncher : IUpdateInstallerLauncher
+    {
+        public string? InstallerPath { get; private set; }
+
+        public void Launch(string installerPath) =>
+            InstallerPath = installerPath;
+    }
+
     private sealed class RouteHandler : HttpMessageHandler
     {
         private readonly Dictionary<string, Func<HttpResponseMessage>>
             _routes = new(StringComparer.Ordinal);
+
+        public Uri? ResponseUriOverride { get; set; }
 
         public void AddJson(
             string uri,
@@ -187,6 +341,12 @@ public sealed class ReleaseUpdateServiceTests
                 uri,
                 Encoding.UTF8.GetBytes(json),
                 "application/json");
+
+        public void AddText(string uri, string value) =>
+            Add(uri, Encoding.UTF8.GetBytes(value), "text/plain");
+
+        public void AddBytes(string uri, byte[] value) =>
+            Add(uri, value, "application/octet-stream");
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -198,7 +358,13 @@ public sealed class ReleaseUpdateServiceTests
                     request.RequestUri.AbsoluteUri,
                     out var createResponse))
             {
-                return Task.FromResult(createResponse());
+                var response = createResponse();
+                response.RequestMessage = ResponseUriOverride is null
+                    ? request
+                    : new HttpRequestMessage(
+                        request.Method,
+                        ResponseUriOverride);
+                return Task.FromResult(response);
             }
 
             return Task.FromResult(

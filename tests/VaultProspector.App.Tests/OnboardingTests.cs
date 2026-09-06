@@ -49,6 +49,26 @@ public sealed class OnboardingTests : IDisposable
     }
 
     [Fact]
+    public async Task InstallUpdatePerformsCheckVerificationAndLaunchInOneAction()
+    {
+        var updateService = new RecordingReleaseUpdateService();
+        var viewModel = CreateViewModel(releaseUpdateService: updateService);
+        var exitRequested = false;
+        viewModel.ExitRequested += (_, _) => exitRequested = true;
+
+        await viewModel.InstallReleaseUpdateCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, updateService.CheckCount);
+        Assert.Equal(1, updateService.DownloadCount);
+        Assert.Equal(1, updateService.LaunchCount);
+        Assert.True(exitRequested);
+        Assert.Contains(
+            "Windows Installer started",
+            viewModel.UpdateStatus,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task MissingSettingsUseProductRegistrationWithoutCustomMode()
     {
         var store = new AppSettingsStore(Path.Combine(_directory, "settings.json"));
@@ -1675,7 +1695,8 @@ public sealed class OnboardingTests : IDisposable
 
     private static MainViewModel CreateViewModel(
         IRevealVerificationSession? revealVerificationSession = null,
-        IExternalUriLauncher? externalUriLauncher = null) =>
+        IExternalUriLauncher? externalUriLauncher = null,
+        IReleaseUpdateService? releaseUpdateService = null) =>
         new(
             null!,
             null!,
@@ -1690,7 +1711,56 @@ public sealed class OnboardingTests : IDisposable
             null!,
             revealVerificationSession:
                 revealVerificationSession,
+            releaseUpdateService: releaseUpdateService,
             externalUriLauncher: externalUriLauncher);
+
+    private sealed class RecordingReleaseUpdateService :
+        IReleaseUpdateService
+    {
+        private readonly ReleaseUpdateInfo _release = new(
+            "0.3.0-preview.19",
+            "0.3.0-preview.20",
+            ReleaseUpdateAvailability.Available,
+            "Vault Prospector 0.3.0-preview.20",
+            "Verified in-app update.",
+            new Uri("https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/tag/v0.3.0-preview.20"),
+            new Uri("https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.3.0-preview.20/VaultProspector-0.3.0-preview.20-win-x64.msi"),
+            new Uri("https://github.com/Hybrid-Solutions-Cloud/vault-prospector-releases/releases/download/v0.3.0-preview.20/VaultProspector-0.3.0-preview.20-win-x64.msi.sha256"),
+            "VaultProspector-0.3.0-preview.20-win-x64.msi",
+            1024,
+            new string('A', 64),
+            DateTimeOffset.UtcNow);
+
+        public int CheckCount { get; private set; }
+        public int DownloadCount { get; private set; }
+        public int LaunchCount { get; private set; }
+
+        public Task<ReleaseUpdateInfo> CheckAsync(
+            CancellationToken cancellationToken)
+        {
+            CheckCount++;
+            return Task.FromResult(_release);
+        }
+
+        public Task<VerifiedReleaseUpdate> DownloadAndVerifyAsync(
+            ReleaseUpdateInfo release,
+            CancellationToken cancellationToken)
+        {
+            DownloadCount++;
+            return Task.FromResult(new VerifiedReleaseUpdate(
+                release,
+                "C:\\Updates\\VaultProspector-0.3.0-preview.20-win-x64.msi",
+                release.ExpectedSha256));
+        }
+
+        public Task LaunchAsync(
+            VerifiedReleaseUpdate update,
+            CancellationToken cancellationToken)
+        {
+            LaunchCount++;
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class RecordingUriLauncher(bool result) : IExternalUriLauncher
     {

@@ -115,7 +115,7 @@ public partial class App : Avalonia.Application
             var governedWriteHttpClient = new HttpClient(
                 new SocketsHttpHandler
                 {
-                    AllowAutoRedirect = false,
+                    AllowAutoRedirect = true,
                 })
             {
                 Timeout = TimeSpan.FromSeconds(60),
@@ -125,7 +125,7 @@ public partial class App : Avalonia.Application
                 AllowAutoRedirect = false,
             })
             {
-                Timeout = TimeSpan.FromSeconds(30),
+                Timeout = TimeSpan.FromMinutes(10),
             };
             var cyberArkProvider = new CyberArkPrivilegeCloudProvider(
                 cyberArkHttpClient,
@@ -152,7 +152,9 @@ public partial class App : Avalonia.Application
             var releaseUpdateService =
                 new GitHubReleaseUpdateService(
                     updateHttpClient,
-                    currentVersion);
+                    VaultProspectorPaths.UpdateDirectory,
+                    currentVersion,
+                    new WindowsUpdateInstallerLauncher());
             var cyberArkService = new CyberArkService(
                 cyberArkProvider,
                 new WindowsCyberArkCredentialStore(

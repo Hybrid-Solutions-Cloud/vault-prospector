@@ -6,6 +6,8 @@ namespace VaultProspector.App.ViewModels;
 
 public sealed partial class MainViewModel
 {
+    private ReleaseUpdateInfo? _checkedReleaseUpdate;
+
     [ObservableProperty]
     private string _updateCurrentVersion = GetVersion();
     [ObservableProperty]
@@ -29,6 +31,7 @@ public sealed partial class MainViewModel
             return;
 
         IsUpdateOperationInProgress = true;
+        _checkedReleaseUpdate = null;
         UpdateLatestVersion = "Checking…";
         UpdateStatus =
             "Checking the authenticated Hybrid Solutions Cloud binary-release repository.";
@@ -39,13 +42,14 @@ public sealed partial class MainViewModel
         {
             var release = await releaseUpdateService.CheckAsync(
                 CancellationToken.None);
+            _checkedReleaseUpdate = release;
             UpdateCurrentVersion = release.CurrentVersion;
             UpdateLatestVersion = release.LatestVersion;
             UpdateReleaseNotes = release.ReleaseNotes;
             UpdateStatus = release.Availability switch
             {
                 ReleaseUpdateAvailability.Available =>
-                    $"Vault Prospector {release.LatestVersion} is available. Open Release history to download it, then follow Install & verify releases before running the MSI.",
+                    $"Vault Prospector {release.LatestVersion} is available. Select Install and verify update to download, verify, and start the Windows upgrade.",
                 ReleaseUpdateAvailability.Current =>
                     $"Vault Prospector {release.CurrentVersion} is current for this release channel.",
                 _ =>
@@ -73,7 +77,71 @@ public sealed partial class MainViewModel
         }
     }
 
+    [RelayCommand(CanExecute = nameof(CanInstallReleaseUpdate))]
+    private async Task InstallReleaseUpdateAsync()
+    {
+        if (releaseUpdateService is null)
+            return;
+
+        IsUpdateOperationInProgress = true;
+        NotifyUpdateCommandState();
+        try
+        {
+            UpdateStatus = _checkedReleaseUpdate is null
+                ? "Checking for the newest trusted release before installation."
+                : $"Preparing Vault Prospector {_checkedReleaseUpdate.LatestVersion} for installation.";
+            var release = _checkedReleaseUpdate ??
+                await releaseUpdateService.CheckAsync(CancellationToken.None);
+            _checkedReleaseUpdate = release;
+            UpdateCurrentVersion = release.CurrentVersion;
+            UpdateLatestVersion = release.LatestVersion;
+            UpdateReleaseNotes = release.ReleaseNotes;
+            if (release.Availability != ReleaseUpdateAvailability.Available)
+            {
+                UpdateStatus = release.Availability ==
+                    ReleaseUpdateAvailability.Current
+                    ? $"Vault Prospector {release.CurrentVersion} is already current."
+                    : $"This development build cannot be upgraded in place. The latest supported package is {release.LatestVersion}.";
+                return;
+            }
+
+            UpdateStatus =
+                $"Downloading Vault Prospector {release.LatestVersion} to the protected update directory and verifying its SHA-256 identity.";
+            var verified = await releaseUpdateService.DownloadAndVerifyAsync(
+                release,
+                CancellationToken.None);
+            UpdateStatus =
+                $"Verified {verified.Release.PackageName}. Rechecking it before requesting Windows administrator approval.";
+            await releaseUpdateService.LaunchAsync(
+                verified,
+                CancellationToken.None);
+            UpdateStatus =
+                "Windows Installer started. Vault Prospector is locking and exiting so the upgrade can continue.";
+            LockForSystemBoundary();
+            ExitRequested?.Invoke(this, EventArgs.Empty);
+        }
+        catch (OperationCanceledException)
+        {
+            UpdateStatus =
+                "The update was cancelled. No partial installer is retained and Vault Prospector remains open.";
+        }
+        catch
+        {
+            UpdateStatus =
+                "The update could not be downloaded, verified, or started. No unverified installer was launched; Vault Prospector remains open.";
+        }
+        finally
+        {
+            IsUpdateOperationInProgress = false;
+            NotifyUpdateCommandState();
+        }
+    }
+
     private bool CanCheckForUpdates() =>
+        releaseUpdateService is not null &&
+        !IsUpdateOperationInProgress;
+
+    private bool CanInstallReleaseUpdate() =>
         releaseUpdateService is not null &&
         !IsUpdateOperationInProgress;
 
@@ -84,5 +152,6 @@ public sealed partial class MainViewModel
     private void NotifyUpdateCommandState()
     {
         CheckForUpdatesCommand.NotifyCanExecuteChanged();
+        InstallReleaseUpdateCommand.NotifyCanExecuteChanged();
     }
 }

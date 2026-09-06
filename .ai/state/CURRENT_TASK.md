@@ -1,6 +1,22 @@
 # Current task
 
-Validate public Preview 18 feedback before resuming lower-priority work.
+Deliver the product-owner-requested in-app verified installer workflow as the next public Preview.
+
+Current public source: merge commit `7b191d541cb7987798b8c41de1a85789d947dc46`, immutable tag
+`v0.3.0-preview.19`.
+
+- Preview 19 corrects the 250-result presentation ceiling and adds selected/all-identity sync.
+- The current branch `fix/in-app-verified-update` changes **Install and verify update** from a
+  documentation link into one explicit check, download, digest/checksum verification, launch-time
+  rehash, Windows elevation, lock, and exit workflow.
+- Unsigned Preview risk is explicitly accepted by the product owner for non-production evaluation;
+  Windows still displays Unknown Publisher. Trusted signing/Store identity and independent review
+  remain GA gates.
+- Focused application tests pass 107/107 and app tests pass 126/126. The governed build before the
+  final redirect-boundary regression passed 503/503 with zero warnings/errors and no known
+  vulnerable packages; repeat the complete gate before publication.
+
+Historical context follows.
 
 Current public source: merge commit `f98174b9211b4889e635558cc7237d102c7f0730`, immutable tag
 `v0.3.0-preview.18`.

@@ -5,6 +5,10 @@
 `0.3.0-preview.19` is the latest public, unsigned Windows Preview for non-production evaluation.
 Its immutable source tag points to `7b191d541cb7987798b8c41de1a85789d947dc46`; protected main
 CI and the tag release workflow passed, and the public release contains 16 artifacts.
+Product-owner feedback on 2026-09-06 requires the next Preview's **Install and verify update**
+action to complete trusted release discovery, verified download, Windows Installer launch, and app
+exit without sending the user to a manual website workflow. The implementation is in progress and
+is not part of Preview 19.
 The installed Start-menu/Search icon fix and the completed Phases 3–13 implementation are included
 in the 0.2 Preview line and remain subject to the live, independent, Store, and GA validation
 gates recorded below.

@@ -50,6 +50,28 @@ public sealed class AccessibilityMarkupTests
     }
 
     [Fact]
+    public void ProductUpdatesExposesInAppVerifiedInstallation()
+    {
+        var document = XDocument.Load(FindMainWindowMarkup());
+        var installButton = document
+            .Descendants()
+            .Single(element =>
+                Attribute(element, "Command")?.Value ==
+                "{Binding InstallReleaseUpdateCommand}");
+
+        Assert.Equal("Button", installButton.Name.LocalName);
+        Assert.Equal(
+            "Install and verify update",
+            Attribute(installButton, "Content")?.Value);
+        Assert.Contains(
+            "install",
+            Attribute(
+                installButton,
+                "AutomationProperties.Name")?.Value ?? string.Empty,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void AtlasUsesOneLightControlThemeAcrossEveryWindowsColorMode()
     {
         var application = XDocument.Load(

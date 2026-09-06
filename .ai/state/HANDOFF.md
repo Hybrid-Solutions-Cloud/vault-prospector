@@ -1,5 +1,25 @@
 # Session handoff
 
+## In-app verified installer correction — 2026-09-06
+
+- The product owner clarified that **Install and verify release** must install the available update
+  inside the application instead of opening a website for manual download and installation.
+- Branch `fix/in-app-verified-update` restores the bounded updater behind one explicit action:
+  trusted release discovery, exact MSI download, GitHub digest plus adjacent checksum agreement,
+  streamed size/hash verification, launch-time rehash, `msiexec /i` with Windows `runas`, and app
+  lock/exit only after the installer starts.
+- Metadata redirects fail closed. Asset redirects are accepted only to GitHub's exact
+  `release-assets.githubusercontent.com` HTTPS host. Partial, oversized, malformed, changed, or
+  mismatched installers are not launched.
+- The update threat model records the product owner's accepted unsigned, non-production Preview
+  risk. Windows Unknown Publisher remains explicit; trusted signing/Store identity and independent
+  security review remain GA gates.
+- Regression coverage proves one-click check/download/verify/launch/exit, tampered-download and
+  changed-retained-file rejection, redirect rejection, the three-method service contract, and the
+  accessible Atlas action. Focused application tests pass 107/107 and app tests pass 126/126.
+- A complete governed build before the final redirect-boundary regression passed 503/503 with zero
+  warnings/errors and no known vulnerable NuGet packages. Repeat the full gate before packaging.
+
 ## Preview 19 public release — 2026-09-06
 
 - PR #111 passed protected CI run 34050106080 and merged as
