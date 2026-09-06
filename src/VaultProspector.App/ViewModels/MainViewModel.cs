@@ -778,6 +778,37 @@ public sealed partial class MainViewModel(
         StatusText = $"{run.Status}: {run.VaultCount} vaults and {run.ItemCount} objects; {run.NonSensitiveErrors.Count} isolated errors.";
     }, $"Synchronizing {SelectedIdentity?.DisplayName ?? "the selected identity"}");
 
+    [RelayCommand(CanExecute = nameof(CanSynchronizeAllIdentities))]
+    private Task SynchronizeAllIdentitiesAsync() => RunAsync(async cancellationToken =>
+    {
+        var eligibleIdentities = GetSynchronizationEligibleIdentities();
+        var skipped = Identities.Count - eligibleIdentities.Length;
+        StatusText = $"Synchronizing {eligibleIdentities.Length} ready identities…";
+        var summary = await SynchronizeIdentitiesAsync(
+            eligibleIdentities,
+            cancellationToken);
+        if (SelectedIdentity is not null)
+            await ReloadSubscriptionsCoreAsync(SelectedIdentity.Id, cancellationToken);
+        await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
+        await ReloadWorkspaceResourceCatalogAsync(cancellationToken);
+        if (SelectedWorkspace is not null)
+            await ReloadWorkspaceMembersAsync(SelectedWorkspace.Id, cancellationToken);
+        await RefreshSearchFilterOptionsAsync(cancellationToken);
+        await SearchCoreAsync(cancellationToken);
+        ReplaceSyncErrors(summary.Runs);
+        SetupSyncStatus = summary.Failed > 0
+            ? "Needs attention"
+            : summary.Partial > 0
+                ? "Complete with isolated errors"
+                : "Complete";
+        ContinueToSearchCommand.NotifyCanExecuteChanged();
+        StatusText =
+            $"All-identity sync checked {eligibleIdentities.Length} ready identities: " +
+            $"{summary.Completed} complete, {summary.Partial} partial, {summary.Failed} failed; " +
+            $"{summary.VaultCount} vaults, {summary.ItemCount} objects, {summary.ErrorCount} isolated errors" +
+            (skipped > 0 ? $"; {skipped} skipped because disabled, sign-in-required, or policy-blocked." : ".");
+    }, "Synchronizing all ready identities");
+
     [RelayCommand(CanExecute = nameof(CanContinueToSearch))]
     private void ContinueToSearch()
     {
@@ -791,16 +822,20 @@ public sealed partial class MainViewModel(
     [RelayCommand(CanExecute = nameof(CanRetrySelectedSyncError))]
     private Task RetrySelectedSyncErrorAsync() => RunAsync(async cancellationToken =>
     {
-        if (SelectedIdentity is null || SelectedSyncError is null)
+        if (SelectedSyncError is null)
             return;
+        var identity = Identities.FirstOrDefault(candidate =>
+            candidate.Id == SelectedSyncError.IdentityId) ??
+            throw new InvalidOperationException(
+                "The identity associated with this synchronization error is no longer connected.");
 
         StatusText = $"Retrying {SelectedSyncError.Target}…";
         var run = await synchronizationService.RetryFailedScopesAsync(
-            SelectedIdentity,
+            identity,
             SelectedSyncError.Details,
             cancellationToken);
         await ReloadSubscriptionsCoreAsync(
-            SelectedIdentity.Id,
+            identity.Id,
             cancellationToken);
         await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
         await ReloadWorkspaceResourceCatalogAsync(cancellationToken);
@@ -808,7 +843,7 @@ public sealed partial class MainViewModel(
             await ReloadWorkspaceMembersAsync(SelectedWorkspace.Id, cancellationToken);
         await RefreshSearchFilterOptionsAsync(cancellationToken);
         await SearchCoreAsync(cancellationToken);
-        ReplaceSyncErrors(run);
+        ReplaceSyncErrors([(run, identity.Id, identity.DisplayName)]);
         SetupSyncStatus = run.Status == SyncStatus.Completed
             ? "Complete"
             : "Complete with isolated errors";
@@ -973,60 +1008,82 @@ public sealed partial class MainViewModel(
             IsBusy)
             return Task.CompletedTask;
 
-        var eligibleIdentities = Identities
-            .Where(identity =>
-                identity.IsEnabled &&
-                identity.AuthenticationState == AuthenticationState.Ready &&
-                IsIdentityAllowed(identity))
-            .ToArray();
+        var eligibleIdentities = GetSynchronizationEligibleIdentities();
         if (eligibleIdentities.Length == 0)
             return Task.CompletedTask;
 
         return RunAsync(async cancellationToken =>
         {
-            var completed = 0;
-            var partial = 0;
-            var failed = 0;
-            var vaultCount = 0;
-            var itemCount = 0;
-            var errorCount = 0;
-
-            foreach (var identity in eligibleIdentities)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                try
-                {
-                    var run = await synchronizationService.SynchronizeAsync(
-                        identity,
-                        cancellationToken);
-                    vaultCount += run.VaultCount;
-                    itemCount += run.ItemCount;
-                    errorCount += run.NonSensitiveErrors.Count;
-                    if (run.Status == SyncStatus.Completed)
-                        completed++;
-                    else if (run.Status == SyncStatus.CompletedWithErrors)
-                        partial++;
-                    else
-                        failed++;
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch
-                {
-                    failed++;
-                }
-            }
+            var summary = await SynchronizeIdentitiesAsync(
+                eligibleIdentities,
+                cancellationToken);
 
             await RefreshAdministrationSubscriptionOptionsAsync(cancellationToken);
             await RefreshSearchFilterOptionsAsync(cancellationToken);
             await SearchCoreAsync(cancellationToken);
             StatusText =
                 $"Background metadata sync checked {eligibleIdentities.Length} connected identities: " +
-                $"{completed} complete, {partial} partial, {failed} failed; " +
-                $"{vaultCount} vaults, {itemCount} objects, {errorCount} isolated errors.";
+                $"{summary.Completed} complete, {summary.Partial} partial, {summary.Failed} failed; " +
+                $"{summary.VaultCount} vaults, {summary.ItemCount} objects, {summary.ErrorCount} isolated errors.";
         });
+    }
+
+    private ConnectedIdentity[] GetSynchronizationEligibleIdentities() =>
+        Identities
+            .Where(identity =>
+                identity.IsEnabled &&
+                identity.AuthenticationState == AuthenticationState.Ready &&
+                IsIdentityAllowed(identity))
+            .ToArray();
+
+    private async Task<MultiIdentitySyncSummary> SynchronizeIdentitiesAsync(
+        IReadOnlyList<ConnectedIdentity> identities,
+        CancellationToken cancellationToken)
+    {
+        var completed = 0;
+        var partial = 0;
+        var failed = 0;
+        var vaultCount = 0;
+        var itemCount = 0;
+        var errorCount = 0;
+        var runs = new List<(SyncRun Run, Guid IdentityId, string IdentityName)>();
+        foreach (var identity in identities)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                var run = await synchronizationService.SynchronizeAsync(
+                    identity,
+                    cancellationToken);
+                runs.Add((run, identity.Id, identity.DisplayName));
+                vaultCount += run.VaultCount;
+                itemCount += run.ItemCount;
+                errorCount += run.NonSensitiveErrors.Count;
+                if (run.Status == SyncStatus.Completed)
+                    completed++;
+                else if (run.Status == SyncStatus.CompletedWithErrors)
+                    partial++;
+                else
+                    failed++;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                failed++;
+            }
+        }
+
+        return new MultiIdentitySyncSummary(
+            completed,
+            partial,
+            failed,
+            vaultCount,
+            itemCount,
+            errorCount,
+            runs);
     }
 
     [RelayCommand(CanExecute = nameof(CanStartOperation))]
@@ -1383,26 +1440,35 @@ public sealed partial class MainViewModel(
         LoadMoreSearchResultsCommand.NotifyCanExecuteChanged();
     }
 
-    private void ReplaceSyncErrors(SyncRun run)
+    private void ReplaceSyncErrors(SyncRun run) =>
+        ReplaceSyncErrors(
+            [(run, SelectedIdentity?.Id ?? Guid.Empty, SelectedIdentity?.DisplayName ?? run.Scope)]);
+
+    private void ReplaceSyncErrors(
+        IReadOnlyList<(SyncRun Run, Guid IdentityId, string IdentityName)> runs)
     {
         SelectedSyncError = null;
         SyncErrors.Clear();
-        var details = run.ErrorDetails ??
-            run.NonSensitiveErrors
-                .Select((message, index) => new SyncErrorDetail(
-                    $"Affected scope {index + 1}",
-                    "Unavailable",
-                    message,
-                    "Use the safe category shown here to correct the affected scope, then retry synchronization."))
-                .ToArray();
-        foreach (var group in details.GroupBy(SyncErrorRow.GroupKey))
+        foreach (var (run, identityId, identityName) in runs)
         {
-            SyncErrors.Add(new SyncErrorRow(
-                group.ToArray(),
-                SelectedIdentity?.DisplayName ?? run.Scope,
-                Tenants,
-                Subscriptions,
-                VaultAccessPaths));
+            var details = run.ErrorDetails ??
+                run.NonSensitiveErrors
+                    .Select((message, index) => new SyncErrorDetail(
+                        $"Affected scope {index + 1}",
+                        "Unavailable",
+                        message,
+                        "Use the safe category shown here to correct the affected scope, then retry synchronization."))
+                    .ToArray();
+            foreach (var group in details.GroupBy(SyncErrorRow.GroupKey))
+            {
+                SyncErrors.Add(new SyncErrorRow(
+                    group.ToArray(),
+                    identityId,
+                    identityName,
+                    Tenants,
+                    Subscriptions,
+                    VaultAccessPaths));
+            }
         }
         OnPropertyChanged(nameof(HasSyncErrors));
     }
@@ -1960,9 +2026,16 @@ public sealed partial class MainViewModel(
         } identity &&
         IsIdentityAllowed(identity) &&
         !IsBusy;
+    private bool CanSynchronizeAllIdentities() =>
+        !IsBusy && GetSynchronizationEligibleIdentities().Length > 0;
     private bool CanRetrySelectedSyncError() =>
-        CanUseSelectedIdentityOnline() &&
-        SelectedSyncError?.CanRetry == true;
+        !IsBusy &&
+        SelectedSyncError is { CanRetry: true } error &&
+        Identities.Any(identity =>
+            identity.Id == error.IdentityId &&
+            identity.IsEnabled &&
+            identity.AuthenticationState == AuthenticationState.Ready &&
+            IsIdentityAllowed(identity));
     private bool CanAdministerWorkloadIdentities() =>
         workloadIdentityAdministrationService is not null &&
         SelectedIdentity is
@@ -2053,6 +2126,7 @@ public sealed partial class MainViewModel(
         RemoveIdentityCommand.NotifyCanExecuteChanged();
         PurgeSelectedIdentityCacheCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
+        SynchronizeAllIdentitiesCommand.NotifyCanExecuteChanged();
         RetrySelectedSyncErrorCommand.NotifyCanExecuteChanged();
         PrepareGovernedMutationCommand.NotifyCanExecuteChanged();
         ExecuteGovernedMutationCommand.NotifyCanExecuteChanged();
@@ -2263,6 +2337,7 @@ public sealed partial class MainViewModel(
         PreviewManagedIdentityCommand.NotifyCanExecuteChanged();
         PreviewServicePrincipalCommand.NotifyCanExecuteChanged();
         SynchronizeCommand.NotifyCanExecuteChanged();
+        SynchronizeAllIdentitiesCommand.NotifyCanExecuteChanged();
         RetrySelectedSyncErrorCommand.NotifyCanExecuteChanged();
         RefreshSubscriptionsCommand.NotifyCanExecuteChanged();
         ContinueToSearchCommand.NotifyCanExecuteChanged();
@@ -2758,6 +2833,15 @@ public sealed partial class MainViewModel(
     [RelayCommand]
     private void DismissActionableError() => ClearActionableError();
 
+    private sealed record MultiIdentitySyncSummary(
+        int Completed,
+        int Partial,
+        int Failed,
+        int VaultCount,
+        int ItemCount,
+        int ErrorCount,
+        IReadOnlyList<(SyncRun Run, Guid IdentityId, string IdentityName)> Runs);
+
 }
 
 public sealed class LocalRecoveryArchiveRow(
@@ -2821,6 +2905,7 @@ public sealed class SyncErrorRow
 {
     public SyncErrorRow(
         IReadOnlyList<SyncErrorDetail> details,
+        Guid identityId,
         string identityDisplayName,
         IEnumerable<TenantSelectionRow> tenants,
         IEnumerable<SubscriptionSelectionRow> subscriptions,
@@ -2830,6 +2915,7 @@ public sealed class SyncErrorRow
             throw new ArgumentException("At least one synchronization error is required.", nameof(details));
 
         Details = details;
+        IdentityId = identityId;
         var first = details[0];
         var retry = first.RetryScope;
         var vault = string.IsNullOrWhiteSpace(retry?.VaultResourceId)
@@ -2902,6 +2988,7 @@ public sealed class SyncErrorRow
     }
 
     public IReadOnlyList<SyncErrorDetail> Details { get; }
+    public Guid IdentityId { get; }
     public string Target { get; }
     public string Scope => Target;
     public string Operations { get; }

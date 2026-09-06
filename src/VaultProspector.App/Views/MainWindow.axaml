@@ -692,6 +692,7 @@
               </ListBox>
               <WrapPanel>
                 <Button Classes="primary" Content="Sync selected" Command="{Binding SynchronizeCommand}" Margin="0,0,8,8" />
+                <Button Content="Sync all identities" Command="{Binding SynchronizeAllIdentitiesCommand}" Margin="0,0,8,8" />
                 <Button Content="Cancel" Command="{Binding CancelOperationCommand}" IsEnabled="{Binding IsBusy}" Margin="0,0,8,8" />
                 <Button Content="Reauthenticate" Command="{Binding ReauthenticateIdentityCommand}" Margin="0,0,8,8" />
                 <Button Content="Disable" Command="{Binding DisableIdentityCommand}" IsVisible="{Binding IsSelectedIdentityEnabled}" Margin="0,0,8,8" />
@@ -891,6 +892,9 @@
                       Command="{Binding SynchronizeCommand}"
                       HorizontalAlignment="Stretch"
                       Margin="0,8,0,0" />
+              <Button Content="Synchronize all identities"
+                      Command="{Binding SynchronizeAllIdentitiesCommand}"
+                      HorizontalAlignment="Stretch" />
               <Button Content="Continue to Find secrets"
                       Command="{Binding ContinueToSearchCommand}"
                       HorizontalAlignment="Stretch" />

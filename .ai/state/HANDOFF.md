@@ -21,6 +21,25 @@
 - HCS profile validation returned the expected reasoning-only app checks. Drift validation still
   returns `Path not found` for this registered checkout, so no drift pass is claimed.
 
+## Foreground selected/all identity synchronization — 2026-09-06
+
+- Product-owner feedback requested an explicit choice between synchronizing the selected identity
+  and synchronizing all connected identities.
+- The existing `Sync selected` path remains unchanged. Connections now also exposes `Sync all
+  identities` in both the identity action row and the discovery card.
+- Foreground all-identity sync processes every enabled, ready, policy-allowed connection, isolates
+  a failure to its identity, aggregates complete/partial/failed, vault, object, and error counts,
+  and reports identities skipped because they are disabled, require sign-in, or are policy-blocked.
+- Multi-identity error rows retain their owning identity so retry targets the correct connection
+  even when it is not the currently selected identity. No secret values are retrieved by either
+  metadata synchronization choice.
+- The existing background-sync implementation now shares the same multi-identity execution path.
+  A focused foreground regression proves that two ready identities run and one disabled identity is
+  skipped without any value retrieval.
+- `pwsh ./scripts/Build.ps1 -Configuration Release` passes all 498 tests, zero warnings/errors,
+  and the NuGet vulnerability audit. This remains source evidence; no new MSI has been packaged or
+  installed.
+
 ## Preview 18 audit hardening publication — 2026-08-13
 
 - Branch `fix/preview18-security-hardening` starts at public-main commit

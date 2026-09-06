@@ -211,6 +211,13 @@ public sealed class AtlasVisualBaselineTests
             production.Descendants(),
             element =>
                 element.Name.LocalName == "Button" &&
+                Attribute(element, "Content") == "Sync all identities" &&
+                Attribute(element, "Command") ==
+                    "{Binding SynchronizeAllIdentitiesCommand}");
+        Assert.Contains(
+            production.Descendants(),
+            element =>
+                element.Name.LocalName == "Button" &&
                 Attribute(element, "Content") == "Load more results" &&
                 Attribute(element, "Command") ==
                     "{Binding LoadMoreSearchResultsCommand}" &&
