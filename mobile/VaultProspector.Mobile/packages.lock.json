@@ -4,31 +4,31 @@
     "net10.0": {
       "Avalonia": {
         "type": "Direct",
-        "requested": "[12.1.2, )",
-        "resolved": "12.1.2",
-        "contentHash": "GHSe4qxjbqqxB570xuB4KtoD+Qhk3uKXJUXbelGYhGz/ti8xEoL7e5DGun8hcsXHondszPPBEdcC68szw7vUKg==",
+        "requested": "[12.1.4, )",
+        "resolved": "12.1.4",
+        "contentHash": "Vlz+ebY0PBVsTFXAPIpM+7ySgezMtyJ3GMMGmccHwxXXjgLF2x5+NMwO4AqrdM/lrUPZremnYNO6MSg1r1vuxw==",
         "dependencies": {
           "Avalonia.BuildServices": "11.3.2",
-          "Avalonia.Remote.Protocol": "12.1.2",
+          "Avalonia.Remote.Protocol": "12.1.4",
           "MicroCom.Runtime": "0.11.6"
         }
       },
       "Avalonia.Fonts.Inter": {
         "type": "Direct",
-        "requested": "[12.1.2, )",
-        "resolved": "12.1.2",
-        "contentHash": "pFkrNWecSX3wP9kTsMyLKyP29/8T7cYywKuE+DC9HN+BstmcIx5iOi6ZZLYAK1HkNTAGjF+oQf5wpTj3gnkWXA==",
+        "requested": "[12.1.4, )",
+        "resolved": "12.1.4",
+        "contentHash": "PqzIALObVJ3ZUpfYDkoNNkijaVBUGVrHqAyWPkE39aJrPukbMv49aGMhS+c5HiW1s+/iuo3fW+ISOk34GOc0iw==",
         "dependencies": {
-          "Avalonia": "12.1.2"
+          "Avalonia": "12.1.4"
         }
       },
       "Avalonia.Themes.Fluent": {
         "type": "Direct",
-        "requested": "[12.1.2, )",
-        "resolved": "12.1.2",
-        "contentHash": "EKw1PzlIfqB8n0+yGuHThR9cUEiqZYj0EHYp89jrTwSuudu8pji6I4SGe1UmdwJWdgWf+kuss8T7KT+0wsUyow==",
+        "requested": "[12.1.4, )",
+        "resolved": "12.1.4",
+        "contentHash": "vx7P4as07WLQqA2mhMy4iBsqhkWEGwZI7g9Rd2DlJgz3uKS2tSvY6nZqHq3sWMFDBYBT65jkTsetPrgV8oprsQ==",
         "dependencies": {
-          "Avalonia": "12.1.2"
+          "Avalonia": "12.1.4"
         }
       },
       "CommunityToolkit.Mvvm": {
@@ -44,8 +44,8 @@
       },
       "Avalonia.Remote.Protocol": {
         "type": "Transitive",
-        "resolved": "12.1.2",
-        "contentHash": "DdLTe9xKXxxfRcXmUw1trXZpBpz1YiZYWXx0DfMVPFAnkCszKsHLi67kaZfGJqtfQq2EySKd2qgRYX2QYkSxcg=="
+        "resolved": "12.1.4",
+        "contentHash": "9ajC+Ff+U9S21JJKGbJgnwp9fY+zwJG+bSEC//o/vJU2M6IEMRGp+D1+AUoqTR79FAA/iDYgf4f4EF4PZKhZsg=="
       },
       "Azure.Core": {
         "type": "Transitive",
@@ -88,24 +88,24 @@
       },
       "Azure.Security.KeyVault.Certificates": {
         "type": "Transitive",
-        "resolved": "4.9.1",
-        "contentHash": "WOnOJuJlchi708rjedYYXI1CBbNBfUjzqHDa6777EiCnKLhiWTnxfvCMHSjT3THDZFRaby4CRMrOPsIvaeSIoQ==",
+        "resolved": "4.9.2",
+        "contentHash": "zPH6TSnC4ThLeVcQghm+pwgV/PEgao5D2dVG93p5TVXXHqqVen4NvGLA+WfySMieRlb+HZCQvRHk/eYg1kmqdw==",
         "dependencies": {
           "Azure.Core": "1.57.0"
         }
       },
       "Azure.Security.KeyVault.Keys": {
         "type": "Transitive",
-        "resolved": "4.10.1",
-        "contentHash": "RAFXuB5dWDTrfU5kw/uLH9IMeW7wL2ZgpR6sBcZZ/jJ0LOuKQ+ScEy2S8KeTr+BWnDIyIHtLLDPzEAPtbBZf5w==",
+        "resolved": "4.10.2",
+        "contentHash": "Md0YYVe0cGgLbgVW5tdOn3f78Pdp93rJ6DJZGKQbdBbjEysKdTLn8X5uTml/TTxJ1j1e6pY2kRV6iT7Ry+Z8Jg==",
         "dependencies": {
           "Azure.Core": "1.54.0"
         }
       },
       "Azure.Security.KeyVault.Secrets": {
         "type": "Transitive",
-        "resolved": "4.11.1",
-        "contentHash": "/yFMJGQYPPvBSrupjJ388qqXZ1h70Yrer1vG+z+jddgovEmIE7IhShU6ZGIi24IPArY8HBH6FFtgVK369TWhmQ==",
+        "resolved": "4.11.2",
+        "contentHash": "23VoXpEhSw7jLuG4qKx3tHjosBf02NOtwrjh/HOIpKSL5iHIDur5xWmR78wQ9WDQk+ganZH4Lx2nYmthTQ3Phw==",
         "dependencies": {
           "Azure.Core": "1.54.0"
         }
@@ -122,10 +122,10 @@
       },
       "Microsoft.Data.Sqlite.Core": {
         "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "2aL9eL5HQr0V4b8V909SD+jQAx6qnTTl7sT/v3D8dIvmr2UGdpZIQxqm1pj2Js3e4EYTvpw0oMH7DjapJJuPPw==",
+        "resolved": "10.0.14",
+        "contentHash": "1p9rO3Q2X/L/9YrYog3vaDzi8u+WZfJCOkDYoHqmofqYP0DLPLPyZcS2Rnh/79JXAodgbs1AgsaNwLpIvC3Xew==",
         "dependencies": {
-          "SQLitePCLRaw.core": "2.1.12"
+          "SQLitePCLRaw.core": "2.1.13"
         }
       },
       "Microsoft.Extensions.Configuration.Abstractions": {
@@ -194,10 +194,10 @@
       },
       "Microsoft.Identity.Client.Extensions.Msal": {
         "type": "Transitive",
-        "resolved": "4.90.0",
-        "contentHash": "/L7b+fNF+ITSw3SPlbgE7ax2MqVg/a60kHsDooKUbjYDdX88COTTwE20qRPT84fykehBTSmP7LSxh6b5hwIEOw==",
+        "resolved": "4.91.1",
+        "contentHash": "hAiV5z7kfc2mRg43z4fsHsw8Q5LQxxQGzofv4X4e8QJCB3na+LCWvjAzOpjSlitSGuO/+pOZKAgEc6rRjsw3vg==",
         "dependencies": {
-          "Microsoft.Identity.Client": "4.90.0",
+          "Microsoft.Identity.Client": "4.91.1",
           "System.Security.Cryptography.ProtectedData": "4.5.0"
         }
       },
@@ -217,8 +217,8 @@
       },
       "SQLitePCLRaw.core": {
         "type": "Transitive",
-        "resolved": "2.1.12",
-        "contentHash": "ETpNw9DY3ckWLgRRAeCHj+GKOuPi61aeczkXhgHexUvqoZBAYg8RYESE2J7O1M7+o6QbdSEZwrw9bfqztUVWXg=="
+        "resolved": "2.1.13",
+        "contentHash": "2joofoinuHBFs0nMX3nKuXgxpXryRkCOdM2Ua6HBqQLLy6IW+5f28ZI+HAvMyF8vG7XfNz/lwfBfE6V4juru8Q=="
       },
       "SQLitePCLRaw.lib.e_sqlcipher": {
         "type": "Transitive",
@@ -270,7 +270,7 @@
       "vaultprospector.infrastructure": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Data.Sqlite.Core": "[10.0.12, )",
+          "Microsoft.Data.Sqlite.Core": "[10.0.14, )",
           "SQLitePCLRaw.bundle_e_sqlcipher": "[2.1.11, )",
           "VaultProspector.Application": "[0.1.0, )",
           "VaultProspector.Domain": "[0.1.0, )"
@@ -291,11 +291,11 @@
           "Azure.Identity": "[1.21.0, )",
           "Azure.ResourceManager": "[1.14.0, )",
           "Azure.ResourceManager.ManagedServiceIdentities": "[1.4.1, )",
-          "Azure.Security.KeyVault.Certificates": "[4.9.1, )",
-          "Azure.Security.KeyVault.Keys": "[4.10.1, )",
-          "Azure.Security.KeyVault.Secrets": "[4.11.1, )",
-          "Microsoft.Identity.Client": "[4.90.0, )",
-          "Microsoft.Identity.Client.Extensions.Msal": "[4.90.0, )",
+          "Azure.Security.KeyVault.Certificates": "[4.9.2, )",
+          "Azure.Security.KeyVault.Keys": "[4.10.2, )",
+          "Azure.Security.KeyVault.Secrets": "[4.11.2, )",
+          "Microsoft.Identity.Client": "[4.91.1, )",
+          "Microsoft.Identity.Client.Extensions.Msal": "[4.91.1, )",
           "VaultProspector.Application": "[0.1.0, )",
           "VaultProspector.Domain": "[0.1.0, )"
         }
@@ -303,8 +303,8 @@
       "Microsoft.Identity.Client": {
         "type": "CentralTransitive",
         "requested": "[4.86.1, )",
-        "resolved": "4.90.0",
-        "contentHash": "oc5A0jmu083T3OW1JVYMrM1rekIL8SkBRB/byMMQjFuYlRZsMh3wDeCwwrz9sGI6XlP5BIqO7XWgjPpF3reF5A==",
+        "resolved": "4.91.1",
+        "contentHash": "o3loEgTbvlVlret7jG76SfOoeRWQQqyY11+rQXvkI9tQzs5I3C1FDkD3hZTMefC5LBeGZu3nRK9MJXiVcW4skQ==",
         "dependencies": {
           "Microsoft.IdentityModel.Abstractions": "8.14.0"
         }
